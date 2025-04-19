@@ -24,7 +24,7 @@ const UserInfo = () => {
       </h1>
 
       <Button onClick={() => signOut()} variant="destructive" className="mx-auto">
-        Sign out
+        Log out
       </Button>
     </>
   );

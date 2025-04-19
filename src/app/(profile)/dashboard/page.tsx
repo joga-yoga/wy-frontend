@@ -1,21 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 interface Organizer {
   id: string;
   name: string;
-  description?: string;
-  image_id?: string;
+}
+
+interface Instructor {
+  id: string;
+  name: string;
 }
 
 export default function DashboardPage() {
   const [organizer, setOrganizer] = useState<Organizer | null>(null);
+  const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
@@ -25,13 +31,20 @@ export default function DashboardPage() {
       .get("/organizer/me")
       .then((res) => {
         setOrganizer(res.data);
+        // If user is an organizer, fetch their instructors too
+        return axiosInstance.get("/instructors");
+      })
+      .then((res) => {
+        if (res) setInstructors(res.data);
       })
       .catch((err) => {
-        toast({
-          description: "Failed to load organizer profile.",
-          variant: "destructive",
-        });
-        router.push("/become-organizer");
+        // Don't redirect, just set organizer to null
+        if (err.response?.status !== 404) {
+          toast({
+            description: "Failed to load organizer profile.",
+            variant: "destructive",
+          });
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -42,34 +55,73 @@ export default function DashboardPage() {
     return <p className="text-center mt-20">Loading...</p>;
   }
 
-  if (!organizer) {
-    return null;
-  }
-  console.log("🚀 ~ DashboardPage ~ process.env:", process.env);
-
   return (
-    <div className="max-w-xl mx-auto py-12">
-      <h1 className="text-2xl font-bold mb-6 text-center">Your Organizer Profile</h1>
-      <div className="space-y-4">
-        <p>
-          <strong>Name:</strong> {organizer.name}
-        </p>
-        {organizer.description && (
-          <p>
-            <strong>Description:</strong> {organizer.description}
-          </p>
+    <div className="max-w-5xl mx-auto py-12 px-4">
+      <h1 className="text-3xl font-bold mb-8 text-center">Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {organizer ? (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>Organizer Profile</CardTitle>
+                <CardDescription>Manage your organizer information</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">Welcome, {organizer.name}!</p>
+                <Button variant="default" onClick={() => router.push("/dashboard/organizer")}>
+                  View Profile
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Manage Events</CardTitle>
+                <CardDescription>Create and manage your events</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">Create new events or manage existing ones.</p>
+                <Button variant="default" onClick={() => router.push("/dashboard/events")}>
+                  Events Dashboard
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Instructors</CardTitle>
+                <CardDescription>Manage your event instructors</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  {instructors.length > 0
+                    ? `You have ${instructors.length} instructor${instructors.length === 1 ? "" : "s"} registered.`
+                    : "Add instructors for your events."}
+                </p>
+                <Button variant="default" onClick={() => router.push("/dashboard/instructors")}>
+                  {instructors.length > 0 ? "Manage Instructors" : "Add Instructors"}
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Become an Organizer</CardTitle>
+              <CardDescription>Start hosting your own events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">
+                You're not registered as an organizer yet. Become an organizer to create and manage
+                events.
+              </p>
+              <Link href="/become-organizer">
+                <Button variant="default">Become an Organizer</Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
-        {organizer.image_id && (
-          <div>
-            <strong>Image:</strong>
-            <img
-              src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${organizer.image_id}`}
-              alt="Organizer"
-              className="mt-2 max-h-64 object-contain"
-            />
-          </div>
-        )}
-        <Button onClick={() => router.push("/dashboard/organizer")}>Edit Profile</Button>
       </div>
     </div>
   );

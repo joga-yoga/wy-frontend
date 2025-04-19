@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
     if (token) {
       storeToken(token);
       toast({ description: "Login successful." });
-      router.push("/become-organizer"); // Redirect home or wherever you want
+      router.push("/dashboard"); // Redirect home or wherever you want
     } else {
       toast({ description: "Missing token from callback", variant: "destructive" });
       router.push("/login");

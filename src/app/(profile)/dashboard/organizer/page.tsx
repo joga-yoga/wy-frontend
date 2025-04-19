@@ -1,78 +1,80 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  image: z.any().optional(),
-});
+interface Organizer {
+  id: string;
+  name: string;
+  description?: string;
+  image_id?: string;
+}
 
-export default function EditOrganizerPage() {
+export default function OrganizerProfilePage() {
+  const [organizer, setOrganizer] = useState<Organizer | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
   const { toast } = useToast();
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(schema) });
+  const router = useRouter();
 
   useEffect(() => {
     axiosInstance
       .get("/organizer/me")
       .then((res) => {
-        setValue("name", res.data.name);
-        setValue("description", res.data.description || "");
+        setOrganizer(res.data);
       })
-      .catch(() => {
-        toast({ description: "Failed to load organizer", variant: "destructive" });
-        router.push("/dashboard");
+      .catch((err) => {
+        toast({
+          description: "Failed to load organizer profile.",
+          variant: "destructive",
+        });
+        router.push("/become-organizer");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  async function onSubmit(data: any) {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    if (data.description) formData.append("description", data.description);
-    if (data.image?.[0]) formData.append("image", data.image[0]);
-
-    try {
-      await axiosInstance.put("/organizer", formData);
-      toast({ description: "Profile updated successfully!" });
-      router.push("/dashboard");
-    } catch {
-      toast({ description: "Update failed", variant: "destructive" });
-    }
+  if (loading) {
+    return <p className="text-center mt-20">Loading...</p>;
   }
 
-  if (loading) return <p className="text-center mt-20">Loading...</p>;
+  if (!organizer) {
+    return null;
+  }
 
   return (
     <div className="max-w-xl mx-auto py-12">
-      <h1 className="text-2xl font-bold mb-6 text-center">Edit Organizer Profile</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input placeholder="Name" {...register("name")} />
-        {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-        <Textarea placeholder="Description" {...register("description")} />
-        <Input type="file" {...register("image")} />
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          Save Changes
-        </Button>
-      </form>
+      <h1 className="text-2xl font-bold mb-6 text-center">Your Organizer Profile</h1>
+      <div className="space-y-4">
+        <p>
+          <strong>Name:</strong> {organizer.name}
+        </p>
+        {organizer.description && (
+          <p>
+            <strong>Description:</strong> {organizer.description}
+          </p>
+        )}
+        {organizer.image_id && (
+          <div>
+            <strong>Image:</strong>
+            <img
+              src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${organizer.image_id}`}
+              alt="Organizer"
+              className="mt-2 max-h-64 object-contain"
+            />
+          </div>
+        )}
+        <div className="flex gap-4">
+          <Button onClick={() => router.push("/dashboard/organizer/edit")}>Edit Profile</Button>
+          <Button variant="outline" onClick={() => router.push("/dashboard")}>
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export function LoginPage() {
       const token = response.data.access_token;
       storeToken(token);
       toast({ description: "Login successful." });
-      router.push("/become-organizer");
+      router.push("/dashboard");
     } catch (error) {
       toast({
         description: "Login failed. Please check your credentials and try again.",
