@@ -1,11 +1,18 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link"; // Import Link
+import { PlusCircle, Trash2 } from "lucide-react"; // Import icons
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react"; // Import useEffect
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { z } from "zod";
+import { useEffect, useState } from "react";
+import {
+  Control, // Import Control type
+  Controller,
+  FieldErrors, // Import FieldErrors type
+  useFieldArray, // Import useFieldArray
+  useForm, // Keep useForm import temporarily if needed for types, but remove its usage
+  UseFormGetValues, // Import UseFormGetValues type
+  UseFormRegister, // Import UseFormRegister type
+} from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,156 +20,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { axiosInstance } from "@/lib/axiosInstance"; // Add axios instance import
+import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { axiosInstance } from "@/lib/axiosInstance";
+import { EventFormData, eventFormSchema, EventInitialData } from "@/lib/schemas/event"; // Import from new location
 
 // Define Instructor interface
 interface Instructor {
   id: string;
   name: string;
-  // Add other relevant instructor fields if needed, e.g., image_id
 }
 
-// Define the schema within the component or import from a shared location
-const eventFormSchema = z.object({
-  title: z.string().min(1, "Tytuł jest wymagany"),
-  description: z.string().optional(),
-  location: z.string().optional(),
-  start_date: z.string().min(1, "Data rozpoczęcia jest wymagana"),
-  end_date: z.string().min(1, "Data zakończenia jest wymagana"),
-  price: z.coerce.number().min(0, "Cena musi być liczbą dodatnią").optional(),
-  currency: z.string().max(3).optional(),
-  main_attractions: z.string().optional(),
-  language: z.string().optional(),
-  skill_level: z.string().optional(),
-  country: z.string().optional(),
-  accommodation_description: z.string().optional(),
-  guest_welcome_description: z.string().optional(),
-  food_description: z.string().optional(),
-  price_includes: z.string().optional(),
-  price_excludes: z.string().optional(),
-  activity_days: z.coerce.number().int().positive().optional(),
-  itinerary: z.string().optional(),
-  included_trips: z.string().optional(),
-  paid_attractions: z.string().optional(),
-  spa_description: z.string().optional(),
-  cancellation_policy: z.string().optional(),
-  important_info: z.string().optional(),
-  image: z.any().optional(), // Keep as any for FileList
-  is_public: z.boolean(),
-  instructor_ids: z.array(z.string().uuid()).optional(), // Assuming UUID strings for IDs
-});
-
-export type EventFormData = z.infer<typeof eventFormSchema>;
-
-// Define a type for the initial data that might include fields not in the form schema (like IDs)
-// We are mainly interested in image_id here for displaying the current image.
-// Ideally, this should match the structure returned by your GET /events/{id} endpoint.
-interface EventInitialDataBase extends Partial<EventFormData> {
-  // Renamed to avoid conflict
-  id?: string; // Assuming event ID might be useful
-  image_id?: string | null;
-  // Add other fields returned by the API but not directly in the form schema if needed
-}
-
-// Export the interface
-export type EventInitialData = EventInitialDataBase;
-
+// Updated Props for the controlled form component
 interface EventFormProps {
   initialData?: EventInitialData;
-  onSubmit: (data: EventFormData, formData: FormData) => Promise<void>;
-  isSubmitting: boolean;
-  submitButtonText?: string;
-  cancelHref: string;
+  register: UseFormRegister<EventFormData>;
+  errors: FieldErrors<EventFormData>;
+  control: Control<EventFormData>; // Add control prop back
+  currentDurationDays?: number | string | null; // Prop for watched value (can be string initially)
+  getValues: UseFormGetValues<EventFormData>; // Add getValues prop
+  eventId?: string; // Add eventId prop for edit mode actions
 }
 
-// Base default values matching the schema
-const baseDefaultValues: EventFormData = {
-  title: "",
-  description: undefined,
-  location: undefined,
-  start_date: "",
-  end_date: "",
-  price: undefined,
-  currency: undefined,
-  main_attractions: undefined,
-  language: undefined,
-  skill_level: undefined,
-  country: undefined,
-  accommodation_description: undefined,
-  guest_welcome_description: undefined,
-  food_description: undefined,
-  price_includes: undefined,
-  price_excludes: undefined,
-  activity_days: undefined,
-  itinerary: undefined,
-  included_trips: undefined,
-  paid_attractions: undefined,
-  spa_description: undefined,
-  cancellation_policy: undefined,
-  important_info: undefined,
-  image: undefined,
-  is_public: false, // Ensure boolean default
-  instructor_ids: undefined,
-};
+// Remove schema definition and type exports from here
 
 export function EventForm({
   initialData,
-  onSubmit,
-  isSubmitting,
-  submitButtonText = "Submit",
-  cancelHref,
+  register,
+  errors,
+  control, // Add control prop back
+  currentDurationDays, // Receive duration value prop
+  getValues, // Receive getValues prop
+  eventId, // Receive eventId
 }: EventFormProps) {
-  const router = useRouter();
-  const [instructors, setInstructors] = useState<Instructor[]>([]); // Add state for instructors
+  const { toast } = useToast(); // Use toast hook
+  const router = useRouter(); // Can keep if used for internal links like "Manage Instructors"
+  const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [currentImageId, setCurrentImageId] = useState<string | null>(
+    initialData?.image_id ?? null,
+  );
+  // State for visibility toggle
+  const [currentIsPublic, setCurrentIsPublic] = useState<boolean>(initialData?.is_public ?? false);
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
 
+  // Setup useFieldArray for the program
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
+    fields: programFields,
+    append,
+    remove,
+    replace,
+  } = useFieldArray({
     control,
-  } = useForm<EventFormData>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: baseDefaultValues,
+    name: "program",
   });
 
-  // Effect to reset form when initialData is provided
-  useEffect(() => {
-    console.log("🚀 ~ useEffect ~ initialData:", initialData);
-    if (initialData) {
-      // Map initialData to form data, ensuring correct types and defaults
-      const dataForReset: Partial<EventFormData> = {};
-      for (const key in eventFormSchema.shape) {
-        const fieldKey = key as keyof EventFormData;
-        const initialValue = initialData[fieldKey as keyof EventInitialData];
-
-        if (fieldKey === "start_date" || fieldKey === "end_date") {
-          dataForReset[fieldKey] =
-            typeof initialValue === "string"
-              ? initialValue.split("T")[0]
-              : baseDefaultValues[fieldKey];
-        } else if (fieldKey === "image") {
-          dataForReset[fieldKey] = undefined; // Don't reset file input
-        } else if (fieldKey === "is_public") {
-          console.log("🚀 ~ useEffect ~ initialValue:", initialValue);
-          // Ensure is_public is always boolean
-          dataForReset[fieldKey] =
-            typeof initialValue === "boolean" ? initialValue : baseDefaultValues.is_public;
-        } else if (initialValue !== undefined && initialValue !== null) {
-          // @ts-ignore - Allow assignment if key exists, refine if possible
-          dataForReset[fieldKey] = initialValue;
-        }
-      }
-      // Use spread to ensure all fields from baseDefaults are present if not in initialData
-      reset({ ...baseDefaultValues, ...dataForReset });
-    } else {
-      // If no initialData (create mode), ensure form uses base defaults
-      reset(baseDefaultValues);
-    }
-  }, [initialData, reset]);
-
-  // Effect to fetch instructors
+  // Keep useEffect for fetching instructors as it's internal to the form display
   useEffect(() => {
     axiosInstance
       .get<Instructor[]>("/instructors")
@@ -171,50 +82,63 @@ export function EventForm({
       })
       .catch((error) => {
         console.error("Failed to fetch instructors:", error);
-        // Handle error appropriately, e.g., show a notification
       });
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
-  // Correctly typed submit handler
-  const handleFormSubmit: SubmitHandler<EventFormData> = (data) => {
-    console.log("🚀 ~ data:", data);
-    const formData = new FormData();
+  // Update image and visibility state when initialData changes
+  useEffect(() => {
+    setCurrentImageId(initialData?.image_id ?? null);
+    setCurrentIsPublic(initialData?.is_public ?? false);
+  }, [initialData?.image_id, initialData?.is_public]);
 
-    // Helper function to append if value exists and is not empty
-    const appendIfExists = (key: string, value: any) => {
-      // Explicitly check for boolean false
-      if (typeof value === "boolean") {
-        formData.append(key, value.toString());
-      } else if (value !== undefined && value !== null && value !== "") {
-        // Ensure numbers are converted to strings if needed by backend
-        formData.append(key, typeof value === "number" ? value.toString() : value);
-      }
-    };
+  // Effect to sync program array length using replace
+  useEffect(() => {
+    console.log("Sync Effect Triggered. Duration:", currentDurationDays);
+    const currentProgramValue = getValues("program") || []; // Get current array value
+    const currentLength = currentProgramValue.length;
+    let targetLength = parseInt(currentDurationDays as any, 10);
 
-    // Append all fields from validated data
-    Object.keys(data).forEach((key) => {
-      const fieldKey = key as keyof EventFormData;
-      if (fieldKey === "image") {
-        // Handle image file
-        if (data.image && data.image.length > 0 && data.image[0] instanceof File) {
-          formData.append("image", data.image[0]);
-        }
-      } else if (fieldKey === "instructor_ids") {
-        // Handle instructor IDs
-        if (data.instructor_ids && data.instructor_ids.length > 0) {
-          data.instructor_ids.forEach((id) => formData.append("instructor_ids", id));
-        }
-      } else {
-        // Append other fields using the helper
-        appendIfExists(fieldKey, data[fieldKey]);
-      }
-    });
+    if (isNaN(targetLength) || targetLength < 0) {
+      targetLength = 0;
+    }
 
-    onSubmit(data, formData);
+    console.log(`Current Length: ${currentLength}, Target Length: ${targetLength}`);
+
+    if (currentLength !== targetLength) {
+      const newProgramArray = Array.from({ length: targetLength }, (_, index) => {
+        // Keep existing value if available, otherwise use empty string
+        return index < currentLength ? currentProgramValue[index] : "";
+      });
+      console.log("Replacing program with:", newProgramArray);
+      replace(newProgramArray); // Replace the entire array
+    }
+  }, [currentDurationDays, getValues, replace]); // Update dependencies
+
+  // Handler for toggling public status
+  const handleToggleVisibility = async () => {
+    if (!eventId) return;
+
+    setIsTogglingVisibility(true);
+    const newStatus = !currentIsPublic;
+
+    try {
+      await axiosInstance.patch(`/events/${eventId}`, { is_public: newStatus });
+      setCurrentIsPublic(newStatus);
+      toast({ description: `Wydarzenie ${newStatus ? "opublikowane" : "ukryte"} pomyślnie.` });
+    } catch (error: any) {
+      console.error("Failed to toggle event visibility:", error);
+      toast({
+        description: `Nie udało się zmienić widoczności: ${error.response?.data?.detail || error.message || "Unknown error"}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsTogglingVisibility(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+    // Remove onSubmit from form tag - parent handles submit trigger via header button
+    <form className="space-y-8">
       {/* Section 1: Title, Description */}
       <div className="space-y-6">
         <div className="space-y-2">
@@ -332,7 +256,7 @@ export function EventForm({
       {/* Section 4: Instructors */}
       <div className="space-y-6">
         <h2 className="text-lg font-semibold border-b pb-2">Instruktorzy</h2>
-        <Controller
+        <Controller // Restore Controller for instructors
           name="instructor_ids"
           control={control}
           render={({ field }) => (
@@ -362,7 +286,7 @@ export function EventForm({
                                 checked === true
                                   ? [...currentIds, instructor.id]
                                   : currentIds.filter((id) => id !== instructor.id);
-                              field.onChange(newIds); // Update form state
+                              field.onChange(newIds);
                             }}
                           />
                           <Label
@@ -378,9 +302,8 @@ export function EventForm({
                 </ScrollArea>
               ) : (
                 <p className="text-sm text-gray-500">
-                  {instructors.length === 0
-                    ? "Ładowanie instruktorów..."
-                    : "Brak dostępnych instruktorów. Dodaj ich najpierw."}
+                  {/* Simplified loading/empty message */}
+                  Brak dostępnych instruktorów.
                 </p>
               )}
             </div>
@@ -424,24 +347,19 @@ export function EventForm({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="end_date">Data zakończenia</Label>
-            <Input id="end_date" type="date" {...register("end_date")} />
-            {errors.end_date && <p className="text-sm text-red-500">{errors.end_date.message}</p>}
+            <Label htmlFor="duration_days">Czas trwania (dni)</Label>
+            <Input
+              id="duration_days"
+              type="number"
+              min="0"
+              step="1"
+              {...register("duration_days")}
+              placeholder="Ile dni będzie trwał program/wydarzenie?"
+            />
+            {errors.duration_days && (
+              <p className="text-sm text-red-500">{errors.duration_days.message}</p>
+            )}
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="activity_days">Czas trwania (dni)</Label>
-          <Input
-            id="activity_days"
-            type="number"
-            min="1"
-            step="1"
-            {...register("activity_days")}
-            placeholder="Ile dni będzie trwał program/wydarzenie?"
-          />
-          {errors.activity_days && (
-            <p className="text-sm text-red-500">{errors.activity_days.message}</p>
-          )}
         </div>
       </div>
 
@@ -537,6 +455,38 @@ export function EventForm({
         </div>
       </div>
 
+      {/* NEW Section for Program (dynamically sized) */}
+      <div className="space-y-6">
+        <h2 className="text-lg font-semibold border-b pb-2">Program wydarzenia (dzień po dniu)</h2>
+        {programFields.map((field, index) => (
+          <div
+            key={field.id}
+            className="flex items-start gap-2 border p-3 rounded-md bg-muted/30 relative group"
+          >
+            <Label htmlFor={`program.${index}`} className="pt-2 font-semibold whitespace-nowrap">
+              Dzień {index + 1}:
+            </Label>
+            <div className="flex-grow space-y-1">
+              <Textarea
+                id={`program.${index}`}
+                {...register(`program.${index}` as const)}
+                placeholder={`Opis programu na dzień ${index + 1}`}
+                rows={3}
+                className="bg-background"
+              />
+              {errors.program?.[index] && (
+                <p className="text-sm text-red-500">{errors.program[index]?.message}</p>
+              )}
+            </div>
+          </div>
+        ))}
+        {(!currentDurationDays || parseInt(currentDurationDays as any, 10) <= 0) && (
+          <p className="text-sm text-gray-500 italic">
+            Wpisz liczbę dni trwania wydarzenia, aby dodać program dnia.
+          </p>
+        )}
+      </div>
+
       {/* Section 8: Policies and Important Info */}
       <div className="space-y-6">
         <h2 className="text-lg font-semibold border-b pb-2">Zasady i ważne informacje</h2>
@@ -594,46 +544,32 @@ export function EventForm({
         </div>
       </div>
 
-      {/* Section 10: Visibility */}
-      <div className="space-y-6">
-        <h2 className="text-lg font-semibold border-b pb-2">Widoczność</h2>
-        <div className="flex items-center space-x-2">
-          <Controller
-            name="is_public"
-            control={control}
-            render={({ field }) => (
-              <Checkbox
-                id="is_public"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                ref={field.ref}
-              />
-            )}
-          />
-          <Label htmlFor="is_public" className="cursor-pointer">
-            Upublicznij to wydarzenie
-          </Label>
+      {/* Section 10: Visibility - Conditional based on eventId (edit mode) */}
+      {eventId && (
+        <div className="space-y-6">
+          <h2 className="text-lg font-semibold border-b pb-2">Widoczność</h2>
+          <div className="flex items-center space-x-4">
+            <Button
+              type="button"
+              variant={currentIsPublic ? "destructive" : "default"}
+              onClick={handleToggleVisibility}
+              disabled={isTogglingVisibility}
+            >
+              {isTogglingVisibility
+                ? "Zmieniam..."
+                : currentIsPublic
+                  ? "Ukryj wydarzenie (Unpublish)"
+                  : "Opublikuj wydarzenie (Publish)"}
+            </Button>
+            <p className="text-sm text-gray-500">
+              {currentIsPublic
+                ? "Wydarzenie jest publiczne i widoczne w wyszukiwarce."
+                : "Wydarzenie jest prywatne. Opublikuj, aby było widoczne."}
+            </p>
+          </div>
+          {/* Removed Controller/Checkbox for is_public */}
         </div>
-        <p className="text-sm text-gray-500">
-          Publiczne wydarzenia pojawią się w wynikach wyszukiwania i listach wydarzeń
-        </p>
-        {errors.is_public && <p className="text-sm text-red-500">{errors.is_public.message}</p>}
-      </div>
-
-      <div className="flex gap-4 pt-4">
-        <Button type="submit" disabled={isSubmitting} variant="default" className="flex-1">
-          {isSubmitting ? "Przetwarzanie..." : submitButtonText}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push(cancelHref)}
-          className="flex-1"
-          disabled={isSubmitting}
-        >
-          Anuluj
-        </Button>
-      </div>
+      )}
     </form>
   );
 }

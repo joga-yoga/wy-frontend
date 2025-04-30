@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -49,15 +50,15 @@ export default function DashboardPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return <p className="text-center mt-20">Loading...</p>;
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">Dashboard</h1>
+    <div className="p-6">
+      <DashboardHeader title="Dashboard" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {organizer ? (
@@ -113,8 +114,8 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="mb-4">
-                You're not registered as an organizer yet. Become an organizer to create and manage
-                events.
+                You&apos;re not registered as an organizer yet. Become an organizer to create and
+                manage events.
               </p>
               <Link href="/become-organizer">
                 <Button variant="default">Become an Organizer</Button>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,16 +44,33 @@ export default function CreateInstructorPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto py-12">
-      <h1 className="text-2xl font-bold mb-6 text-center">Create Instructor</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input placeholder="Name" {...register("name")} />
-        {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-        <Textarea placeholder="Bio (optional)" {...register("bio")} />
-        <Input type="file" {...register("image")} />
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          Create
-        </Button>
+    <div className="p-6">
+      <DashboardHeader
+        title="Create Instructor"
+        onUpdate={handleSubmit(onSubmit)}
+        updateLabel={isSubmitting ? "Creating..." : "Create"}
+      />
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-xl">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium mb-1">
+            Name
+          </label>
+          <Input id="name" placeholder="Name" {...register("name")} />
+          {errors.name && <p className="text-sm text-red-500">{errors.name.message?.toString()}</p>}
+        </div>
+        <div>
+          <label htmlFor="bio" className="block text-sm font-medium mb-1">
+            Bio (optional)
+          </label>
+          <Textarea id="bio" placeholder="Bio (optional)" {...register("bio")} />
+        </div>
+        <div>
+          <label htmlFor="image" className="block text-sm font-medium mb-1">
+            Image (optional)
+          </label>
+          <Input id="image" type="file" {...register("image")} />
+        </div>
       </form>
     </div>
   );

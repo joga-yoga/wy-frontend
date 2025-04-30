@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -26,27 +27,36 @@ export default function InstructorsPage() {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Instructors</h1>
-        <Button onClick={() => router.push("/dashboard/instructors/create")}>Add Instructor</Button>
-      </div>
+    <div className="p-6">
+      <DashboardHeader
+        title="Your Instructors"
+        onCreate={() => router.push("/dashboard/instructors/create")}
+        createLabel="Add Instructor"
+      />
 
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-4xl">
+        {instructors.length === 0 && (
+          <div className="text-center py-10 border rounded-lg bg-gray-50">
+            <p className="text-gray-500 mb-4">You haven&apos;t added any instructors yet.</p>
+            <Button onClick={() => router.push("/dashboard/instructors/create")}>
+              Add Your First Instructor
+            </Button>
+          </div>
+        )}
         {instructors.map((instructor) => (
           <div key={instructor.id} className="border rounded-lg p-4 shadow-sm flex gap-4">
             {instructor.image_id && (
               <Image
-                src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${instructor.image_id}`}
+                src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_80,h_80,c_fill/${instructor.image_id}`}
                 alt={instructor.name}
                 width={80}
                 height={80}
-                className="rounded object-cover"
+                className="rounded object-cover flex-shrink-0"
               />
             )}
             <div className="flex-grow">
               <h2 className="text-lg font-semibold">{instructor.name}</h2>
-              <p className="text-sm text-gray-600">{instructor.bio}</p>
+              <p className="text-sm text-gray-600 line-clamp-3">{instructor.bio}</p>
               <Button
                 variant="outline"
                 size="sm"
