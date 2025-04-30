@@ -36,9 +36,9 @@ interface EventFormProps {
   register: UseFormRegister<EventFormData>;
   errors: FieldErrors<EventFormData>;
   control: Control<EventFormData>; // Add control prop back
-  currentDurationDays?: number | string | null; // Prop for watched value (can be string initially)
   getValues: UseFormGetValues<EventFormData>; // Add getValues prop
   eventId?: string; // Add eventId prop for edit mode actions
+  calculatedDuration: number; // Add prop for calculated duration from parent
 }
 
 // Remove schema definition and type exports from here
@@ -48,9 +48,9 @@ export function EventForm({
   register,
   errors,
   control, // Add control prop back
-  currentDurationDays, // Receive duration value prop
   getValues, // Receive getValues prop
   eventId, // Receive eventId
+  calculatedDuration, // Receive calculated duration prop
 }: EventFormProps) {
   const { toast } = useToast(); // Use toast hook
   const router = useRouter(); // Can keep if used for internal links like "Manage Instructors"
@@ -91,18 +91,22 @@ export function EventForm({
     setCurrentIsPublic(initialData?.is_public ?? false);
   }, [initialData?.image_id, initialData?.is_public]);
 
-  // Effect to sync program array length using replace
+  // Restore useEffect to sync program array length based on calculated duration
   useEffect(() => {
-    console.log("Sync Effect Triggered. Duration:", currentDurationDays);
+    console.log("Sync Effect Triggered. Calculated Duration:", calculatedDuration);
     const currentProgramValue = getValues("program") || []; // Get current array value
     const currentLength = currentProgramValue.length;
-    let targetLength = parseInt(currentDurationDays as any, 10);
+    // Use the calculated duration passed from parent
+    let targetLength = calculatedDuration;
+    console.log("🚀 ~ useEffect ~ calculatedDuration:", calculatedDuration);
+    console.log("🚀 ~ useEffect ~ targetLength:", targetLength);
 
+    // Ensure targetLength is a non-negative integer
     if (isNaN(targetLength) || targetLength < 0) {
       targetLength = 0;
     }
 
-    console.log(`Current Length: ${currentLength}, Target Length: ${targetLength}`);
+    console.log(`Current Program Length: ${currentLength}, Target Program Length: ${targetLength}`);
 
     if (currentLength !== targetLength) {
       const newProgramArray = Array.from({ length: targetLength }, (_, index) => {
@@ -112,7 +116,8 @@ export function EventForm({
       console.log("Replacing program with:", newProgramArray);
       replace(newProgramArray); // Replace the entire array
     }
-  }, [currentDurationDays, getValues, replace]); // Update dependencies
+    // Depend on the calculated duration prop
+  }, [calculatedDuration, getValues, replace]);
 
   // Handler for toggling public status
   const handleToggleVisibility = async () => {
@@ -253,88 +258,19 @@ export function EventForm({
         </div>
       </div>
 
-      {/* Section 4: Instructors */}
+      {/* Section 4: Location & Dates */}
       <div className="space-y-6">
-        <h2 className="text-lg font-semibold border-b pb-2">Instruktorzy</h2>
-        <Controller // Restore Controller for instructors
-          name="instructor_ids"
-          control={control}
-          render={({ field }) => (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Wybierz instruktorów</Label>
-                <Link
-                  href="/dashboard/instructors"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Zarządzaj instruktorami
-                </Link>
-              </div>
-              {instructors.length > 0 ? (
-                <ScrollArea className="h-40 w-full rounded-sm border p-4">
-                  <div className="space-y-2">
-                    {instructors.map((instructor) => {
-                      const isChecked = field.value?.includes(instructor.id) ?? false;
-                      return (
-                        <div key={instructor.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`instructor-${instructor.id}`}
-                            checked={isChecked}
-                            onCheckedChange={(checked) => {
-                              const currentIds = field.value ?? [];
-                              const newIds =
-                                checked === true
-                                  ? [...currentIds, instructor.id]
-                                  : currentIds.filter((id) => id !== instructor.id);
-                              field.onChange(newIds);
-                            }}
-                          />
-                          <Label
-                            htmlFor={`instructor-${instructor.id}`}
-                            className="font-normal cursor-pointer"
-                          >
-                            {instructor.name}
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  {/* Simplified loading/empty message */}
-                  Brak dostępnych instruktorów.
-                </p>
-              )}
-            </div>
-          )}
-        />
-        {errors.instructor_ids && (
-          <p className="text-sm text-red-500">{errors.instructor_ids.message}</p>
-        )}
-      </div>
-
-      {/* Section 5: Location, Country, Dates, Duration */}
-      <div className="space-y-6">
-        <h2 className="text-lg font-semibold border-b pb-2">Lokalizacja i czas</h2>
+        <h2 className="text-lg font-semibold border-b pb-2">Lokalizacja i termin</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="country">Kraj</Label>
-            <Input
-              id="country"
-              {...register("country")}
-              placeholder="Wybierz kraj, w którym odbędzie się podróż"
-            />
-            {errors.country && <p className="text-sm text-red-500">{errors.country.message}</p>}
+            <Label htmlFor="location">Lokalizacja (miasto)</Label>
+            <Input id="location" {...register("location")} placeholder="np. Warszawa" />
+            {errors.location && <p className="text-sm text-red-500">{errors.location.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location">Lokalizacja</Label>
-            <Input
-              id="location"
-              {...register("location")}
-              placeholder="Podaj adres lub nazwę miejsca"
-            />
-            {errors.location && <p className="text-sm text-red-500">{errors.location.message}</p>}
+            <Label htmlFor="country">Kraj</Label>
+            <Input id="country" {...register("country")} placeholder="np. Polska" />
+            {errors.country && <p className="text-sm text-red-500">{errors.country.message}</p>}
           </div>
         </div>
 
@@ -347,23 +283,14 @@ export function EventForm({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="duration_days">Czas trwania (dni)</Label>
-            <Input
-              id="duration_days"
-              type="number"
-              min="0"
-              step="1"
-              {...register("duration_days")}
-              placeholder="Ile dni będzie trwał program/wydarzenie?"
-            />
-            {errors.duration_days && (
-              <p className="text-sm text-red-500">{errors.duration_days.message}</p>
-            )}
+            <Label htmlFor="end_date">Data zakończenia</Label>
+            <Input id="end_date" type="date" {...register("end_date")} />
+            {errors.end_date && <p className="text-sm text-red-500">{errors.end_date.message}</p>}
           </div>
         </div>
       </div>
 
-      {/* Section 6: Accommodation, Guests, Food */}
+      {/* Section 5: Accommodation, Guests, Food */}
       <div className="space-y-6">
         <h2 className="text-lg font-semibold border-b pb-2">Zakwaterowanie, goście i wyżywienie</h2>
         <div className="space-y-2">
@@ -404,7 +331,7 @@ export function EventForm({
         </div>
       </div>
 
-      {/* Section 7: Itinerary, Trips, Extra Attractions, Spa */}
+      {/* Section 6: Itinerary, Trips, Extra Attractions, Spa */}
       <div className="space-y-6">
         <h2 className="text-lg font-semibold border-b pb-2">Program i atrakcje</h2>
         <div className="space-y-2">
@@ -478,16 +405,27 @@ export function EventForm({
                 <p className="text-sm text-red-500">{errors.program[index]?.message}</p>
               )}
             </div>
+            {/* Optional: Add a remove button for the day? */}
+            {/* <Button 
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => remove(index)}
+              className="absolute top-1 right-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button> */}
           </div>
         ))}
-        {(!currentDurationDays || parseInt(currentDurationDays as any, 10) <= 0) && (
+        {/* Conditionally show add/remove buttons or message */}
+        {calculatedDuration > 0 ? null : ( // No buttons needed if duration > 0
           <p className="text-sm text-gray-500 italic">
-            Wpisz liczbę dni trwania wydarzenia, aby dodać program dnia.
+            Wybierz datę rozpoczęcia i zakończenia, aby dodać program dnia.
           </p>
         )}
       </div>
 
-      {/* Section 8: Policies and Important Info */}
+      {/* Section 7: Policies and Important Info */}
       <div className="space-y-6">
         <h2 className="text-lg font-semibold border-b pb-2">Zasady i ważne informacje</h2>
         <div className="space-y-2">
@@ -516,7 +454,7 @@ export function EventForm({
         </div>
       </div>
 
-      {/* Section 9: Images */}
+      {/* Section 8: Images */}
       <div className="space-y-6">
         <h2 className="text-lg font-semibold border-b pb-2">Zdjęcia wydarzenia</h2>
         {initialData?.image_id && (
@@ -544,7 +482,7 @@ export function EventForm({
         </div>
       </div>
 
-      {/* Section 10: Visibility - Conditional based on eventId (edit mode) */}
+      {/* Section 9: Visibility - Conditional based on eventId (edit mode) */}
       {eventId && (
         <div className="space-y-6">
           <h2 className="text-lg font-semibold border-b pb-2">Widoczność</h2>
@@ -567,7 +505,6 @@ export function EventForm({
                 : "Wydarzenie jest prywatne. Opublikuj, aby było widoczne."}
             </p>
           </div>
-          {/* Removed Controller/Checkbox for is_public */}
         </div>
       )}
     </form>

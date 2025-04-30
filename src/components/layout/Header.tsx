@@ -11,10 +11,10 @@ export const ProfileHeader: React.FC = () => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 w-full text-primary border-b">
+    <header className="w-full text-primary border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Placeholder for logo space */}
-        <Link href="/" className="flex items-center justify-center w-[40px] h-[40px]">
+        <Link href="/dashboard" className="flex items-center justify-center w-[40px] h-[40px]">
           <svg
             viewBox="0 0 50 50"
             fill="none"
@@ -36,7 +36,13 @@ export const ProfileHeader: React.FC = () => {
         {/* Right Section: User Email & Profile Icon */}
         <div className="flex items-center gap-4">
           {/* Display user email if available */}
-          {user && <span className="text-sm font-medium">{user.email}</span>}
+          {user && (
+            <Link href="/dashboard/organizer">
+              <span className="text-sm font-medium cursor-pointer hover:underline">
+                {user.email}
+              </span>
+            </Link>
+          )}
           {/* Log out button */}
           <Button
             variant="ghost"

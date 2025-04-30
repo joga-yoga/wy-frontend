@@ -6,6 +6,7 @@ export const eventFormSchema = z.object({
   description: z.string().optional(),
   location: z.string().optional(),
   start_date: z.string().min(1, "Data rozpoczęcia jest wymagana"),
+  end_date: z.string().optional(),
   price: z.coerce.number().min(0, "Cena musi być liczbą dodatnią").optional(),
   currency: z.string().max(3).optional(),
   main_attractions: z.string().optional(),
@@ -17,7 +18,6 @@ export const eventFormSchema = z.object({
   food_description: z.string().optional(),
   price_includes: z.string().optional(),
   price_excludes: z.string().optional(),
-  duration_days: z.coerce.number().int().positive().optional(),
   itinerary: z.string().optional(),
   included_trips: z.string().optional(),
   paid_attractions: z.string().optional(),
@@ -38,6 +38,6 @@ export interface EventInitialData extends Partial<EventFormData> {
   image_id?: string | null;
   is_public?: boolean;
   program?: string[];
-  duration_days?: number;
+  end_date?: string;
   // Add other fields returned by the API if needed
 }

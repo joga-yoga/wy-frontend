@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { differenceInCalendarDays, isValid, parseISO } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -21,7 +22,6 @@ export default function EditEventPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageId, setCurrentImageId] = useState<string | null>(null);
 
   const {
     register,
@@ -35,7 +35,26 @@ export default function EditEventPage() {
     resolver: zodResolver(eventFormSchema),
   });
 
-  const watchedDuration = watch("duration_days");
+  const startDateString = watch("start_date");
+  const endDateString = watch("end_date");
+
+  const [calculatedDuration, setCalculatedDuration] = useState(0);
+
+  useEffect(() => {
+    if (startDateString && endDateString) {
+      const startDate = parseISO(startDateString);
+      const endDate = parseISO(endDateString);
+
+      if (isValid(startDate) && isValid(endDate) && endDate >= startDate) {
+        const duration = differenceInCalendarDays(endDate, startDate) + 1;
+        setCalculatedDuration(duration);
+      } else {
+        setCalculatedDuration(0);
+      }
+    } else {
+      setCalculatedDuration(0);
+    }
+  }, [startDateString, endDateString]);
 
   const [fetchedInitialData, setFetchedInitialData] = useState<EventInitialData | undefined>(
     undefined,
@@ -57,7 +76,7 @@ export default function EditEventPage() {
           const fieldKey = key as keyof EventFormData;
           const initialValue = fetchedData[fieldKey as keyof EventInitialData];
 
-          if (fieldKey === "start_date") {
+          if (fieldKey === "start_date" || fieldKey === "end_date") {
             dataForReset[fieldKey] =
               typeof initialValue === "string" ? initialValue.split("T")[0] : undefined;
           } else if (fieldKey === "image") {
@@ -82,7 +101,6 @@ export default function EditEventPage() {
           }
         });
         reset(dataForReset);
-        setCurrentImageId(fetchedData.image_id || null);
       })
       .catch((err) => {
         console.error("Failed to fetch event data:", err);
@@ -183,10 +201,10 @@ export default function EditEventPage() {
         register={register}
         errors={errors}
         control={control}
-        currentDurationDays={watchedDuration}
         getValues={getValues}
         eventId={eventId}
         initialData={fetchedInitialData}
+        calculatedDuration={calculatedDuration}
       />
     </div>
   );

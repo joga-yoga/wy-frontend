@@ -32,7 +32,7 @@ export function EventSidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "sticky top-0 h-screen border-r bg-background flex flex-col items-center pt-4 pb-4",
+        "sticky top-0 h-screen border-r bg-background flex flex-col items-center pt-4 pb-4 px-2",
         className,
       )}
     >

@@ -1,7 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { differenceInCalendarDays, isValid, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 
 import { EventForm } from "@/components/features/events/EventForm";
@@ -28,6 +30,7 @@ export default function CreateEventPage() {
       description: "",
       location: "",
       start_date: "",
+      end_date: "",
       price: undefined,
       currency: "PLN",
       main_attractions: "",
@@ -39,7 +42,6 @@ export default function CreateEventPage() {
       food_description: "",
       price_includes: "",
       price_excludes: "",
-      duration_days: undefined,
       itinerary: "",
       included_trips: "",
       paid_attractions: "",
@@ -52,7 +54,26 @@ export default function CreateEventPage() {
     },
   });
 
-  const watchedDuration = watch("duration_days");
+  const startDateString = watch("start_date");
+  const endDateString = watch("end_date");
+
+  const [calculatedDuration, setCalculatedDuration] = useState(0);
+
+  useEffect(() => {
+    if (startDateString && endDateString) {
+      const startDate = parseISO(startDateString);
+      const endDate = parseISO(endDateString);
+
+      if (isValid(startDate) && isValid(endDate) && endDate >= startDate) {
+        const duration = differenceInCalendarDays(endDate, startDate) + 1;
+        setCalculatedDuration(duration);
+      } else {
+        setCalculatedDuration(0);
+      }
+    } else {
+      setCalculatedDuration(0);
+    }
+  }, [startDateString, endDateString]);
 
   const onSubmit: SubmitHandler<EventFormData> = async (data) => {
     console.log("Form Data Submitted:", data);
@@ -114,8 +135,8 @@ export default function CreateEventPage() {
         register={register}
         errors={errors}
         control={control}
-        currentDurationDays={watchedDuration}
         getValues={getValues}
+        calculatedDuration={calculatedDuration}
       />
     </div>
   );
