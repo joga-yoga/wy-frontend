@@ -20,9 +20,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   children,
 }) => {
   return (
-    <div className="sticky top-0 z-10 bg-background py-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div className="sticky top-[65px] z-10 bg-background py-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 px-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <h1 className="text-lg font-bold text-gray-900">{title}</h1>
         {/* You can place breadcrumbs or subtitle here using children prop if needed */}
         {children}
       </div>

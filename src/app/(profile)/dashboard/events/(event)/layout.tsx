@@ -25,12 +25,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-background">
       <EventSidebar />
       <div className="flex-1 flex flex-col">
-        {/* <ProfileHeader /> */}
-        <main className="flex-1 p-6">
-          {" "}
-          {/* Added padding to main content */}
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
   );

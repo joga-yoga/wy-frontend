@@ -1,14 +1,15 @@
 import {
   BedDouble,
   CalendarDays,
-  FolderPlus,
+  ClipboardList,
+  DollarSign,
+  Eye,
+  FileText,
   Image,
-  ImagePlus,
-  Link2,
-  List,
-  MessageSquare,
+  Info,
+  Map,
+  Users,
 } from "lucide-react";
-import Link from "next/link";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -16,38 +17,58 @@ import { cn } from "@/lib/utils";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLElement> {}
 
+// Define the desired offset (adjust this value as needed)
+const SCROLL_OFFSET = 148; // e.g., 65px header + 15px padding
+
 const menuItems = [
-  { href: "#", icon: Link2, label: "Links" },
-  { href: "#", icon: MessageSquare, label: "Messages" },
-  { href: "#", icon: List, label: "Details" },
-  { href: "#", icon: BedDouble, label: "Accommodation" },
-  { href: "#", icon: ImagePlus, label: "Add Image" },
-  { href: "#", icon: CalendarDays, label: "Calendar" },
-  { href: "#", icon: FolderPlus, label: "Add Folder" },
-  { href: "#", icon: Image, label: "Gallery" },
+  { href: "#event-details", icon: Info, label: "Basic Info & Details" },
+  { href: "#event-pricing", icon: DollarSign, label: "Pricing" },
+  { href: "#event-location-dates", icon: CalendarDays, label: "Location & Dates" },
+  { href: "#event-hospitality", icon: BedDouble, label: "Hospitality" },
+  { href: "#event-activities", icon: Map, label: "Activities & Itinerary" },
+  { href: "#event-program", icon: ClipboardList, label: "Daily Program" },
+  { href: "#event-instructors", icon: Users, label: "Instructors" },
+  { href: "#event-policies", icon: FileText, label: "Policies & Info" },
+  { href: "#event-images-section", icon: Image, label: "Images" },
+  { href: "#event-visibility", icon: Eye, label: "Visibility" },
 ];
 
 export function EventSidebar({ className }: SidebarProps) {
-  // TODO: Add active state based on current route
+  const handleScrollToSection = (targetId: string) => {
+    // Remove the '#' prefix
+    const id = targetId.substring(1);
+    const element = document.getElementById(id);
+
+    if (element) {
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - SCROLL_OFFSET;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <aside
       className={cn(
-        "sticky top-0 h-screen border-r bg-background flex flex-col items-center pt-4 pb-4 px-2",
+        "sticky top-[65px] h-[calc(100vh-65px)] border-r bg-background flex flex-col items-center pt-4 pb-4 px-2",
         className,
       )}
     >
       <nav className="flex flex-col gap-2 w-full px-2 items-center">
         {menuItems.map((item, index) => (
-          <Link key={index} href={item.href} passHref legacyBehavior>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={item.label}
-              className="h-10 w-10 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
-            >
-              <item.icon className="h-5 w-5" />
-            </Button>
-          </Link>
+          <Button
+            key={index}
+            variant="ghost"
+            size="icon"
+            aria-label={item.label}
+            className="h-10 w-10 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
+            onClick={() => handleScrollToSection(item.href)}
+          >
+            <item.icon className="h-5 w-5" />
+          </Button>
         ))}
       </nav>
     </aside>

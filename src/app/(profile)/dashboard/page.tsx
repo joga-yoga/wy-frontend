@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { CalendarDays, DollarSign, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -168,10 +169,20 @@ export default function DashboardPage() {
                 <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
 
                 <div className="mt-3 text-sm text-gray-500 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1">
-                  <span>📍 {event.location || "N/A"}</span>
-                  <span>📅 {formatDate(event.start_date)}</span>
-                  {event.end_date && <span>📅 {formatDate(event.end_date)}</span>}
-                  <span>💰 ${event.price?.toFixed(2) ?? "N/A"}</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" /> {event.location || "N/A"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CalendarDays className="h-4 w-4" /> {formatDate(event.start_date)}
+                  </span>
+                  {event.end_date && (
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="h-4 w-4" /> {formatDate(event.end_date)}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" /> ${event.price?.toFixed(2) ?? "N/A"}
+                  </span>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2 items-center">
