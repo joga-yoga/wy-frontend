@@ -135,6 +135,7 @@ export default function DashboardPage() {
     );
   }
 
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-6">{`Welcome, ${organizer.name}!`}</h1>
@@ -170,7 +171,7 @@ export default function DashboardPage() {
 
                 <div className="mt-3 text-sm text-gray-500 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1">
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" /> {event.location || "N/A"}
+                    <MapPin className="h-4 w-4" /> {event.location.title || "N/A"}
                   </span>
                   <span className="flex items-center gap-1">
                     <CalendarDays className="h-4 w-4" /> {formatDate(event.start_date)}
@@ -186,14 +187,11 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2 items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`/dashboard/events/${event.id}/edit`)}
-                    className="text-xs"
-                  >
-                    Edit
-                  </Button>
+                  <Link href={`/dashboard/events/${event.id}/edit`} passHref>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Edit
+                    </Button>
+                  </Link>
                   <AlertDialog onOpenChange={(open: boolean) => !open && setEventIdToDelete(null)}>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -228,14 +226,15 @@ export default function DashboardPage() {
                       </AlertDialogContent>
                     )}
                   </AlertDialog>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push(`/events/${event.id}`)}
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    View Public Page
-                  </Button>
+                  <Link href={`/events/${event.id}`} passHref>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      View Public Page
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}

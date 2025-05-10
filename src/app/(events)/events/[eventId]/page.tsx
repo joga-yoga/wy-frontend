@@ -6,7 +6,7 @@ import {
   CalendarDays,
   CheckCircle,
   Clock3,
-  DollarSign, // Add DollarSign
+  DollarSign,
   Heart,
   Home,
   Info,
@@ -19,68 +19,93 @@ import {
   Utensils,
   XCircle,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useParams } from "next/navigation"; // Hook to get route parameters
-import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-// Import UI components & Icons
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-// Define the full event structure based on API response
-// Assuming Event is defined elsewhere or defined here if needed
-interface Event {
+const EventLeafletMap = dynamic(() => import("./EventLeafletMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
+      Loading map...
+    </div>
+  ),
+});
+
+// Define the structure for the nested location object
+interface LocationDetail {
   id: string;
   title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  location: string;
-  country: string;
-  price: number;
-  image_id?: string;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state_province: string | null;
+  postal_code: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  google_place_id: string | null;
 }
 
-interface EventDetail extends Event {
-  // Extend the list Event interface if needed
-  // title: string; // Already in Event
-  // description: string; // Already in Event
-  // location: string; // Already in Event
-  // start_date: string; // Already in Event
-  // end_date: string; // Already in Event
-  // image_id?: string; // Already in Event
-  // price: number; // Already in Event
-  // id: string; // Already in Event
-  // country?: string; // Already in Event? Ensure consistency
-  gallery_image_ids?: string[];
-  is_public?: boolean;
-  currency?: string;
-  main_attractions?: string;
-  language?: string;
-  skill_level?: string;
-  min_age?: number;
-  max_age?: number;
-  min_child_age?: number;
-  activity_days?: number;
-  itinerary?: string;
-  included_trips?: string;
-  food_description?: string;
-  price_includes?: string;
-  price_excludes?: string;
-  accommodation_description?: string;
-  guest_welcome_description?: string;
-  paid_attractions?: string;
-  spa_description?: string;
-  cancellation_policy?: string;
-  important_info?: string; // May not be public?
-  organizer_id?: string;
-  instructor_ids?: string[];
-  // Add instructor details if populated by backend
-  instructors?: { id: string; name: string; image_id?: string }[];
-  // Add organizer details if populated by backend
-  organizer?: { name: string; logo_image_id?: string; url?: string };
+// Define the structure for an instructor in the event details
+interface InstructorDetail {
+  id: string;
+  name: string;
+  bio: string | null;
+  image_id: string | null;
+}
+
+// Define the structure for the organizer in the event details
+interface OrganizerDetail {
+  id: string; // Assuming organizer has an ID, though schema might not show it at top level
+  name: string;
+  image_id: string | null;
+  // Add other fields like url if available and needed
+  // url: string | null;
+}
+
+// Define the event structure based on API response (schema.Event)
+interface EventDetail {
+  id: string;
+  organizer: OrganizerDetail | null; // Updated to nested object
+  instructors: InstructorDetail[] | null; // Updated to array of objects
+  title: string;
+  description: string | null;
+  location: LocationDetail | null; // Updated to nested object
+  start_date: string; // Date comes as string, needs formatting
+  end_date: string | null; // Date comes as string, needs formatting
+  image_id?: string | null;
+  is_public: boolean;
+  price: number | null;
+  currency: string | null;
+  main_attractions: string | null;
+  language: string | null;
+  skill_level: string | null;
+  min_age: number | null;
+  max_age: number | null;
+  min_child_age: number | null;
+  itinerary: string | null;
+  included_trips: string | null;
+  food_description: string | null;
+  price_includes: string | null;
+  price_excludes: string | null;
+  accommodation_description: string | null;
+  guest_welcome_description: string | null;
+  paid_attractions: string | null;
+  spa_description: string | null;
+  cancellation_policy: string | null;
+  important_info: string | null;
+  program: string[] | null; // Program is available
+
+  // Removed nested objects as they are not in the schema.Event response
+  // instructors?: { id: string; name: string; image_id?: string }[];
+  // organizer?: { name: string; logo_image_id?: string; url?: string };
 }
 
 // Helper function to format multi-line text
@@ -121,7 +146,7 @@ const formatMultiLineText = (text: string | undefined | null): React.ReactNode =
 };
 
 // Helper function to format date range (reuse or import)
-const formatDateRange = (start: string, end: string) => {
+const formatDateRange = (start: string | null, end: string | null) => {
   try {
     if (!start || !end || typeof start !== "string" || typeof end !== "string") return "N/A";
     const startDateObj = new Date(start);
@@ -130,7 +155,7 @@ const formatDateRange = (start: string, end: string) => {
 
     const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
     const startDate = startDateObj.toLocaleDateString("pl-PL", options);
-    const endDate = endDateObj.toLocaleDateString("pl-PL", { day: "numeric" }); // Only day for end date
+    const endDate = endDateObj.toLocaleDateString("pl-PL", { day: "numeric" });
     const endMonth = endDateObj.toLocaleDateString("pl-PL", { month: "short" });
 
     const polishAbbreviation = (month: string): string => {
@@ -160,17 +185,32 @@ const formatDateRange = (start: string, end: string) => {
   }
 };
 
-// Helper to construct Cloudinary URL
-const getImageUrl = (imageId: string | undefined, placeholderText: string = "Placeholder") => {
+// Predefined Unsplash image URLs for fallbacks
+const unsplashImageUrls = [
+  "https://images.unsplash.com/photo-1505238680356-667803448bb6?auto=format&fit=crop&w=1170&q=80", // travel/outdoors
+  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1170&q=80", // concert/event
+  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1171&q=80", // people/workshop
+  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1170&q=80", // tech/conference
+  "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1170&q=80", // presentation/meeting
+];
+
+// Helper to construct Image URL (Cloudinary or Unsplash fallback)
+const getImageUrl = (
+  imageId: string | undefined | null,
+  unsplashIndex?: number, // Index for Unsplash fallback list
+): string => {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo";
-  return imageId
-    ? `https://res.cloudinary.com/${cloudName}/image/upload/${imageId}`
-    : `https://via.placeholder.com/400x300?text=${encodeURIComponent(placeholderText)}`;
+  if (imageId) {
+    return `https://res.cloudinary.com/${cloudName}/image/upload/${imageId}`;
+  }
+  // Fallback to Unsplash
+  const fallbackIndex = unsplashIndex !== undefined ? unsplashIndex % unsplashImageUrls.length : 0;
+  return unsplashImageUrls[fallbackIndex];
 };
 
 const EventDetailPage: React.FC = () => {
   const params = useParams();
-  const eventId = params?.eventId as string; // Type assertion
+  const eventId = params?.eventId as string;
 
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -187,12 +227,9 @@ const EventDetailPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        // --- IMPORTANT: Adjust this endpoint ---
-        // Assumes a public endpoint exists. Change if auth is needed or URL is different.
+        // Endpoint remains the same, but the expected response type is updated
         const apiUrl = `/events/${eventId}`;
         console.log(`Fetching event details from: ${apiUrl}`);
-        // -----------------------------------------
-
         const response = await axiosInstance.get<EventDetail>(apiUrl);
         setEvent(response.data);
       } catch (err) {
@@ -215,9 +252,17 @@ const EventDetailPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchEventDetails();
-  }, [eventId]); // Re-run effect if eventId changes
+  }, [eventId]);
+
+  // const Map = useMemo(
+  //   () =>
+  //     dynamic(() => import("./Map"), {
+  //       loading: () => <p>A map is loading</p>,
+  //       ssr: false,
+  //     }),
+  //   [],
+  // );
 
   if (loading) {
     return <div className="container mx-auto px-4 py-10 text-center">Loading event details...</div>;
@@ -239,12 +284,15 @@ const EventDetailPage: React.FC = () => {
   }
 
   // --- Render the Event Detail Page ---
-  const mainImageUrl = getImageUrl(event.image_id, "Event Image");
-  // Mock gallery images if not provided by API
-  const galleryImages = event.gallery_image_ids?.map((id) => getImageUrl(id)) || [
-    getImageUrl(undefined, "Gallery 1"),
-    getImageUrl(undefined, "Gallery 2"),
-    getImageUrl(undefined, "Gallery 3"),
+  const mainImageUrl = getImageUrl(event.image_id, 0); // Uses Unsplash[0] if no event.image_id
+
+  // Gallery thumbnails - use subsequent Unsplash images
+  // Indices 1, 2, 3, 4 from the unsplashImageUrls list
+  const thumbnailUrls: string[] = [
+    getImageUrl(undefined, 1),
+    getImageUrl(undefined, 2),
+    getImageUrl(undefined, 3),
+    getImageUrl(undefined, 4),
   ];
 
   return (
@@ -275,10 +323,8 @@ const EventDetailPage: React.FC = () => {
           </div>
           {/* Gallery Thumbnails */}
           <div className="grid grid-cols-2 gap-2">
-            {galleryImages.slice(0, 4).map((imgUrl, index) => (
+            {thumbnailUrls.map((imgUrl, index) => (
               <div key={index} className="relative w-full h-32 md:h-[11.75rem]">
-                {" "}
-                {/* Adjust height to fit */}
                 <Image
                   src={imgUrl}
                   alt={`Gallery image ${index + 1}`}
@@ -345,26 +391,49 @@ const EventDetailPage: React.FC = () => {
           )}
           {event.spa_description && (
             <Section title="Zabiegi spa" icon={Award}>
-              {" "}
-              {/* Using Award icon */}
               {formatMultiLineText(event.spa_description)}
             </Section>
           )}
+          {event.program && event.program.length > 0 && (
+            <Section title="Program dnia" icon={CalendarDays}>
+              {event.program.map((dayDesc, index) => (
+                <div key={index} className="mb-2">
+                  <p className="font-semibold">Dzień {index + 1}:</p>
+                  {formatMultiLineText(dayDesc)}
+                </div>
+              ))}
+            </Section>
+          )}
           {/* Instructor Section - Placeholder */}
-          <Section title="Prowadząca / Prowadzący" icon={Users}>
-            {/* TODO: Replace with actual instructor data fetched/populated */}
-            <div className="flex items-center gap-4">
-              <Avatar>
-                <AvatarImage src={getImageUrl(undefined, "I")} alt="Instructor" />
-                <AvatarFallback>P</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">Paulina Kowalski</p>
-                <p className="text-sm text-muted-foreground">Bartek Sapkowski</p>
-                {/* Display fetched names here */}
-                {/* {event.instructors ? event.instructors.map(inst => <p key={inst.id}>{inst.name}</p>) : <p>Instructor details unavailable.</p>} */}
+          <Section title="Prowadzący" icon={Users}>
+            {event.instructors && event.instructors.length > 0 ? (
+              <div className="space-y-4">
+                {event.instructors.map((instructor) => (
+                  <div
+                    key={instructor.id}
+                    className="flex items-start gap-4 p-3 border rounded-lg bg-muted/30"
+                  >
+                    <Avatar className="h-16 w-16 text-lg">
+                      <AvatarImage
+                        src={getImageUrl(instructor.image_id, 0)}
+                        alt={instructor.name}
+                      />
+                      <AvatarFallback>{instructor.name.substring(0, 1)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-base text-foreground">{instructor.name}</h3>
+                      {instructor.bio && (
+                          formatMultiLineText(instructor.bio)
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Informacje o instruktorach nie zostały jeszcze podane.
+              </p>
+            )}
           </Section>
         </div>
 
@@ -373,21 +442,38 @@ const EventDetailPage: React.FC = () => {
           {/* Co Oferujemy Box */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Co oferujemy:</CardTitle>
+              <CardTitle className="text-lg">Informacje</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <InfoItem icon={MapPin} text={event.location || "Location N/A"} />
-              {/* Instructor Placeholder */}
-              <InfoItem icon={Users} text="Paulina Kowalski, Bartek Sapkowski" />
-              <InfoItem icon={Clock3} text={`${event.activity_days || "N/A"} dni`} />
-              <InfoItem icon={Languages} text={event.language || "Polski"} />
+              <InfoItem
+                icon={MapPin}
+                text={
+                  <>
+                    {event.location?.title || event.location?.address_line1 || "N/A"}
+                    {event.location?.country ? `, ${event.location.country}` : ""}
+                  </>
+                }
+              />
+              {event.instructors && event.instructors.length > 0 && (
+                <InfoItem
+                  icon={Users}
+                  text={`${event.instructors.length} Instruktor${event.instructors.length > 1 ? "ów" : ""}`}
+                />
+              )}
+              {/* Removed hardcoded duration/language - use actual data */}
+              {/* <InfoItem icon={Clock3} text={`${event.activity_days || "N/A"} dni`} /> */}
+              {event.language && <InfoItem icon={Languages} text={event.language} />}
+              {event.skill_level && <InfoItem icon={Award} text={`Poziom: ${event.skill_level}`} />}
             </CardContent>
           </Card>
 
           {/* Price & Date Box */}
           <Card className="bg-secondary text-secondary-foreground p-4 flex justify-between items-center">
             <div className="text-lg font-semibold">
-              {event.price} {event.currency || "PLN"} / {event.activity_days || "N/A"} dni
+              {event.price
+                ? `${event.price.toFixed(2)} ${event.currency || "PLN"}`
+                : "Cena nie podana"}
+              {/* Duration info could be calculated if needed */}
             </div>
             <div className="text-right text-sm font-medium bg-primary text-primary-foreground px-2 py-1 rounded">
               {formatDateRange(event.start_date, event.end_date)}
@@ -405,21 +491,25 @@ const EventDetailPage: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* <NextjsMap /> */}
           {/* Lokalizacja Section */}
           <Section title="Lokalizacja" icon={MapPin}>
-            {/* TODO: Replace with an actual map component if needed */}
-            <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
-              {/* Ensure the placeholder map image exists in /public */}
-              <Image
-                src="/placeholder-map.png"
-                alt="Map placeholder"
-                fill
-                style={{ objectFit: "cover" }}
+            {event.location?.latitude && event.location?.longitude ? (
+              <EventLeafletMap
+                latitude={event.location.latitude}
+                longitude={event.location.longitude}
+                title={event.title}
               />
-              <p className="absolute bottom-2 left-2 bg-background/80 p-1 text-xs rounded">
-                {event.location}
-              </p>
-            </div>
+            ) : (
+              <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Mapa niedostępna (brak koordynatów)</p>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              {event.location?.title || event.location?.address_line1}
+              {event.location?.city ? `, ${event.location.city}` : ""}
+              {event.location?.country ? `, ${event.location.country}` : ""}
+            </p>
           </Section>
 
           {event.main_attractions && (
@@ -440,32 +530,30 @@ const EventDetailPage: React.FC = () => {
             </Section>
           )}
           {/* Organizer Section - Placeholder */}
-          <Section title="Organizator" icon={Users}>
-            <div className="flex items-center gap-4">
-              {/* TODO: Fetch or populate organizer details */}
-              <Avatar>
-                <AvatarImage
-                  src={getImageUrl(event.organizer?.logo_image_id, "O")}
-                  alt={event.organizer?.name || "Organizer"}
-                />
-                <AvatarFallback>O</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{event.organizer?.name || "Organizer Name"}</p>
-                {event.organizer?.url && (
-                  <a
-                    href={event.organizer.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    Website
-                  </a>
-                )}
+          {event.organizer && (
+            <Section title="Organizator" icon={Users}>
+              <div className="flex items-center gap-4">
+                <Avatar>
+                  <AvatarImage
+                    src={getImageUrl(event.organizer.image_id, 1)} // Use a different Unsplash index if needed
+                    alt={event.organizer.name}
+                  />
+                  <AvatarFallback>{event.organizer.name.substring(0, 1)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-foreground">{event.organizer.name}</p>
+                  {/* Add organizer URL if available and desired */}
+                  {/* event.organizer.url && <a href={event.organizer.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Strona organizatora</a> */}
+                </div>
               </div>
-            </div>
-          </Section>
+            </Section>
+          )}
           {/* Consider adding 'Warto wiedzieć przed wyjazdem' if event.important_info is deemed public */}
+          {event.important_info && (
+            <Section title="Warto wiedzieć" icon={Info}>
+              {formatMultiLineText(event.important_info)}
+            </Section>
+          )}
         </div>
       </div>
     </div>

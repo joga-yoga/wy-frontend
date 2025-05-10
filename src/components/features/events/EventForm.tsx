@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"; // Import zodResolver
 import { differenceInCalendarDays, format, isValid, parseISO } from "date-fns"; // Import date-fns functions
-import { Edit2, PlusCircle, Trash2 } from "lucide-react"; // Import icons
+import { Edit2, Loader2, PlusCircle, Trash2 } from "lucide-react"; // Import icons
 import { Calendar as CalendarIcon } from "lucide-react"; // Use Calendar icon
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import {
   Controller,
+  FieldErrors, // Import FieldErrors type
+  SubmitErrorHandler, // Import SubmitErrorHandler
   SubmitHandler, // Keep if onSubmit stays here, remove if passed in
   useFieldArray,
   useForm, // Import useForm
@@ -17,6 +19,18 @@ import {
 
 import { Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { LocationModal } from "@/components/locations/LocationModal"; // Import LocationModal
+import {
+  AlertDialog, // Import AlertDialog components
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,12 +38,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Import Select components
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { EventFormData, eventFormSchema, EventInitialData } from "@/lib/schemas/event";
 import { cn } from "@/lib/utils"; // For conditional classes
+
+// Define Location type
+export interface Location {
+  id: string;
+  title: string;
+  country?: string | null;
+}
 
 interface EventFormProps {
   eventId?: string;
@@ -53,6 +82,15 @@ export function EventForm({ eventId }: EventFormProps) {
   const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
   // === State for Instructor being edited ===
   const [editingInstructor, setEditingInstructor] = useState<Instructor | null>(null);
+  // === State for Instructor Deletion ===
+  const [instructorToDelete, setInstructorToDelete] = useState<Instructor | null>(null);
+  const [isDeletingInstructor, setIsDeletingInstructor] = useState(false);
+
+  // === State for Location ===
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [locationModalMode, setLocationModalMode] = useState<"create" | "edit">("create");
 
   const {
     register,
@@ -66,10 +104,8 @@ export function EventForm({ eventId }: EventFormProps) {
   } = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      // Provide default values here
       title: "",
       description: "",
-      location: "",
       start_date: "",
       end_date: "",
       price: undefined, // Use undefined for optional number
@@ -77,7 +113,6 @@ export function EventForm({ eventId }: EventFormProps) {
       main_attractions: "",
       language: "",
       skill_level: "",
-      country: "",
       accommodation_description: "",
       guest_welcome_description: "",
       food_description: "",
@@ -93,6 +128,7 @@ export function EventForm({ eventId }: EventFormProps) {
       image: undefined,
       instructor_ids: [], // Ensure this matches schema default
       is_public: false, // Default for create mode
+      location_id: null, // Default for location_id (FK)
     },
   });
 
@@ -146,10 +182,25 @@ export function EventForm({ eventId }: EventFormProps) {
     }
   };
 
+  // === Fetch Locations Function ===
+  const fetchLocations = async () => {
+    try {
+      const response = await axiosInstance.get<Location[]>("/locations");
+      setLocations(response.data);
+    } catch (error) {
+      console.error("Failed to fetch locations:", error);
+      toast({
+        description: "Nie udało się załadować listy lokalizacji.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Keep useEffect for fetching instructors on mount
   useEffect(() => {
     fetchInstructors();
-  }, []); // Removed toast from dependency
+    fetchLocations(); // Fetch locations on mount
+  }, []);
 
   // Update image and visibility state when initialData changes
   useEffect(() => {
@@ -191,6 +242,16 @@ export function EventForm({ eventId }: EventFormProps) {
           } else if (fieldKey === "instructor_ids") {
             // Simplify instructor_ids handling
             dataForReset[fieldKey] = Array.isArray(initialValue) ? initialValue : [];
+          } else if (fieldKey === "location_id") {
+            // Prefer direct initialData.location_id if it's a string
+            if (typeof initialValue === "string") {
+              dataForReset[fieldKey] = initialValue;
+            } else if (fetchedData.location && typeof fetchedData.location.id === "string") {
+              // Fallback to location_id from the nested location object
+              dataForReset[fieldKey] = fetchedData.location.id;
+            } else {
+              dataForReset[fieldKey] = null;
+            }
           } else if (initialValue !== undefined && initialValue !== null) {
             // Use type assertion as workaround for complex Zod types (e.g., price/currency with .or(""))
             (dataForReset as any)[fieldKey] = initialValue;
@@ -284,12 +345,16 @@ export function EventForm({ eventId }: EventFormProps) {
       if (isEditMode) {
         await axiosInstance.put(`/events/${eventId}`, formData);
         toast({ description: "Wydarzenie zaktualizowane pomyślnie!" });
+        router.refresh(); // Refresh data on the current page for updates
       } else {
-        await axiosInstance.post("/events", formData);
+        const response = await axiosInstance.post<{ id: string }>("/events", formData);
+        const newEventId = response.data.id; // Extract the ID
+
         toast({ description: "Wydarzenie utworzone pomyślnie!" });
+
+        // Redirect to the edit page for the new event
+        router.push(`/dashboard/events/${newEventId}/edit`);
       }
-      // router.push("/dashboard/events"); // Redirect on success?
-      router.refresh(); // Refresh data on the current page
     } catch (error: any) {
       const errorMsg =
         error.response?.data?.detail?.[0]?.msg ||
@@ -330,10 +395,57 @@ export function EventForm({ eventId }: EventFormProps) {
     setIsInstructorModalOpen(false); // Close modal
   };
 
+  // === Handler for Location Saved (from modal) ===
+  const handleLocationSaved = (savedLocation: Location) => {
+    fetchLocations(); // Re-fetch all locations
+    setIsLocationModalOpen(false);
+    setEditingLocation(null);
+    // Set the saved/selected location as the event's location_id
+    setValue("location_id", savedLocation.id, { shouldDirty: true });
+    toast({ description: "Lokalizacja zapisana pomyślnie." });
+  };
+
   // === Handler to initiate editing an instructor ===
   const handleEditInstructor = (instructor: Instructor) => {
     setEditingInstructor(instructor);
     setIsInstructorModalOpen(true);
+  };
+
+  // === Handler for Deleting Instructor ===
+  const handleDeleteInstructor = async () => {
+    if (!instructorToDelete) return;
+
+    setIsDeletingInstructor(true);
+    try {
+      await axiosInstance.delete(`/instructors/${instructorToDelete.id}`);
+      toast({ description: `Instruktor "${instructorToDelete.name}" usunięty pomyślnie.` });
+
+      // Remove from local instructors state
+      setInstructors((prev) => prev.filter((i) => i.id !== instructorToDelete.id));
+
+      // Uncheck/remove from form state if selected
+      const currentIds = getValues("instructor_ids") || [];
+      if (currentIds.includes(instructorToDelete.id)) {
+        setValue(
+          "instructor_ids",
+          currentIds.filter((id) => id !== instructorToDelete.id),
+          {
+            shouldDirty: true,
+          },
+        );
+      }
+
+      setInstructorToDelete(null); // Close dialog
+    } catch (error: any) {
+      console.error("Failed to delete instructor:", error);
+      toast({
+        title: "Błąd usuwania",
+        description: `Nie udało się usunąć instruktora: ${error.response?.data?.detail || error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingInstructor(false);
+    }
   };
 
   // Loading state rendering
@@ -380,7 +492,10 @@ export function EventForm({ eventId }: EventFormProps) {
             : isEditMode
               ? "Zapisz zmiany"
               : "Utwórz wydarzenie"
-        } // Use internal isSubmitting
+        }
+        // Pass the href for the public page link if in edit mode
+        viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
+        viewPublicLabel="Zobacz stronę publiczną" // Customize label
       />
       {/* Remove intermediate div, apply max-width and spacing to this outer div */}
       <div className="space-y-10 max-w-3xl mx-auto">
@@ -459,19 +574,6 @@ export function EventForm({ eventId }: EventFormProps) {
 
         {/* Section 4: Location & Dates */}
         <div className="space-y-6" id="event-location-dates">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">Lokalizacja (miasto)</Label>
-              <Input id="location" {...register("location")} placeholder="np. Warszawa" />
-              {errors.location && <p className="text-sm text-red-500">{errors.location.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="country">Kraj</Label>
-              <Input id="country" {...register("country")} placeholder="np. Polska" />
-              {errors.country && <p className="text-sm text-red-500">{errors.country.message}</p>}
-            </div>
-          </div>
-
           {/* Date Range Picker */}
           <div className="space-y-2">
             <Label>Termin wydarzenia *</Label>
@@ -735,8 +837,84 @@ export function EventForm({ eventId }: EventFormProps) {
           </div>
         </div>
 
+        {/* Section: Location Selector */}
+        <div className="space-y-2">
+          <Label htmlFor="location_id">Lokalizacja</Label>
+          <Controller
+            name="location_id"
+            control={control}
+            render={({ field }) => (
+              <div className="flex items-center space-x-2">
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || ""}
+                  disabled={locations.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        locations.length > 0
+                          ? "Wybierz lokalizację"
+                          : "Brak lokalizacji, dodaj nową"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* No empty SelectItem value needed if Select placeholder works */}
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.id}>
+                        {loc.title}
+                        {loc.country ? ` (${loc.country})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const selectedLoc = locations.find((l) => l.id === field.value);
+                    if (selectedLoc) {
+                      setEditingLocation(selectedLoc);
+                      setLocationModalMode("edit");
+                      setIsLocationModalOpen(true);
+                    } else {
+                      // If nothing is selected, or if it's to prevent error,
+                      // we might want to ensure a location is selected first for editing.
+                      // Or, this button is disabled if !field.value
+                      toast({ description: "Wybierz lokalizację do edycji.", variant: "default" });
+                    }
+                  }}
+                  disabled={!field.value || locations.length === 0} // Disable if no value or no locations
+                  aria-label="Edytuj wybraną lokalizację"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setEditingLocation(null);
+                    setLocationModalMode("create");
+                    setIsLocationModalOpen(true);
+                  }}
+                  aria-label="Dodaj nową lokalizację"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          />
+          {errors.location_id && (
+            <p className="text-sm text-destructive">{errors.location_id.message}</p>
+          )}
+        </div>
+
         {/* Section: Instructors */}
         <div className="space-y-6" id="event-instructors">
+          {/* Header with Add Instructor button */}
           <div className="flex justify-between items-center border-b pb-2">
             <h2 className="text-lg font-semibold">Instruktorzy</h2>
             <Button
@@ -752,60 +930,106 @@ export function EventForm({ eventId }: EventFormProps) {
             control={control}
             name="instructor_ids"
             render={({ field }) => (
-              <ScrollArea className="h-48 w-full rounded-md border p-4">
-                <div className="space-y-2">
-                  {instructors.length > 0 ? (
-                    instructors.map((instructor) => (
-                      <div
-                        key={instructor.id}
-                        className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-muted/50"
-                      >
-                        <div className="flex items-center gap-2 flex-grow">
-                          <Checkbox
-                            id={`instructor-${instructor.id}`}
-                            checked={field.value?.includes(instructor.id)}
-                            onCheckedChange={(checked) => {
-                              const currentIds = field.value || [];
-                              if (checked) {
-                                field.onChange([...currentIds, instructor.id]);
-                              } else {
-                                field.onChange(currentIds.filter((id) => id !== instructor.id));
-                              }
-                            }}
-                          />
-                          <Label
-                            htmlFor={`instructor-${instructor.id}`}
-                            className="font-normal cursor-pointer"
-                          >
-                            {instructor.name}
-                          </Label>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditInstructor(instructor)}
-                          className="flex-shrink-0 h-7 px-2"
-                          aria-label={`Edit ${instructor.name}`}
+              // Wrap ScrollArea inside AlertDialog provider
+              <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
+                <ScrollArea className="h-48 w-full rounded-md border p-4">
+                  <div className="space-y-2">
+                    {instructors.length > 0 ? (
+                      instructors.map((instructor) => (
+                        <div
+                          key={instructor.id}
+                          className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-muted/50"
                         >
-                          <Edit2 size={14} className="text-muted-foreground" />
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      Nie znaleziono instruktorów.{" "}
-                      <Link
-                        href="/dashboard/instructors/create"
-                        className="text-blue-600 hover:underline"
-                      >
-                        Dodaj pierwszego
-                      </Link>
-                      .
-                    </p>
+                          {/* Checkbox and Label */}
+                          <div className="flex items-center gap-2 flex-grow">
+                            <Checkbox
+                              id={`instructor-${instructor.id}`}
+                              checked={field.value?.includes(instructor.id)}
+                              onCheckedChange={(checked) => {
+                                const currentIds = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentIds, instructor.id]);
+                                } else {
+                                  field.onChange(currentIds.filter((id) => id !== instructor.id));
+                                }
+                              }}
+                            />
+                            <Label
+                              htmlFor={`instructor-${instructor.id}`}
+                              className="font-normal cursor-pointer"
+                            >
+                              {instructor.name}
+                            </Label>
+                          </div>
+                          {/* Action Buttons */}
+                          <div className="flex items-center flex-shrink-0 gap-1">
+                            {/* Edit Button */}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditInstructor(instructor)}
+                              className="h-7 px-2"
+                              aria-label={`Edit ${instructor.name}`}
+                            >
+                              <Edit2 size={14} className="text-muted-foreground" />
+                            </Button>
+                            {/* Delete Button Trigger */}
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setInstructorToDelete(instructor)}
+                                className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                aria-label={`Delete ${instructor.name}`}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </AlertDialogTrigger>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        Nie znaleziono instruktorów.{" "}
+                        <Link
+                          href="/dashboard/instructors/create"
+                          className="text-blue-600 hover:underline"
+                        >
+                          Dodaj pierwszego
+                        </Link>
+                        .
+                      </p>
+                    )}
+                  </div>
+                  {/* Confirmation Dialog Content */}
+                  {instructorToDelete && (
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Na pewno usunąć instruktora?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie instruktora
+                          &quot;<strong>{instructorToDelete.name}</strong>&quot; z Twojej listy i
+                          wszystkich powiązanych wydarzeń.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingInstructor}>
+                          Anuluj
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          disabled={isDeletingInstructor}
+                          onClick={handleDeleteInstructor}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isDeletingInstructor ? "Usuwanie..." : "Tak, usuń"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
                   )}
-                </div>
-              </ScrollArea>
+                </ScrollArea>
+              </AlertDialog>
             )}
           />
           {errors.instructor_ids && (
@@ -872,6 +1096,20 @@ export function EventForm({ eventId }: EventFormProps) {
         // Pass editingInstructor data or null for create mode
         initialInstructor={editingInstructor}
       />
+
+      {/* LocationModal */}
+      {isLocationModalOpen && (
+        <LocationModal
+          isOpen={isLocationModalOpen}
+          onClose={() => {
+            setIsLocationModalOpen(false);
+            setEditingLocation(null); // Clear editing state on close
+          }}
+          onLocationSaved={handleLocationSaved}
+          initialData={editingLocation}
+          mode={locationModalMode}
+        />
+      )}
     </div>
   );
 }

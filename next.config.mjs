@@ -3,8 +3,8 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
-    domains: ["res.cloudinary.com", "via.placeholder.com"],
+    domains: ["res.cloudinary.com", "via.placeholder.com", "images.unsplash.com"]
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig; 

@@ -11,17 +11,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { axiosInstance } from "@/lib/axiosInstance"; // Import axios instance
 
+// Define the structure of a Location object based on the API response
+interface Location {
+  id: string;
+  title: string | null;
+  // address_line1: string | null; // Not immediately needed for card
+  // city: string | null; // title might serve as city or venue
+  // state_province: string | null;
+  // postal_code: string | null;
+  country: string | null;
+  // latitude?: number | null;
+  // longitude?: number | null;
+  // google_maps_url?: string | null;
+  // image_id?: string | null;
+}
+
 // Define the structure of an event based on the API response
 interface Event {
   id: string;
   title: string;
-  description: string;
+  description: string | null; // Updated to be optional
   start_date: string;
-  end_date: string;
-  location: string;
-  country: string;
-  price: number;
+  end_date: string | null; // Updated to be optional
+  location: Location | null; // Updated to use Location interface
+  // country: string; // Removed, now part of Location object
+  price: number | null; // Updated to be optional
   image_id?: string;
+  is_public: boolean;
+  currency: string | null;
+  main_attractions?: string | null;
+  language?: string | null;
+  skill_level?: string | null;
+  min_age?: number | null;
+  max_age?: number | null;
+  min_child_age?: number | null;
+  itinerary?: string | null;
+  included_trips?: string | null;
+  food_description?: string | null;
+  price_includes?: string | null;
+  price_excludes?: string | null;
+  accommodation_description?: string | null;
+  guest_welcome_description?: string | null;
+  paid_attractions?: string | null;
+  spa_description?: string | null;
+  cancellation_policy?: string | null;
+  important_info?: string | null;
+  program?: string[] | null;
+  // organizer_id: string; // Available, but not used in card
+  // instructor_ids: string[]; // Available, but not used in card
 }
 
 // --- Updated Filters Component --- (Receives searchTerm and setSearchTerm)
@@ -90,27 +127,41 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
   console.log("🚀 ~ event:", event);
-  const formatDateRange = (start: string, end: string) => {
+  const formatDateRange = (start: string, end: string | null) => {
     try {
-      // Check if dates are valid strings before parsing
-      if (!start || !end || typeof start !== "string" || typeof end !== "string") {
-        console.warn("Invalid date strings provided:", start, end);
+      // Check if start date is a valid string before parsing
+      if (!start || typeof start !== "string") {
+        console.warn("Invalid start date string provided:", start);
         return "Date N/A";
       }
 
       const startDateObj = new Date(start);
-      const endDateObj = new Date(end);
 
-      // Check if dates are valid after parsing
-      if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-        console.warn("Failed to parse date strings:", start, end);
+      // Check if start date is valid after parsing
+      if (isNaN(startDateObj.getTime())) {
+        console.warn("Failed to parse start date string:", start);
         return "Invalid Date";
       }
 
-      const startDate = startDateObj.toLocaleDateString("pl-PL", {
+      const startDateFormatted = startDateObj.toLocaleDateString("pl-PL", {
         month: "short",
         day: "numeric",
       });
+
+      // If end date is not provided, not a string, or invalid, return only formatted start date
+      if (!end || typeof end !== "string") {
+        // console.warn("End date not provided or invalid, returning start date only for event:", event.id);
+        return startDateFormatted;
+      }
+
+      const endDateObj = new Date(end);
+
+      // Check if end date is valid after parsing
+      if (isNaN(endDateObj.getTime())) {
+        console.warn("Failed to parse end date string, returning start date only for event:", event.id, end);
+        return startDateFormatted;
+      }
+
       const endDate = endDateObj.toLocaleDateString("pl-PL", { day: "numeric" });
       const endMonth = endDateObj.toLocaleDateString("pl-PL", { month: "short" });
 
@@ -137,15 +188,15 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       // Ensure endMonth is a string before processing
       const finalEndMonth = typeof endMonth === "string" ? polishAbbreviation(endMonth) : "";
 
-      return `${startDate} - ${endDate} ${finalEndMonth}`;
+      return `${startDateFormatted} - ${endDate} ${finalEndMonth}`;
     } catch (e) {
       console.error("Error formatting date range:", start, end, e);
       return "Date Error"; // More specific error message
     }
   };
 
-  // Use event.country or fallback to start of event.location string
-  const displayLocation = event.country || event.location?.split(",")[0] || "N/A";
+  // Use event.location.title or event.location.country or fallback
+  const displayLocation = event.location?.title || event.location?.country || "N/A";
 
   // Construct image URL using event.image_id
   const imageUrl = event.image_id
@@ -249,10 +300,32 @@ const EventsPage: React.FC = () => {
             description: item.description,
             start_date: item.start_date,
             end_date: item.end_date,
-            location: item.location,
-            country: item.country,
+            location: item.location, // Assuming item.location is the Location object
+            // country: item.country, // Removed, part of item.location
             price: item.price,
             image_id: item.image_id,
+            is_public: item.is_public,
+            currency: item.currency,
+            main_attractions: item.main_attractions,
+            language: item.language,
+            skill_level: item.skill_level,
+            min_age: item.min_age,
+            max_age: item.max_age,
+            min_child_age: item.min_child_age,
+            itinerary: item.itinerary,
+            included_trips: item.included_trips,
+            food_description: item.food_description,
+            price_includes: item.price_includes,
+            price_excludes: item.price_excludes,
+            accommodation_description: item.accommodation_description,
+            guest_welcome_description: item.guest_welcome_description,
+            paid_attractions: item.paid_attractions,
+            spa_description: item.spa_description,
+            cancellation_policy: item.cancellation_policy,
+            important_info: item.important_info,
+            program: item.program,
+            // organizer_id: item.organizer_id,
+            // instructor_ids: item.instructor_ids,
           }));
           // Optionally handle total count for pagination later
           // const totalEvents = responseData.total;
@@ -301,11 +374,8 @@ const EventsPage: React.FC = () => {
         {!loading && !error && events.length > 0 && (
           <div className="space-y-6">
             {events.map((event) => (
-              <Link key={event.id} href={`/events/${event.id}`} passHref legacyBehavior>
-                {/* Apply cursor-pointer to the anchor for visual feedback */}
-                <a className="block cursor-pointer">
+              <Link key={event.id} href={`/events/${event.id}`} passHref>
                   <EventCard event={event} />
-                </a>
               </Link>
             ))}
           </div>

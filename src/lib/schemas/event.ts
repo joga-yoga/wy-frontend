@@ -6,7 +6,6 @@ export const eventBaseSchema = z.object({
   organizer_id: z.string().uuid(),
   title: z.string(),
   description: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
   start_date: z.string(), // Keep as string for API, handle conversion
   image_id: z.string().nullable().optional(), // Keep image_id from API response
   is_public: z.boolean().optional(), // Keep is_public from API response
@@ -16,7 +15,6 @@ export const eventBaseSchema = z.object({
   main_attractions: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
   skill_level: z.string().nullable().optional(),
-  country: z.string().nullable().optional(),
   accommodation_description: z.string().nullable().optional(),
   guest_welcome_description: z.string().nullable().optional(),
   food_description: z.string().nullable().optional(),
@@ -30,6 +28,7 @@ export const eventBaseSchema = z.object({
   important_info: z.string().nullable().optional(),
   program: z.array(z.string()).nullable().optional(),
   instructor_ids: z.array(z.string().uuid()).optional(), // Optional array of UUIDs
+  location_id: z.string().uuid().nullable().optional(), // Added
 });
 
 // Keep price simple for now, refine if needed after fixing resolver issues
@@ -40,7 +39,6 @@ export const eventFormSchema = z
   .object({
     title: z.string().min(3, "Tytuł musi mieć co najmniej 3 znaki"),
     description: z.string().optional(),
-    location: z.string().optional(),
     start_date: z.string().min(1, "Data rozpoczęcia jest wymagana"),
     end_date: z.string().min(1, "Data zakończenia jest wymagana"),
     // Simplify price for now
@@ -54,7 +52,6 @@ export const eventFormSchema = z
     main_attractions: z.string().optional(),
     language: z.string().optional(),
     skill_level: z.string().optional(),
-    country: z.string().optional(),
     accommodation_description: z.string().optional(),
     guest_welcome_description: z.string().optional(),
     food_description: z.string().optional(),
@@ -87,6 +84,7 @@ export const eventFormSchema = z
     is_public: z.boolean().optional().default(false), // Default to false for creation
     // Add image_id for edit mode reference (read-only, not part of form data normally)
     image_id: z.string().optional(),
+    location_id: z.string().uuid("Nieprawidłowy format ID lokalizacji").nullable().optional(), // Added
   })
   .refine(
     (data) =>
@@ -100,16 +98,24 @@ export const eventFormSchema = z
 // Type inferred from the schema for form data
 export type EventFormData = z.infer<typeof eventFormSchema>;
 
+// Define a type for the nested location information in initial event data
+interface LocationInitialInfo {
+  id: string;
+  title: string;
+  // Add other fields from the Location object if they are consistently present and needed
+  // For example:
+  // address_line1?: string | null;
+  // country?: string | null;
+}
+
 // Type for initial data fetched for editing (might have slightly different structure, e.g., program as string)
-// Keep this simple for now, adjust if backend sends drastically different format
 export type EventInitialData = Partial<
   Omit<EventFormData, "image"> & {
     image_id?: string | null; // Add image_id if fetched
     is_public?: boolean | null; // Explicitly allow null if backend might send it
-    // If backend *always* sends program/instructors as arrays, simplify:
+    location_id?: string | null; // Remains for cases where only ID is sent or as a fallback
+    location?: LocationInitialInfo | null; // Added nested location object from API
     program?: string[];
     instructor_ids?: string[];
-    // If backend *might* send program as JSON string:
-    // program?: string[] | string;
   }
 >;

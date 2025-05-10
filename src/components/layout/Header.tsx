@@ -89,12 +89,12 @@ export const EventsHeader: React.FC = () => {
 
         {/* Right Section: Actions & Profile */}
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" passHref legacyBehavior>
+          <Link href="/dashboard" passHref>
             <Button variant="ghost" size="sm" className="text-sm">
               {user ? user.email : <>Dodaj wydarzenie za 5 min</>}
             </Button>
           </Link>
-          <Link href="/dashboard" passHref legacyBehavior>
+          <Link href="/dashboard" passHref>
             <Button variant="ghost" size="icon" aria-label="Account">
               <User className="h-5 w-5" />
             </Button>
