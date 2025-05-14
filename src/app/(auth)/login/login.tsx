@@ -127,12 +127,12 @@ export function LoginPage() {
             Continue
           </Button>
           <Link href="http://localhost:8000/auth/google/login" className="block mt-2">
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" type="button">
               Continue with Google
             </Button>
           </Link>
           <Link href="http://localhost:8000/auth/facebook/login" className="block mt-2">
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" type="button">
               Continue with Facebook
             </Button>
           </Link>

@@ -98,7 +98,6 @@ interface EventDetail {
   accommodation_description: string | null;
   guest_welcome_description: string | null;
   paid_attractions: string | null;
-  spa_description: string | null;
   cancellation_policy: string | null;
   important_info: string | null;
   program: string[] | null; // Program is available
@@ -364,11 +363,11 @@ const EventDetailPage: React.FC = () => {
               {formatMultiLineText(event.accommodation_description)}
             </Section>
           )}
-          {event.price_includes && (
+          {/* {event.price_includes && (
             <Section title="Co jest wliczone w cenę" icon={CheckCircle} iconColor="text-green-600">
               {formatMultiLineText(event.price_includes)}
             </Section>
-          )}
+          )} */}
           {event.price_excludes && (
             <Section title="Co NIE jest wliczone w cenę" icon={XCircle} iconColor="text-red-600">
               {formatMultiLineText(event.price_excludes)}
@@ -387,11 +386,6 @@ const EventDetailPage: React.FC = () => {
           {event.cancellation_policy && (
             <Section title="Zasady anulowania rezerwacji" icon={Info}>
               {formatMultiLineText(event.cancellation_policy)}
-            </Section>
-          )}
-          {event.spa_description && (
-            <Section title="Zabiegi spa" icon={Award}>
-              {formatMultiLineText(event.spa_description)}
             </Section>
           )}
           {event.program && event.program.length > 0 && (
@@ -422,9 +416,7 @@ const EventDetailPage: React.FC = () => {
                     </Avatar>
                     <div>
                       <h3 className="font-semibold text-base text-foreground">{instructor.name}</h3>
-                      {instructor.bio && (
-                          formatMultiLineText(instructor.bio)
-                      )}
+                      {instructor.bio && formatMultiLineText(instructor.bio)}
                     </div>
                   </div>
                 ))}

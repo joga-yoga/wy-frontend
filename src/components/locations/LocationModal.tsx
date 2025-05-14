@@ -46,7 +46,6 @@ interface AutocompleteSuggestion {
 
 // Schema for location form validation
 const locationFormSchema = z.object({
-  title: z.string().min(1, "Tytuł jest wymagany."),
   addressQuery: z.string().optional().nullable(), // For the autocomplete input
   google_place_id: z.string().optional().nullable(), // To store selected place ID
 });
@@ -80,7 +79,6 @@ export function LocationModal({
   } = useForm<LocationFormData>({
     resolver: zodResolver(locationFormSchema),
     defaultValues: {
-      title: "",
       addressQuery: "",
       google_place_id: null,
     },
@@ -88,6 +86,7 @@ export function LocationModal({
 
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const addressQueryValue = useWatch({ control, name: "addressQuery" });
 
@@ -131,12 +130,13 @@ export function LocationModal({
   ]);
 
   useEffect(() => {
-    if (addressQueryValue !== undefined && addressQueryValue !== null) {
+    if (addressQueryValue !== undefined && addressQueryValue !== null && isSearching) {
       debouncedFetchSuggestions(addressQueryValue);
     }
-  }, [addressQueryValue, debouncedFetchSuggestions]);
+  }, [addressQueryValue, debouncedFetchSuggestions, isSearching]);
 
   const handleSuggestionClick = (suggestion: AutocompleteSuggestion) => {
+    setIsSearching(false);
     setValue("addressQuery", suggestion.description);
     setValue("google_place_id", suggestion.place_id);
     setSuggestions([]); // Clear suggestions after selection
@@ -146,12 +146,11 @@ export function LocationModal({
     if (isOpen) {
       if (initialData && mode === "edit") {
         reset({
-          title: initialData.title,
           addressQuery: initialData.address_line1 || "",
           google_place_id: initialData.google_place_id || null,
         });
       } else if (mode === "create") {
-        reset({ title: "", addressQuery: "", google_place_id: null });
+        reset({ addressQuery: "", google_place_id: null });
       }
     }
   }, [isOpen, initialData, mode, reset]);
@@ -160,8 +159,7 @@ export function LocationModal({
     try {
       let savedLocation: Location;
       // Prepare payload for the backend
-      const payload: { title: string; google_place_id?: string | null } = {
-        title: formData.title,
+      const payload: { google_place_id?: string | null } = {
         google_place_id: formData.google_place_id,
       };
 
@@ -203,18 +201,15 @@ export function LocationModal({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Tytuł</Label>
-            <Input id="title" {...register("title")} />
-            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
-          </div>
           <div className="space-y-2 relative">
             <Label htmlFor="addressQuery">Adres</Label>
             <Input
               id="addressQuery"
               {...register("addressQuery")}
               placeholder="Wpisz adres, aby wyszukać..."
+              autoComplete="off"
               onChange={(e) => {
+                setIsSearching(true);
                 // Also manually update form state if not using useWatch everywhere for this
                 setValue("addressQuery", e.target.value, {
                   shouldValidate: true,

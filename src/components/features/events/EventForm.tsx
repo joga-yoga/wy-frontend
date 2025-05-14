@@ -53,6 +53,8 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { EventFormData, eventFormSchema, EventInitialData } from "@/lib/schemas/event";
 import { cn } from "@/lib/utils"; // For conditional classes
 
+import { DynamicArrayInput } from "./DynamicArrayInput";
+
 // Define Location type
 export interface Location {
   id: string;
@@ -86,6 +88,11 @@ export function EventForm({ eventId }: EventFormProps) {
   const [instructorToDelete, setInstructorToDelete] = useState<Instructor | null>(null);
   const [isDeletingInstructor, setIsDeletingInstructor] = useState(false);
 
+  // === ADDED: State for direct image upload ===
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [directUploadError, setDirectUploadError] = useState<string | null>(null);
+  const [currentImagePreviewUrl, setCurrentImagePreviewUrl] = useState<string | null>(null);
+
   // === State for Location ===
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -108,7 +115,7 @@ export function EventForm({ eventId }: EventFormProps) {
       description: "",
       start_date: "",
       end_date: "",
-      price: undefined, // Use undefined for optional number
+      price: undefined,
       currency: "PLN",
       main_attractions: "",
       language: "",
@@ -116,19 +123,18 @@ export function EventForm({ eventId }: EventFormProps) {
       accommodation_description: "",
       guest_welcome_description: "",
       food_description: "",
-      price_includes: "",
+      price_includes: ["dd"],
       price_excludes: "",
       itinerary: "",
       included_trips: "",
       paid_attractions: "",
-      spa_description: "",
       cancellation_policy: "",
       important_info: "",
-      program: [], // Ensure this matches schema default
-      image: undefined,
-      instructor_ids: [], // Ensure this matches schema default
-      is_public: false, // Default for create mode
-      location_id: null, // Default for location_id (FK)
+      program: [],
+      instructor_ids: [],
+      is_public: false,
+      location_id: null,
+      image_id: undefined,
     },
   });
 
@@ -213,55 +219,50 @@ export function EventForm({ eventId }: EventFormProps) {
       .then((res) => {
         const fetchedData = res.data;
         setCurrentIsPublic(fetchedData.is_public ?? false);
-        // Prepare and reset form using internal `reset`
+
         const dataForReset: Partial<EventFormData> = {};
-        // Access shape from the underlying schema definition
-        // Use ._def.schema.shape for refined schemas
-        Object.keys((eventFormSchema._def as any).schema.shape).forEach((key) => {
+
+        // Iterate over the keys of the base Zod object shape
+        const baseSchema = eventFormSchema._def.schema; // Access the ZodObject from ZodEffects
+        for (const key in baseSchema.shape) {
           const fieldKey = key as keyof EventFormData;
           const initialValue = fetchedData[fieldKey as keyof EventInitialData];
 
-          // Skip fields that shouldn't be reset directly from fetched data
-          if (fieldKey === "image") {
-            return;
-          }
-
-          // Handle is_public separately if needed (already handled by setCurrentIsPublic)
-          if (fieldKey === "is_public") {
-            // Set the form's is_public based on fetched data for the visibility toggle logic
-            dataForReset[fieldKey] = fetchedData.is_public ?? false;
-            return;
+          if (fieldKey === ("image" as any)) {
+            continue;
           }
 
           if (fieldKey === "start_date" || fieldKey === "end_date") {
             dataForReset[fieldKey] =
               typeof initialValue === "string" ? initialValue.split("T")[0] : undefined;
           } else if (fieldKey === "program") {
-            // Simplify program handling assuming backend sends string[] or null/undefined
             dataForReset[fieldKey] = Array.isArray(initialValue) ? initialValue : [];
+          } else if (fieldKey === "price_includes") {
+            const pi = Array.isArray(initialValue) ? initialValue : [];
+            dataForReset[fieldKey] = pi.length > 0 ? pi : [""]; // Ensure at least one empty string for UI
           } else if (fieldKey === "instructor_ids") {
-            // Simplify instructor_ids handling
             dataForReset[fieldKey] = Array.isArray(initialValue) ? initialValue : [];
           } else if (fieldKey === "location_id") {
-            // Prefer direct initialData.location_id if it's a string
             if (typeof initialValue === "string") {
               dataForReset[fieldKey] = initialValue;
             } else if (fetchedData.location && typeof fetchedData.location.id === "string") {
-              // Fallback to location_id from the nested location object
               dataForReset[fieldKey] = fetchedData.location.id;
             } else {
               dataForReset[fieldKey] = null;
             }
+          } else if (fieldKey === "image_id") {
+            dataForReset[fieldKey] = initialValue as string | undefined | null;
           } else if (initialValue !== undefined && initialValue !== null) {
-            // Use type assertion as workaround for complex Zod types (e.g., price/currency with .or(""))
             (dataForReset as any)[fieldKey] = initialValue;
+          } else if (fieldKey === "currency" && !initialValue) {
+            // Ensure default for currency if not present
+            dataForReset[fieldKey] = "PLN";
           }
-        });
-        // Store the image_id separately if needed, e.g., for display
-        if (fetchedData.image_id) {
-          dataForReset.image_id = fetchedData.image_id;
+          // For other fields, if initialValue is undefined/null, they won't be set in dataForReset,
+          // and react-hook-form will use defaultValues from useForm.
         }
-        reset(dataForReset); // Use internal reset
+
+        reset(dataForReset);
       })
       .catch((err) => {
         console.error("Failed to fetch event data:", err);
@@ -302,52 +303,31 @@ export function EventForm({ eventId }: EventFormProps) {
 
   // onSubmit handler definition (will need to be defined here)
   const onSubmit: SubmitHandler<EventFormData> = async (data) => {
-    console.log("Internal onSubmit triggered", data);
-    // ... (submission logic will go here, using internal state/router)
-    const formData = new FormData();
-    const appendIfExists = (key: string, value: any) => {
-      if (typeof value === "boolean") {
-        formData.append(key, value.toString());
-      } else if (value !== undefined && value !== null && value !== "") {
-        formData.append(key, typeof value === "number" ? value.toString() : value);
-      }
+    console.log("Internal onSubmit triggered with data:", data);
+
+    // Prepare the payload as a JSON object
+    const payload: Partial<EventFormData> = {
+      ...data,
+      price_includes: (data.price_includes ?? []).filter((item) => item.trim() !== ""),
+      program: (data.program ?? []).filter((item) => item.trim() !== ""), // Also filter empty program days if necessary
     };
 
-    Object.keys(data).forEach((key) => {
-      const fieldKey = key as keyof EventFormData;
-      if (fieldKey === "image") {
-        if (data.image && data.image.length > 0 && data.image[0] instanceof File) {
-          formData.append("image", data.image[0]);
-        }
-      } else if (fieldKey === "instructor_ids") {
-        // Always send instructor_ids, even if empty array, to potentially clear selection
-        (data.instructor_ids ?? []).forEach((id) => formData.append("instructor_ids", id));
-      } else if (fieldKey === "program") {
-        // Always send program, even if empty array
-        (data.program ?? []).forEach((dayDesc) => {
-          if (dayDesc !== null && dayDesc !== undefined) {
-            // Filter out potential null/undefined in array
-            formData.append("program", dayDesc);
-          }
-        });
-      } else if (fieldKey === "is_public") {
-        // Always append is_public for create/update, backend should handle it
-        appendIfExists(fieldKey, data[fieldKey]);
-      } else if (fieldKey === "image_id") {
-        // Do not send image_id back in the form data
-        return;
-      } else {
-        appendIfExists(fieldKey, data[fieldKey]);
-      }
-    });
+    // Remove image field explicitly if it somehow lingers, image_id is used
+    delete (payload as any).image;
+
+    // Ensure instructor_ids is an array, even if empty, for consistency
+    payload.instructor_ids = data.instructor_ids ?? [];
 
     try {
       if (isEditMode) {
-        await axiosInstance.put(`/events/${eventId}`, formData);
+        // For PUT, it's good practice to send only changed fields if using PATCH behavior,
+        // but for simplicity with PUT, we send the whole payload.
+        // Backend PUT is designed to handle full or partial updates via EventUpdatePartial.
+        await axiosInstance.put(`/events/${eventId}`, payload);
         toast({ description: "Wydarzenie zaktualizowane pomyślnie!" });
         router.refresh(); // Refresh data on the current page for updates
       } else {
-        const response = await axiosInstance.post<{ id: string }>("/events", formData);
+        const response = await axiosInstance.post<{ id: string }>("/events", payload);
         const newEventId = response.data.id; // Extract the ID
 
         toast({ description: "Wydarzenie utworzone pomyślnie!" });
@@ -448,6 +428,71 @@ export function EventForm({ eventId }: EventFormProps) {
     }
   };
 
+  // === ADDED: Watch image_id to update preview ===
+  const watchedImageId = watch("image_id");
+
+  useEffect(() => {
+    if (watchedImageId) {
+      setCurrentImagePreviewUrl(
+        `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/v1/${watchedImageId}`,
+      );
+    } else {
+      setCurrentImagePreviewUrl(null);
+    }
+  }, [watchedImageId]);
+
+  // === ADDED: Handler for when a new image file is selected ===
+  const handleImageSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setDirectUploadError(null);
+
+    const imageFormData = new FormData();
+    imageFormData.append("image", file);
+
+    try {
+      const response = await axiosInstance.post<{ image_id: string }>(
+        "/events/image-upload", // Ensure this path is correct for your API proxy
+        imageFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      const newImageId = response.data.image_id;
+      // Delete old image if one existed and a new one is successfully uploaded
+      const oldImageId = getValues("image_id");
+      if (oldImageId && oldImageId !== newImageId) {
+        // Optional: Call backend to delete oldImageId from Cloudinary if needed immediately
+        // For now, backend handles old image deletion on main form PUT if image_id changes
+        console.log("Old image ID:", oldImageId, "New image ID:", newImageId);
+      }
+
+      setValue("image_id", newImageId, { shouldValidate: true, shouldDirty: true });
+      toast({ description: "Zdjęcie przesłane pomyślnie." });
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.detail || err.message || "Nie udało się przesłać zdjęcia.";
+      console.error("Direct image upload failed:", errorMsg);
+      setDirectUploadError(errorMsg);
+      toast({
+        title: "Błąd przesyłania zdjęcia",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      // Clear the file input if upload fails
+      event.target.value = "";
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   // Loading state rendering
   if (isLoading && isEditMode) {
     // Only show skeleton in edit mode while loading initial data
@@ -516,6 +561,81 @@ export function EventForm({ eventId }: EventFormProps) {
           </div>
         </div>
 
+        {/* Section: Location Selector */}
+        <div className="space-y-2">
+          <Label htmlFor="location_id">Lokalizacja</Label>
+          <Controller
+            name="location_id"
+            control={control}
+            render={({ field }) => (
+              <div className="flex items-center space-x-2">
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || ""}
+                  disabled={locations.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        locations.length > 0
+                          ? "Wybierz lokalizację"
+                          : "Brak lokalizacji, dodaj nową"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* No empty SelectItem value needed if Select placeholder works */}
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.id}>
+                        {loc.title}
+                        {loc.country ? ` (${loc.country})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const selectedLoc = locations.find((l) => l.id === field.value);
+                    if (selectedLoc) {
+                      setEditingLocation(selectedLoc);
+                      setLocationModalMode("edit");
+                      setIsLocationModalOpen(true);
+                    } else {
+                      // If nothing is selected, or if it's to prevent error,
+                      // we might want to ensure a location is selected first for editing.
+                      // Or, this button is disabled if !field.value
+                      toast({ description: "Wybierz lokalizację do edycji.", variant: "default" });
+                    }
+                  }}
+                  disabled={!field.value || locations.length === 0} // Disable if no value or no locations
+                  aria-label="Edytuj wybraną lokalizację"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setEditingLocation(null);
+                    setLocationModalMode("create");
+                    setIsLocationModalOpen(true);
+                  }}
+                  aria-label="Dodaj nową lokalizację"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          />
+          {errors.location_id && (
+            <p className="text-sm text-destructive">{errors.location_id.message}</p>
+          )}
+        </div>
+
         {/* Section 2: Price, Included/Excluded */}
         <div className="space-y-6" id="event-pricing">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -545,19 +665,18 @@ export function EventForm({ eventId }: EventFormProps) {
               {errors.currency && <p className="text-sm text-red-500">{errors.currency.message}</p>}
             </div>
           </div>
-          {/* ... price_includes, price_excludes ... */}
-          <div className="space-y-2">
-            <Label htmlFor="price_includes">Co jest wliczone w cenę</Label>
-            <Textarea
-              id="price_includes"
-              {...register("price_includes")}
-              rows={3}
-              placeholder="..."
-            />
-            {errors.price_includes && (
-              <p className="text-sm text-red-500">{errors.price_includes.message}</p>
-            )}
-          </div>
+          {/* MODIFIED: Use DynamicArrayInput for price_includes */}
+          <DynamicArrayInput<EventFormData, "price_includes">
+            control={control}
+            name="price_includes"
+            label="Co jest wliczone w cenę"
+            register={register}
+            getValues={getValues}
+            setValue={setValue}
+            errors={errors}
+            itemPlaceholder="Wpisz co jest wliczone..."
+            addPlaceholder="Kliknij i dodaj kolejny punkt..."
+          />
           <div className="space-y-2">
             <Label htmlFor="price_excludes">Co nie jest wliczone w cenę</Label>
             <Textarea
@@ -714,18 +833,6 @@ export function EventForm({ eventId }: EventFormProps) {
               <p className="text-sm text-red-500">{errors.paid_attractions.message}</p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="spa_description">Zabiegi spa</Label>
-            <Textarea
-              id="spa_description"
-              {...register("spa_description")}
-              rows={3}
-              placeholder="..."
-            />
-            {errors.spa_description && (
-              <p className="text-sm text-red-500">{errors.spa_description.message}</p>
-            )}
-          </div>
         </div>
 
         {/* Section: Program (dynamic) */}
@@ -808,108 +915,44 @@ export function EventForm({ eventId }: EventFormProps) {
 
         {/* Section 8: Images */}
         <div className="space-y-6" id="event-images-section">
-          {isEditMode && getValues("image_id") && (
+          {/* MODIFIED: Image preview logic */}
+          {currentImagePreviewUrl && (
             <div className="mb-4">
               <Label>Aktualne zdjęcie</Label>
               <img
-                src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/v1/${getValues("image_id")}`}
+                src={currentImagePreviewUrl}
                 alt="Current event image"
                 className="mt-2 max-w-xs rounded border"
                 onError={(e) => {
-                  e.currentTarget.style.display = "none";
+                  e.currentTarget.style.display = "none"; // Hide if broken
+                  setCurrentImagePreviewUrl(null); // Clear preview if image is broken
                 }}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Przesłanie nowego zdjęcia zastąpi aktualne.
-              </p>
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="image">
-              {isEditMode && getValues("image_id")
+            <Label htmlFor="image-upload-input">
+              {currentImagePreviewUrl || getValues("image_id")
                 ? "Zmień zdjęcie wydarzenia"
                 : "Główne zdjęcie wydarzenia"}
             </Label>
-            <Input id="image" type="file" {...register("image")} accept="image/*" />
-            {errors.image && (
-              <p className="text-sm text-red-500">{(errors.image as any)?.message}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Section: Location Selector */}
-        <div className="space-y-2">
-          <Label htmlFor="location_id">Lokalizacja</Label>
-          <Controller
-            name="location_id"
-            control={control}
-            render={({ field }) => (
-              <div className="flex items-center space-x-2">
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || ""}
-                  disabled={locations.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        locations.length > 0
-                          ? "Wybierz lokalizację"
-                          : "Brak lokalizacji, dodaj nową"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* No empty SelectItem value needed if Select placeholder works */}
-                    {locations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id}>
-                        {loc.title}
-                        {loc.country ? ` (${loc.country})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    const selectedLoc = locations.find((l) => l.id === field.value);
-                    if (selectedLoc) {
-                      setEditingLocation(selectedLoc);
-                      setLocationModalMode("edit");
-                      setIsLocationModalOpen(true);
-                    } else {
-                      // If nothing is selected, or if it's to prevent error,
-                      // we might want to ensure a location is selected first for editing.
-                      // Or, this button is disabled if !field.value
-                      toast({ description: "Wybierz lokalizację do edycji.", variant: "default" });
-                    }
-                  }}
-                  disabled={!field.value || locations.length === 0} // Disable if no value or no locations
-                  aria-label="Edytuj wybraną lokalizację"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    setEditingLocation(null);
-                    setLocationModalMode("create");
-                    setIsLocationModalOpen(true);
-                  }}
-                  aria-label="Dodaj nową lokalizację"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                </Button>
+            <Input
+              id="image-upload-input"
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelected}
+              disabled={isUploadingImage}
+            />
+            {isUploadingImage && (
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Przesyłanie zdjęcia...
               </div>
             )}
-          />
-          {errors.location_id && (
-            <p className="text-sm text-destructive">{errors.location_id.message}</p>
-          )}
+            {directUploadError && <p className="text-sm text-red-500">{directUploadError}</p>}
+            {/* MODIFIED: image_id error is now the one to show if any validation fails */}
+            {errors.image_id && <p className="text-sm text-red-500">{errors.image_id.message}</p>}
+          </div>
         </div>
 
         {/* Section: Instructors */}
@@ -991,16 +1034,7 @@ export function EventForm({ eventId }: EventFormProps) {
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-500">
-                        Nie znaleziono instruktorów.{" "}
-                        <Link
-                          href="/dashboard/instructors/create"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Dodaj pierwszego
-                        </Link>
-                        .
-                      </p>
+                      <p className="text-sm text-gray-500">Nie znaleziono instruktorów.</p>
                     )}
                   </div>
                   {/* Confirmation Dialog Content */}

@@ -53,7 +53,6 @@ interface Event {
   accommodation_description?: string | null;
   guest_welcome_description?: string | null;
   paid_attractions?: string | null;
-  spa_description?: string | null;
   cancellation_policy?: string | null;
   important_info?: string | null;
   program?: string[] | null;
@@ -158,7 +157,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
       // Check if end date is valid after parsing
       if (isNaN(endDateObj.getTime())) {
-        console.warn("Failed to parse end date string, returning start date only for event:", event.id, end);
+        console.warn(
+          "Failed to parse end date string, returning start date only for event:",
+          event.id,
+          end,
+        );
         return startDateFormatted;
       }
 
@@ -320,7 +323,6 @@ const EventsPage: React.FC = () => {
             accommodation_description: item.accommodation_description,
             guest_welcome_description: item.guest_welcome_description,
             paid_attractions: item.paid_attractions,
-            spa_description: item.spa_description,
             cancellation_policy: item.cancellation_policy,
             important_info: item.important_info,
             program: item.program,
@@ -375,7 +377,7 @@ const EventsPage: React.FC = () => {
           <div className="space-y-6">
             {events.map((event) => (
               <Link key={event.id} href={`/events/${event.id}`} passHref>
-                  <EventCard event={event} />
+                <EventCard event={event} />
               </Link>
             ))}
           </div>
