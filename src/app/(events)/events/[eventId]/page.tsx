@@ -80,24 +80,20 @@ interface EventDetail {
   location: LocationDetail | null; // Updated to nested object
   start_date: string; // Date comes as string, needs formatting
   end_date: string | null; // Date comes as string, needs formatting
-  image_id?: string | null;
+  image_ids?: string[] | null; // Changed from image_id to image_ids
   is_public: boolean;
   price: number | null;
   currency: string | null;
-  main_attractions: string | null;
+  main_attractions: string[] | null; // Changed from string to string[]
   language: string | null;
-  skill_level: string | null;
-  min_age: number | null;
-  max_age: number | null;
-  min_child_age: number | null;
-  itinerary: string | null;
-  included_trips: string | null;
+  skill_level: string[] | null; // Changed from string to string[]
+  included_trips: string[] | null; // Changed from string to string[]
   food_description: string | null;
-  price_includes: string | null;
-  price_excludes: string | null;
+  price_includes: string[] | null; // Changed from string to string[]
+  price_excludes: string[] | null; // Changed from string to string[]
   accommodation_description: string | null;
   guest_welcome_description: string | null;
-  paid_attractions: string | null;
+  paid_attractions: string[] | null; // Changed from string to string[]
   cancellation_policy: string | null;
   important_info: string | null;
   program: string[] | null; // Program is available
@@ -283,16 +279,26 @@ const EventDetailPage: React.FC = () => {
   }
 
   // --- Render the Event Detail Page ---
-  const mainImageUrl = getImageUrl(event.image_id, 0); // Uses Unsplash[0] if no event.image_id
+  const mainImageUrl = getImageUrl(
+    event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : undefined,
+    0,
+  ); // Uses Unsplash[0] if no event.image_id
 
-  // Gallery thumbnails - use subsequent Unsplash images
-  // Indices 1, 2, 3, 4 from the unsplashImageUrls list
-  const thumbnailUrls: string[] = [
-    getImageUrl(undefined, 1),
-    getImageUrl(undefined, 2),
-    getImageUrl(undefined, 3),
-    getImageUrl(undefined, 4),
-  ];
+  // Gallery thumbnails - use subsequent images from event.image_ids or Unsplash fallbacks
+  const thumbnailUrls: string[] = [];
+  const numThumbnails = 4; // Desired number of thumbnails
+
+  for (let i = 0; i < numThumbnails; i++) {
+    if (event.image_ids && event.image_ids.length > i + 1) {
+      // Use image from event.image_ids (starting from the second image)
+      thumbnailUrls.push(getImageUrl(event.image_ids[i + 1]));
+    } else {
+      // Fallback to Unsplash image
+      // Ensure Unsplash index is unique and doesn't overlap with main image's potential fallback
+      const unsplashFallbackIndex = i + 1; // Start Unsplash fallbacks from index 1
+      thumbnailUrls.push(getImageUrl(undefined, unsplashFallbackIndex));
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -353,34 +359,50 @@ const EventDetailPage: React.FC = () => {
           </section>
 
           {/* Dynamically Render Sections based on available data */}
-          {event.itinerary && (
+          {/* {event.itinerary && ( // itinerary was removed
             <Section title="Harmonogram" icon={CalendarDays}>
               {formatMultiLineText(event.itinerary)}
             </Section>
-          )}
+          )} */}
           {event.accommodation_description && (
             <Section title="Nocleg" icon={Home}>
               {formatMultiLineText(event.accommodation_description)}
             </Section>
           )}
-          {/* {event.price_includes && (
+          {event.price_includes && event.price_includes.length > 0 && (
             <Section title="Co jest wliczone w cenę" icon={CheckCircle} iconColor="text-green-600">
-              {formatMultiLineText(event.price_includes)}
+              <ul className="list-disc pl-5 space-y-1">
+                {event.price_includes.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </Section>
-          )} */}
-          {event.price_excludes && (
+          )}
+          {event.price_excludes && event.price_excludes.length > 0 && (
             <Section title="Co NIE jest wliczone w cenę" icon={XCircle} iconColor="text-red-600">
-              {formatMultiLineText(event.price_excludes)}
+              <ul className="list-disc pl-5 space-y-1">
+                {event.price_excludes.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </Section>
           )}
-          {event.included_trips && (
+          {event.included_trips && event.included_trips.length > 0 && (
             <Section title="Wliczone wycieczki" icon={CheckCircle} iconColor="text-green-600">
-              {formatMultiLineText(event.included_trips)}
+              <ul className="list-disc pl-5 space-y-1">
+                {event.included_trips.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </Section>
           )}
-          {event.paid_attractions && (
+          {event.paid_attractions && event.paid_attractions.length > 0 && (
             <Section title="Dodatkowe atrakcje za dopłatą" icon={DollarSign}>
-              {formatMultiLineText(event.paid_attractions)}
+              <ul className="list-disc pl-5 space-y-1">
+                {event.paid_attractions.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </Section>
           )}
           {event.cancellation_policy && (
@@ -389,13 +411,36 @@ const EventDetailPage: React.FC = () => {
             </Section>
           )}
           {event.program && event.program.length > 0 && (
-            <Section title="Program dnia" icon={CalendarDays}>
-              {event.program.map((dayDesc, index) => (
-                <div key={index} className="mb-2">
-                  <p className="font-semibold">Dzień {index + 1}:</p>
-                  {formatMultiLineText(dayDesc)}
-                </div>
-              ))}
+            <Section title="Harmonogram" icon={CalendarDays}>
+              {(() => {
+                const startDateObj = new Date(event.start_date);
+                const isStartDateValid = !isNaN(startDateObj.getTime());
+
+                return event.program!.map((dayDesc, index) => {
+                  let displayDayTitle = `Dzień ${index + 1}:`;
+                  if (isStartDateValid) {
+                    const currentDate = new Date(startDateObj);
+                    currentDate.setDate(startDateObj.getDate() + index);
+
+                    const dateString = currentDate.toLocaleDateString("pl-PL", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    });
+                    const dayOfWeekString = currentDate.toLocaleDateString("pl-PL", {
+                      weekday: "long",
+                    });
+                    displayDayTitle = `${dateString} r. (${dayOfWeekString})`;
+                  }
+
+                  return (
+                    <div key={index} className="mb-2">
+                      <p className="font-semibold">{displayDayTitle}</p>
+                      {formatMultiLineText(dayDesc)}
+                    </div>
+                  );
+                });
+              })()}
             </Section>
           )}
           {/* Instructor Section - Placeholder */}
@@ -455,7 +500,9 @@ const EventDetailPage: React.FC = () => {
               {/* Removed hardcoded duration/language - use actual data */}
               {/* <InfoItem icon={Clock3} text={`${event.activity_days || "N/A"} dni`} /> */}
               {event.language && <InfoItem icon={Languages} text={event.language} />}
-              {event.skill_level && <InfoItem icon={Award} text={`Poziom: ${event.skill_level}`} />}
+              {event.skill_level && (
+                <InfoItem icon={Award} text={`Poziom: ${event.skill_level.join(", ")}`} />
+              )}
             </CardContent>
           </Card>
 
@@ -504,9 +551,13 @@ const EventDetailPage: React.FC = () => {
             </p>
           </Section>
 
-          {event.main_attractions && (
+          {event.main_attractions && event.main_attractions.length > 0 && (
             <Section title="Najważniejsze atrakcje" icon={Star}>
-              {formatMultiLineText(event.main_attractions)}
+              <ul className="list-disc pl-5 space-y-1">
+                {event.main_attractions.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </Section>
           )}
 

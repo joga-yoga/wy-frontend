@@ -36,7 +36,7 @@ interface Event {
   location: Location | null; // Updated to use Location interface
   // country: string; // Removed, now part of Location object
   price: number | null; // Updated to be optional
-  image_id?: string;
+  image_ids?: string[]; // Changed from image_id to image_ids
   is_public: boolean;
   currency: string | null;
   main_attractions?: string | null;
@@ -201,10 +201,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   // Use event.location.title or event.location.country or fallback
   const displayLocation = event.location?.title || event.location?.country || "N/A";
 
-  // Construct image URL using event.image_id
-  const imageUrl = event.image_id
-    ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo"}/image/upload/${event.image_id}`
-    : `https://via.placeholder.com/150?text=No+Image`;
+  // Construct image URL using the first image_id from event.image_ids
+  const imageUrl =
+    event.image_ids && event.image_ids.length > 0
+      ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo"}/image/upload/${event.image_ids[0]}`
+      : `https://via.placeholder.com/150?text=No+Image`;
 
   return (
     <Card className="flex flex-col md:flex-row overflow-hidden">
@@ -306,7 +307,7 @@ const EventsPage: React.FC = () => {
             location: item.location, // Assuming item.location is the Location object
             // country: item.country, // Removed, part of item.location
             price: item.price,
-            image_id: item.image_id,
+            image_ids: item.image_ids, // Changed from image_id to image_ids
             is_public: item.is_public,
             currency: item.currency,
             main_attractions: item.main_attractions,
