@@ -136,7 +136,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 mx-auto max-w-4xl">
       <h1 className="text-2xl font-semibold mb-6">{`Welcome, ${organizer.name}!`}</h1>
 
       <div className="mt-6 space-y-6 max-w-4xl">
@@ -170,7 +170,7 @@ export default function DashboardPage() {
 
                 <div className="mt-3 text-sm text-gray-500 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1">
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" /> {event.location?.title || "N/A"}
+                    <MapPin className="h-4 w-4" /> Need fix
                   </span>
                   <span className="flex items-center gap-1">
                     <CalendarDays className="h-4 w-4" /> {formatDate(event.start_date)}

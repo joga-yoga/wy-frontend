@@ -1,45 +1,56 @@
-import { z } from "zod";
+import * as yup from "yup";
 
 // Base schema for event data validation
-export const eventFormSchema = z
-  .object({
-    title: z.string().min(3, "Tytuł musi mieć co najmniej 3 znaki"),
-    description: z.string().optional(),
-    start_date: z.string().min(1, "Data rozpoczęcia jest wymagana"),
-    end_date: z.string().min(1, "Data zakończenia jest wymagana"),
-    // Simplify price for now
-    price: z.coerce.number().positive("Cena musi być dodatnia").optional(),
-    currency: z.string().length(3, "Waluta musi mieć 3 znaki").toUpperCase().optional(),
-    main_attractions: z.string().optional(),
-    language: z.string().optional(),
-    skill_level: z.string().optional(),
-    accommodation_description: z.string().optional(),
-    guest_welcome_description: z.string().optional(),
-    food_description: z.string().optional(),
-    price_includes: z.array(z.string()).optional().default([]),
-    price_excludes: z.string().optional(),
-    itinerary: z.string().optional(),
-    included_trips: z.string().optional(),
-    paid_attractions: z.string().optional(),
-    cancellation_policy: z.string().optional(),
-    important_info: z.string().optional(),
-    program: z.array(z.string()).default([]),
-    instructor_ids: z.array(z.string()).default([]),
-    is_public: z.boolean().optional().default(false), // Default to false for creation
-    image_id: z.string().optional().nullable(), // Allow null to explicitly remove image
-    location_id: z.string().uuid("Nieprawidłowy format ID lokalizacji").nullable().optional(), // Added
+export const eventFormSchema = yup
+  .object()
+  .shape({
+    title: yup.string().min(3, "Tytuł musi mieć co najmniej 3 znaki").required(),
+    description: yup.string().optional(),
+    start_date: yup.string().min(1, "Data rozpoczęcia jest wymagana").required(),
+    end_date: yup.string().min(1, "Data zakończenia jest wymagana").required(),
+    price: yup.number().positive("Cena musi być dodatnia").optional().nullable(), // Yup numbers are nullable by default if optional
+    currency: yup.string().length(3, "Waluta musi mieć 3 znaki").optional().nullable(), // .transform(val => val ? val.toUpperCase() : val) can be added if toUpperCase is a transform
+    main_attractions: yup.array().of(yup.string()).optional().default([]),
+    language: yup.string().optional(),
+    skill_level: yup.array().of(yup.string().required()).optional().default([]),
+    accommodation_description: yup.string().optional(),
+    guest_welcome_description: yup.string().optional(),
+    food_description: yup.string().optional(),
+    price_excludes: yup.array().of(yup.string()).optional().default([]),
+    included_trips: yup.array().of(yup.string()).optional().default([]),
+    paid_attractions: yup.array().of(yup.string()).optional().default([]),
+    cancellation_policy: yup.string().optional(),
+    important_info: yup.string().optional(),
+    image_ids: yup.array().of(yup.string().required()).optional().default([]),
+    location_id: yup.string().uuid("Nieprawidłowy format ID lokalizacji").nullable().optional(),
+    is_public: yup.boolean().default(false),
+    price_includes: yup.array().of(yup.string()).optional().default([]),
+    program: yup.array().of(yup.string().required()).optional().default([]),
+    instructor_ids: yup.array().of(yup.string().required()).default([]),
   })
-  .refine(
-    (data) =>
-      !data.start_date || !data.end_date || new Date(data.end_date) >= new Date(data.start_date),
-    {
-      message: "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia",
-      path: ["end_date"], // Attach error to end_date field
+  .test(
+    "date-order",
+    "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia",
+    function (value) {
+      const { start_date, end_date } = value;
+      if (!start_date || !end_date) {
+        return true; // Let individual field validation handle missing dates
+      }
+      // Ensure that this test only runs if both dates are valid strings
+      if (typeof start_date === "string" && typeof end_date === "string") {
+        const startDate = new Date(start_date);
+        const endDate = new Date(end_date);
+        // Check if dates are valid before comparing
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          return endDate >= startDate;
+        }
+      }
+      return true; // If dates are not valid strings or parsing fails, bypass this test
     },
   );
 
 // Type inferred from the schema for form data
-export type EventFormData = z.infer<typeof eventFormSchema>;
+export type EventFormData = yup.InferType<typeof eventFormSchema>;
 
 // Define a type for the nested location information in initial event data
 interface LocationInitialInfo {
@@ -54,11 +65,16 @@ interface LocationInitialInfo {
 // Type for initial data fetched for editing (might have slightly different structure, e.g., program as string)
 export type EventInitialData = Partial<
   Omit<EventFormData, "image"> & {
-    image_id?: string | null; // Add image_id if fetched
-    is_public?: boolean | null; // Explicitly allow null if backend might send it
-    location_id?: string | null; // Remains for cases where only ID is sent or as a fallback
-    location?: LocationInitialInfo | null; // Added nested location object from API
+    image_ids?: string[] | null;
+    is_public: boolean;
+    location_id?: string | null;
+    location?: LocationInitialInfo | null;
     program?: string[];
     instructor_ids?: string[];
+    price_excludes?: string[];
+    skill_level?: string[];
+    included_trips?: string[];
+    paid_attractions?: string[];
+    main_attractions?: string[];
   }
 >;

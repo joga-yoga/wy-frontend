@@ -1,17 +1,13 @@
-import {
-  BedDouble,
-  CalendarDays,
-  ClipboardList,
-  DollarSign,
-  Eye,
-  FileText,
-  Image,
-  Info,
-  Map,
-  Users,
-} from "lucide-react";
 import React from "react";
 
+import CustomAnalyticsIcon from "@/components/icons/CustomAnalyticsIcon";
+import CustomChatIcon from "@/components/icons/CustomChatIcon";
+import CustomDocumentIcon from "@/components/icons/CustomDocumentIcon";
+import CustomFormsIcon from "@/components/icons/CustomFormsIcon";
+import CustomIncludedIcon from "@/components/icons/CustomIncludedIcon";
+import CustomLinkIcon from "@/components/icons/CustomLinkIcon";
+import CustomListIcon from "@/components/icons/CustomListIcon";
+import CustomRouteIcon from "@/components/icons/CustomRouteIcon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,16 +17,16 @@ interface SidebarProps extends React.HTMLAttributes<HTMLElement> {}
 const SCROLL_OFFSET = 148; // e.g., 65px header + 15px padding
 
 const menuItems = [
-  { href: "#event-details", icon: Info, label: "Basic Info & Details" },
-  { href: "#event-pricing", icon: DollarSign, label: "Pricing" },
-  { href: "#event-location-dates", icon: CalendarDays, label: "Location & Dates" },
-  { href: "#event-hospitality", icon: BedDouble, label: "Hospitality" },
-  { href: "#event-activities", icon: Map, label: "Activities & Itinerary" },
-  { href: "#event-program", icon: ClipboardList, label: "Daily Program" },
-  { href: "#event-instructors", icon: Users, label: "Instructors" },
-  { href: "#event-policies", icon: FileText, label: "Policies & Info" },
-  { href: "#event-images-section", icon: Image, label: "Images" },
-  { href: "#event-visibility", icon: Eye, label: "Visibility" },
+  { href: "#event-details", icon: CustomDocumentIcon, label: "Basic Info & Details" },
+  { href: "#event-pricing", icon: CustomIncludedIcon, label: "Pricing" },
+  { href: "#event-location-dates", icon: CustomRouteIcon, label: "Location & Dates" },
+  { href: "#event-hospitality", icon: CustomLinkIcon, label: "Hospitality" },
+  { href: "#event-activities", icon: CustomListIcon, label: "Activities & Itinerary" },
+  { href: "#event-program", icon: CustomListIcon, label: "Daily Program" },
+  { href: "#event-instructors", icon: CustomChatIcon, label: "Instructors" },
+  { href: "#event-policies", icon: CustomDocumentIcon, label: "Policies & Info" },
+  { href: "#event-images-section", icon: CustomAnalyticsIcon, label: "Images" },
+  { href: "#event-visibility", icon: CustomLinkIcon, label: "Visibility" },
 ];
 
 export function EventSidebar({ className }: SidebarProps) {
@@ -53,7 +49,7 @@ export function EventSidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "sticky top-[65px] h-[calc(100vh-65px)] border-r bg-background flex flex-col items-center pt-4 pb-4 px-2",
+        "sticky top-[65px] h-[calc(100vh-65px)] border-r bg-background flex flex-col items-center pt-4 pb-4 px-2 w-[84px]",
         className,
       )}
     >
@@ -64,10 +60,10 @@ export function EventSidebar({ className }: SidebarProps) {
             variant="ghost"
             size="icon"
             aria-label={item.label}
-            className="h-10 w-10 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
+            className="h-[48px] w-[48px] text-gray-800 hover:bg-muted hover:text-black"
             onClick={() => handleScrollToSection(item.href)}
           >
-            <item.icon className="h-5 w-5" />
+            <item.icon className="size-10" />
           </Button>
         ))}
       </nav>

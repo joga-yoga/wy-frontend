@@ -96,7 +96,7 @@ export default function OrganizerProfilePage() {
         updateLabel={isSubmitting ? "Updating..." : undefined} // Show loading state on button
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-xl">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mx-auto max-w-xl">
         {/* Form fields from edit page */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium mb-1">

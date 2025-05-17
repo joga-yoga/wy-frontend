@@ -1,24 +1,28 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"; // Import zodResolver
+import { yupResolver } from "@hookform/resolvers/yup"; // Import yupResolver
 import { differenceInCalendarDays, format, isValid, parseISO } from "date-fns"; // Import date-fns functions
 import { Edit2, Loader2, PlusCircle, Trash2 } from "lucide-react"; // Import icons
 import { Calendar as CalendarIcon } from "lucide-react"; // Use Calendar icon
+import { Cat, Dog, Fish, Rabbit, Turtle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import {
   Controller,
+  FieldArrayPath, // Import FieldArrayPath
   FieldErrors, // Import FieldErrors type
   SubmitErrorHandler, // Import SubmitErrorHandler
   SubmitHandler, // Keep if onSubmit stays here, remove if passed in
-  useFieldArray,
+  useFieldArray, // Import useForm
   useForm, // Import useForm
 } from "react-hook-form";
+import * as yup from "yup"; // Import yup itself for casting
 
+import MultipleSelector, { Option } from "@/components/custom/multiple-selector";
 import { Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
-import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { DashboardFooter } from "@/components/layout/DashboardFooter";
 import { LocationModal } from "@/components/locations/LocationModal"; // Import LocationModal
 import {
   AlertDialog, // Import AlertDialog components
@@ -34,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -45,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"; // Import Select components
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +61,11 @@ import { cn } from "@/lib/utils"; // For conditional classes
 
 import { DynamicArrayInput } from "./DynamicArrayInput";
 
+const OPTIONS: Option[] = [
+  { label: "Początkujący", value: "beginner" },
+  { label: "Średni", value: "intermediate" },
+  { label: "Zaawansowany", value: "advanced" },
+];
 // Define Location type
 export interface Location {
   id: string;
@@ -91,13 +102,16 @@ export function EventForm({ eventId }: EventFormProps) {
   // === ADDED: State for direct image upload ===
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [directUploadError, setDirectUploadError] = useState<string | null>(null);
-  const [currentImagePreviewUrl, setCurrentImagePreviewUrl] = useState<string | null>(null);
+  // No longer a single preview URL, image_ids from form will be the source of truth for display
+  // const [currentImagePreviewUrl, setCurrentImagePreviewUrl] = useState<string | null>(null);
 
   // === State for Location ===
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [locationModalMode, setLocationModalMode] = useState<"create" | "edit">("create");
+
+  const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>(["react", "angular"]);
 
   const {
     register,
@@ -109,33 +123,32 @@ export function EventForm({ eventId }: EventFormProps) {
     reset, // Need reset for initial data
     setValue, // Need setValue to update dates from picker
   } = useForm<EventFormData>({
-    resolver: zodResolver(eventFormSchema),
+    resolver: yupResolver(eventFormSchema as yup.ObjectSchema<EventFormData>), // Use yupResolver with cast
     defaultValues: {
       title: "",
-      description: "",
+      description: undefined,
       start_date: "",
       end_date: "",
       price: undefined,
       currency: "PLN",
-      main_attractions: "",
-      language: "",
-      skill_level: "",
-      accommodation_description: "",
-      guest_welcome_description: "",
-      food_description: "",
-      price_includes: ["dd"],
-      price_excludes: "",
-      itinerary: "",
-      included_trips: "",
-      paid_attractions: "",
-      cancellation_policy: "",
-      important_info: "",
+      main_attractions: [],
+      language: "pl",
+      skill_level: [],
+      accommodation_description: undefined,
+      guest_welcome_description: undefined,
+      food_description: undefined,
+      price_includes: [],
+      price_excludes: [], // Changed to array
+      included_trips: [], // Changed to array
+      paid_attractions: [], // Changed to array
+      cancellation_policy: undefined,
+      important_info: undefined,
       program: [],
       instructor_ids: [],
       is_public: false,
       location_id: null,
-      image_id: undefined,
-    },
+      image_ids: [], // Changed from image_id to image_ids
+    } as Partial<EventFormData>, // Explicitly type defaultValues
   });
 
   const startDateString = watch("start_date");
@@ -171,7 +184,25 @@ export function EventForm({ eventId }: EventFormProps) {
   }, [startDateString, endDateString]);
 
   // Setup useFieldArray for the program
-  const { fields: programFields, append, remove } = useFieldArray({ control, name: "program" });
+  const {
+    fields: programFields,
+    append,
+    remove,
+  } = useFieldArray({
+    control,
+    name: "program" as FieldArrayPath<EventFormData>,
+  });
+
+  // === ADDED: Setup useFieldArray for price_includes ===
+  const {
+    fields: priceIncludesFields,
+    append: appendPriceInclude,
+    remove: removePriceInclude,
+    replace: replacePriceIncludes, // For setting initial values or whole array changes
+  } = useFieldArray({
+    control,
+    name: "price_includes" as FieldArrayPath<EventFormData>, // Assuming 'price_includes' is an array of strings
+  });
 
   // === Fetch Instructors Function ===
   const fetchInstructors = async () => {
@@ -222,13 +253,15 @@ export function EventForm({ eventId }: EventFormProps) {
 
         const dataForReset: Partial<EventFormData> = {};
 
-        // Iterate over the keys of the base Zod object shape
-        const baseSchema = eventFormSchema._def.schema; // Access the ZodObject from ZodEffects
-        for (const key in baseSchema.shape) {
+        // Iterate over the keys of the Yup object shape
+        const yupSchemaFields = eventFormSchema.fields;
+        for (const key in yupSchemaFields) {
           const fieldKey = key as keyof EventFormData;
           const initialValue = fetchedData[fieldKey as keyof EventInitialData];
 
-          if (fieldKey === ("image" as any)) {
+          if (fieldKey === ("image" as any) || fieldKey === ("image_id" as any)) {
+            // also skip old image_id
+            // Still relevant to skip an 'image' field if it exists
             continue;
           }
 
@@ -236,12 +269,39 @@ export function EventForm({ eventId }: EventFormProps) {
             dataForReset[fieldKey] =
               typeof initialValue === "string" ? initialValue.split("T")[0] : undefined;
           } else if (fieldKey === "program") {
-            dataForReset[fieldKey] = Array.isArray(initialValue) ? initialValue : [];
-          } else if (fieldKey === "price_includes") {
-            const pi = Array.isArray(initialValue) ? initialValue : [];
-            dataForReset[fieldKey] = pi.length > 0 ? pi : [""]; // Ensure at least one empty string for UI
+            const programVal = fetchedData.program;
+            if (Array.isArray(programVal)) {
+              dataForReset.program = programVal.filter(
+                (item): item is string => typeof item === "string",
+              );
+            } else {
+              dataForReset.program = [];
+            }
+          } else if (
+            fieldKey === "price_includes" ||
+            fieldKey === "price_excludes" ||
+            fieldKey === "included_trips" ||
+            fieldKey === "paid_attractions" ||
+            fieldKey === "skill_level" ||
+            fieldKey === "main_attractions"
+          ) {
+            const arrayValUntyped: unknown = fetchedData[fieldKey as keyof EventInitialData];
+            if (Array.isArray(arrayValUntyped)) {
+              (dataForReset as any)[fieldKey] = arrayValUntyped.filter(
+                (item): item is string => typeof item === "string",
+              );
+            } else {
+              (dataForReset as any)[fieldKey] = [];
+            }
           } else if (fieldKey === "instructor_ids") {
-            dataForReset[fieldKey] = Array.isArray(initialValue) ? initialValue : [];
+            const instructorIdsVal = fetchedData.instructor_ids;
+            if (Array.isArray(instructorIdsVal)) {
+              dataForReset.instructor_ids = instructorIdsVal.filter(
+                (item): item is string => typeof item === "string",
+              );
+            } else {
+              dataForReset.instructor_ids = [];
+            }
           } else if (fieldKey === "location_id") {
             if (typeof initialValue === "string") {
               dataForReset[fieldKey] = initialValue;
@@ -250,16 +310,31 @@ export function EventForm({ eventId }: EventFormProps) {
             } else {
               dataForReset[fieldKey] = null;
             }
-          } else if (fieldKey === "image_id") {
-            dataForReset[fieldKey] = initialValue as string | undefined | null;
+          } else if (fieldKey === "image_ids") {
+            // Changed from image_id to image_ids
+            const imageIdsVal = fetchedData.image_ids;
+            if (Array.isArray(imageIdsVal)) {
+              dataForReset.image_ids = imageIdsVal.filter(
+                (item): item is string => typeof item === "string",
+              );
+            } else {
+              dataForReset.image_ids = [];
+            }
           } else if (initialValue !== undefined && initialValue !== null) {
             (dataForReset as any)[fieldKey] = initialValue;
           } else if (fieldKey === "currency" && !initialValue) {
             // Ensure default for currency if not present
             dataForReset[fieldKey] = "PLN";
+          } else if (fieldKey === "language" && !initialValue) {
+            dataForReset[fieldKey] = "pl";
           }
           // For other fields, if initialValue is undefined/null, they won't be set in dataForReset,
           // and react-hook-form will use defaultValues from useForm.
+        }
+
+        // Ensure language has a default if not present in fetchedData
+        if (!dataForReset.language) {
+          dataForReset.language = "pl";
         }
 
         reset(dataForReset);
@@ -308,12 +383,33 @@ export function EventForm({ eventId }: EventFormProps) {
     // Prepare the payload as a JSON object
     const payload: Partial<EventFormData> = {
       ...data,
-      price_includes: (data.price_includes ?? []).filter((item) => item.trim() !== ""),
-      program: (data.program ?? []).filter((item) => item.trim() !== ""), // Also filter empty program days if necessary
+      price_includes: (data.price_includes ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ),
+      price_excludes: (data.price_excludes ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ),
+      program: (data.program ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ),
+      included_trips: (data.included_trips ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ),
+      paid_attractions: (data.paid_attractions ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ),
+      skill_level: (data.skill_level ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ),
+      image_ids: data.image_ids ?? [], // Ensure image_ids is an array
+      main_attractions: (data.main_attractions ?? []).filter(
+        (item) => typeof item === "string" && item.trim() !== "",
+      ), // Process as array
     };
 
-    // Remove image field explicitly if it somehow lingers, image_id is used
+    // Remove image field explicitly if it somehow lingers
     delete (payload as any).image;
+    delete (payload as any).image_id; // also remove old image_id if present
 
     // Ensure instructor_ids is an array, even if empty, for consistency
     payload.instructor_ids = data.instructor_ids ?? [];
@@ -429,17 +525,7 @@ export function EventForm({ eventId }: EventFormProps) {
   };
 
   // === ADDED: Watch image_id to update preview ===
-  const watchedImageId = watch("image_id");
-
-  useEffect(() => {
-    if (watchedImageId) {
-      setCurrentImagePreviewUrl(
-        `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/v1/${watchedImageId}`,
-      );
-    } else {
-      setCurrentImagePreviewUrl(null);
-    }
-  }, [watchedImageId]);
+  const watchedImageIds = watch("image_ids"); // Changed from image_id
 
   // === ADDED: Handler for when a new image file is selected ===
   const handleImageSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -456,7 +542,7 @@ export function EventForm({ eventId }: EventFormProps) {
 
     try {
       const response = await axiosInstance.post<{ image_id: string }>(
-        "/events/image-upload", // Ensure this path is correct for your API proxy
+        "/events/image-upload",
         imageFormData,
         {
           headers: {
@@ -466,16 +552,12 @@ export function EventForm({ eventId }: EventFormProps) {
       );
 
       const newImageId = response.data.image_id;
-      // Delete old image if one existed and a new one is successfully uploaded
-      const oldImageId = getValues("image_id");
-      if (oldImageId && oldImageId !== newImageId) {
-        // Optional: Call backend to delete oldImageId from Cloudinary if needed immediately
-        // For now, backend handles old image deletion on main form PUT if image_id changes
-        console.log("Old image ID:", oldImageId, "New image ID:", newImageId);
-      }
-
-      setValue("image_id", newImageId, { shouldValidate: true, shouldDirty: true });
-      toast({ description: "Zdjęcie przesłane pomyślnie." });
+      const currentImageIds = getValues("image_ids") || [];
+      setValue("image_ids", [...currentImageIds, newImageId], {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      toast({ description: "Zdjęcie dodane pomyślnie." });
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail || err.message || "Nie udało się przesłać zdjęcia.";
@@ -486,11 +568,25 @@ export function EventForm({ eventId }: EventFormProps) {
         description: errorMsg,
         variant: "destructive",
       });
-      // Clear the file input if upload fails
-      event.target.value = "";
     } finally {
       setIsUploadingImage(false);
+      // Clear the file input
+      if (event.target) {
+        event.target.value = "";
+      }
     }
+  };
+
+  const handleRemoveImage = (imageIdToRemove: string) => {
+    const currentImageIds = getValues("image_ids") || [];
+    setValue(
+      "image_ids",
+      currentImageIds.filter((id) => id !== imageIdToRemove),
+      { shouldValidate: true, shouldDirty: true },
+    );
+    toast({ description: "Zdjęcie usunięte z listy." });
+    // Note: Actual deletion from Cloudinary happens on form submission (PUT/PATCH) by the backend
+    // if this imageId is no longer in the image_ids list.
   };
 
   // Loading state rendering
@@ -524,46 +620,178 @@ export function EventForm({ eventId }: EventFormProps) {
 
   // Main form rendering
   return (
-    <div className="space-y-8 pb-10" id="event-form">
-      {/* DashboardHeader now uses internal state/handlers */}
-      <DashboardHeader
-        title={isEditMode ? "Edytuj wydarzenie" : "Utwórz nowe wydarzenie"}
-        onUpdate={handleSubmit(onSubmit)} // Pass the internal onSubmit to handleSubmit
-        updateLabel={
-          isSubmitting
-            ? isEditMode
-              ? "Zapisywanie..."
-              : "Tworzenie..."
-            : isEditMode
-              ? "Zapisz zmiany"
-              : "Utwórz wydarzenie"
-        }
-        // Pass the href for the public page link if in edit mode
-        viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
-        viewPublicLabel="Zobacz stronę publiczną" // Customize label
-      />
+    <div className="space-y-8 pt-10" id="event-form">
       {/* Remove intermediate div, apply max-width and spacing to this outer div */}
-      <div className="space-y-10 max-w-3xl mx-auto">
+      <div className="space-y-[64px] max-w-3xl mx-auto">
         {/* Form fields use internal register, errors, control */}
         {/* Section 1: Title, Description & Section 3: Details merged */}
-        <div className="space-y-6" id="event-details">
+        <div className="space-y-[64px]" id="event-details">
           <div className="space-y-2">
-            <Label htmlFor="title">Tytuł *</Label>
-            <Input id="title" {...register("title")} placeholder="..." />
+            <Label htmlFor="title" size="event">
+              Tytuł
+            </Label>
+            <Label htmlFor="title" size="event-description">
+              Przyciągnij klientów tytułem, który podkreśla czas trwania, miejsce docelowe i
+              atrakcje programu
+            </Label>
+            <Separator className="my-8" />
+            <Input id="title" {...register("title")} placeholder="Tytuł" />
             {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Opis</Label>
-            <Textarea id="description" {...register("description")} rows={4} placeholder="..." />
+            <Label htmlFor="description" size="event">
+              Opis
+            </Label>
+            <Label htmlFor="description" size="event-description">
+              Przedstaw swoją ofertę w krótkim podsumowaniu, aby przyciągnąć uwagę klientów
+            </Label>
+            <Separator className="my-8" />
+            <Textarea id="description" {...register("description")} rows={4} placeholder="Opis" />
             {errors.description && (
               <p className="text-sm text-red-500">{errors.description.message}</p>
+            )}
+          </div>
+        </div>
+        <div className="space-y-[64px]" id="event-details">
+          <div className="space-y-6" id="event-location-dates">
+            {/* Date Range Picker */}
+            <div className="space-y-2">
+              <Label htmlFor="start_date" size="event">
+                Termin wydarzenia
+              </Label>
+              <Separator className="my-8" />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateRange && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "LLL dd, y")} -{" "}
+                          {format(dateRange.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Wybierz zakres dat</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={(selectedRange: DateRange | undefined) => {
+                      setDateRange(selectedRange);
+                      // Update react-hook-form fields
+                      if (selectedRange?.from) {
+                        setValue("start_date", format(selectedRange.from, "yyyy-MM-dd"), {
+                          shouldValidate: true,
+                        });
+                      } else {
+                        setValue("start_date", "", { shouldValidate: true }); // Clear if no start date
+                      }
+                      if (selectedRange?.to) {
+                        setValue("end_date", format(selectedRange.to, "yyyy-MM-dd"), {
+                          shouldValidate: true,
+                        });
+                      } else {
+                        setValue("end_date", "", { shouldValidate: true }); // Clear if no end date
+                      }
+                    }}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+              {/* Display validation errors for start/end dates below the popover */}
+              {errors.start_date && (
+                <p className="text-sm text-red-500">
+                  Błąd daty rozpoczęcia: {errors.start_date.message}
+                </p>
+              )}
+              {!errors.start_date && errors.end_date && (
+                <p className="text-sm text-red-500">
+                  Błąd daty zakończenia: {errors.end_date.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="skill_level" size="event">
+              Poziom zaawansowania
+            </Label>
+            <Separator className="my-8" />
+            <Controller
+              name="skill_level"
+              control={control}
+              render={({ field }) => (
+                <MultipleSelector
+                  defaultOptions={OPTIONS}
+                  selectFirstItem={false}
+                  value={
+                    field.value?.map((val: string) => ({
+                      label: OPTIONS.find((o) => o.value === val)?.label || val,
+                      value: val,
+                    })) || []
+                  }
+                  onChange={(options: Option[]) => {
+                    field.onChange(options.map((option) => option.value));
+                  }}
+                  placeholder="Wybierz poziom zaawansowania"
+                  emptyIndicator={
+                    <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                      Brak wyników.
+                    </p>
+                  }
+                />
+              )}
+            />
+            {errors.skill_level && (
+              <p className="text-sm text-red-500">{errors.skill_level.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description" size="event">
+              Język prowadzenia zajęć
+            </Label>
+            <Separator className="my-8" />
+            <Controller
+              name="language"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value || "pl"}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Wybierz język" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pl">Polski</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.language && (
+              <p className="text-sm text-destructive">{errors.language.message}</p>
             )}
           </div>
         </div>
 
         {/* Section: Location Selector */}
         <div className="space-y-2">
-          <Label htmlFor="location_id">Lokalizacja</Label>
+          <Label htmlFor="location_id" size="event">
+            Lokalizacja
+          </Label>
+          <Separator className="my-8" />
           <Controller
             name="location_id"
             control={control}
@@ -637,164 +865,194 @@ export function EventForm({ eventId }: EventFormProps) {
         </div>
 
         {/* Section 2: Price, Included/Excluded */}
-        <div className="space-y-6" id="event-pricing">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Cena</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                {...register("price", {
-                  setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
-                })} // Convert empty string or value to number/undefined
-                placeholder="..."
-              />
-              {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="currency">Waluta</Label>
-              <Input
-                id="currency"
-                {...register("currency")}
-                maxLength={3}
-                placeholder="np. PLN, EUR, USD"
-                defaultValue={"PLN"}
-              />
-              {errors.currency && <p className="text-sm text-red-500">{errors.currency.message}</p>}
+        <div className="space-y-[64px]" id="event-pricing">
+          <div className="space-y-2">
+            <Label htmlFor="price" size="event">
+              Cena
+            </Label>
+            <Label htmlFor="price" size="event-description">
+              Podaj pełną cenę za udział w wydarzeniu za jedną osobę
+            </Label>
+            <Separator className="my-8" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="flex">
+                  Cena
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step=""
+                  {...register("price", {
+                    setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
+                  })} // Convert empty string or value to number/undefined
+                  placeholder="Cena za jedną osobę"
+                />
+                {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currency" className="flex">
+                  Waluta
+                </Label>
+                <Controller
+                  name="currency"
+                  control={control}
+                  defaultValue="PLN" // Ensure default value is set for Controller
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || "PLN"} // Ensure value is controlled
+                      // defaultValue="PLN" // Handled by Controller's defaultValue and field.value
+                    >
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="Wybierz walutę" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PLN">PLN</SelectItem>
+                        {/* Add other currencies here when needed */}
+                        {/* <SelectItem value="EUR">EUR</SelectItem> */}
+                        {/* <SelectItem value="USD">USD</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.currency && (
+                  <p className="text-sm text-red-500">{errors.currency.message}</p>
+                )}
+              </div>
             </div>
           </div>
-          {/* MODIFIED: Use DynamicArrayInput for price_includes */}
-          <DynamicArrayInput<EventFormData, "price_includes">
-            control={control}
-            name="price_includes"
-            label="Co jest wliczone w cenę"
-            register={register}
-            getValues={getValues}
-            setValue={setValue}
-            errors={errors}
-            itemPlaceholder="Wpisz co jest wliczone..."
-            addPlaceholder="Kliknij i dodaj kolejny punkt..."
-          />
           <div className="space-y-2">
-            <Label htmlFor="price_excludes">Co nie jest wliczone w cenę</Label>
-            <Textarea
-              id="price_excludes"
-              {...register("price_excludes")}
-              rows={3}
-              placeholder="..."
+            <Label htmlFor="price_includes" size="event">
+              Co jest wliczone w cenę
+            </Label>
+            <Label htmlFor="price_includes" size="event-description">
+              Wymień wszystkie aktywności, udogodnienia i usługi, które są zawarte w cenie pakietu.
+            </Label>
+            <Separator className="my-8" />
+            <Controller
+              name="price_includes"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DynamicArrayInput
+                  initialValues={(field.value ?? []).filter(
+                    (item): item is string => typeof item === "string",
+                  )}
+                  onChange={field.onChange}
+                  placeholder="Np. Śniadanie, Transfer z lotniska"
+                  ariaLabel="Lista rzeczy wliczonych w cenę"
+                  error={fieldState.error}
+                />
+              )}
             />
-            {errors.price_excludes && (
-              <p className="text-sm text-red-500">{errors.price_excludes.message}</p>
-            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="price_excludes" size="event">
+              Co nie jest wliczone w cenę
+            </Label>
+            <Label htmlFor="price_excludes" size="event-description">
+              Wymień wszystkie elementy istotne dla uczestników, które nie są zawarte w cenie
+              pakietu
+            </Label>
+            <Separator className="my-8" />
+            <Controller
+              name="price_excludes"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DynamicArrayInput
+                  initialValues={(field.value ?? []).filter(
+                    (item): item is string => typeof item === "string",
+                  )}
+                  onChange={field.onChange}
+                  placeholder="Np. Lunch, Opłaty klimatyczne"
+                  ariaLabel="Lista rzeczy niewliczonych w cenę"
+                  error={fieldState.error}
+                />
+              )}
+            />
           </div>
         </div>
 
-        {/* Section 4: Location & Dates */}
-        <div className="space-y-6" id="event-location-dates">
-          {/* Date Range Picker */}
-          <div className="space-y-2">
-            <Label>Termin wydarzenia *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dateRange && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(dateRange.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Wybierz zakres dat</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={(selectedRange: DateRange | undefined) => {
-                    setDateRange(selectedRange);
-                    // Update react-hook-form fields
-                    if (selectedRange?.from) {
-                      setValue("start_date", format(selectedRange.from, "yyyy-MM-dd"), {
-                        shouldValidate: true,
-                      });
-                    } else {
-                      setValue("start_date", "", { shouldValidate: true }); // Clear if no start date
-                    }
-                    if (selectedRange?.to) {
-                      setValue("end_date", format(selectedRange.to, "yyyy-MM-dd"), {
-                        shouldValidate: true,
-                      });
-                    } else {
-                      setValue("end_date", "", { shouldValidate: true }); // Clear if no end date
-                    }
-                  }}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-            {/* Display validation errors for start/end dates below the popover */}
-            {errors.start_date && (
-              <p className="text-sm text-red-500">
-                Błąd daty rozpoczęcia: {errors.start_date.message}
-              </p>
+        {/* Section: Main Attractions - ADDED */}
+        <div className="space-y-2" id="event-main-attractions">
+          <Label htmlFor="main_attractions" size="event">
+            Najważniejsze atrakcje
+          </Label>
+          <Label htmlFor="main_attractions" size="event-description">
+            Wyróżnij to, co jest wyjątkowe w tej podróży, w 6–8 punktach
+          </Label>
+          <Separator className="my-8" />
+          <Controller
+            name="main_attractions"
+            control={control}
+            render={({ field, fieldState }) => (
+              <DynamicArrayInput
+                initialValues={(field.value ?? []).filter(
+                  (item): item is string => typeof item === "string",
+                )}
+                onChange={field.onChange}
+                placeholder="Wymień główny punkt programu lub unikalną cechę..."
+                ariaLabel="Lista najważniejszych atrakcji"
+                error={fieldState.error}
+              />
             )}
-            {errors.end_date && (
-              <p className="text-sm text-red-500">
-                Błąd daty zakończenia: {errors.end_date.message}
-              </p>
-            )}
-          </div>
+          />
         </div>
 
         {/* Section 5: Accommodation, Guests, Food */}
         <div className="space-y-6" id="event-hospitality">
           <div className="space-y-2">
-            <Label htmlFor="accommodation_description">Nocleg</Label>
+            <Label htmlFor="accommodation_description" size="event">
+              Nocleg
+            </Label>
+            <Label htmlFor="accommodation_description" size="event-description">
+              Opisz miejsce lub miejsca, w których będą przebywać uczestnicy
+            </Label>
+            <Separator className="my-8" />
             <Textarea
               id="accommodation_description"
               {...register("accommodation_description")}
               rows={3}
-              placeholder="..."
+              placeholder="Opisz miejsce lub miejsca, w których będą przebywać uczestnicy"
             />
             {errors.accommodation_description && (
               <p className="text-sm text-red-500">{errors.accommodation_description.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="guest_welcome_description">Powitanie gości</Label>
+            <Label htmlFor="guest_welcome_description" size="event">
+              Powitanie gości
+            </Label>
+            <Label htmlFor="guest_welcome_description" size="event-description">
+              Opisz, kto będzie gościł uczestników oraz o której godzinie przewidziane są
+              zameldowanie i wymeldowanie.
+            </Label>
+            <Separator className="my-8" />
             <Textarea
               id="guest_welcome_description"
               {...register("guest_welcome_description")}
               rows={3}
-              placeholder="..."
+              placeholder="Powitanie gości"
             />
             {errors.guest_welcome_description && (
               <p className="text-sm text-red-500">{errors.guest_welcome_description.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="food_description">Wyżywienie</Label>
+            <Label htmlFor="food_description" size="event">
+              Wyżywienie
+            </Label>
+            <Label htmlFor="food_description" size="event-description">
+              Wybierz wszystkie rodzaje jedzenia, które są serwowane, oraz wszelkie wymagania
+              dietetyczne, które są uwzględniane{" "}
+            </Label>
+            <Separator className="my-8" />
             <Textarea
               id="food_description"
               {...register("food_description")}
               rows={3}
-              placeholder="..."
+              placeholder="Wyżywienie"
             />
             {errors.food_description && (
               <p className="text-sm text-red-500">{errors.food_description.message}</p>
@@ -805,41 +1063,65 @@ export function EventForm({ eventId }: EventFormProps) {
         {/* Section 6: Itinerary, Trips, Extra Attractions, Spa */}
         <div className="space-y-6" id="event-activities">
           <div className="space-y-2">
-            <Label htmlFor="itinerary">Plan podróży (Harmonogram)</Label>
-            <Textarea id="itinerary" {...register("itinerary")} rows={5} placeholder="..." />
-            {errors.itinerary && <p className="text-sm text-red-500">{errors.itinerary.message}</p>}
+            <Label htmlFor="included_trips" size="event">
+              Wliczone wycieczki
+            </Label>
+            <Label htmlFor="included_trips" size="event-description">
+              Podaj więcej szczegółów na temat wycieczek, które są zawarte w pakiecie
+            </Label>
+            <Separator className="my-8" />
+            <Controller
+              name="included_trips"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DynamicArrayInput
+                  initialValues={(field.value ?? []).filter(
+                    (item): item is string => typeof item === "string",
+                  )}
+                  onChange={field.onChange}
+                  placeholder="Np. Wycieczka górska, Zwiedzanie miasta"
+                  ariaLabel="Lista wliczonych wycieczek"
+                  error={fieldState.error}
+                />
+              )}
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="included_trips">Wliczone wycieczki</Label>
-            <Textarea
-              id="included_trips"
-              {...register("included_trips")}
-              rows={3}
-              placeholder="..."
+            <Label htmlFor="paid_attractions" size="event">
+              Dodatkowe atrakcje za dopłatą
+            </Label>
+            <Label htmlFor="paid_attractions" size="event-description">
+              Podziel się informacjami o innych aktywnościach, które uczestnicy mogą zrobić w
+              okolicy za dodatkową opłatę
+            </Label>
+            <Separator className="my-8" />
+            <Controller
+              name="paid_attractions"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DynamicArrayInput
+                  initialValues={(field.value ?? []).filter(
+                    (item): item is string => typeof item === "string",
+                  )}
+                  onChange={field.onChange}
+                  placeholder="Np. Masaż, Wypożyczenie sprzętu"
+                  ariaLabel="Lista dodatkowych płatnych atrakcji"
+                  error={fieldState.error}
+                />
+              )}
             />
-            {errors.included_trips && (
-              <p className="text-sm text-red-500">{errors.included_trips.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="paid_attractions">Dodatkowe atrakcje za dopłatą</Label>
-            <Textarea
-              id="paid_attractions"
-              {...register("paid_attractions")}
-              rows={3}
-              placeholder="..."
-            />
-            {errors.paid_attractions && (
-              <p className="text-sm text-red-500">{errors.paid_attractions.message}</p>
-            )}
           </div>
         </div>
 
         {/* Section: Program (dynamic) */}
         <div className="space-y-6" id="event-program">
-          <h2 className="text-lg font-semibold border-b pb-2">
+          <Label htmlFor="program" size="event">
             Program wydarzenia (dzień po dniu)
-          </h2>
+          </Label>
+          <Label htmlFor="program" size="event-description">
+            Opisz pełny program dla uczestników i podziel się z nimi, jak będą wyglądały ich dni
+          </Label>
+          <Separator className="my-8" />
           {programFields.map((field, index) => (
             <div
               key={field.id}
@@ -888,24 +1170,39 @@ export function EventForm({ eventId }: EventFormProps) {
         {/* Section 7: Policies and Important Info */}
         <div className="space-y-6" id="event-policies">
           <div className="space-y-2">
-            <Label htmlFor="cancellation_policy">Zasady anulowania rezerwacji</Label>
+            <Label htmlFor="cancellation_policy" size="event">
+              Zasady anulowania rezerwacji
+            </Label>
+            <Label htmlFor="cancellation_policy" size="event-description">
+              Tutaj należy opisać, na jakich warunkach uczestnik może odwołać swój udział w
+              wydarzeniu
+            </Label>
+            <Separator className="my-8" />
             <Textarea
               id="cancellation_policy"
               {...register("cancellation_policy")}
               rows={3}
-              placeholder="..."
+              placeholder="Zasady anulowania rezerwacji"
             />
             {errors.cancellation_policy && (
               <p className="text-sm text-red-500">{errors.cancellation_policy.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="important_info">Warto wiedzieć przed wyjazdem</Label>
+            <Label htmlFor="important_info" size="event">
+              Warto wiedzieć przed wyjazdem
+            </Label>
+            <Label htmlFor="important_info" size="event-description">
+              Podziel się dodatkowymi informacjami, które mogą być istotne dla uczestników. Ta
+              sekcja nie będzie publikowana w ofercie, a jedynie widoczna w powiadomieniach e-mail
+              dla klientów
+            </Label>
+            <Separator className="my-8" />
             <Textarea
               id="important_info"
               {...register("important_info")}
               rows={3}
-              placeholder="..."
+              placeholder="Warto wiedzieć przed wyjazdem"
             />
             {errors.important_info && (
               <p className="text-sm text-red-500">{errors.important_info.message}</p>
@@ -915,26 +1212,45 @@ export function EventForm({ eventId }: EventFormProps) {
 
         {/* Section 8: Images */}
         <div className="space-y-6" id="event-images-section">
-          {/* MODIFIED: Image preview logic */}
-          {currentImagePreviewUrl && (
-            <div className="mb-4">
-              <Label>Aktualne zdjęcie</Label>
-              <img
-                src={currentImagePreviewUrl}
-                alt="Current event image"
-                className="mt-2 max-w-xs rounded border"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none"; // Hide if broken
-                  setCurrentImagePreviewUrl(null); // Clear preview if image is broken
-                }}
-              />
+          <Label htmlFor="images" size="event">
+            Zdjęcia wydarzenia
+          </Label>
+          <Label htmlFor="images" size="event-description">
+            Dodaj zdjęcia, które pomogą uczestnikom zrozumieć, co czeka ich na wydarzeniu
+          </Label>
+          <Separator className="my-8" />
+          {watchedImageIds && watchedImageIds.length > 0 && (
+            <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {watchedImageIds.map((imageId) => (
+                <div key={imageId} className="relative group">
+                  <img
+                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_200,h_150/v1/${imageId}`}
+                    alt="Zdjęcie wydarzenia"
+                    className="rounded border object-cover w-full h-[150px]"
+                    onError={(e) => {
+                      // Optionally hide or show placeholder if image fails to load
+                      // e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto"
+                    onClick={() => handleRemoveImage(imageId)}
+                    aria-label="Usuń zdjęcie"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="image-upload-input">
-              {currentImagePreviewUrl || getValues("image_id")
-                ? "Zmień zdjęcie wydarzenia"
-                : "Główne zdjęcie wydarzenia"}
+            <Label htmlFor="image-upload-input" className="flex">
+              {watchedImageIds && watchedImageIds.length > 0
+                ? "Dodaj kolejne zdjęcie"
+                : "Dodaj zdjęcia wydarzenia"}
             </Label>
             <Input
               id="image-upload-input"
@@ -950,125 +1266,131 @@ export function EventForm({ eventId }: EventFormProps) {
               </div>
             )}
             {directUploadError && <p className="text-sm text-red-500">{directUploadError}</p>}
-            {/* MODIFIED: image_id error is now the one to show if any validation fails */}
-            {errors.image_id && <p className="text-sm text-red-500">{errors.image_id.message}</p>}
+            {errors.image_ids && <p className="text-sm text-red-500">{errors.image_ids.message}</p>}
           </div>
         </div>
 
         {/* Section: Instructors */}
         <div className="space-y-6" id="event-instructors">
-          {/* Header with Add Instructor button */}
-          <div className="flex justify-between items-center border-b pb-2">
-            <h2 className="text-lg font-semibold">Instruktorzy</h2>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsInstructorModalOpen(true)}
-            >
-              <PlusCircle className="mr-2 h-4 w-4" /> Dodaj Instruktora
-            </Button>
-          </div>
-          <Controller
-            control={control}
-            name="instructor_ids"
-            render={({ field }) => (
-              // Wrap ScrollArea inside AlertDialog provider
-              <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
-                <ScrollArea className="h-48 w-full rounded-md border p-4">
-                  <div className="space-y-2">
-                    {instructors.length > 0 ? (
-                      instructors.map((instructor) => (
-                        <div
-                          key={instructor.id}
-                          className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-muted/50"
-                        >
-                          {/* Checkbox and Label */}
-                          <div className="flex items-center gap-2 flex-grow">
-                            <Checkbox
-                              id={`instructor-${instructor.id}`}
-                              checked={field.value?.includes(instructor.id)}
-                              onCheckedChange={(checked) => {
-                                const currentIds = field.value || [];
-                                if (checked) {
-                                  field.onChange([...currentIds, instructor.id]);
-                                } else {
-                                  field.onChange(currentIds.filter((id) => id !== instructor.id));
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={`instructor-${instructor.id}`}
-                              className="font-normal cursor-pointer"
-                            >
-                              {instructor.name}
-                            </Label>
-                          </div>
-                          {/* Action Buttons */}
-                          <div className="flex items-center flex-shrink-0 gap-1">
-                            {/* Edit Button */}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditInstructor(instructor)}
-                              className="h-7 px-2"
-                              aria-label={`Edit ${instructor.name}`}
-                            >
-                              <Edit2 size={14} className="text-muted-foreground" />
-                            </Button>
-                            {/* Delete Button Trigger */}
-                            <AlertDialogTrigger asChild>
+          <div className="space-y-2">
+            <Label htmlFor="instructors" size="event">
+              Instruktorzy
+            </Label>
+            <Label htmlFor="instructors" size="event-description">
+              Wybierz instruktorów, którzy będą prowadzić wydarzenie
+            </Label>
+            <Separator className="my-8" />
+            <div className="flex justify-between items-center border-b pb-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsInstructorModalOpen(true)}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Dodaj Instruktora
+              </Button>
+            </div>
+            <Controller
+              control={control}
+              name="instructor_ids"
+              render={({ field }) => (
+                // Wrap ScrollArea inside AlertDialog provider
+                <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
+                  <ScrollArea className="h-48 w-full rounded-md border p-4">
+                    <div className="space-y-2">
+                      {instructors.length > 0 ? (
+                        instructors.map((instructor) => (
+                          <div
+                            key={instructor.id}
+                            className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-muted/50"
+                          >
+                            {/* Checkbox and Label */}
+                            <div className="flex items-center gap-2 flex-grow">
+                              <Checkbox
+                                id={`instructor-${instructor.id}`}
+                                checked={field.value?.includes(instructor.id)}
+                                onCheckedChange={(checked) => {
+                                  const currentIds = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...currentIds, instructor.id]);
+                                  } else {
+                                    field.onChange(currentIds.filter((id) => id !== instructor.id));
+                                  }
+                                }}
+                              />
+                              <Label
+                                htmlFor={`instructor-${instructor.id}`}
+                                className="font-normal cursor-pointer"
+                              >
+                                {instructor.name}
+                              </Label>
+                            </div>
+                            {/* Action Buttons */}
+                            <div className="flex items-center flex-shrink-0 gap-1">
+                              {/* Edit Button */}
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setInstructorToDelete(instructor)}
-                                className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                aria-label={`Delete ${instructor.name}`}
+                                onClick={() => handleEditInstructor(instructor)}
+                                className="h-7 px-2"
+                                aria-label={`Edit ${instructor.name}`}
                               >
-                                <Trash2 size={14} />
+                                <Edit2 size={14} className="text-muted-foreground" />
                               </Button>
-                            </AlertDialogTrigger>
+                              {/* Delete Button Trigger */}
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setInstructorToDelete(instructor)}
+                                  className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  aria-label={`Delete ${instructor.name}`}
+                                >
+                                  <Trash2 size={14} />
+                                </Button>
+                              </AlertDialogTrigger>
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">Nie znaleziono instruktorów.</p>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500">Nie znaleziono instruktorów.</p>
+                      )}
+                    </div>
+                    {/* Confirmation Dialog Content */}
+                    {instructorToDelete && (
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Na pewno usunąć instruktora?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie instruktora
+                            &quot;<strong>{instructorToDelete.name}</strong>&quot; z Twojej listy i
+                            wszystkich powiązanych wydarzeń.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isDeletingInstructor}>
+                            Anuluj
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            disabled={isDeletingInstructor}
+                            onClick={handleDeleteInstructor}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isDeletingInstructor ? "Usuwanie..." : "Tak, usuń"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
                     )}
-                  </div>
-                  {/* Confirmation Dialog Content */}
-                  {instructorToDelete && (
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Na pewno usunąć instruktora?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie instruktora
-                          &quot;<strong>{instructorToDelete.name}</strong>&quot; z Twojej listy i
-                          wszystkich powiązanych wydarzeń.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeletingInstructor}>
-                          Anuluj
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                          disabled={isDeletingInstructor}
-                          onClick={handleDeleteInstructor}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {isDeletingInstructor ? "Usuwanie..." : "Tak, usuń"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  )}
-                </ScrollArea>
-              </AlertDialog>
+                  </ScrollArea>
+                </AlertDialog>
+              )}
+            />
+            {errors.instructor_ids && (
+              <p className="text-sm text-red-500">{errors.instructor_ids.message}</p>
             )}
-          />
-          {errors.instructor_ids && (
-            <p className="text-sm text-red-500">{errors.instructor_ids.message}</p>
-          )}
+          </div>
         </div>
 
         {/* Section 9: Visibility */}
@@ -1097,7 +1419,10 @@ export function EventForm({ eventId }: EventFormProps) {
         )}
         {!isEditMode && (
           <div className="space-y-2" id="event-visibility">
-            <h2 className="text-lg font-semibold border-b pb-2">Widoczność początkowa</h2>
+            <Label htmlFor="is_public_create" size="event">
+              Widoczność początkowa
+            </Label>
+            <Separator className="my-8" />
             <div className="flex items-center space-x-2">
               <Controller
                 name="is_public"
@@ -1117,7 +1442,59 @@ export function EventForm({ eventId }: EventFormProps) {
             {errors.is_public && <p className="text-sm text-red-500">{errors.is_public.message}</p>}
           </div>
         )}
+
+        {/* Display all form errors at the bottom */}
+        {Object.keys(errors).length > 0 && (
+          <div
+            className="mt-6 p-4 border border-red-300 bg-red-50 rounded-md space-y-2"
+            id="form-errors-summary"
+          >
+            <h3 className="text-lg font-semibold text-red-700">Wystąpiły błędy w formularzu:</h3>
+            <ul className="list-disc list-inside pl-2 text-red-600 text-sm">
+              {Object.entries(errors).map(([fieldName, fieldError]) => {
+                if (fieldError && fieldError.message) {
+                  // Handle direct field errors
+                  return <li key={fieldName}>{`${fieldName}: ${fieldError.message}`}</li>;
+                } else if (Array.isArray(fieldError)) {
+                  // Handle errors in field arrays (e.g., program, price_includes)
+                  return fieldError.map((errorItem, index) =>
+                    errorItem && errorItem.message ? (
+                      <li
+                        key={`${fieldName}.${index}`}
+                      >{`${fieldName}[${index}]: ${errorItem.message}`}</li>
+                    ) : null,
+                  );
+                } else if (typeof fieldError === "object" && fieldError !== null) {
+                  // Handle cases where fieldError is an object but not an array (e.g. for price_includes root error)
+                  // This might be a root error for the array itself if not using FieldArray specific errors
+                  const message = (fieldError as any).message;
+                  if (message) {
+                    return <li key={`${fieldName}-root`}>{`${fieldName}: ${message}`}</li>;
+                  }
+                }
+                return null;
+              })}
+            </ul>
+          </div>
+        )}
       </div>
+
+      <DashboardFooter
+        title={isEditMode ? "Edytuj wydarzenie" : "Utwórz nowe wydarzenie"}
+        onUpdate={handleSubmit(onSubmit)} // Pass the internal onSubmit to handleSubmit
+        updateLabel={
+          isSubmitting
+            ? isEditMode
+              ? "Zapisywanie..."
+              : "Tworzenie..."
+            : isEditMode
+              ? "Zapisz zmiany"
+              : "Utwórz wydarzenie"
+        }
+        // Pass the href for the public page link if in edit mode
+        viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
+        viewPublicLabel="Zobacz stronę publiczną" // Customize label
+      />
 
       {/* === Render Instructor Modal === */}
       <InstructorModal

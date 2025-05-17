@@ -32,7 +32,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         {children}
       </div>
       <div className="flex gap-2 flex-shrink-0 items-center">
-        {" "}
         {/* Use items-center for alignment */}
         {/* Render Create button if handler exists */}
         {onCreate && (
@@ -48,7 +47,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         )}
         {/* Render Update button if handler exists */}
         {onUpdate && (
-          <Button variant="default" onClick={onUpdate}>
+          <Button
+            variant="default"
+            onClick={() => {
+              console.log("🚀 ~ onUpdate:");
+              onUpdate();
+            }}
+          >
             {updateLabel}
           </Button>
         )}

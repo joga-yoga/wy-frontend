@@ -7,14 +7,27 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+  "leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+  {
+    variants: {
+      size: {
+        default: "text-sm font-medium",
+        sm: "text-sm font-medium",
+        event: "text-3xl font-semibold text-gray-800 flex",
+        "event-description": "text-xl font-normal text-gray-500 flex pt-2",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
+  },
 );
 
 const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>
->(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root ref={ref} className={cn(labelVariants(), className)} {...props} />
+>(({ className, size, ...props }, ref) => (
+  <LabelPrimitive.Root ref={ref} className={cn(labelVariants({ size }), className)} {...props} />
 ));
 Label.displayName = LabelPrimitive.Root.displayName;
 
