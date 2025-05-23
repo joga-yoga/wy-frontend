@@ -1,15 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -31,7 +31,9 @@ export default function BecomeOrganizerPage() {
   const { toast } = useToast();
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
-  console.log("🚀 ~ BecomeOrganizerPage ~ codeSent:", codeSent);
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -39,6 +41,7 @@ export default function BecomeOrganizerPage() {
     watch,
     trigger,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -46,10 +49,31 @@ export default function BecomeOrganizerPage() {
   });
 
   const phoneNumberValue = watch("phoneNumber");
+  const imageFile = watch("image");
 
   useEffect(() => {
     setCodeSent(false);
   }, [phoneNumberValue]);
+
+  useEffect(() => {
+    const file = imageFile?.[0];
+    if (file instanceof File) {
+      const currentPreviewUrl = imagePreviewUrl;
+      const newPreviewUrl = URL.createObjectURL(file);
+      setImagePreviewUrl(newPreviewUrl);
+      handleImageSelected(file);
+
+      if (currentPreviewUrl && currentPreviewUrl !== newPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+    } else {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+      setImagePreviewUrl(null);
+      setUploadedImageId(null);
+    }
+  }, [imageFile]);
 
   useEffect(() => {
     axiosInstance
@@ -69,6 +93,38 @@ export default function BecomeOrganizerPage() {
       });
   }, [router, toast]);
 
+  async function handleImageSelected(file: File | undefined) {
+    if (!file) {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl(null);
+      setUploadedImageId(null);
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const imageFormData = new FormData();
+    imageFormData.append("image", file);
+    try {
+      const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
+      setUploadedImageId(response.data.image_id);
+      toast({ description: "Image uploaded successfully." });
+    } catch (err: any) {
+      setUploadedImageId(null);
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+      setImagePreviewUrl(null);
+      setValue("image", null);
+      toast({
+        title: "Image Upload Failed",
+        description: err.response?.data?.detail || "Could not upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
   async function handleSendCode() {
     const isValid = await trigger("phoneNumber");
     if (!isValid) {
@@ -77,11 +133,10 @@ export default function BecomeOrganizerPage() {
     }
 
     setIsSendingCode(true);
-    const formData = new FormData();
-    formData.append("phone_number", phoneNumberValue);
-
     try {
-      await axiosInstance.post("/organizer/send-verification-code", formData);
+      await axiosInstance.post("/organizer/send-verification-code", {
+        phone_number: phoneNumberValue,
+      });
       setCodeSent(true);
       toast({ description: "Verification code sent to your phone." });
     } catch (err: any) {
@@ -96,19 +151,34 @@ export default function BecomeOrganizerPage() {
   }
 
   async function onSubmit(data: FormData) {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("phone_number", data.phoneNumber);
-    formData.append("verification_code", data.verificationCode);
+    const payload: {
+      name: string;
+      description?: string;
+      phone_number: string;
+      verification_code: string;
+      image_id?: string;
+    } = {
+      name: data.name,
+      phone_number: data.phoneNumber,
+      verification_code: data.verificationCode,
+    };
+
     if (data.description) {
-      formData.append("description", data.description);
+      payload.description = data.description;
     }
-    if (data.image?.[0]) {
-      formData.append("image", data.image[0]);
+    if (uploadedImageId) {
+      payload.image_id = uploadedImageId;
+    } else if (data.image?.[0] && !uploadedImageId && !isUploadingImage) {
+      toast({
+        title: "Image Not Uploaded",
+        description: "Please wait for the image to upload or clear the selection.",
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
-      await axiosInstance.post("/organizer", formData);
+      await axiosInstance.post("/organizer", payload);
       toast({ description: "You are now an organizer! Redirecting..." });
       router.replace("/dashboard");
     } catch (err: any) {
@@ -117,11 +187,18 @@ export default function BecomeOrganizerPage() {
         "Failed to become an organizer. Please check your input and try again.";
       toast({ description: errorMsg, variant: "destructive" });
       if (errorMsg.toLowerCase().includes("verification code")) {
+        setError("verificationCode", { type: "manual", message: "Invalid or expired code." });
+      }
+      if (errorMsg.toLowerCase().includes("phone number is already associated")) {
+        setError("phoneNumber", {
+          type: "manual",
+          message: "This phone number is already in use.",
+        });
         setCodeSent(false);
-        setError("verificationCode", { type: "manual", message: "Invalid code." });
       }
     }
   }
+
   return (
     <div className="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <h1 className="text-2xl font-bold mb-6 text-center">Become an Organizer</h1>
@@ -158,7 +235,7 @@ export default function BecomeOrganizerPage() {
             <Input
               id="phoneNumber"
               type="tel"
-              placeholder="e.g., +14155552671"
+              placeholder="e.g., +14155552671 (include country code)"
               {...register("phoneNumber")}
               aria-invalid={errors.phoneNumber ? "true" : "false"}
               className="flex-grow"
@@ -166,7 +243,9 @@ export default function BecomeOrganizerPage() {
             <Button
               type="button"
               onClick={handleSendCode}
-              disabled={isSendingCode || !phoneNumberValue || !!errors.phoneNumber}
+              disabled={
+                isSendingCode || !phoneNumberValue || !!errors.phoneNumber || isUploadingImage
+              }
               variant="outline"
               size="sm"
             >
@@ -203,10 +282,35 @@ export default function BecomeOrganizerPage() {
           <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
             Logo / Image (optional)
           </label>
-          <Input id="image" type="file" {...register("image")} accept="image/*" />
+          <Input
+            id="image"
+            type="file"
+            {...register("image")}
+            accept="image/*"
+            disabled={isUploadingImage}
+          />
+          {isUploadingImage && <p className="text-sm text-blue-500 mt-1">Uploading image...</p>}
+          {!isUploadingImage && uploadedImageId && (
+            <p className="text-sm text-green-500 mt-1">Image uploaded successfully.</p>
+          )}
+          {imagePreviewUrl && (
+            <div className="mt-2">
+              <Image
+                src={imagePreviewUrl}
+                alt="Image preview"
+                width={100}
+                height={100}
+                className="rounded object-cover"
+              />
+            </div>
+          )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || isSendingCode}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || isSendingCode || isUploadingImage}
+        >
           {isSubmitting ? "Submitting..." : "Submit Application"}
         </Button>
       </form>

@@ -461,17 +461,19 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                   className={cn(
                     "data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground",
                     "data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground",
+                    "py-1",
                     badgeClassName,
                   )}
                   data-fixed={option.fixed}
                   data-disabled={disabled || undefined}
+                  variant="outline"
                 >
                   {option.label}
                   <button
-                    title="button"
                     type="button"
                     className={cn(
                       "ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                      "bg-gray-800 p-[2px] hover:bg-gray-600",
                       (disabled || option.fixed) && "hidden",
                     )}
                     onKeyDown={(e) => {
@@ -485,7 +487,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                     }}
                     onClick={() => handleUnselect(option)}
                   >
-                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                    <X className="h-4 w-4 text-white" />
                   </button>
                 </Badge>
               );
@@ -529,7 +531,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                 onChange?.(selected.filter((s) => s.fixed));
               }}
               className={cn(
-                "absolute right-0 h-6 w-6 p-0",
+                "absolute right-0 h-8 w-6 p-0",
                 (hideClearAllButton ||
                   disabled ||
                   selected.length < 1 ||

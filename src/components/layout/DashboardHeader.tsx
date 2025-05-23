@@ -12,6 +12,7 @@ interface DashboardHeaderProps {
   viewPublicHref?: string; // New prop for the link href
   viewPublicLabel?: string; // Optional label for the new button
   children?: React.ReactNode; // Optional slot for extra elements like breadcrumbs or filters
+  isSubmitting?: boolean; // Added to disable buttons during submission
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -23,6 +24,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   viewPublicHref,
   viewPublicLabel = "View Public Page", // Default label
   children,
+  isSubmitting,
 }) => {
   return (
     <div className="sticky top-[65px] z-10 bg-background py-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 px-6">
@@ -35,7 +37,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         {/* Use items-center for alignment */}
         {/* Render Create button if handler exists */}
         {onCreate && (
-          <Button variant="default" onClick={onCreate}>
+          <Button variant="default" onClick={onCreate} disabled={isSubmitting}>
             {createLabel}
           </Button>
         )}
@@ -53,6 +55,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               console.log("🚀 ~ onUpdate:");
               onUpdate();
             }}
+            disabled={isSubmitting}
           >
             {updateLabel}
           </Button>

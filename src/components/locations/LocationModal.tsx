@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -87,6 +87,10 @@ export function LocationModal({
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  const suggestionsContainerRef = useRef<HTMLDivElement>(null);
+  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const addressQueryValue = useWatch({ control, name: "addressQuery" });
 
@@ -135,11 +139,29 @@ export function LocationModal({
     }
   }, [addressQueryValue, debouncedFetchSuggestions, isSearching]);
 
+  useEffect(() => {
+    // Reset highlighted index when suggestions change
+    setHighlightedIndex(-1);
+    // Initialize suggestion refs array when suggestions change
+    suggestionRefs.current = suggestions.map(() => null);
+  }, [suggestions]);
+
+  // Effect to scroll highlighted suggestion into view
+  useEffect(() => {
+    if (highlightedIndex > -1 && suggestionRefs.current[highlightedIndex]) {
+      suggestionRefs.current[highlightedIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [highlightedIndex]);
+
   const handleSuggestionClick = (suggestion: AutocompleteSuggestion) => {
     setIsSearching(false);
     setValue("addressQuery", suggestion.description);
     setValue("google_place_id", suggestion.place_id);
     setSuggestions([]); // Clear suggestions after selection
+    setHighlightedIndex(-1); // Reset highlight
   };
 
   useEffect(() => {
@@ -218,6 +240,25 @@ export function LocationModal({
                 // If user clears input, also clear google_place_id
                 if (!e.target.value) {
                   setValue("google_place_id", null);
+                  setSuggestions([]); // Clear suggestions
+                }
+              }}
+              onKeyDown={(e) => {
+                if (suggestions.length > 0) {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setHighlightedIndex((prevIndex) =>
+                      prevIndex === suggestions.length - 1 ? 0 : prevIndex + 1,
+                    );
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setHighlightedIndex((prevIndex) =>
+                      prevIndex <= 0 ? suggestions.length - 1 : prevIndex - 1,
+                    );
+                  } else if (e.key === "Enter" && highlightedIndex > -1) {
+                    e.preventDefault();
+                    handleSuggestionClick(suggestions[highlightedIndex]);
+                  }
                 }
               }}
             />
@@ -225,12 +266,23 @@ export function LocationModal({
               {isFetchingSuggestions && "Szukanie..."}
             </p>
             {suggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-background border border-border shadow-lg rounded-md mt-1 min-h-[62px] max-h-[200px] overflow-y-auto top-[68px]">
-                {suggestions.map((suggestion) => (
+              <div
+                ref={suggestionsContainerRef}
+                className="absolute z-10 w-full bg-background border border-border shadow-lg rounded-md mt-1 min-h-[62px] max-h-[200px] overflow-y-auto top-[68px]"
+              >
+                {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.place_id}
-                    className="p-2 hover:bg-accent cursor-pointer"
+                    ref={(el) => {
+                      if (suggestionRefs.current) {
+                        suggestionRefs.current[index] = el;
+                      }
+                    }}
+                    className={`p-2 hover:bg-accent cursor-pointer ${
+                      index === highlightedIndex ? "bg-accent" : ""
+                    }`}
                     onClick={() => handleSuggestionClick(suggestion)}
+                    onMouseEnter={() => setHighlightedIndex(index)} // Optional: highlight on mouse enter
                   >
                     <p className="font-medium">{suggestion.structured_formatting.main_text}</p>
                     <p className="text-sm text-muted-foreground">

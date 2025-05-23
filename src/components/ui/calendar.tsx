@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
@@ -14,6 +15,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      fromDate={new Date()}
+      locale={pl}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",

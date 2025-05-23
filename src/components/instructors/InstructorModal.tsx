@@ -20,8 +20,9 @@ import { InstructorForm, InstructorFormData, instructorSchema } from "./Instruct
 export interface Instructor {
   id: string;
   name: string;
-  bio: string;
-  image_id: string;
+  bio?: string | null; // Optional bio
+  image_id: string | null; // image_id can be string or null if no image
+  // Add other relevant fields like contact, expertise, etc.
 }
 
 interface InstructorModalProps {
@@ -38,9 +39,11 @@ export function InstructorModal({
   initialInstructor,
 }: InstructorModalProps) {
   const { toast } = useToast();
-  const [currentImageId, setCurrentImageId] = useState<string | null>(
-    initialInstructor?.image_id || null,
-  );
+  const [currentImageId, setCurrentImageId] = useState<string | null>(null);
+  const [newlyUploadedImageId, setNewlyUploadedImageId] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [removeCurrentImage, setRemoveCurrentImage] = useState(false);
 
   const form = useForm<InstructorFormData>({
     resolver: zodResolver(instructorSchema),
@@ -54,33 +57,121 @@ export function InstructorModal({
   const {
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { isSubmitting },
   } = form;
 
-  // Reset form and image when initialInstructor changes or modal closes
+  const imageFile = watch("image");
+
+  // Effect to handle selected image file changes for preview and upload
+  useEffect(() => {
+    const file = imageFile?.[0];
+    if (file instanceof File) {
+      const currentPreview = imagePreviewUrl;
+      const newPreview = URL.createObjectURL(file);
+      setImagePreviewUrl(newPreview);
+      setNewlyUploadedImageId(null); // Clear previous upload ID
+      setRemoveCurrentImage(false); // New file selected, don't remove
+      handleImageUpload(file); // Auto-upload on selection
+      if (currentPreview) {
+        URL.revokeObjectURL(currentPreview);
+      }
+    } else if (!file && imagePreviewUrl) {
+      // File cleared from input, but not by "Remove Image" button
+      // This case might be tricky if "Remove Image" also clears the file input.
+      // For now, assume clearing input means user deselects, not necessarily removes existing.
+      // URL.revokeObjectURL(imagePreviewUrl);
+      // setImagePreviewUrl(null);
+      // setNewlyUploadedImageId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageFile]); // imagePreviewUrl was removed to avoid re-triggering upload
+
+  // Effect to cleanup preview URL
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
+  // Reset form and image states when initialInstructor changes or modal opens/closes
   useEffect(() => {
     if (isOpen) {
       const defaultVals = {
         name: initialInstructor?.name || "",
         bio: initialInstructor?.bio || "",
-        image: undefined,
+        image: undefined, // RHF image field
       };
       reset(defaultVals);
       setCurrentImageId(initialInstructor?.image_id || null);
+      setNewlyUploadedImageId(null);
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl(null);
+      setRemoveCurrentImage(false);
+      setIsUploadingImage(false);
     } else {
       // Optional: Delay reset slightly to avoid visual flicker on close
       // setTimeout(() => {
       //   reset({ name: "", bio: "", image: undefined });
       //   setCurrentImageId(null);
+      //   if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      //   setImagePreviewUrl(null);
+      //   setNewlyUploadedImageId(null);
+      //   setRemoveCurrentImage(false);
+      //   setIsUploadingImage(false);
       // }, 150);
     }
-  }, [initialInstructor, isOpen, reset]);
+  }, [initialInstructor, isOpen, reset]); // imagePreviewUrl removed from deps
+
+  async function handleImageUpload(file: File) {
+    setIsUploadingImage(true);
+    const imageFormData = new FormData();
+    imageFormData.append("image", file);
+    try {
+      const response = await axiosInstance.post("/instructors/image-upload", imageFormData);
+      setNewlyUploadedImageId(response.data.image_id);
+      toast({ description: "New image uploaded. Save changes to apply." });
+    } catch (err: any) {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl(null);
+      setNewlyUploadedImageId(null);
+      setValue("image", null); // Clear RHF image state
+      toast({
+        title: "Image Upload Failed",
+        description: err.response?.data?.detail || "Could not upload image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
+  function handleRemoveImageClick() {
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    setImagePreviewUrl(null);
+    setValue("image", null); // Clear the file input in RHF
+    setNewlyUploadedImageId(null); // No new image will be uploaded
+    setRemoveCurrentImage(true); // Mark that current image should be removed
+    toast({ description: "Current image will be removed on save." });
+  }
 
   async function onSubmit(data: InstructorFormData) {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    if (data.bio) formData.append("bio", data.bio);
-    if (data.image?.[0]) formData.append("image", data.image[0]);
+    const payload: { name: string; bio?: string; image_id?: string | null } = {
+      name: data.name,
+    };
+    if (data.bio) payload.bio = data.bio;
+
+    if (newlyUploadedImageId) {
+      payload.image_id = newlyUploadedImageId;
+    } else if (removeCurrentImage) {
+      payload.image_id = null; // Signal to backend to remove the image
+    }
+    // If neither newlyUploadedImageId is set nor removeCurrentImage is true,
+    // image_id is not sent, so backend should not change the existing image
+    // unless initialInstructor had no image_id, in which case it remains null/undefined.
 
     const url = initialInstructor ? `/instructors/${initialInstructor.id}` : "/instructors";
     const method = initialInstructor ? "put" : "post";
@@ -89,16 +180,29 @@ export function InstructorModal({
       ? "Failed to update instructor"
       : "Failed to create instructor";
 
+    // Prevent submission if an image is uploading but not yet finished
+    if (isUploadingImage) {
+      toast({ description: "Please wait for the image to finish uploading.", variant: "default" });
+      return;
+    }
+
     try {
       const response = await axiosInstance({
         method,
         url,
-        data: formData,
-        headers: { "Content-Type": "multipart/form-data" },
+        data: payload, // Send JSON payload
+        headers: { "Content-Type": "application/json" }, // Set content type to JSON
       });
       toast({ description: successMessage });
-      onInstructorSaved(response.data); // Pass saved instructor back
-      onClose(); // Close modal on success
+      onInstructorSaved(response.data);
+      onClose();
+      // Reset states after successful save
+      setCurrentImageId(response.data.image_id || null);
+      setNewlyUploadedImageId(null);
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl(null);
+      setValue("image", null);
+      setRemoveCurrentImage(false);
     } catch (error: any) {
       toast({
         description: `${errorMessage}: ${error?.response?.data?.detail || error?.message || "Unknown error"}`,
@@ -131,19 +235,23 @@ export function InstructorModal({
           form={form}
           onSubmit={onSubmit}
           currentImageId={currentImageId}
-          // No need to pass initialData here, form handles it via defaultValues/reset
+          imagePreviewUrl={imagePreviewUrl}
+          isUploadingImage={isUploadingImage}
+          newlyUploadedImageId={newlyUploadedImageId}
+          removeCurrentImage={removeCurrentImage}
+          onRemoveImage={handleRemoveImageClick}
         />
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting || isUploadingImage}>
             Cancel
           </Button>
           <Button
-            type="submit" // Connects to the form inside InstructorForm
-            onClick={handleSubmit(onSubmit)} // Trigger form submission
-            disabled={isSubmitting}
+            type="submit"
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting || isUploadingImage}
           >
-            {isSubmitting
+            {isSubmitting || isUploadingImage
               ? initialInstructor
                 ? "Saving..."
                 : "Creating..."
