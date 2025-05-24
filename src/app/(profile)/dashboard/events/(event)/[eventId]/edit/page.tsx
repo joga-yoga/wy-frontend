@@ -9,9 +9,5 @@ export default function EditEventPage() {
   const params = useParams();
   const eventId = params.eventId as string;
 
-  return (
-    <div className="">
-      <EventForm eventId={eventId} />
-    </div>
-  );
+  return <EventForm eventId={eventId} />;
 }

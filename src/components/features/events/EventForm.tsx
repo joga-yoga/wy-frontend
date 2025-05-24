@@ -6,10 +6,13 @@ import { pl } from "date-fns/locale";
 import {
   Calendar as CalendarIcon,
   Edit2,
+  EyeOff,
   HelpCircle,
   Info,
   Loader2,
   PlusCircle,
+  Save,
+  Send,
   Trash2,
   X,
 } from "lucide-react";
@@ -86,6 +89,46 @@ interface EventFormProps {
   eventId?: string;
 }
 
+// 1. Helper function to prepare event payload
+const prepareEventPayload = (data: EventFormData): Partial<EventFormData> => {
+  const payload: Omit<EventFormData, "start_date" | "end_date"> & {
+    start_date: string | null | undefined;
+    end_date: string | null | undefined;
+  } = {
+    ...data,
+    start_date: data.start_date === "" ? null : data.start_date,
+    end_date: data.end_date === "" ? null : data.end_date,
+    price_includes: (data.price_includes ?? []).filter(
+      (item) => typeof item === "string" && item.trim() !== "",
+    ),
+    price_excludes: (data.price_excludes ?? []).filter(
+      (item) => typeof item === "string" && item.trim() !== "",
+    ),
+    program: (data.program ?? []).filter((item) => typeof item === "string" && item.trim() !== ""),
+    included_trips: (data.included_trips ?? []).filter(
+      (item) => typeof item === "string" && item.trim() !== "",
+    ),
+    paid_attractions: (data.paid_attractions ?? []).filter(
+      (item) => typeof item === "string" && item.trim() !== "",
+    ),
+    skill_level: (data.skill_level ?? []).filter(
+      (item) => typeof item === "string" && item.trim() !== "",
+    ),
+    image_ids: data.image_ids ?? [],
+    main_attractions: (data.main_attractions ?? []).filter(
+      (item) => typeof item === "string" && item.trim() !== "",
+    ),
+  };
+  // Assuming 'image' and 'image_id' fields are not meant for direct submission
+  // and are handled differently (e.g. image_ids is the source of truth for images).
+  // If EventFormData is strictly what's sent, these deletes might not be needed
+  // or 'image'/'image_id' shouldn't be on EventFormData.
+  delete (payload as any).image;
+  delete (payload as any).image_id;
+  payload.instructor_ids = data.instructor_ids ?? [];
+  return payload as Partial<EventFormData>; // Adjust cast if a more specific return type is defined
+};
+
 export function EventForm({ eventId }: EventFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -108,7 +151,7 @@ export function EventForm({ eventId }: EventFormProps) {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [locationModalMode, setLocationModalMode] = useState<"create" | "edit">("create");
-  const [isHelpBarOpen, setIsHelpBarOpen] = useState(false);
+  const [isHelpBarOpen, setIsHelpBarOpen] = useState(true);
   const [activeTipId, setActiveTipId] = useState<string | undefined>(undefined);
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
 
@@ -127,6 +170,7 @@ export function EventForm({ eventId }: EventFormProps) {
     getValues,
     reset,
     setValue,
+    trigger,
   } = useForm<EventFormData>({
     resolver: yupResolver(eventFormSchema as yup.ObjectSchema<EventFormData>),
     defaultValues: {
@@ -328,6 +372,11 @@ export function EventForm({ eventId }: EventFormProps) {
           dataForReset.language = "pl";
         }
 
+        // Ensure RHF's is_public state is also initialized
+        if (typeof fetchedData.is_public === "boolean") {
+          dataForReset.is_public = fetchedData.is_public;
+        }
+
         reset(dataForReset);
       })
       .catch((err) => {
@@ -341,75 +390,25 @@ export function EventForm({ eventId }: EventFormProps) {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [eventId, isEditMode, reset, toast]);
+  }, [eventId, isEditMode, reset, toast, eventFormSchema.fields]); // Added eventFormSchema.fields to deps if it's stable
 
-  const handleToggleVisibility = async () => {
-    if (!eventId) return;
-
-    setIsTogglingVisibility(true);
-    const newStatus = !currentIsPublic;
-
-    try {
-      await axiosInstance.patch(`/events/${eventId}`, { is_public: newStatus });
-      setCurrentIsPublic(newStatus);
-      setValue("is_public", newStatus, { shouldDirty: true });
-      toast({ description: `Wydarzenie ${newStatus ? "opublikowane" : "ukryte"} pomyślnie.` });
-    } catch (error: any) {
-      console.error("Failed to toggle event visibility:", error);
-      toast({
-        description: `Nie udało się zmienić widoczności: ${error.response?.data?.detail || error.message || "Unknown error"}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsTogglingVisibility(false);
-    }
-  };
-
+  // 2. Update onSubmit
   const onSubmit: SubmitHandler<EventFormData> = async (data) => {
     console.log("Internal onSubmit triggered with data:", data);
-
-    const payload: Partial<EventFormData> = {
-      ...data,
-      price_includes: (data.price_includes ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-      price_excludes: (data.price_excludes ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-      program: (data.program ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-      included_trips: (data.included_trips ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-      paid_attractions: (data.paid_attractions ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-      skill_level: (data.skill_level ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-      image_ids: data.image_ids ?? [],
-      main_attractions: (data.main_attractions ?? []).filter(
-        (item) => typeof item === "string" && item.trim() !== "",
-      ),
-    };
-
-    delete (payload as any).image;
-    delete (payload as any).image_id;
-
-    payload.instructor_ids = data.instructor_ids ?? [];
+    const payload = prepareEventPayload(data);
+    const submissionIsPublic = payload.is_public ?? false;
 
     try {
-      if (isEditMode) {
+      if (isEditMode && eventId) {
         await axiosInstance.put(`/events/${eventId}`, payload);
         toast({ description: "Wydarzenie zaktualizowane pomyślnie!" });
+        setCurrentIsPublic(submissionIsPublic);
         router.refresh();
       } else {
         const response = await axiosInstance.post<{ id: string }>("/events", payload);
         const newEventId = response.data.id;
-
         toast({ description: "Wydarzenie utworzone pomyślnie!" });
-
+        setCurrentIsPublic(submissionIsPublic);
         router.push(`/dashboard/events/${newEventId}/edit`);
       }
     } catch (error: any) {
@@ -427,6 +426,102 @@ export function EventForm({ eventId }: EventFormProps) {
         description: `Nie udało się ${isEditMode ? "zaktualizować" : "utworzyć"} wydarzenia: ${errorMsg}`,
         variant: "destructive",
       });
+    }
+  };
+
+  // 3. Update handleToggleVisibility
+  const handleToggleVisibility = async () => {
+    if (!eventId) return; // Should only be callable in edit mode
+
+    setIsTogglingVisibility(true);
+    const newStatus = !currentIsPublic; // If true, we are trying to publish. If false, unpublish.
+    const originalFormIsPublicValue = getValues("is_public");
+
+    if (newStatus === true) {
+      // Attempting to publish (and save all changes)
+      // Validation is now done in handlePublishButtonClick before opening the modal
+      setValue("is_public", true, { shouldDirty: true, shouldValidate: false });
+      const formDataForPublish = getValues(); // This now has is_public: true
+      const payloadForPublish = prepareEventPayload(formDataForPublish);
+
+      try {
+        await axiosInstance.put(`/events/${eventId}`, payloadForPublish);
+        setCurrentIsPublic(true); // Successfully published and saved
+        toast({ description: "Wydarzenie opublikowane i zmiany zapisane pomyślnie." });
+        router.refresh();
+      } catch (error: any) {
+        setValue("is_public", originalFormIsPublicValue, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
+        setCurrentIsPublic(originalFormIsPublicValue); // Revert UI if PUT fails
+
+        const errorMsg =
+          error.response?.data?.detail?.[0]?.msg ||
+          error.response?.data?.detail ||
+          error.message ||
+          "Spróbuj ponownie.";
+        console.error("Failed to publish and update event:", error.response?.data || error.message);
+        toast({
+          title: "Błąd publikacji",
+          description: `Nie udało się opublikować i zapisać zmian: ${errorMsg}`,
+          variant: "destructive",
+        });
+      } finally {
+        setIsTogglingVisibility(false);
+      }
+    } else {
+      // Attempting to unpublish (newStatus === false)
+      try {
+        await axiosInstance.patch(`/events/${eventId}`, { is_public: false });
+        setCurrentIsPublic(false);
+        setValue("is_public", false, { shouldDirty: true, shouldValidate: false });
+        toast({ description: "Wydarzenie ukryte pomyślnie." });
+      } catch (error: any) {
+        setValue("is_public", originalFormIsPublicValue, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
+        setCurrentIsPublic(originalFormIsPublicValue); // Revert UI if PATCH fails
+
+        const errorMsg =
+          error.response?.data?.detail || error.message || "Nie udało się ukryć wydarzenia.";
+        console.error("Failed to unpublish event:", error.response?.data || error.message);
+        toast({
+          title: "Błąd zmiany widoczności",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      } finally {
+        setIsTogglingVisibility(false);
+      }
+    }
+  };
+
+  const handlePublishButtonClick = async () => {
+    if (!currentIsPublic) {
+      // Attempting to publish, validate first
+      const originalFormIsPublicValue = getValues("is_public");
+      setValue("is_public", true, { shouldDirty: true, shouldValidate: false });
+      const isValid = await trigger(undefined, { shouldFocus: true });
+      setValue("is_public", originalFormIsPublicValue, {
+        shouldDirty: true,
+        shouldValidate: false,
+      }); // Revert for now
+
+      if (!isValid) {
+        toast({
+          title: "Błąd walidacji",
+          description: "Nie można opublikować wydarzenia. Formularz zawiera błędy.",
+          variant: "destructive",
+          duration: 2000,
+        });
+        return;
+      }
+      setIsPublishConfirmModalOpen(true);
+    } else {
+      // Attempting to unpublish
+      handleToggleVisibility();
     }
   };
 
@@ -455,6 +550,15 @@ export function EventForm({ eventId }: EventFormProps) {
     setEditingLocation(null);
     setValue("location_id", savedLocation.id, { shouldDirty: true });
     toast({ description: "Lokalizacja zapisana pomyślnie." });
+  };
+
+  const handleLocationDeleted = (deletedLocationId: string) => {
+    setLocations((prevLocations) => prevLocations.filter((loc) => loc.id !== deletedLocationId));
+    if (getValues("location_id") === deletedLocationId) {
+      setValue("location_id", null, { shouldDirty: true });
+    }
+    toast({ description: "Lokalizacja usunięta pomyślnie." });
+    fetchLocations(); // Refetch to ensure consistency, though client-side update is done
   };
 
   const handleEditInstructor = (instructor: Instructor) => {
@@ -499,50 +603,80 @@ export function EventForm({ eventId }: EventFormProps) {
   const watchedImageIds = watch("image_ids");
 
   const handleImageSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
+    const files = event.target.files;
+    if (!files || files.length === 0) {
       return;
     }
 
     setIsUploadingImage(true);
     setDirectUploadError(null);
+    let allUploadsSuccessful = true;
+    const newImageIds: string[] = [];
 
-    const imageFormData = new FormData();
-    imageFormData.append("image", file);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imageFormData = new FormData();
+      imageFormData.append("image", file);
 
-    try {
-      const response = await axiosInstance.post<{ image_id: string }>(
-        "/events/image-upload",
-        imageFormData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
+      try {
+        const response = await axiosInstance.post<{ image_id: string }>(
+          "/events/image-upload",
+          imageFormData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           },
-        },
-      );
+        );
+        newImageIds.push(response.data.image_id);
+      } catch (err: any) {
+        allUploadsSuccessful = false;
+        const errorMsg =
+          err.response?.data?.detail ||
+          err.message ||
+          `Nie udało się przesłać pliku: ${file.name}.`;
+        console.error("Direct image upload failed for file:", file.name, errorMsg);
+        setDirectUploadError(
+          (prevError) =>
+            (prevError ? prevError + "\n" : "") + `Błąd przesyłania ${file.name}: ${errorMsg}`,
+        );
+        // We'll show a summary toast later
+      }
+    }
 
-      const newImageId = response.data.image_id;
+    if (newImageIds.length > 0) {
       const currentImageIds = getValues("image_ids") || [];
-      setValue("image_ids", [...currentImageIds, newImageId], {
+      setValue("image_ids", [...currentImageIds, ...newImageIds], {
         shouldValidate: true,
         shouldDirty: true,
       });
-      toast({ description: "Zdjęcie dodane pomyślnie." });
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.detail || err.message || "Nie udało się przesłać zdjęcia.";
-      console.error("Direct image upload failed:", errorMsg);
-      setDirectUploadError(errorMsg);
+    }
+
+    setIsUploadingImage(false);
+    if (event.target) {
+      event.target.value = ""; // Reset file input
+    }
+
+    if (newImageIds.length > 0 && allUploadsSuccessful) {
       toast({
-        title: "Błąd przesyłania zdjęcia",
-        description: errorMsg,
+        description:
+          newImageIds.length > 1
+            ? `Dodano ${newImageIds.length} zdjęć pomyślnie.`
+            : "Zdjęcie dodane pomyślnie.",
+      });
+    } else if (newImageIds.length > 0 && !allUploadsSuccessful) {
+      toast({
+        title: "Częściowy sukces przesyłania",
+        description: `Dodano ${newImageIds.length} z ${files.length} zdjęć. Sprawdź błędy poniżej pola przesyłania.`,
+        variant: "default", // Or "warning" if you have one
+      });
+    } else if (!allUploadsSuccessful) {
+      toast({
+        title: "Błąd przesyłania zdjęć",
+        description:
+          "Nie udało się przesłać żadnego ze zdjęć. Szczegóły błędu powinny być widoczne poniżej pola do przesyłania.",
         variant: "destructive",
       });
-    } finally {
-      setIsUploadingImage(false);
-      if (event.target) {
-        event.target.value = "";
-      }
     }
   };
 
@@ -613,7 +747,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 placeholder="Tytuł"
                 onFocus={() => handleFocusField("title")}
               />
-              {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+              {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description" size="event">
@@ -631,7 +765,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 onFocus={() => handleFocusField("description")}
               />
               {errors.description && (
-                <p className="text-sm text-red-500">{errors.description.message}</p>
+                <p className="text-sm text-destructive">{errors.description.message}</p>
               )}
             </div>
           </div>
@@ -668,6 +802,28 @@ export function EventForm({ eventId }: EventFormProps) {
                       )}
                     </Button>
                   </PopoverTrigger>
+                  <Controller
+                    name="start_date"
+                    control={control}
+                    render={({ field }) => (
+                      <div
+                        ref={field.ref}
+                        tabIndex={-1}
+                        className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="end_date"
+                    control={control}
+                    render={({ field }) => (
+                      <div
+                        ref={field.ref}
+                        tabIndex={-1}
+                        className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                      />
+                    )}
+                  />
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       initialFocus
@@ -697,12 +853,12 @@ export function EventForm({ eventId }: EventFormProps) {
                   </PopoverContent>
                 </Popover>
                 {errors.start_date && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-destructive">
                     Błąd daty rozpoczęcia: {errors.start_date.message}
                   </p>
                 )}
                 {!errors.start_date && errors.end_date && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-destructive">
                     Błąd daty zakończenia: {errors.end_date.message}
                   </p>
                 )}
@@ -743,7 +899,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 )}
               />
               {errors.skill_level && (
-                <p className="text-sm text-red-500">{errors.skill_level.message}</p>
+                <p className="text-sm text-destructive">{errors.skill_level.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -921,7 +1077,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 )}
               />
               {errors.instructor_ids && (
-                <p className="text-sm text-red-500">{errors.instructor_ids.message}</p>
+                <p className="text-sm text-destructive">{errors.instructor_ids.message}</p>
               )}
             </div>
           </div>
@@ -951,65 +1107,77 @@ export function EventForm({ eventId }: EventFormProps) {
               control={control}
               render={({ field }) => (
                 <div className="flex items-center space-x-2">
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || ""}
-                    disabled={locations.length === 0}
-                    onOpenChange={(isOpen) => isOpen && handleFocusField("location_id")}
-                  >
-                    <SelectTrigger onFocus={() => handleFocusField("location_id")}>
-                      <SelectValue
-                        placeholder={
-                          locations.length > 0
-                            ? "Wybierz lokalizację"
-                            : "Brak lokalizacji, dodaj nową"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locations.map((loc) => (
-                        <SelectItem key={loc.id} value={loc.id}>
-                          {loc.title}
-                          {loc.country ? ` (${loc.country})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      const selectedLoc = locations.find((l) => l.id === field.value);
-                      if (selectedLoc) {
-                        setEditingLocation(selectedLoc);
-                        setLocationModalMode("edit");
+                  {locations.length > 0 ? (
+                    <>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                        onOpenChange={(isOpen) => isOpen && handleFocusField("location_id")}
+                      >
+                        <SelectTrigger onFocus={() => handleFocusField("location_id")}>
+                          <SelectValue placeholder="Wybierz lokalizację" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {locations.map((loc) => (
+                            <SelectItem key={loc.id} value={loc.id}>
+                              {loc.title}
+                              {loc.country ? ` (${loc.country})` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          const selectedLoc = locations.find((l) => l.id === field.value);
+                          if (selectedLoc) {
+                            setEditingLocation(selectedLoc);
+                            setLocationModalMode("edit");
+                            setIsLocationModalOpen(true);
+                          } else {
+                            toast({
+                              description: "Wybierz lokalizację do edycji.",
+                              variant: "default",
+                            });
+                          }
+                        }}
+                        disabled={!field.value}
+                        aria-label="Edytuj wybraną lokalizację"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setEditingLocation(null);
+                          setLocationModalMode("create");
+                          setIsLocationModalOpen(true);
+                        }}
+                        aria-label="Dodaj nową lokalizację"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingLocation(null);
+                        setLocationModalMode("create");
                         setIsLocationModalOpen(true);
-                      } else {
-                        toast({
-                          description: "Wybierz lokalizację do edycji.",
-                          variant: "default",
-                        });
-                      }
-                    }}
-                    disabled={!field.value || locations.length === 0}
-                    aria-label="Edytuj wybraną lokalizację"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setEditingLocation(null);
-                      setLocationModalMode("create");
-                      setIsLocationModalOpen(true);
-                    }}
-                    aria-label="Dodaj nową lokalizację"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
+                      }}
+                      aria-label="Dodaj pierwszą lokalizację"
+                      className="w-full justify-start"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Dodaj pierwszą lokalizację
+                    </Button>
+                  )}
                 </div>
               )}
             />
@@ -1043,7 +1211,9 @@ export function EventForm({ eventId }: EventFormProps) {
                     placeholder="Cena za jedną osobę"
                     onFocus={() => handleFocusField("price")}
                   />
-                  {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
+                  {errors.price && (
+                    <p className="text-sm text-destructive">{errors.price.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="currency" className="flex">
@@ -1065,7 +1235,7 @@ export function EventForm({ eventId }: EventFormProps) {
                     )}
                   />
                   {errors.currency && (
-                    <p className="text-sm text-red-500">{errors.currency.message}</p>
+                    <p className="text-sm text-destructive">{errors.currency.message}</p>
                   )}
                 </div>
               </div>
@@ -1167,7 +1337,9 @@ export function EventForm({ eventId }: EventFormProps) {
                 onFocus={() => handleFocusField("accommodation_description")}
               />
               {errors.accommodation_description && (
-                <p className="text-sm text-red-500">{errors.accommodation_description.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.accommodation_description.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -1187,7 +1359,9 @@ export function EventForm({ eventId }: EventFormProps) {
                 onFocus={() => handleFocusField("guest_welcome_description")}
               />
               {errors.guest_welcome_description && (
-                <p className="text-sm text-red-500">{errors.guest_welcome_description.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.guest_welcome_description.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -1207,7 +1381,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 onFocus={() => handleFocusField("food_description")}
               />
               {errors.food_description && (
-                <p className="text-sm text-red-500">{errors.food_description.message}</p>
+                <p className="text-sm text-destructive">{errors.food_description.message}</p>
               )}
             </div>
           </div>
@@ -1296,7 +1470,7 @@ export function EventForm({ eventId }: EventFormProps) {
                     onFocus={() => handleFocusField("program")}
                   />
                   {errors.program?.[index] && (
-                    <p className="text-sm text-red-500">{errors.program[index]?.message}</p>
+                    <p className="text-sm text-destructive">{errors.program[index]?.message}</p>
                   )}
                 </div>
               </div>
@@ -1341,7 +1515,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 onFocus={() => handleFocusField("cancellation_policy")}
               />
               {errors.cancellation_policy && (
-                <p className="text-sm text-red-500">{errors.cancellation_policy.message}</p>
+                <p className="text-sm text-destructive">{errors.cancellation_policy.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -1362,7 +1536,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 onFocus={() => handleFocusField("important_info")}
               />
               {errors.important_info && (
-                <p className="text-sm text-red-500">{errors.important_info.message}</p>
+                <p className="text-sm text-destructive">{errors.important_info.message}</p>
               )}
             </div>
           </div>
@@ -1417,13 +1591,14 @@ export function EventForm({ eventId }: EventFormProps) {
             <div className="space-y-2">
               <Label htmlFor="image-upload-input" className="flex">
                 {watchedImageIds && watchedImageIds.length > 0
-                  ? "Dodaj kolejne zdjęcie"
+                  ? "Dodaj kolejne zdjęcia"
                   : "Dodaj zdjęcia wydarzenia"}
               </Label>
               <Input
                 id="image-upload-input"
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageSelected}
                 disabled={isUploadingImage}
                 onFocus={() => handleFocusField("images")}
@@ -1434,70 +1609,12 @@ export function EventForm({ eventId }: EventFormProps) {
                   Przesyłanie zdjęcia...
                 </div>
               )}
-              {directUploadError && <p className="text-sm text-red-500">{directUploadError}</p>}
+              {directUploadError && <p className="text-sm text-destructive">{directUploadError}</p>}
               {errors.image_ids && (
-                <p className="text-sm text-red-500">{errors.image_ids.message}</p>
+                <p className="text-sm text-destructive">{errors.image_ids.message}</p>
               )}
             </div>
           </div>
-
-          {isEditMode && (
-            <div className="space-y-6" id="event-visibility">
-              <div className="flex items-center space-x-4">
-                <Button
-                  type="button"
-                  variant={currentIsPublic ? "destructive" : "default"}
-                  onClick={() => {
-                    if (!currentIsPublic) {
-                      setIsPublishConfirmModalOpen(true);
-                    } else {
-                      handleToggleVisibility();
-                    }
-                  }}
-                  disabled={isTogglingVisibility}
-                >
-                  {isTogglingVisibility
-                    ? "Zmieniam..."
-                    : currentIsPublic
-                      ? "Ukryj wydarzenie"
-                      : "Opublikuj wydarzenie"}
-                </Button>
-                <p className="text-sm text-gray-500">
-                  {currentIsPublic
-                    ? "Wydarzenie jest publiczne i widoczne w wyszukiwarce."
-                    : "Wydarzenie jest prywatne. Opublikuj, aby było widoczne."}
-                </p>
-              </div>
-            </div>
-          )}
-          {!isEditMode && (
-            <div className="space-y-2" id="event-visibility-create">
-              <Label htmlFor="is_public_create" size="event">
-                Widoczność początkowa
-              </Label>
-              <Separator className="my-8" />
-              <div className="flex items-center space-x-2">
-                <Controller
-                  name="is_public"
-                  control={control}
-                  render={({ field }) => (
-                    <Checkbox
-                      id="is_public_create"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      onFocus={() => handleFocusField("is_public")}
-                    />
-                  )}
-                />
-                <Label htmlFor="is_public_create" className="font-normal">
-                  Opublikuj wydarzenie od razu po utworzeniu
-                </Label>
-              </div>
-              {errors.is_public && (
-                <p className="text-sm text-red-500">{errors.is_public.message}</p>
-              )}
-            </div>
-          )}
 
           {Object.keys(errors).length > 0 && (
             <div
@@ -1551,8 +1668,22 @@ export function EventForm({ eventId }: EventFormProps) {
               ? "Zapisz zmiany"
               : "Utwórz wydarzenie"
         }
+        updateIcon={
+          isSubmitting ? (
+            <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="ml-2 h-4 w-4" />
+          )
+        }
         viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
         viewPublicLabel="Zobacz stronę publiczną"
+        showPublishButton={isEditMode}
+        isPublished={currentIsPublic}
+        isPublishing={isTogglingVisibility}
+        onPublishToggle={handlePublishButtonClick}
+        publishIcon={<Send className="ml-2 h-4 w-4" />}
+        unpublishIcon={<EyeOff className="ml-2 h-4 w-4" />}
+        publishingIcon={<Loader2 className="ml-2 h-4 w-4 animate-spin" />}
       />
 
       <InstructorModal
@@ -1575,6 +1706,7 @@ export function EventForm({ eventId }: EventFormProps) {
           onLocationSaved={handleLocationSaved}
           initialData={editingLocation}
           mode={locationModalMode}
+          onLocationDeleted={handleLocationDeleted}
         />
       )}
 
@@ -1584,7 +1716,7 @@ export function EventForm({ eventId }: EventFormProps) {
             <AlertDialogTitle>Potwierdź publikację</AlertDialogTitle>
             <AlertDialogDescription>
               Czy na pewno chcesz opublikować to wydarzenie? Stanie się ono widoczne dla wszystkich
-              użytkowników.
+              użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1597,11 +1729,11 @@ export function EventForm({ eventId }: EventFormProps) {
             <AlertDialogAction
               disabled={isTogglingVisibility}
               onClick={() => {
-                handleToggleVisibility();
                 setIsPublishConfirmModalOpen(false);
+                handleToggleVisibility();
               }}
             >
-              {isTogglingVisibility ? "Publikowanie..." : "Tak, opublikuj"}
+              {isTogglingVisibility ? "Publikowanie..." : "Tak, opublikuj i zapisz"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

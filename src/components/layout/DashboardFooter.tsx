@@ -9,9 +9,21 @@ interface DashboardFooterProps {
   onUpdate?: () => void; // Function to call when Update is clicked
   createLabel?: string; // Optional custom label for Create button
   updateLabel?: string; // Optional custom label for Update button
+  updateIcon?: React.ReactNode; // Optional icon for Update button
   viewPublicHref?: string; // New prop for the link href
   viewPublicLabel?: string; // Optional label for the new button
   children?: React.ReactNode; // Optional slot for extra elements like breadcrumbs or filters
+  // Props for the Publish/Unpublish button
+  showPublishButton?: boolean;
+  isPublished?: boolean;
+  isPublishing?: boolean;
+  onPublishToggle?: () => void;
+  publishButtonLabel?: string;
+  unpublishButtonLabel?: string;
+  publishingButtonLabel?: string;
+  publishIcon?: React.ReactNode;
+  unpublishIcon?: React.ReactNode;
+  publishingIcon?: React.ReactNode;
 }
 
 export const DashboardFooter: React.FC<DashboardFooterProps> = ({
@@ -20,9 +32,20 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
   onUpdate,
   createLabel = "Create New",
   updateLabel = "Update",
+  updateIcon,
   viewPublicHref,
   viewPublicLabel = "View Public Page", // Default label
   children,
+  showPublishButton,
+  isPublished,
+  isPublishing,
+  onPublishToggle,
+  publishButtonLabel = "Opublikuj wydarzenie",
+  unpublishButtonLabel = "Ukryj wydarzenie",
+  publishingButtonLabel = "Zmieniam...",
+  publishIcon,
+  unpublishIcon,
+  publishingIcon,
 }) => {
   return (
     <div>
@@ -47,16 +70,32 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
               <Button variant="outline">{viewPublicLabel}</Button>
             </Link>
           )}
+          {/* Render Publish/Unpublish button */}
+          {showPublishButton && onPublishToggle && (
+            <Button
+              variant={isPublished ? "destructive" : "default"}
+              onClick={onPublishToggle}
+              disabled={isPublishing}
+            >
+              {isPublishing
+                ? publishingButtonLabel
+                : isPublished
+                  ? unpublishButtonLabel
+                  : publishButtonLabel}
+              {isPublishing ? publishingIcon : isPublished ? unpublishIcon : publishIcon}
+            </Button>
+          )}
           {/* Render Update button if handler exists */}
           {onUpdate && (
             <Button
               variant="default"
               onClick={() => {
-                console.log("🚀 ~ onUpdate:");
                 onUpdate();
               }}
+              disabled={isPublishing} // Assuming isPublishing also means other actions might be blocked or it's a general loading state
             >
               {updateLabel}
+              {updateIcon}
             </Button>
           )}
         </div>

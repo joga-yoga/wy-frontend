@@ -14,13 +14,13 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Nazwa jest wymagana"),
   description: z.string().optional(),
-  phoneNumber: z.string().min(10, "Valid phone number is required"),
+  phoneNumber: z.string().min(10, "Wymagany jest prawidłowy numer telefonu"),
   verificationCode: z
     .string()
-    .min(6, "Verification code is required")
-    .max(6, "Verification code must be 6 digits"),
+    .min(6, "Kod weryfikacyjny jest wymagany")
+    .max(6, "Kod weryfikacyjny musi mieć 6 cyfr"),
   image: z.any().optional(),
 });
 
@@ -34,6 +34,7 @@ export default function BecomeOrganizerPage() {
   const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [highlightSendCodeButton, setHighlightSendCodeButton] = useState(false);
 
   const {
     register,
@@ -42,6 +43,7 @@ export default function BecomeOrganizerPage() {
     trigger,
     setError,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -53,6 +55,7 @@ export default function BecomeOrganizerPage() {
 
   useEffect(() => {
     setCodeSent(false);
+    setHighlightSendCodeButton(false);
   }, [phoneNumberValue]);
 
   useEffect(() => {
@@ -79,14 +82,15 @@ export default function BecomeOrganizerPage() {
     axiosInstance
       .get("/organizer/me")
       .then(() => {
-        toast({ description: "You are already an organizer.", variant: "default" });
+        toast({ description: "Jesteś już organizatorem.", variant: "default" });
         router.push("/dashboard");
       })
       .catch((err) => {
         if (err.response?.status !== 404) {
           toast({
-            title: "Error",
-            description: "Could not verify organizer status. Please try again later.",
+            title: "Błąd",
+            description:
+              "Nie udało się zweryfikować statusu organizatora. Spróbuj ponownie później.",
             variant: "destructive",
           });
         }
@@ -107,7 +111,7 @@ export default function BecomeOrganizerPage() {
     try {
       const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
       setUploadedImageId(response.data.image_id);
-      toast({ description: "Image uploaded successfully." });
+      toast({ description: "Obraz został pomyślnie przesłany." });
     } catch (err: any) {
       setUploadedImageId(null);
       if (imagePreviewUrl) {
@@ -116,8 +120,9 @@ export default function BecomeOrganizerPage() {
       setImagePreviewUrl(null);
       setValue("image", null);
       toast({
-        title: "Image Upload Failed",
-        description: err.response?.data?.detail || "Could not upload image. Please try again.",
+        title: "Przesyłanie obrazu nie powiodło się",
+        description:
+          err.response?.data?.detail || "Nie udało się przesłać obrazu. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -128,7 +133,7 @@ export default function BecomeOrganizerPage() {
   async function handleSendCode() {
     const isValid = await trigger("phoneNumber");
     if (!isValid) {
-      toast({ description: "Please enter a valid phone number.", variant: "destructive" });
+      toast({ description: "Wprowadź prawidłowy numer telefonu.", variant: "destructive" });
       return;
     }
 
@@ -138,11 +143,12 @@ export default function BecomeOrganizerPage() {
         phone_number: phoneNumberValue,
       });
       setCodeSent(true);
-      toast({ description: "Verification code sent to your phone." });
+      setHighlightSendCodeButton(false);
+      toast({ description: "Kod weryfikacyjny został wysłany na Twój telefon." });
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||
-        "Failed to send verification code. Please check the number and try again.";
+        "Nie udało się wysłać kodu weryfikacyjnego. Sprawdź numer i spróbuj ponownie.";
       setError("phoneNumber", { type: "manual", message: errorMsg });
       toast({ description: errorMsg, variant: "destructive" });
     } finally {
@@ -170,8 +176,8 @@ export default function BecomeOrganizerPage() {
       payload.image_id = uploadedImageId;
     } else if (data.image?.[0] && !uploadedImageId && !isUploadingImage) {
       toast({
-        title: "Image Not Uploaded",
-        description: "Please wait for the image to upload or clear the selection.",
+        title: "Obraz nie został przesłany",
+        description: "Poczekaj na przesłanie obrazu lub wyczyść zaznaczenie.",
         variant: "destructive",
       });
       return;
@@ -179,37 +185,56 @@ export default function BecomeOrganizerPage() {
 
     try {
       await axiosInstance.post("/organizer", payload);
-      toast({ description: "You are now an organizer! Redirecting..." });
+      toast({ description: "Jesteś teraz organizatorem! Przekierowywanie..." });
       router.replace("/dashboard");
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||
-        "Failed to become an organizer. Please check your input and try again.";
+        "Nie udało się zostać organizatorem. Sprawdź wprowadzone dane i spróbuj ponownie.";
       toast({ description: errorMsg, variant: "destructive" });
       if (errorMsg.toLowerCase().includes("verification code")) {
-        setError("verificationCode", { type: "manual", message: "Invalid or expired code." });
+        setError("verificationCode", { type: "manual", message: "Nieprawidłowy lub wygasły kod." });
       }
       if (errorMsg.toLowerCase().includes("phone number is already associated")) {
         setError("phoneNumber", {
           type: "manual",
-          message: "This phone number is already in use.",
+          message: "Ten numer telefonu jest już używany.",
         });
         setCodeSent(false);
       }
     }
   }
 
+  const handleInvalidSubmit = (formErrors: typeof errors) => {
+    const currentValues = getValues();
+    if (
+      currentValues.name &&
+      currentValues.phoneNumber &&
+      !codeSent &&
+      formErrors.verificationCode &&
+      !formErrors.name &&
+      !formErrors.phoneNumber
+    ) {
+      toast({
+        title: "Nie wysłano kodu weryfikacyjnego",
+        description: "Najpierw wyślij kod weryfikacyjny na swój telefon.",
+        variant: "destructive",
+      });
+      setHighlightSendCodeButton(true);
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold mb-6 text-center">Become an Organizer</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <h1 className="text-2xl font-bold mb-6 text-center">Zostań Organizatorem</h1>
+      <form onSubmit={handleSubmit(onSubmit, handleInvalidSubmit)} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Organizer Name *
+            Nazwa Organizatora *
           </label>
           <Input
             id="name"
-            placeholder="Your organizer or company name"
+            placeholder="Nazwa Twojego organizatora lub firmy"
             {...register("name")}
             aria-invalid={errors.name ? "true" : "false"}
           />
@@ -218,24 +243,24 @@ export default function BecomeOrganizerPage() {
 
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description (optional)
+            Opis (opcjonalnie)
           </label>
           <Textarea
             id="description"
-            placeholder="Tell us a bit about your organization"
+            placeholder="Opowiedz nam trochę o swojej organizacji"
             {...register("description")}
           />
         </div>
 
         <div>
           <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number *
+            Numer Telefonu *
           </label>
           <div className="flex items-center space-x-2">
             <Input
               id="phoneNumber"
               type="tel"
-              placeholder="e.g., +14155552671 (include country code)"
+              placeholder="np. +48123456789 (z kodem kraju)"
               {...register("phoneNumber")}
               aria-invalid={errors.phoneNumber ? "true" : "false"}
               className="flex-grow"
@@ -248,8 +273,11 @@ export default function BecomeOrganizerPage() {
               }
               variant="outline"
               size="sm"
+              className={
+                highlightSendCodeButton ? "border-2 border-brand-green animate-pulse-border" : ""
+              }
             >
-              {isSendingCode ? "Sending..." : codeSent ? "Resend Code" : "Send Code"}
+              {isSendingCode ? "Wysyłanie..." : codeSent ? "Wyślij kod ponownie" : "Wyślij Kod"}
             </Button>
           </div>
           {errors.phoneNumber && (
@@ -263,11 +291,11 @@ export default function BecomeOrganizerPage() {
               htmlFor="verificationCode"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Verification Code *
+              Kod Weryfikacyjny *
             </label>
             <Input
               id="verificationCode"
-              placeholder="6-digit code"
+              placeholder="6-cyfrowy kod"
               {...register("verificationCode")}
               maxLength={6}
               aria-invalid={errors.verificationCode ? "true" : "false"}
@@ -280,7 +308,7 @@ export default function BecomeOrganizerPage() {
 
         <div>
           <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-            Logo / Image (optional)
+            Logo / Obraz (opcjonalnie)
           </label>
           <Input
             id="image"
@@ -289,15 +317,15 @@ export default function BecomeOrganizerPage() {
             accept="image/*"
             disabled={isUploadingImage}
           />
-          {isUploadingImage && <p className="text-sm text-blue-500 mt-1">Uploading image...</p>}
+          {isUploadingImage && <p className="text-sm text-blue-500 mt-1">Przesyłanie obrazu...</p>}
           {!isUploadingImage && uploadedImageId && (
-            <p className="text-sm text-green-500 mt-1">Image uploaded successfully.</p>
+            <p className="text-sm text-green-500 mt-1">Obraz został pomyślnie przesłany.</p>
           )}
           {imagePreviewUrl && (
             <div className="mt-2">
               <Image
                 src={imagePreviewUrl}
-                alt="Image preview"
+                alt="Podgląd obrazu"
                 width={100}
                 height={100}
                 className="rounded object-cover"
@@ -311,7 +339,7 @@ export default function BecomeOrganizerPage() {
           className="w-full"
           disabled={isSubmitting || isSendingCode || isUploadingImage}
         >
-          {isSubmitting ? "Submitting..." : "Submit Application"}
+          {isSubmitting ? "Przesyłanie..." : "Złóż Wniosek"}
         </Button>
       </form>
     </div>

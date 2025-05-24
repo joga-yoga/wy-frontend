@@ -5,6 +5,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -58,6 +69,7 @@ interface LocationModalProps {
   onLocationSaved: (location: Location) => void;
   initialData?: Location | null;
   mode: "create" | "edit";
+  onLocationDeleted?: (locationId: string) => void;
 }
 
 export function LocationModal({
@@ -66,6 +78,7 @@ export function LocationModal({
   onLocationSaved,
   initialData,
   mode,
+  onLocationDeleted,
 }: LocationModalProps) {
   const { toast } = useToast();
   const {
@@ -88,6 +101,8 @@ export function LocationModal({
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const suggestionsContainerRef = useRef<HTMLDivElement>(null);
   const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -209,6 +224,29 @@ export function LocationModal({
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!initialData?.id || !onLocationDeleted) return;
+
+    setIsDeleting(true);
+    try {
+      await axiosInstance.delete(`/locations/${initialData.id}`);
+      toast({ description: "Lokalizacja usunięta pomyślnie." });
+      onLocationDeleted(initialData.id);
+      setIsDeleteConfirmOpen(false); // Close confirmation dialog
+      onClose(); // Close the main modal
+    } catch (error: any) {
+      console.error("Failed to delete location:", error);
+      toast({
+        title: "Błąd usuwania lokalizacji",
+        description:
+          error.response?.data?.detail || "Nie udało się usunąć lokalizacji. Spróbuj ponownie.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -300,6 +338,38 @@ export function LocationModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Anuluj
             </Button>
+            {mode === "edit" && initialData?.id && onLocationDeleted && (
+              <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-red-600 border-red-600 hover:bg-red-100 hover:text-red-700 mr-2"
+                  >
+                    Usuń
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Na pewno usunąć lokalizację?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie lokalizacji{" "}
+                      <strong>{initialData.title}</strong>.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                    <AlertDialogAction
+                      disabled={isDeleting}
+                      onClick={handleConfirmDelete}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {isDeleting ? "Usuwanie..." : "Tak, usuń"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? mode === "create"

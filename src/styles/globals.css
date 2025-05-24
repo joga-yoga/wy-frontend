@@ -22,6 +22,35 @@
   /* Firefox */
   input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+@layer utilities {
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
+
+  .animate-pulse-border {
+    animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% {
+      border-color: oklch(0.73 0.2303 144.24 / 1); /* Corresponds to --brand-green full opacity */
+    }
+    50% {
+      border-color: oklch(0.73 0.2303 144.24 / 0.5); /* Corresponds to --brand-green 50% opacity */
+    }
   }
 }
 

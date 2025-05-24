@@ -4,10 +4,21 @@ import * as yup from "yup";
 export const eventFormSchema = yup
   .object()
   .shape({
-    title: yup.string().min(3, "Tytuł musi mieć co najmniej 3 znaki").required(),
+    title: yup
+      .string()
+      .min(3, "Tytuł musi mieć co najmniej 3 znaki")
+      .required("Tytuł jest wymagany."),
     description: yup.string().optional(),
-    start_date: yup.string().min(1, "Data rozpoczęcia jest wymagana").required(),
-    end_date: yup.string().min(1, "Data zakończenia jest wymagana").required(),
+    start_date: yup.string().when("is_public", {
+      is: true,
+      then: (schema) => schema.required("Data rozpoczęcia jest wymagana dla wydarzeń publicznych."),
+      otherwise: (schema) => schema.optional().nullable(),
+    }),
+    end_date: yup.string().when("is_public", {
+      is: true,
+      then: (schema) => schema.required("Data zakończenia jest wymagana dla wydarzeń publicznych."),
+      otherwise: (schema) => schema.optional().nullable(),
+    }),
     price: yup.number().positive("Cena musi być dodatnia").optional().nullable(), // Yup numbers are nullable by default if optional
     currency: yup.string().length(3, "Waluta musi mieć 3 znaki").optional().nullable(), // .transform(val => val ? val.toUpperCase() : val) can be added if toUpperCase is a transform
     main_attractions: yup.array().of(yup.string()).optional().default([]),
@@ -32,20 +43,18 @@ export const eventFormSchema = yup
     "date-order",
     "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia",
     function (value) {
-      const { start_date, end_date } = value;
-      if (!start_date || !end_date) {
-        return true; // Let individual field validation handle missing dates
+      const { start_date, end_date, is_public } = value;
+      if (!is_public || !start_date || !end_date) {
+        return true;
       }
-      // Ensure that this test only runs if both dates are valid strings
       if (typeof start_date === "string" && typeof end_date === "string") {
         const startDate = new Date(start_date);
         const endDate = new Date(end_date);
-        // Check if dates are valid before comparing
         if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
           return endDate >= startDate;
         }
       }
-      return true; // If dates are not valid strings or parsing fails, bypass this test
+      return true;
     },
   );
 

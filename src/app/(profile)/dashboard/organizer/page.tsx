@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Nazwa jest wymagana"),
   description: z.string().optional(),
   image: z.any().optional(), // For the file input, RHF will manage FileList
 });
@@ -58,13 +58,16 @@ export default function OrganizerProfilePage() {
       .catch((err) => {
         if (err.response?.status === 404) {
           toast({
-            title: "Not an Organizer",
-            description: "Create an organizer profile first.",
+            title: "Nie jesteś Organizatorem",
+            description: "Najpierw utwórz profil organizatora.",
             variant: "destructive",
           });
           router.push("/become-organizer");
         } else {
-          toast({ description: "Failed to load organizer profile.", variant: "destructive" });
+          toast({
+            description: "Nie udało się wczytać profilu organizatora.",
+            variant: "destructive",
+          });
           router.push("/dashboard");
         }
       })
@@ -107,15 +110,15 @@ export default function OrganizerProfilePage() {
     try {
       const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
       setNewlyUploadedImageId(response.data.image_id);
-      toast({ description: "New image uploaded successfully. Save changes to apply." });
+      toast({ description: "Nowe zdjęcie przesłano pomyślnie. Zapisz zmiany, aby zastosować." });
     } catch (err: any) {
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
       setImagePreviewUrl(null);
       setNewlyUploadedImageId(null);
       setValue("image", null); // Clear RHF image state
       toast({
-        title: "Image Upload Failed",
-        description: err.response?.data?.detail || "Could not upload image.",
+        title: "Przesyłanie obrazu nie powiodło się",
+        description: err.response?.data?.detail || "Nie można przesłać obrazu.",
         variant: "destructive",
       });
     } finally {
@@ -129,7 +132,7 @@ export default function OrganizerProfilePage() {
     setValue("image", null); // Clear the file input
     setNewlyUploadedImageId(null); // No new image will be uploaded
     setRemoveCurrentImage(true); // Mark that current image should be removed
-    toast({ description: "Current image will be removed on save." });
+    toast({ description: "Obecne zdjęcie zostanie usunięte po zapisaniu." });
   }
 
   async function onSubmit(data: FormData) {
@@ -150,13 +153,13 @@ export default function OrganizerProfilePage() {
     // so backend should not change the existing image.
 
     if (Object.keys(payload).length === 0 && !newlyUploadedImageId && !removeCurrentImage) {
-      toast({ description: "No changes to submit." });
+      toast({ description: "Brak zmian do przesłania." });
       return;
     }
 
     try {
       const response = await axiosInstance.put("/organizer", payload);
-      toast({ description: "Profile updated successfully!" });
+      toast({ description: "Profil zaktualizowany pomyślnie!" });
       setCurrentImageId(response.data.image_id || null); // Update current image from response
       setNewlyUploadedImageId(null); // Reset after successful save
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
@@ -165,29 +168,29 @@ export default function OrganizerProfilePage() {
       setRemoveCurrentImage(false); // Reset remove flag
     } catch (error: any) {
       toast({
-        description: `Update failed: ${error?.response?.data?.detail || error?.message || "Unknown error"}`,
+        description: `Aktualizacja nie powiodła się: ${error?.response?.data?.detail || error?.message || "Unknown error"}`,
         variant: "destructive",
       });
     }
   }
 
-  if (loading) return <p className="text-center mt-20">Loading...</p>;
+  if (loading) return <p className="text-center mt-20">Ładowanie...</p>;
 
   return (
     <div className="p-6">
       <DashboardHeader
-        title="Organizer Profile"
+        title="Profil Organizatora"
         onUpdate={handleSubmit(onSubmit)}
-        updateLabel={isSubmitting || isUploadingImage ? "Saving..." : "Save Changes"}
+        updateLabel={isSubmitting || isUploadingImage ? "Zapisywanie..." : "Zapisz Zmiany"}
         isSubmitting={isSubmitting || isUploadingImage} // Disable button during upload too
       />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mx-auto max-w-xl mt-6">
         <div>
           <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Name *
+            Nazwa *
           </label>
-          <Input id="name" placeholder="Organizer Name" {...register("name")} />
+          <Input id="name" placeholder="Nazwa Organizatora" {...register("name")} />
           {errors.name && (
             <p className="text-sm text-red-500 mt-1">{errors.name.message?.toString()}</p>
           )}
@@ -195,21 +198,21 @@ export default function OrganizerProfilePage() {
 
         <div>
           <label htmlFor="description" className="block text-sm font-medium mb-1">
-            Description
+            Opis
           </label>
           <Textarea
             id="description"
-            placeholder="Tell us about your organization"
+            placeholder="Opowiedz nam o swojej organizacji"
             {...register("description")}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Profile Image</label>
+          <label className="block text-sm font-medium mb-1">Zdjęcie Profilowe</label>
           {/* Current Image Display */}
           {currentImageId && !imagePreviewUrl && !removeCurrentImage && (
             <div className="mb-2">
-              <p className="text-xs text-gray-600 mb-1">Current Image:</p>
+              <p className="text-xs text-gray-600 mb-1">Obecne Zdjęcie:</p>
               <Image
                 src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_200,h_200,c_fill/${currentImageId}`}
                 alt="Current Organizer Profile"
@@ -223,7 +226,7 @@ export default function OrganizerProfilePage() {
           {/* New Image Preview */}
           {imagePreviewUrl && (
             <div className="mb-2">
-              <p className="text-xs text-gray-600 mb-1">New Image Preview:</p>
+              <p className="text-xs text-gray-600 mb-1">Podgląd Nowego Zdjęcia:</p>
               <Image
                 src={imagePreviewUrl}
                 alt="New image preview"
@@ -245,9 +248,9 @@ export default function OrganizerProfilePage() {
             disabled={isUploadingImage}
             className="mb-2"
           />
-          {isUploadingImage && <p className="text-sm text-blue-500">Uploading image...</p>}
+          {isUploadingImage && <p className="text-sm text-blue-500">Przesyłanie zdjęcia...</p>}
           {!isUploadingImage && newlyUploadedImageId && (
-            <p className="text-sm text-green-500">New image uploaded. Click Save Changes.</p>
+            <p className="text-sm text-green-500">Nowe zdjęcie przesłane. Kliknij Zapisz Zmiany.</p>
           )}
           {currentImageId && !removeCurrentImage && (
             <Button
@@ -258,11 +261,13 @@ export default function OrganizerProfilePage() {
               disabled={isUploadingImage}
               className="mt-2"
             >
-              Remove Current Image
+              Usuń Obecne Zdjęcie
             </Button>
           )}
           {removeCurrentImage && (
-            <p className="text-sm text-orange-600 mt-1">Current image will be removed on save.</p>
+            <p className="text-sm text-orange-600 mt-1">
+              Obecne zdjęcie zostanie usunięte po zapisaniu.
+            </p>
           )}
         </div>
       </form>

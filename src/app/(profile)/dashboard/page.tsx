@@ -64,7 +64,7 @@ export default function DashboardPage() {
           router.replace("/become-organizer");
         } else {
           toast({
-            description: "Failed to load organizer profile.",
+            description: "Nie udało się załadować profilu organizatora.",
             variant: "destructive",
           });
           setOrganizer(null);
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         .catch((err) => {
           console.error("Failed to fetch events", err);
           toast({
-            description: "Failed to load your events.",
+            description: "Nie udało się załadować Twoich wydarzeń.",
             variant: "destructive",
           });
         })
@@ -96,13 +96,13 @@ export default function DashboardPage() {
 
   const formatDate = (dateString: string | null | undefined) => {
     try {
-      if (!dateString) return "N/A";
+      if (!dateString) return "Brak danych";
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Invalid date format";
-      return format(date, "MMM d, yyyy");
+      if (isNaN(date.getTime())) return "Nieprawidłowy format daty";
+      return format(date, "d MMM yyyy");
     } catch (error) {
       console.error("Error formatting date:", error);
-      return "Invalid date";
+      return "Nieprawidłowa data";
     }
   };
 
@@ -111,13 +111,13 @@ export default function DashboardPage() {
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/events/${eventIdToDelete}`);
-      toast({ description: "Event deleted successfully!" });
+      toast({ description: "Wydarzenie usunięte pomyślnie!" });
       setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventIdToDelete));
       setEventIdToDelete(null);
     } catch (error: any) {
       console.error("Failed to delete event:", error);
       toast({
-        description: `Failed to delete event: ${error.response?.data?.detail || error.message}`,
+        description: `Nie udało się usunąć wydarzenia: ${error.response?.data?.detail || error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -126,27 +126,29 @@ export default function DashboardPage() {
   };
 
   if (loadingOrganizer) {
-    return <p className="text-center mt-20">Loading...</p>;
+    return <p className="text-center mt-20">Ładowanie...</p>;
   }
 
   if (!organizer) {
     return (
-      <p className="text-center mt-20">Failed to load your profile. Please try again later.</p>
+      <p className="text-center mt-20">
+        Nie udało się załadować Twojego profilu. Spróbuj ponownie później.
+      </p>
     );
   }
 
   return (
     <div className="p-6 mx-auto max-w-4xl">
-      <h1 className="text-2xl font-semibold mb-6">{`Welcome, ${organizer.name}!`}</h1>
+      <h1 className="text-2xl font-semibold mb-6">{`Witaj, ${organizer.name}!`}</h1>
 
       <div className="mt-6 space-y-6 max-w-4xl">
         {loadingEvents ? (
-          <p className="text-center text-gray-500">Loading events...</p>
+          <p className="text-center text-gray-500">Ładowanie wydarzeń...</p>
         ) : events.length === 0 ? (
           <div className="text-center py-10 border rounded-lg bg-gray-50">
-            <p className="text-gray-500 mb-4">You haven&apos;t created any events yet.</p>
+            <p className="text-gray-500 mb-4">Nie utworzyłeś jeszcze żadnych wydarzeń.</p>
             <Button variant="default" onClick={() => router.push("/dashboard/events/create")}>
-              Create Your First Event
+              Utwórz swoje pierwsze wydarzenie
             </Button>
           </div>
         ) : (
@@ -162,7 +164,7 @@ export default function DashboardPage() {
                         : "bg-gray-100 text-gray-700 border border-gray-300"
                     }`}
                   >
-                    {event.is_public ? "Public" : "Private"}
+                    {event.is_public ? "Publiczne" : "Prywatne"}
                   </span>
                 </div>
 
@@ -170,7 +172,7 @@ export default function DashboardPage() {
 
                 <div className="mt-3 text-sm text-gray-500 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1">
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" /> Need fix
+                    <MapPin className="h-4 w-4" /> Do poprawy
                   </span>
                   <span className="flex items-center gap-1">
                     <CalendarDays className="h-4 w-4" /> {formatDate(event.start_date)}
@@ -181,14 +183,14 @@ export default function DashboardPage() {
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" /> ${event.price?.toFixed(2) ?? "N/A"}
+                    <DollarSign className="h-4 w-4" /> ${event.price?.toFixed(2) ?? "Brak danych"}
                   </span>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2 items-center">
                   <Link href={`/dashboard/events/${event.id}/edit`} passHref>
                     <Button variant="outline" size="sm" className="text-xs">
-                      Edit
+                      Edytuj
                     </Button>
                   </Link>
                   <AlertDialog onOpenChange={(open: boolean) => !open && setEventIdToDelete(null)}>
@@ -200,26 +202,26 @@ export default function DashboardPage() {
                         disabled={isDeleting}
                         className="text-xs"
                       >
-                        Delete
+                        Usuń
                       </Button>
                     </AlertDialogTrigger>
                     {eventIdToDelete === event.id && (
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the event
+                            Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie wydarzenia
                             &quot;<strong>{event.title}</strong>&quot;.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
                           <AlertDialogAction
                             disabled={isDeleting}
                             onClick={handleDelete}
                             className="bg-red-600 hover:bg-red-700"
                           >
-                            {isDeleting ? "Deleting..." : "Yes, delete event"}
+                            {isDeleting ? "Usuwanie..." : "Tak, usuń wydarzenie"}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -231,7 +233,7 @@ export default function DashboardPage() {
                       size="sm"
                       className="text-xs text-blue-600 hover:text-blue-800"
                     >
-                      View Public Page
+                      Zobacz stronę publiczną
                     </Button>
                   </Link>
                 </div>
@@ -242,7 +244,7 @@ export default function DashboardPage() {
         {!loadingEvents && events.length > 0 && (
           <div className="mt-8 flex justify-center">
             <Button variant="default" onClick={() => router.push("/dashboard/events/create")}>
-              Create New Event
+              Utwórz nowe wydarzenie
             </Button>
           </div>
         )}

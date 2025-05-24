@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface Tip {
   id: string;
@@ -181,7 +182,10 @@ export function HelpBar({ isOpen, onClose, activeTipId }: HelpBarProps) {
             <div
               key={tip.id}
               id={`tip-${tip.id}`}
-              className="p-3 rounded-md border bg-muted/30 scroll-mt-4"
+              className={cn(
+                "p-3 rounded-md border bg-muted/30 scroll-mt-4",
+                tip.id === activeTipId && "border-2 border-brand-green animate-pulse-border",
+              )}
             >
               <h3 className="font-semibold text-base mb-1.5">{tip.title}</h3>
               <p className="text-sm text-muted-foreground whitespace-pre-line">{tip.content}</p>
