@@ -3,9 +3,13 @@ import { LogOut, PlusCircle, User } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
+import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
+import BookmarkIcon from "@/components/icons/BookmarkIcon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useEventsFilter } from "@/context/EventsFilterContext";
+import { cn } from "@/lib/utils";
 
 export const ProfileHeader: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -61,6 +65,7 @@ export const ProfileHeader: React.FC = () => {
 
 export const EventsHeader: React.FC = () => {
   const { user } = useAuth();
+  const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -94,6 +99,20 @@ export const EventsHeader: React.FC = () => {
               {user ? user.email : <>Dodaj wydarzenie za 5 min</>}
             </Button>
           </Link>
+          {/* Bookmark Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle Bookmarks"
+            onClick={toggleBookmarksView}
+            className={cn(isBookmarksActive && "text-brand-green")}
+          >
+            {isBookmarksActive ? (
+              <ActiveBookmarkIcon className="h-5 w-5" />
+            ) : (
+              <BookmarkIcon className="h-5 w-5" />
+            )}
+          </Button>
           <Link href="/dashboard" passHref>
             <Button variant="ghost" size="icon" aria-label="Account">
               <User className="h-5 w-5" />
