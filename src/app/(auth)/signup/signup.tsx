@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 const FormSchema = z.object({
   email: z.string().email({
@@ -39,7 +40,7 @@ export function SignUp() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       // Send registration request to the API
-      const response = await axios.post("http://localhost:8000/register", {
+      const response = await axiosInstance.post("/register", {
         email: data.email,
         password: data.password,
       });

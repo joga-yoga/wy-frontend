@@ -2,8 +2,10 @@ const BOOKMARKS_STORAGE_KEY = "bookmarkedEvents";
 
 export const getBookmarkedEvents = (): string[] => {
   if (typeof window !== "undefined") {
-    const bookmarks = localStorage.getItem(BOOKMARKS_STORAGE_KEY);
-    return bookmarks ? JSON.parse(bookmarks) : [];
+    const storedBookmarks = localStorage.getItem(BOOKMARKS_STORAGE_KEY);
+    const parsedBookmarks = storedBookmarks ? JSON.parse(storedBookmarks) : [];
+    const filteredBookmarks = parsedBookmarks.filter((bookmark: string) => bookmark !== null);
+    return filteredBookmarks;
   }
   return [];
 };

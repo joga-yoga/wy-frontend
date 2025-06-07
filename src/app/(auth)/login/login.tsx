@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 const emailSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -49,7 +49,7 @@ export function LoginPage() {
   async function onSubmitEmail(data: { email: string }) {
     setEmailValue(data.email);
     try {
-      const response = await axios.post("http://localhost:8000/check-email", { email: data.email });
+      const response = await axiosInstance.post("/check-email", { email: data.email });
       const exists = response.data.exists;
       if (exists) {
         setStep("login");
@@ -70,7 +70,7 @@ export function LoginPage() {
       formData.append("username", emailValue);
       formData.append("password", data.password);
 
-      const response = await axios.post("http://localhost:8000/login", formData, {
+      const response = await axiosInstance.post("/login", formData, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       const token = response.data.access_token;
@@ -87,7 +87,7 @@ export function LoginPage() {
 
   async function onSubmitPasswordSignup(data: { password: string }) {
     try {
-      const response = await axios.post("http://localhost:8000/register", {
+      const response = await axiosInstance.post("/register", {
         email: emailValue,
         password: data.password,
       });
@@ -104,7 +104,7 @@ export function LoginPage() {
 
   async function onSubmitForgot(data: { email: string }) {
     try {
-      await axios.post("http://localhost:8000/forgot-password", { email: data.email });
+      await axiosInstance.post("/forgot-password", { email: data.email });
       toast({
         description: "If this email is registered and verified, a reset link has been sent.",
       });
@@ -126,12 +126,20 @@ export function LoginPage() {
           <Button type="submit" className="w-full">
             Continue
           </Button>
-          <Link href="http://localhost:8000/auth/google/login" className="block mt-2">
+          {/* TODO: Add prod-ready links */}
+          <Link
+            href={`${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login`}
+            className="block mt-2"
+          >
             <Button className="w-full" variant="outline" type="button">
               Continue with Google
             </Button>
           </Link>
-          <Link href="http://localhost:8000/auth/facebook/login" className="block mt-2">
+          {/* TODO: Add prod-ready links */}
+          <Link
+            href={`${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login`}
+            className="block mt-2"
+          >
             <Button className="w-full" variant="outline" type="button">
               Continue with Facebook
             </Button>

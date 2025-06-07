@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 export function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -44,7 +44,7 @@ export function ResetPasswordPage() {
     }
 
     try {
-      await axios.post("http://localhost:8000/reset-password", {
+      await axiosInstance.post("/reset-password", {
         token: token,
         new_password: newPassword,
       });

@@ -1,5 +1,6 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
+
+import { axiosInstance } from "@/lib/axiosInstance";
 
 export function useCurrentUser() {
   const [user, setUser] = useState(null);
@@ -10,8 +11,8 @@ export function useCurrentUser() {
     if (token) {
       // Alternatively, decode the token if it has user info,
       // but ideally call your backend /me endpoint.
-      axios
-        .get("http://localhost:8000/me", {
+      axiosInstance
+        .get("/me", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {

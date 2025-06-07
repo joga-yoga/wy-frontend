@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning={true}
-      className={`${fonts.inter.className} ${fonts.inter.variable}`}
+      className={`${fonts.hindSiliguri.className} ${fonts.hindSiliguri.variable}`}
     >
       <head>
         <meta name="googlebot" content="all" />

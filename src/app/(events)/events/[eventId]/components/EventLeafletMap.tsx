@@ -2,11 +2,11 @@
 
 import "leaflet/dist/leaflet.css";
 
-import { useEffect, useState } from "react";
 import L from "leaflet";
 import MarkerIcon from "leaflet/dist/images/marker-icon.png";
 import MarkerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import MarkerShadow from "leaflet/dist/images/marker-shadow.png";
+import { useEffect, useState } from "react";
 
 interface EventLeafletMapProps {
   latitude: number;
@@ -51,7 +51,7 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
       center={[latitude, longitude]}
       zoom={13}
       scrollWheelZoom={false}
-      className="h-48 w-full rounded-lg z-0"
+      className="h-[440px] w-full rounded-lg z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -62,4 +62,4 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
   );
 };
 
-export default EventLeafletMap
+export default EventLeafletMap;

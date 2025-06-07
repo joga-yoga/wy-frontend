@@ -576,7 +576,8 @@ const EventsPageContent: React.FC = () => {
     sortConfig,
     isBookmarksActive,
     bookmarkedEventIds,
-    updateBookmarkedIds, // Use this to refresh bookmark list after an action
+    addBookmark,
+    removeBookmark,
   } = useEventsFilter();
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -701,7 +702,6 @@ const EventsPageContent: React.FC = () => {
     } else {
       removeBookmark(eventId);
     }
-    updateBookmarkedIds(); // This will refresh bookmarkedEventIds in context and trigger re-renders/refetches if needed
 
     // If viewing bookmarks and an event is unbookmarked, remove it from the currently displayed list
     // This filtering is now more robust as it relies on bookmarkedEventIds from context for re-filtering if needed

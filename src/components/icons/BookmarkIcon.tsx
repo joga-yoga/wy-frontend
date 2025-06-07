@@ -8,18 +8,19 @@ interface BookmarkIconProps extends React.SVGProps<SVGSVGElement> {
 const BookmarkIcon: React.FC<BookmarkIconProps> = (props) => {
   return (
     <svg
-      width="44"
-      height="45"
-      viewBox="0 0 44 45"
+      width="46"
+      height="46"
+      viewBox="0 0 46 46"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      {...props} // Spread any additional props (like className)
+      {...props}
     >
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M22 44.5C34.1503 44.5 44 34.6503 44 22.5C44 10.3497 34.1503 0.5 22 0.5C9.84974 0.5 0 10.3497 0 22.5C0 34.6503 9.84974 44.5 22 44.5ZM25.2929 17.9678L22 7.83333L18.7071 17.9678H8.05117L16.672 24.2312L13.3792 34.3656L22 28.1022L30.6209 34.3656L27.328 24.2312L35.9488 17.9678H25.2929Z"
-        fill="#52525B" // Default fill from your SVG, can be overridden by props.className if Tailwind is used
+        d="M22.8333 45.3571C34.9835 45.3571 44.8333 35.5074 44.8333 23.3571C44.8333 11.2069 34.9835 1.35712 22.8333 1.35712C10.683 1.35712 0.833252 11.2069 0.833252 23.3571C0.833252 35.5074 10.683 45.3571 22.8333 45.3571ZM26.1261 18.8249L22.8333 8.69045L19.5404 18.8249H8.88442L17.5053 25.0883L14.2124 35.2227L22.8333 28.9593L31.4541 35.2227L28.1612 25.0883L36.7821 18.8249H26.1261Z"
+        fill="#52525B"
+        stroke="white"
       />
     </svg>
   );

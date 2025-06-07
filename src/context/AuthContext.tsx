@@ -3,10 +3,23 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
+import { axiosInstance } from "@/lib/axiosInstance";
+
+type Organizer = {
+  id: string;
+  user_id: string;
+  name?: string;
+  description?: string;
+  image_id?: string;
+  phone_number?: string;
+  phone_verified: boolean;
+};
+
 type User = {
   id: string;
   email: string;
   name?: string;
+  organizer?: Organizer | null;
   // add other properties as necessary
 };
 
@@ -36,7 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: decoded.sub, // adjust based on your JWT payload
           email: decoded.email,
           name: decoded.name,
+          organizer: null, // Initially we don't know about the organizer
         });
+        // After setting user from token, refresh from backend to get full user object
+        refreshUser();
       } catch (error) {
         console.error("Failed to decode token", error);
         setUser(null);
@@ -49,10 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("access_token");
     if (token) {
       try {
-        const response = await axios.get("http://localhost:8000/me", {
+        const response = await axiosInstance.get("/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(response.data);
+        // Keep the name from the token, as the backend doesn't provide it
+        setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
       } catch (error) {
         console.error("Error refreshing user", error);
         setUser(null);
@@ -69,7 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: decoded.sub, // adjust based on your JWT payload
           email: decoded.email,
           name: decoded.name,
+          organizer: null, // Initially we don't know about the organizer
         });
+        // After setting user from token, refresh from backend to get full user object
+        refreshUser();
       } catch (error) {
         console.error("Failed to decode token", error);
         setUser(null);

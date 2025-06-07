@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -108,6 +109,58 @@
   --color-gray-700: var(--gray-700);
   --color-gray-800: var(--gray-800);
   --color-gray-900: var(--gray-900);
+
+  --font-family-hind: "Hind Siliguri", sans-serif;
+
+  /* h_middle: Font(family: "Hind Siliguri", style: SemiBold, size: 30, weight: 600, lineHeight: 30) */
+  --text-h-middle: 30px;
+  --text-h-middle--line-height: 30px;
+  --text-h-middle--font-weight: 600;
+
+  /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
+  --text-descr-under-big-head: 24px;
+  --text-descr-under-big-head--line-height: 30px;
+  --text-descr-under-big-head--font-weight: 500;
+
+  /* middle_header_22: Font(family: "Hind Siliguri", style: Medium, size: 22, weight: 500, lineHeight: 30) */
+  --text-middle-header-22: 22px;
+  --text-middle-header-22--line-height: 30px;
+  --text-middle-header-22--font-weight: 500;
+
+  /* m_subtitle: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 22) */
+  --text-m-subtitle: 22px;
+  --text-m-subtitle--line-height: 22px;
+  --text-m-subtitle--font-weight: 600;
+
+  /* descrip_under_header: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 30) */
+  --text-descrip-under-header: 20px;
+  --text-descrip-under-header--line-height: 30px;
+  --text-descrip-under-header--font-weight: 500;
+
+  /* subheader: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 28) */
+  --text-subheader: 18px;
+  --text-subheader--line-height: 28px;
+  --text-subheader--font-weight: 500;
+
+  /* sub_descript_18: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 22) */
+  --text-sub-descript-18: 18px;
+  --text-sub-descript-18--line-height: 22px;
+  --text-sub-descript-18--font-weight: 500;
+
+  /* m_descript: Font(family: "Hind Siliguri", style: Regular, size: 16, weight: 400, lineHeight: 18) */
+  --text-m-descript: 16px;
+  --text-m-descript--line-height: 18px;
+  --text-m-descript--font-weight: 400;
+
+  /* m_sunscript_font: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
+  --text-m-sunscript-font: 15px;
+  --text-m-sunscript-font--line-height: 18px;
+  --text-m-sunscript-font--font-weight: 400;
+
+  /* listing_description: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 25) */
+  --text-listing-description: 20px;
+  --text-listing-description--line-height: 25px;
+  --text-listing-description--font-weight: 500;
 }
 
 :root {
@@ -149,16 +202,16 @@
   --brand-red: oklch(0.63 0.201 25.14);
   --brand-blue: oklch(0.66 0.18 262.89);
   --brand-pink: oklch(0.61 0.21 330.72);
-  --gray-50: oklch(0.98 0.0034 247.86);
-  --gray-100: oklch(0.97 0.0069 247.9);
-  --gray-200: oklch(0.93 0.0058 264.53);
-  --gray-300: oklch(0.87 0.0198 252.89);
+  --gray-50: oklch(0.9851 0 0);
+  --gray-100: oklch(0.9614 0.0013 286.38);
+  --gray-200: oklch(0.9197 0.004 286.32);
+  --gray-300: oklch(0.8711 0.0055 286.29);
   --gray-400: oklch(0.7118 0.0129 286.07);
-  --gray-500: oklch(0.55 0.0407 257.42);
+  --gray-500: oklch(0.5517 0.0138 285.94);
   --gray-600: oklch(0.4419 0.0146 285.79);
-  --gray-700: oklch(0.37 0.0392 257.29);
-  --gray-800: oklch(0.35 0.018 231.82);
-  --gray-900: oklch(0.21 0.0398 265.75);
+  --gray-700: oklch(0.3703 0.0119 285.81);
+  --gray-800: oklch(0.2739 0.0055 286.03);
+  --gray-900: oklch(0.2103 0.0059 285.89);
 }
 
 .dark {

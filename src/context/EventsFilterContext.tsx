@@ -31,7 +31,8 @@ interface EventsFilterContextState {
   setSortConfigAndReset: (config: SortConfig | null) => void;
   setIsSearchActiveAndReset: (isActive: boolean) => void;
   toggleBookmarksView: () => void;
-  updateBookmarkedIds: () => void;
+  addBookmark: (eventId: string) => void;
+  removeBookmark: (eventId: string) => void;
 }
 
 // Create the context with a default undefined value
@@ -67,7 +68,17 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
 
   useEffect(() => {
     updateBookmarkedIds();
-  }, [isBookmarksActive, updateBookmarkedIds]);
+  }, [updateBookmarkedIds]);
+
+  const handleAddBookmark = (eventId: string) => {
+    addBookmark(eventId);
+    updateBookmarkedIds();
+  };
+
+  const handleRemoveBookmark = (eventId: string) => {
+    removeBookmark(eventId);
+    updateBookmarkedIds();
+  };
 
   // Handlers that also reset other filters
   const setCountryFilterAndReset = (newCountryFilter: string) => {
@@ -142,7 +153,8 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
     isBookmarksActive,
     toggleBookmarksView,
     bookmarkedEventIds,
-    updateBookmarkedIds,
+    addBookmark: handleAddBookmark,
+    removeBookmark: handleRemoveBookmark,
   };
 
   return <EventsFilterContext.Provider value={value}>{children}</EventsFilterContext.Provider>;
