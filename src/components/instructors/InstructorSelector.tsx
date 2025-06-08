@@ -152,7 +152,8 @@ export function InstructorSelector({
           setIsModalOpen(false);
           setEditingInstructor(null); // Clear editing state on close
         }}
-        onInstructorSaved={handleInstructorSaved}
+        // TODO CHECK THIS
+        onInstructorSaved={handleInstructorSaved as any}
         initialInstructor={editingInstructor}
       />
     </div>
