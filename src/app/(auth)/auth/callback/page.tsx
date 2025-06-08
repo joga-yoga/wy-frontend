@@ -25,7 +25,7 @@ function AuthCallback() {
       });
       router.push("/login");
     }
-  }, [token, router, storeToken, toast]);
+  }, [token]);
 
   return null;
 }
