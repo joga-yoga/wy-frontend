@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AuthCallbackPage() {
+function AuthCallback() {
   const router = useRouter();
   const { storeToken } = useAuth();
   const { toast } = useToast();
@@ -17,12 +17,24 @@ export default function AuthCallbackPage() {
     if (token) {
       storeToken(token);
       toast({ description: "Login successful." });
-      router.push("/dashboard"); // Redirect home or wherever you want
+      router.push("/dashboard");
     } else {
-      toast({ description: "Missing token from callback", variant: "destructive" });
+      toast({
+        description: "Missing token from callback",
+        variant: "destructive",
+      });
       router.push("/login");
     }
-  }, [token]);
+  }, [token, router, storeToken, toast]);
 
-  return null; // Or show a loading spinner
+  return null;
+}
+
+export default function AuthCallbackPage() {
+  return (
+    // Wrap the component that uses useSearchParams in Suspense
+    <Suspense>
+      <AuthCallback />
+    </Suspense>
+  );
 }

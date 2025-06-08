@@ -49,7 +49,7 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
   // Effect to manage input refs for focusing
   useEffect(() => {
     inputRefs.current = items.map((_, i) => inputRefs.current[i] || createRef<HTMLInputElement>());
-  }, [items.length]);
+  }, [items]);
 
   const handleInputChange = (index: number, value: string) => {
     const newItems = [...items];

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -61,20 +61,11 @@ export default function BecomeOrganizerPage() {
   useEffect(() => {
     const file = imageFile?.[0];
     if (file instanceof File) {
-      const currentPreviewUrl = imagePreviewUrl;
       const newPreviewUrl = URL.createObjectURL(file);
       setImagePreviewUrl(newPreviewUrl);
-      handleImageSelected(file);
-
-      if (currentPreviewUrl && currentPreviewUrl !== newPreviewUrl) {
-        URL.revokeObjectURL(currentPreviewUrl);
-      }
+      return () => URL.revokeObjectURL(newPreviewUrl);
     } else {
-      if (imagePreviewUrl) {
-        URL.revokeObjectURL(imagePreviewUrl);
-      }
       setImagePreviewUrl(null);
-      setUploadedImageId(null);
     }
   }, [imageFile]);
 
@@ -97,38 +88,39 @@ export default function BecomeOrganizerPage() {
       });
   }, [router, toast]);
 
-  async function handleImageSelected(file: File | undefined) {
-    if (!file) {
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-      setImagePreviewUrl(null);
-      setUploadedImageId(null);
-      return;
-    }
-
-    setIsUploadingImage(true);
-    const imageFormData = new FormData();
-    imageFormData.append("image", file);
-    try {
-      const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
-      setUploadedImageId(response.data.image_id);
-      toast({ description: "Obraz został pomyślnie przesłany." });
-    } catch (err: any) {
-      setUploadedImageId(null);
-      if (imagePreviewUrl) {
-        URL.revokeObjectURL(imagePreviewUrl);
+  const handleImageSelected = useCallback(
+    async (file: File) => {
+      setIsUploadingImage(true);
+      const imageFormData = new FormData();
+      imageFormData.append("image", file);
+      try {
+        const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
+        setUploadedImageId(response.data.image_id);
+        toast({ description: "Obraz został pomyślnie przesłany." });
+      } catch (err: any) {
+        setUploadedImageId(null);
+        setValue("image", null);
+        toast({
+          title: "Przesyłanie obrazu nie powiodło się",
+          description:
+            err.response?.data?.detail || "Nie udało się przesłać obrazu. Spróbuj ponownie.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUploadingImage(false);
       }
-      setImagePreviewUrl(null);
-      setValue("image", null);
-      toast({
-        title: "Przesyłanie obrazu nie powiodło się",
-        description:
-          err.response?.data?.detail || "Nie udało się przesłać obrazu. Spróbuj ponownie.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploadingImage(false);
+    },
+    [toast, setValue],
+  );
+
+  useEffect(() => {
+    const file = imageFile?.[0];
+    if (file instanceof File) {
+      handleImageSelected(file);
+    } else {
+      setUploadedImageId(null);
     }
-  }
+  }, [imageFile, handleImageSelected]);
 
   async function handleSendCode() {
     const isValid = await trigger("phoneNumber");

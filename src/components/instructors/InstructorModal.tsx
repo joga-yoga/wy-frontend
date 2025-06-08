@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -64,31 +64,45 @@ export function InstructorModal({
 
   const imageFile = watch("image");
 
-  // Effect to handle selected image file changes for preview and upload
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      setIsUploadingImage(true);
+      const imageFormData = new FormData();
+      imageFormData.append("image", file);
+      let newPreviewUrl = URL.createObjectURL(file);
+      setImagePreviewUrl(newPreviewUrl);
+      setNewlyUploadedImageId(null);
+      setRemoveCurrentImage(false);
+
+      try {
+        const response = await axiosInstance.post("/instructors/image-upload", imageFormData);
+        setNewlyUploadedImageId(response.data.image_id);
+        toast({ description: "New image uploaded. Save changes to apply." });
+      } catch (err: any) {
+        if (newPreviewUrl) URL.revokeObjectURL(newPreviewUrl);
+        setImagePreviewUrl(null);
+        setNewlyUploadedImageId(null);
+        setValue("image", null); // Clear RHF image state
+        toast({
+          title: "Image Upload Failed",
+          description: err.response?.data?.detail || "Could not upload image.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUploadingImage(false);
+      }
+    },
+    [toast, setValue],
+  );
+
   useEffect(() => {
     const file = imageFile?.[0];
     if (file instanceof File) {
-      const currentPreview = imagePreviewUrl;
-      const newPreview = URL.createObjectURL(file);
-      setImagePreviewUrl(newPreview);
-      setNewlyUploadedImageId(null); // Clear previous upload ID
-      setRemoveCurrentImage(false); // New file selected, don't remove
-      handleImageUpload(file); // Auto-upload on selection
-      if (currentPreview) {
-        URL.revokeObjectURL(currentPreview);
-      }
-    } else if (!file && imagePreviewUrl) {
-      // File cleared from input, but not by "Remove Image" button
-      // This case might be tricky if "Remove Image" also clears the file input.
-      // For now, assume clearing input means user deselects, not necessarily removes existing.
-      // URL.revokeObjectURL(imagePreviewUrl);
-      // setImagePreviewUrl(null);
-      // setNewlyUploadedImageId(null);
+      handleImageUpload(file);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageFile]); // imagePreviewUrl was removed to avoid re-triggering upload
+  }, [imageFile, handleImageUpload]);
 
-  // Effect to cleanup preview URL
+  // Effect to cleanup preview URL on unmount or when a new one is created
   useEffect(() => {
     return () => {
       if (imagePreviewUrl) {
@@ -108,46 +122,14 @@ export function InstructorModal({
       reset(defaultVals);
       setCurrentImageId(initialInstructor?.image_id || null);
       setNewlyUploadedImageId(null);
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
       setImagePreviewUrl(null);
       setRemoveCurrentImage(false);
       setIsUploadingImage(false);
-    } else {
-      // Optional: Delay reset slightly to avoid visual flicker on close
-      // setTimeout(() => {
-      //   reset({ name: "", bio: "", image: undefined });
-      //   setCurrentImageId(null);
-      //   if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-      //   setImagePreviewUrl(null);
-      //   setNewlyUploadedImageId(null);
-      //   setRemoveCurrentImage(false);
-      //   setIsUploadingImage(false);
-      // }, 150);
     }
-  }, [initialInstructor, isOpen, reset]); // imagePreviewUrl removed from deps
-
-  async function handleImageUpload(file: File) {
-    setIsUploadingImage(true);
-    const imageFormData = new FormData();
-    imageFormData.append("image", file);
-    try {
-      const response = await axiosInstance.post("/instructors/image-upload", imageFormData);
-      setNewlyUploadedImageId(response.data.image_id);
-      toast({ description: "New image uploaded. Save changes to apply." });
-    } catch (err: any) {
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-      setImagePreviewUrl(null);
-      setNewlyUploadedImageId(null);
-      setValue("image", null); // Clear RHF image state
-      toast({
-        title: "Image Upload Failed",
-        description: err.response?.data?.detail || "Could not upload image.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploadingImage(false);
-    }
-  }
+  }, [initialInstructor, isOpen, reset, imagePreviewUrl]);
 
   function handleRemoveImageClick() {
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);

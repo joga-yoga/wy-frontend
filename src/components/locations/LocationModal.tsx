@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -72,6 +72,18 @@ interface LocationModalProps {
   onLocationDeleted?: (locationId: string) => void;
 }
 
+// Debounce function
+const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<F>): Promise<ReturnType<F>> =>
+    new Promise((resolve) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => resolve(func(...args)), waitFor);
+    });
+};
+
 export function LocationModal({
   isOpen,
   onClose,
@@ -109,18 +121,6 @@ export function LocationModal({
 
   const addressQueryValue = useWatch({ control, name: "addressQuery" });
 
-  // Debounce function
-  const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
-    let timeout: NodeJS.Timeout;
-    return (...args: Parameters<F>): Promise<ReturnType<F>> =>
-      new Promise((resolve) => {
-        if (timeout) {
-          clearTimeout(timeout);
-        }
-        timeout = setTimeout(() => resolve(func(...args)), waitFor);
-      });
-  };
-
   const fetchSuggestions = useCallback(async (inputValue: string) => {
     if (!inputValue || inputValue.trim().length < 3) {
       setSuggestions([]);
@@ -144,9 +144,10 @@ export function LocationModal({
     }
   }, []); // Empty dependency array as axiosInstance should be stable
 
-  const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [
-    fetchSuggestions,
-  ]);
+  const debouncedFetchSuggestions = useMemo(
+    () => debounce(fetchSuggestions, 300),
+    [fetchSuggestions],
+  );
 
   useEffect(() => {
     if (addressQueryValue !== undefined && addressQueryValue !== null && isSearching) {

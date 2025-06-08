@@ -16,9 +16,10 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import {
   Controller,
@@ -250,7 +251,7 @@ export function EventForm({ eventId }: EventFormProps) {
     name: "price_includes" as FieldArrayPath<EventFormData>,
   });
 
-  const fetchInstructors = async () => {
+  const fetchInstructors = useCallback(async () => {
     try {
       const response = await axiosInstance.get<Instructor[]>("/instructors");
       setInstructors(response.data);
@@ -261,9 +262,9 @@ export function EventForm({ eventId }: EventFormProps) {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
       const response = await axiosInstance.get<Location[]>("/locations");
       setLocations(response.data);
@@ -274,12 +275,12 @@ export function EventForm({ eventId }: EventFormProps) {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchInstructors();
     fetchLocations();
-  }, []);
+  }, [fetchInstructors, fetchLocations]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -390,7 +391,7 @@ export function EventForm({ eventId }: EventFormProps) {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [eventId, isEditMode, reset, toast, eventFormSchema.fields]); // Added eventFormSchema.fields to deps if it's stable
+  }, [eventId, isEditMode, reset, toast]);
 
   // 2. Update onSubmit
   const onSubmit: SubmitHandler<EventFormData> = async (data) => {
@@ -983,14 +984,16 @@ export function EventForm({ eventId }: EventFormProps) {
                               className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow duration-200"
                             >
                               <div className="flex items-center gap-3 flex-grow">
-                                <img
+                                <Image
                                   src={
                                     instructor.image_id
                                       ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_40,h_40,g_face,r_max/v1/${instructor.image_id}`
                                       : `https://avatar.vercel.sh/${instructor.name.replace(/\s+/g, "_")}.png?size=40`
                                   }
                                   alt={instructor.name}
-                                  className="h-10 w-10 rounded-full object-cover border"
+                                  width={40}
+                                  height={40}
+                                  className="rounded-full object-cover border"
                                 />
                                 <Label
                                   htmlFor={`instructor-switch-${instructor.id}`}
@@ -1568,11 +1571,12 @@ export function EventForm({ eventId }: EventFormProps) {
               <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {watchedImageIds.map((imageId) => (
                   <div key={imageId} className="relative group">
-                    <img
+                    <Image
                       src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_200,h_150/v1/${imageId}`}
                       alt="Zdjęcie wydarzenia"
-                      className="rounded border object-cover w-full h-[150px]"
-                      onError={(e) => {}}
+                      width={200}
+                      height={150}
+                      className="rounded border object-cover w-full"
                     />
                     <Button
                       type="button"
