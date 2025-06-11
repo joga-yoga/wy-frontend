@@ -415,9 +415,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
   return (
     <div className="box-border flex flex-col items-start p-[22px] gap-[22px] w-full bg-white border-[4px] border-gray-50 shadow-[0px_8px_16px_8px_#FAFAFA] rounded-[22px]">
       <div className="flex flex-row items-center p-0 gap-4 w-full h-[55px] self-stretch">
-        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-6 py-2 rounded-[4px] gap-3">
+        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-6 py-1.5 rounded-[4px] gap-3">
           <CustomSmallCalendarIcon className="w-[32px] h-[32px]" />{" "}
-          <span className="font-semibold text-2xl text-black whitespace-nowrap">
+          <span className="text-h-middle text-black whitespace-nowrap">
             {formatDateRange(event.start_date, event.end_date)}
           </span>
         </div>
@@ -426,7 +426,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
           event.location?.country?.toLowerCase() === "poland" ? (
             <PolandFlagIcon className="w-[44px] h-[44px] rounded-full object-cover border border-gray-300" />
           ) : null}
-          <span className="font-medium text-2xl text-gray-500 whitespace-nowrap">
+          <span className="text-descr-under-big-head text-gray-500 whitespace-nowrap">
             {displayCountry}
           </span>
         </div>
@@ -434,16 +434,16 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
         <div className="w-[44px] h-[44px] flex items-center justify-center">
           <button onClick={handleBookmarkClick} aria-label="Toggle bookmark" className="p-2">
             {isBookmarkedLocal ? (
-              <ActiveBookmarkIcon className="w-7 h-7 sm:w-9 sm:h-9 text-brand-green" />
+              <ActiveBookmarkIcon className="w-[44px] h-[44px] text-brand-green" />
             ) : (
-              <BookmarkIcon className="w-7 h-7 sm:w-9 sm:h-9 cursor-pointer" />
+              <BookmarkIcon className="w-[44px] h-[44px] cursor-pointer" />
             )}
           </button>
         </div>
       </div>
       <div className="flex flex-col md:flex-row items-start md:items-center p-0 gap-[45px] w-full self-stretch">
-        <div className="flex flex-col gap-[12px] w-full md:w-[616px] flex-shrink-0">
-          <div className="relative w-full h-[300px] sm:h-[380px] rounded-[11px] overflow-hidden">
+        <div className="flex flex-col gap-[12px] w-full md:w-[485px] flex-shrink-0">
+          <div className="relative w-full h-[300px] rounded-[11px] overflow-hidden">
             {event.image_ids && event.image_ids.length > 0 ? (
               <Swiper
                 modules={[Navigation]}
@@ -466,7 +466,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
                         src={`${baseImageUrl}${imageId}`}
                         alt={event.title || "Event image"}
                         fill
-                        sizes="(max-width: 768px) 100vw, 616px"
+                        sizes="(max-width: 768px) 100vw, 485px"
                         style={{ objectFit: "cover" }}
                       />
                     </div>
@@ -479,7 +479,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
                   src={placeholderImageUrl}
                   alt="No image available"
                   fill
-                  sizes="(max-width: 768px) 100vw, 616px"
+                  sizes="(max-width: 768px) 100vw, 485px"
                   style={{ objectFit: "cover" }}
                 />
               </div>
@@ -505,25 +505,25 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
             </p>
           )}
         </div>
-        <div className="flex flex-col justify-center items-start gap-[12px] flex-grow self-stretch md:h-[380px] pt-[8px] md:pt-0">
-          <div className="flex flex-col items-start gap-[20px] sm:gap-[30px] w-full">
-            <h2 className="font-semibold text-4xl/11 text-gray-700 self-stretch line-clamp-2">
+        <div className="flex flex-col justify-center items-start gap-[12px] flex-grow self-stretch md:h-[300px] pt-[8px] md:pt-0">
+          <div className="flex flex-col items-start gap-3 w-full">
+            <h2 className="text-h-middle text-gray-800 self-stretch line-clamp-2">
               {event.title || "Tytuł Wydarzenia"}
             </h2>
-            <p className="font-medium text-[18px] sm:text-[20px] leading-[26px] sm:leading-[30px] tracking-[-0.01em] text-[#71717A] self-stretch line-clamp-3 sm:line-clamp-4 md:line-clamp-7">
+            <p className="text-descrip-under-header text-gray-500 self-stretch line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
               {event.description || "Brak opisu."}
             </p>
           </div>
           <div className="flex-grow"></div>
           <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
             <div className="flex flex-row justify-end items-center w-full h-[30px]">
-              <span className="font-medium text-2xl text-right text-gray-700 flex-grow">
+              <span className="text-middle-header-22 text-right text-gray-700 flex-grow">
                 {event.price !== null ? `od ${event.price} ${event.currency || "PLN"}` : "Cena N/A"}
               </span>
             </div>
             {event.price !== null && event.start_date && (
               <div className="flex flex-row justify-end items-center w-full h-[22px]">
-                <span className="font-medium text-lg text-gray-400 text-right flex-grow">
+                <span className="text-sub-descript-18 text-gray-400 text-right flex-grow">
                   {calculatePricePerDay(event.price, event.start_date, event.end_date)}
                 </span>
               </div>
@@ -531,7 +531,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
           </div>
         </div>
       </div>
-      <div className="w-full h-[1px] bg-[#A1A1AA] mt-[10px]"></div>
     </div>
   );
 };

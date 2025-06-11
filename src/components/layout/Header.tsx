@@ -74,13 +74,13 @@ export const EventsHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-8 py-10 flex items-center justify-between">
+      <div className="container mx-auto px-8 py-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
           {/* Wy icon */}
           <svg
-            width="65"
-            height="65"
+            width="64"
+            height="64"
             viewBox="0 0 65 65"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -107,9 +107,9 @@ export const EventsHeader: React.FC = () => {
         {/* Right Section: Actions & Profile */}
         <div className="flex items-center gap-5">
           <Link href="/dashboard" passHref>
-            <Button variant="ghost" size="sm" className="text-sm py-8 px-5 mr-[-20px]">
+            <button className="text-sm py-4 px-5 mr-[-20px] hover:underline">
               <p className="text-gray-700 text-middle-header-22">Dodaj wydarzenie za 5 min</p>
-            </Button>
+            </button>
           </Link>
           {/* Bookmark Toggle Button */}
           {pathname === "/" && (
