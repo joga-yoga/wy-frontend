@@ -13,7 +13,6 @@ import {
   EventSidebar,
   ImageGallery,
 } from "./components";
-import { getImageUrl } from "./helpers";
 import { EventDetail } from "./types";
 
 const EventDetailPage: React.FC = () => {
@@ -81,33 +80,11 @@ const EventDetailPage: React.FC = () => {
     );
   }
 
-  const mainImageUrl = getImageUrl(
-    event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : undefined,
-    0,
-  );
-
-  const thumbnailUrls: string[] = [];
-  const numThumbnails = 4;
-
-  for (let i = 0; i < numThumbnails; i++) {
-    if (event.image_ids && event.image_ids.length > i + 1) {
-      thumbnailUrls.push(getImageUrl(event.image_ids[i + 1]));
-    } else {
-      const unsplashFallbackIndex = i + 1;
-      thumbnailUrls.push(getImageUrl(undefined, unsplashFallbackIndex));
-    }
-  }
-
   return (
     <div className="bg-white pb-10">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <EventHeader title={event.title} eventId={eventId} />
-        <ImageGallery
-          mainImageUrl={mainImageUrl}
-          thumbnailUrls={thumbnailUrls}
-          title={event.title}
-          allImages={event.image_ids?.map((id) => getImageUrl(id)) || []}
-        />
+        <ImageGallery title={event.title} image_ids={event.image_ids || []} />
 
         <div className="grid grid-cols-2 lg:grid-cols-[1fr_1fr_400px] gap-x-16 mt-[44px]">
           <EventMainContent event={event} />

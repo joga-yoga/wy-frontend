@@ -22,6 +22,66 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudinary-util/types@npm:1.5.10":
+  version: 1.5.10
+  resolution: "@cloudinary-util/types@npm:1.5.10"
+  checksum: 10c0/febb220aa78532b4d31a729938276b1256044970503cc123eca17b3ab602d9b1e00841bea69aaa9fc23c7cb1cf7e16bb4c42754f3f35e4d98af73852227cc130
+  languageName: node
+  linkType: hard
+
+"@cloudinary-util/url-loader@npm:5.10.4":
+  version: 5.10.4
+  resolution: "@cloudinary-util/url-loader@npm:5.10.4"
+  dependencies:
+    "@cloudinary-util/types": "npm:1.5.10"
+    "@cloudinary-util/util": "npm:3.3.2"
+    "@cloudinary/url-gen": "npm:1.15.0"
+    zod: "npm:^3.22.4"
+  checksum: 10c0/303eb949d9011df821ef54bfc2195219da92f71f319c9963302e169d70b0661bce0d4ee814267726a93967533d777d39e23bce93fca07565370281426902e18b
+  languageName: node
+  linkType: hard
+
+"@cloudinary-util/util@npm:3.3.2":
+  version: 3.3.2
+  resolution: "@cloudinary-util/util@npm:3.3.2"
+  checksum: 10c0/65f58ea8914c3255343ca5ae119b54c723405aa30c65851c8bbed586a474b09f23041cd60cb4358e479cb31f23b6540c8af70303b40710878dc63be91e014c3b
+  languageName: node
+  linkType: hard
+
+"@cloudinary-util/util@npm:4.0.0":
+  version: 4.0.0
+  resolution: "@cloudinary-util/util@npm:4.0.0"
+  checksum: 10c0/0ae1aaeec9ba26513d1ba742b3c7db7fd3aacf0c6a4efc289a14ad2a69fdfaf2bc7ac9992b7463718a758c1f68ed5d22780ea697e98c6e4107e8b1deeecd404a
+  languageName: node
+  linkType: hard
+
+"@cloudinary/transformation-builder-sdk@npm:^1.10.0, @cloudinary/transformation-builder-sdk@npm:^1.15.1":
+  version: 1.17.0
+  resolution: "@cloudinary/transformation-builder-sdk@npm:1.17.0"
+  dependencies:
+    "@cloudinary/url-gen": "npm:^1.7.0"
+  checksum: 10c0/f7626a44aeb08fadc1b674d1c1841d3f08379f7bdf2589aa73f2d79e2c8a54f31a51904b626fa4b738ed790e2eff3913b7e906440834f45cd754060f96bb2b9f
+  languageName: node
+  linkType: hard
+
+"@cloudinary/url-gen@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@cloudinary/url-gen@npm:1.15.0"
+  dependencies:
+    "@cloudinary/transformation-builder-sdk": "npm:^1.10.0"
+  checksum: 10c0/4b50b690f40b117068d7396906e9bbda36bd4b8e6143bbc8ad57709cf18f7b3953611a414f56f6551680277e683c3e82f581b01d67e6d06ff88125f8c8f447d6
+  languageName: node
+  linkType: hard
+
+"@cloudinary/url-gen@npm:^1.7.0":
+  version: 1.21.0
+  resolution: "@cloudinary/url-gen@npm:1.21.0"
+  dependencies:
+    "@cloudinary/transformation-builder-sdk": "npm:^1.15.1"
+  checksum: 10c0/e8b776c0f116a53830b55322f2c23475d7da633bd11b9863dfb4cca1ef82ebc25b1a201f40bf70ecf955d111f295eebae1774d44743d09fc8dbe429334313044
+  languageName: node
+  linkType: hard
+
 "@emnapi/core@npm:^1.4.0":
   version: 1.4.0
   resolution: "@emnapi/core@npm:1.4.0"
@@ -2740,6 +2800,7 @@ __metadata:
     leaflet: "npm:^1.9.4"
     lucide-react: "npm:^0.503.0"
     next: "npm:15.3.1"
+    next-cloudinary: "npm:^6.16.0"
     next-themes: "npm:^0.4.6"
     postcss: "npm:^8.5.3"
     prettier: "npm:^3.5.3"
@@ -5670,6 +5731,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"next-cloudinary@npm:^6.16.0":
+  version: 6.16.0
+  resolution: "next-cloudinary@npm:6.16.0"
+  dependencies:
+    "@cloudinary-util/types": "npm:1.5.10"
+    "@cloudinary-util/url-loader": "npm:5.10.4"
+    "@cloudinary-util/util": "npm:4.0.0"
+  peerDependencies:
+    next: ^12 || ^13 || ^14 || >=15.0.0-rc || ^15
+    react: ^17 || ^18 || >=19.0.0-beta || ^19
+  checksum: 10c0/9fa48324d0b88e9e7ad9330b7bda48a00ac38f859e8966caf073692e46ce7540a5dc3448f1f852ce4beb9eef85c157629ca05bc1bc3d619778120215a05174f1
+  languageName: node
+  linkType: hard
+
 "next-themes@npm:^0.4.6":
   version: 0.4.6
   resolution: "next-themes@npm:0.4.6"
@@ -7541,6 +7616,13 @@ __metadata:
   peerDependencies:
     zod: ^3.24.1
   checksum: 10c0/0745b94ba53e652d39f262641cdeb2f75d24339fb6076a38ce55bcf53d82dfaea63adf524ebc5f658681005401687f8e9551c4feca7c4c882e123e66091dfb90
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.22.4":
+  version: 3.25.63
+  resolution: "zod@npm:3.25.63"
+  checksum: 10c0/ce09c6ae327a66629e67340856ec19b6b4ba2c28691a2de1e618a5cc717685c2b4e9baa370cf81c34f453fc652733ecfc9a7d5d966570a22472999931abd5ada
   languageName: node
   linkType: hard
 

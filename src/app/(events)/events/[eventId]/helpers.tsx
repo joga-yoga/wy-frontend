@@ -1,3 +1,4 @@
+import { getCldImageUrl } from "next-cloudinary";
 import React from "react";
 
 // Helper function to format multi-line text
@@ -103,4 +104,25 @@ export const getImageUrl = (
   // Fallback to Unsplash
   const fallbackIndex = unsplashIndex !== undefined ? unsplashIndex % unsplashImageUrls.length : 0;
   return unsplashImageUrls[fallbackIndex];
+};
+// Helper to construct Image URL (Cloudinary or Unsplash fallback)
+export const getImagePlaceholderUrl = (imageId: string | undefined | null): string => {
+  if (!imageId) return "";
+  return getCldImageUrl({
+    src: imageId,
+    width: 10,
+    height: 10,
+  });
+};
+
+export const getImageBlurDataURL = async (imageId: string) => {
+  const blurImageUrl = getImagePlaceholderUrl(imageId);
+
+  // Fetch the blurred image and convert to base64
+  const response = await fetch(blurImageUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const blurDataURL = `data:image/jpeg;base64,${buffer.toString("base64")}`; // Adjust mimetype if needed
+
+  return blurDataURL;
 };

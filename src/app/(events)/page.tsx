@@ -1,20 +1,16 @@
 "use client"; // Add this line for client-side rendering
 
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import axios from "axios"; // Import axios itself for isAxiosError
 import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Globe,
   Search,
 } from "lucide-react";
 import Image from "next/image"; // Import next/image
@@ -33,7 +29,6 @@ import PortugalIcon from "@/components/icons/countries/PortugalIcon";
 import SpainIcon from "@/components/icons/countries/SpainIcon";
 import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
 import ThailandIcon from "@/components/icons/countries/ThailandIcon";
-import CustomBookmarkIcon from "@/components/icons/CustomBookmarkIcon";
 import CustomCalendarIcon from "@/components/icons/CustomCalendarIcon";
 import CustomPriceIcon from "@/components/icons/CustomPriceIcon";
 import CustomSearchIcon from "@/components/icons/CustomSearchIcon";
@@ -41,14 +36,8 @@ import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon"
 import PolandFlagIcon from "@/components/icons/flags/PolandFlagIcon"; // Import PolandFlagIcon
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import { Input } from "@/components/ui/input";
-import { EventsFilterProvider, SortConfig, useEventsFilter } from "@/context/EventsFilterContext"; // Import context
+import { useEventsFilter } from "@/context/EventsFilterContext"; // Import context
 import { axiosInstance } from "@/lib/axiosInstance"; // Import axios instance
-import {
-  addBookmark,
-  getBookmarkedEvents,
-  isEventBookmarked,
-  removeBookmark,
-} from "@/lib/bookmarks";
 import { cn } from "@/lib/utils";
 
 // Define the structure of a Location object based on the API response
@@ -163,9 +152,13 @@ const Filters: React.FC = () => {
   const slidesPerViewCountries = 5;
   const initialSlideCountries = Math.max(0, filterItems.length - slidesPerViewCountries);
 
-  const [hideCountryPrev, setHideCountryPrev] = useState(true);
+  const [hideCountryPrev, setHideCountryPrev] = useState(
+    // true
+    false,
+  );
   const [hideCountryNext, setHideCountryNext] = useState(
-    filterItems.length <= slidesPerViewCountries,
+    // filterItems.length <= slidesPerViewCountries,
+    false,
   );
 
   const updateCountryNavVisibility = (swiper: SwiperClass) => {
@@ -183,57 +176,62 @@ const Filters: React.FC = () => {
           isSearchActive && "hidden",
         )}
       >
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div
+          // className="w-[calc(100%-280px-40px)]"
+          className="w-full relative"
+        >
           <button
             aria-label="Previous country"
             onClick={() => {
               countrySwiperRef.current?.slidePrev();
-              countrySwiperRef.current?.slidePrev();
-              countrySwiperRef.current?.slidePrev();
-              countrySwiperRef.current?.slidePrev();
             }}
-            className={`text-gray-600 p-2 ${hideCountryPrev ? "hidden" : ""}`}
+            className={`text-gray-600 absolute left-[-68px] top-[20px] ${hideCountryPrev ? "hidden" : ""}`}
             disabled={hideCountryPrev}
           >
-            <ChevronLeft className="h-10 w-10" />
-          </button>
-          <button
-            aria-label="Next country"
-            onClick={() => {
-              countrySwiperRef.current?.slideNext();
-              countrySwiperRef.current?.slideNext();
-              countrySwiperRef.current?.slideNext();
-              countrySwiperRef.current?.slideNext();
-            }}
-            className={`text-gray-600 p-2 ${hideCountryNext ? "hidden" : ""}`}
-            disabled={hideCountryNext}
-          >
-            <ChevronRight className="h-10 w-10" />
+            <ChevronLeft className="h-[48px] w-[48px]" />
           </button>
           <Swiper
             modules={[Navigation]}
-            spaceBetween={10}
-            slidesPerView={slidesPerViewCountries}
-            initialSlide={initialSlideCountries}
+            spaceBetween="0px"
+            // slidesPerView={6}
+            breakpoints={{
+              // when window width is >= 320px
+              320: {
+                slidesPerView: 2,
+              },
+              // when window width is >= 480px
+              480: {
+                slidesPerView: 3,
+              },
+              // when window width is >= 640px
+              640: {
+                slidesPerView: 10,
+              },
+            }}
+            // initialSlide={initialSlideCountries}
             onSwiper={(swiper) => {
               countrySwiperRef.current = swiper;
               updateCountryNavVisibility(swiper);
             }}
             onSlideChange={updateCountryNavVisibility}
-            className="w-[440px]"
+            // className="w-[calc(100%-280px)]"
           >
             {filterItems.map((item, index) => (
-              <SwiperSlide key={index}>
+              <SwiperSlide
+                key={index}
+                className="h-[88px] w-[108px] min-w-[108px]"
+                style={{ width: 88 }}
+              >
                 <button
                   aria-label={item.label}
                   className={cn(
-                    "group text-muted-foreground h-[80px] w-[80px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
+                    "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
                     countryFilter === item.filterValue &&
                       "border-brand-green hover:border-brand-green",
                   )}
                   onClick={() => setCountryFilterAndReset(item.filterValue)}
                 >
-                  <item.Icon className="h-[48px] w-[48px]" />
+                  <item.Icon className="h-[88px] w-[88px]" />
                   <span className="absolute top-0 left-0 text-2xl/6 font-medium text-black opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
                     {item.name}
                   </span>
@@ -241,17 +239,27 @@ const Filters: React.FC = () => {
               </SwiperSlide>
             ))}
           </Swiper>
+          <button
+            aria-label="Next country"
+            onClick={() => {
+              countrySwiperRef.current?.slideNext();
+            }}
+            className={`text-gray-600 absolute right-[-48px] top-[20px] ${hideCountryNext ? "hidden" : ""}`}
+            disabled={hideCountryNext}
+          >
+            <ChevronRight className="h-[48px] w-[48px]" />
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 min-w-[280px]">
           <button
             aria-label="Calendar"
             className={cn(
-              "group text-muted-foreground h-[80px] w-[80px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
+              "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
               sortConfig?.field === "start_date" && "border-brand-green hover:border-brand-green",
             )}
             onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })} // Simplified, logic is in context
           >
-            <CustomCalendarIcon className="h-[60px] w-[60px]" />
+            <CustomCalendarIcon className="h-[88px] w-[88px]" />
             {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
               <ArrowUp className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
             )}
@@ -263,12 +271,12 @@ const Filters: React.FC = () => {
           <button
             aria-label="Price"
             className={cn(
-              "group text-muted-foreground h-[80px] w-[80px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
+              "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
               sortConfig?.field === "price" && "border-brand-green hover:border-brand-green",
             )}
             onClick={() => setSortConfigAndReset({ field: "price", order: "desc" })} // Simplified, logic is in context
           >
-            <CustomPriceIcon className="h-[60px] w-[60px]" />
+            <CustomPriceIcon className="h-[88px] w-[88px]" />
             {sortConfig?.field === "price" && sortConfig.order === "desc" && (
               <ArrowDown className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
             )}
@@ -280,10 +288,10 @@ const Filters: React.FC = () => {
           {/* This button in Filters will now use toggleBookmarksView */}
           <button
             aria-label="Search"
-            className="group text-muted-foreground h-[80px] w-[80px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative"
+            className="group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative"
             onClick={() => setIsSearchActiveAndReset(true)}
           >
-            <CustomSearchIcon className="h-[60px] w-[60px]" />
+            <CustomSearchIcon className="h-[88px] w-[88px]" />
           </button>
         </div>
       </div>
@@ -718,7 +726,7 @@ const EventsPageContent: React.FC = () => {
     : events;
 
   return (
-    <div className="container mx-auto px-4 pt-2 pb-8 min-h-[100dvh]">
+    <div className="container mx-auto px-12 pt-2 pb-8 min-h-[100dvh]">
       <Filters /> {/* Filters component now uses context, no props needed here */}
       <main>
         {loading && events.length === 0 && (
