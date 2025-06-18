@@ -88,6 +88,7 @@ export interface Location {
 
 interface EventFormProps {
   eventId?: string;
+  initialData?: Partial<EventFormData>;
 }
 
 // 1. Helper function to prepare event payload
@@ -130,7 +131,8 @@ const prepareEventPayload = (data: EventFormData): Partial<EventFormData> => {
   return payload as Partial<EventFormData>; // Adjust cast if a more specific return type is defined
 };
 
-export function EventForm({ eventId }: EventFormProps) {
+export function EventForm({ eventId, initialData }: EventFormProps) {
+  console.log("🚀 ~ EventForm ~ initialData:", initialData);
   const { toast } = useToast();
   const router = useRouter();
   const isEditMode = !!eventId;
@@ -198,6 +200,7 @@ export function EventForm({ eventId }: EventFormProps) {
       is_public: false,
       location_id: null,
       image_ids: [],
+      ...initialData,
     } as Partial<EventFormData>,
   });
 

@@ -14,6 +14,7 @@ import { useEventsFilter } from "@/context/EventsFilterContext";
 import { cn } from "@/lib/utils";
 
 import CustomBurgerIcon from "../icons/CustomBurgerIcon";
+import LogoBlackIcon from "../icons/LogoBlackIcon";
 
 export const ProfileHeader: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -74,40 +75,16 @@ export const EventsHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-8 py-8 flex items-center justify-between">
+      <div className="container mx-auto px-5 md:px-8 py-3 md:py-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          {/* Wy icon */}
-          <svg
-            width="64"
-            height="64"
-            viewBox="0 0 65 65"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect width="65" height="65" rx="32.5" fill="#52525B" />
-            <g clipPath="url(#clip0_1_327)">
-              <path
-                d="M26.8784 17.3122C27.528 18.0731 28.8978 20.7322 30.0378 23.3379C32.2527 28.4516 33.1321 29.7219 34.4675 29.7219C35.7052 29.7219 36.8126 28.419 38.2783 25.227C41.2423 18.7779 41.7309 17.8008 42.5452 16.9214C43.4898 15.9442 44.6298 15.7488 44.9229 16.5305C45.4766 17.9311 43.0338 24.3476 37.9852 34.9333C33.7501 44.0858 31.0801 47.9618 29.4841 47.9618C28.4501 47.8808 28.2071 46.8278 29.2235 45.1281C32.0247 39.591 31.6664 36.399 27.139 25.683C24.7242 20.1791 23.9795 17.4425 24.3053 16.5631C24.6635 15.6837 25.7384 15.9768 26.8784 17.3122Z"
-                fill="#FAFAFA"
-              />
-              <path
-                d="M25.7344 46.1328C25.7344 47.7163 24.4507 49 22.8672 49C21.2837 49 20 47.7163 20 46.1328C20 44.5493 21.2837 43.2656 22.8672 43.2656C24.4507 43.2656 25.7344 44.5493 25.7344 46.1328Z"
-                fill="#FAFAFA"
-              />
-            </g>
-            <defs>
-              <clipPath id="clip0_1_327">
-                <rect width="25" height="33" fill="white" transform="translate(20 16)" />
-              </clipPath>
-            </defs>
-          </svg>
+          <LogoBlackIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
         </Link>
 
         {/* Right Section: Actions & Profile */}
         <div className="flex items-center gap-5">
           <Link href="/dashboard" passHref>
-            <button className="text-sm py-4 px-5 mr-[-20px] hover:underline">
+            <button className="hidden md:inline-block text-sm py-4 px-5 mr-[-20px] hover:underline">
               <p className="text-gray-700 text-middle-header-22">Dodaj wydarzenie za 5 min</p>
             </button>
           </Link>
@@ -116,12 +93,12 @@ export const EventsHeader: React.FC = () => {
             <button
               aria-label="Toggle Bookmarks"
               onClick={toggleBookmarksView}
-              className={cn(isBookmarksActive && "text-brand-green")}
+              className={cn("hidden md:block", isBookmarksActive && "text-brand-green")}
             >
               {isBookmarksActive ? (
-                <ActiveBookmarkIcon className="h-[64px] w-[64px]" />
+                <ActiveBookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
               ) : (
-                <BookmarkIcon className="h-[64px] w-[64px]" />
+                <BookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
               )}
             </button>
           )}
@@ -131,13 +108,13 @@ export const EventsHeader: React.FC = () => {
                 <Image
                   src={getImageUrl(user.organizer.image_id)}
                   alt="Organizer Avatar"
-                  className="h-[64px] w-[64px] rounded-full object-cover"
+                  className="h-[32px] w-[32px] md:h-[64px] md:w-[64px] rounded-full object-cover"
                   width={128}
                   height={128}
                   objectFit="cover"
                 />
               ) : (
-                <CustomBurgerIcon className="h-[64px] w-[64px]" />
+                <CustomBurgerIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
               )}
             </button>
           </Link>

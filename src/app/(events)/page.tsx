@@ -36,6 +36,7 @@ import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon"
 import PolandFlagIcon from "@/components/icons/flags/PolandFlagIcon"; // Import PolandFlagIcon
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext"; // Import context
 import { axiosInstance } from "@/lib/axiosInstance"; // Import axios instance
 import { cn } from "@/lib/utils";
@@ -78,10 +79,6 @@ interface Event {
   program?: string[] | null;
 }
 
-// --- SortConfig interface is now imported from EventsFilterContext ---
-
-// --- Updated Filters Component ---
-// No longer needs most props, will use context
 const Filters: React.FC = () => {
   const {
     searchTerm,
@@ -172,7 +169,7 @@ const Filters: React.FC = () => {
     <>
       <div
         className={cn(
-          "container mx-auto flex justify-between gap-10 py-5",
+          "container mx-auto hidden md:flex justify-between gap-10 py-5",
           isSearchActive && "hidden",
         )}
       >
@@ -421,37 +418,40 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
   const nextButtonClass = `event-swiper-next-${event.id}`;
 
   return (
-    <div className="box-border flex flex-col items-start p-[22px] gap-[22px] w-full bg-white border-[4px] border-gray-50 shadow-[0px_8px_16px_8px_#FAFAFA] rounded-[22px]">
-      <div className="flex flex-row items-center p-0 gap-4 w-full h-[55px] self-stretch">
-        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-6 py-1.5 rounded-[4px] gap-3">
-          <CustomSmallCalendarIcon className="w-[32px] h-[32px]" />{" "}
-          <span className="text-h-middle text-black whitespace-nowrap">
+    <div className="box-border flex flex-col items-start p-5 md:p-[22px] gap-4 md:gap-[22px] w-full md:bg-white md:border-[4px] md:border-gray-50 md:shadow-[0px_8px_16px_8px_#FAFAFA] md:rounded-[22px]">
+      <div className="flex flex-row items-center p-0 gap-2 md:gap-4 w-full h-[32px] md:h-[55px] self-stretch">
+        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-6 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
+          <CustomSmallCalendarIcon className="w-[28px] h-[28px] md:w-[32px] md:h-[32px]" />{" "}
+          <span className="text-subheader md:text-h-middle text-black whitespace-nowrap">
             {formatDateRange(event.start_date, event.end_date)}
           </span>
         </div>
         <div className="flex flex-row items-center p-0 gap-2">
           {event.location?.country?.toLowerCase() === "polska" ||
           event.location?.country?.toLowerCase() === "poland" ? (
-            <PolandFlagIcon className="w-[44px] h-[44px] rounded-full object-cover border border-gray-300" />
+            <PolandFlagIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300" />
           ) : null}
-          <span className="text-descr-under-big-head text-gray-500 whitespace-nowrap">
+          <span className="hidden md:inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
             {displayCountry}
+          </span>
+          <span className="inline-block md:hidden text-subheader text-gray-500 whitespace-nowrap">
+            {displayCountry.slice(0, 3).toUpperCase()}
           </span>
         </div>
         <div className="flex-grow"></div>
-        <div className="w-[44px] h-[44px] flex items-center justify-center">
+        <div className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center">
           <button onClick={handleBookmarkClick} aria-label="Toggle bookmark" className="p-2">
             {isBookmarkedLocal ? (
-              <ActiveBookmarkIcon className="w-[44px] h-[44px] text-brand-green" />
+              <ActiveBookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] text-brand-green" />
             ) : (
-              <BookmarkIcon className="w-[44px] h-[44px] cursor-pointer" />
+              <BookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] cursor-pointer" />
             )}
           </button>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row items-start md:items-center p-0 gap-[45px] w-full self-stretch">
+      <div className="flex flex-col md:flex-row items-start md:items-center p-0 gap-5 md:gap-[45px] w-full self-stretch">
         <div className="flex flex-col gap-[12px] w-full md:w-[485px] flex-shrink-0">
-          <div className="relative w-full h-[300px] rounded-[11px] overflow-hidden">
+          <div className="relative w-full h-[220px] md:h-[300px] rounded-[11px] overflow-hidden">
             {event.image_ids && event.image_ids.length > 0 ? (
               <Swiper
                 modules={[Navigation]}
@@ -495,43 +495,43 @@ const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBoo
             {event.image_ids && event.image_ids.length > 1 && (
               <>
                 <button
-                  className={`${prevButtonClass} absolute top-1/2 left-3 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hidePrev ? "opacity-0" : "opacity-100"}`}
+                  className={`${prevButtonClass} absolute top-1/2 left-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hidePrev ? "opacity-0" : "opacity-100"}`}
                 >
-                  <ArrowLeft className="h-6 w-6 text-gray-700" />
+                  <ArrowLeft className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
                 </button>
                 <button
-                  className={`${nextButtonClass} absolute top-1/2 right-3 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hideNext ? "opacity-0" : "opacity-100"}`}
+                  className={`${nextButtonClass} absolute top-1/2 right-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hideNext ? "opacity-0" : "opacity-100"}`}
                 >
-                  <ArrowRight className="h-6 w-6 text-gray-700" />
+                  <ArrowRight className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
                 </button>
               </>
             )}
           </div>
           {displayLocationTitle && (
-            <p className="font-medium text-[20px] sm:text-[24px] leading-[30px] text-[#52525B]">
+            <p className="text-sub-descript-18 md:text-descr-under-big-head text-gray-500">
               {displayLocationTitle}
             </p>
           )}
         </div>
-        <div className="flex flex-col justify-center items-start gap-[12px] flex-grow self-stretch md:h-[300px] pt-[8px] md:pt-0">
-          <div className="flex flex-col items-start gap-3 w-full">
-            <h2 className="text-h-middle text-gray-800 self-stretch line-clamp-2">
+        <div className="flex flex-col justify-center items-start gap-[20px] flex-grow self-stretch md:h-[300px]">
+          <div className="flex flex-col items-start gap-2 md:gap-3 w-full">
+            <h2 className="text-m-subtitle md:text-h-middle text-gray-800 self-stretch line-clamp-2">
               {event.title || "Tytuł Wydarzenia"}
             </h2>
-            <p className="text-descrip-under-header text-gray-500 self-stretch line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
+            <p className="text-m-descript md:text-descrip-under-header text-gray-500 self-stretch line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
               {event.description || "Brak opisu."}
             </p>
           </div>
           <div className="flex-grow"></div>
           <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
-            <div className="flex flex-row justify-end items-center w-full h-[30px]">
-              <span className="text-middle-header-22 text-right text-gray-700 flex-grow">
+            <div className="flex flex-row justify-end items-center w-full">
+              <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
                 {event.price !== null ? `od ${event.price} ${event.currency || "PLN"}` : "Cena N/A"}
               </span>
             </div>
             {event.price !== null && event.start_date && (
               <div className="flex flex-row justify-end items-center w-full h-[22px]">
-                <span className="text-sub-descript-18 text-gray-400 text-right flex-grow">
+                <span className="text-m-sunscript-font md:text-sub-descript-18 text-gray-400 text-right flex-grow">
                   {calculatePricePerDay(event.price, event.start_date, event.end_date)}
                 </span>
               </div>
@@ -726,8 +726,8 @@ const EventsPageContent: React.FC = () => {
     : events;
 
   return (
-    <div className="container mx-auto px-12 pt-2 pb-8 min-h-[100dvh]">
-      <Filters /> {/* Filters component now uses context, no props needed here */}
+    <div className="container mx-auto px-0 md:px-12 pt-0 md:pt-2 pb-8 min-h-[100dvh]">
+      <Filters />
       <main>
         {loading && events.length === 0 && (
           <p className="text-center py-10 min-h-[100dvh]">Loading events...</p>
@@ -743,15 +743,22 @@ const EventsPageContent: React.FC = () => {
           </p>
         )}
         {!loading && !error && displayedEvents.length > 0 && (
-          <div className="flex flex-col gap-6">
-            {displayedEvents.map((event) => (
-              <Link key={event.id} href={`/events/${event.id}`} passHref>
-                <EventCard
-                  event={event}
-                  isBookmarkedInitial={bookmarkedEventIds.includes(event.id)}
-                  onBookmarkToggle={handleBookmarkToggleInCard}
-                />
-              </Link>
+          <div className="flex flex-col gap-3 md:gap-6">
+            {displayedEvents.map((event, index) => (
+              <React.Fragment key={event.id}>
+                <Link href={`/events/${event.id}`} passHref>
+                  <EventCard
+                    event={event}
+                    isBookmarkedInitial={bookmarkedEventIds.includes(event.id)}
+                    onBookmarkToggle={handleBookmarkToggleInCard}
+                  />
+                </Link>
+                {index < displayedEvents.length - 1 && (
+                  <div className="w-full px-5">
+                    <Separator className="bg-gray-400" />
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         )}

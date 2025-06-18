@@ -1,7 +1,92 @@
 "use client";
 
+import axios from "axios";
+import { Loader2, PenLine, Sparkles } from "lucide-react";
+import { useState } from "react";
+
 import { EventForm } from "@/components/features/events/EventForm";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 export default function CreateEventPage() {
-  return <EventForm />;
+  const [selectedOption, setSelectedOption] = useState<"manual" | "autofill" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedData, setGeneratedData] = useState<any>(null);
+  const { toast } = useToast();
+
+  const handleManualCreate = () => {
+    setSelectedOption("manual");
+  };
+
+  const handleAutofill = async () => {
+    setIsLoading(true);
+    try {
+      // Mock API call - replace with actual API endpoint when ready
+      const response = await axios.get("/api/events/generate");
+      setGeneratedData(response.data);
+      setSelectedOption("autofill");
+    } catch (error) {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się wygenerować danych wydarzenia. Spróbuj ponownie.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (selectedOption === null) {
+    return (
+      <div className="container max-w-4xl mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-8">Utwórz nowe wydarzenie</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PenLine className="h-5 w-5" />
+                Ręczne tworzenie
+              </CardTitle>
+              <CardDescription>
+                Utwórz wydarzenie od podstaw, wypełniając wszystkie pola formularza ręcznie.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleManualCreate} className="w-full">
+                Wybierz
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                Automatyczne wypełnienie
+              </CardTitle>
+              <CardDescription>
+                Pozwól nam wygenerować podstawowe dane wydarzenia, które później możesz dostosować.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleAutofill} className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generowanie...
+                  </>
+                ) : (
+                  "Wybierz"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return <EventForm initialData={generatedData} />;
 }
