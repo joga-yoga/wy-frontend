@@ -11,28 +11,18 @@ interface EventLocationProps {
   id?: string;
 }
 
-// import dynamic from "next/dynamic";
-// const EventLeafletMap = dynamic(() => import("./EventLeafletMap"), {
-//   ssr: false,
-//   loading: () => (
-//     <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
-//       Loading map...
-//     </div>
-//   ),
-// });
-
 export const EventLocation: React.FC<EventLocationProps> = ({ location, title, id }) => {
   return (
     <section aria-labelledby="location-heading" id={id}>
-      <div className="mb-[52px]">
+      <div className="mb-5 md:mb-[52px]">
         <h2
           id="location-heading"
-          className="text-h-middle text-zinc-800 flex items-center gap-2 mb-3"
+          className="text-listing-description md:text-h-middle text-gray-800 flex items-center gap-2 mb-3"
         >
           <CustomLocationIcon className="w-8 h-8" />
           Lokalizacja
         </h2>
-        <p className="text-listing-description text-zinc-500 pl-10">
+        <p className="text-m-sunscript-font md:text-listing-description text-gray-500 pl-10">
           {location?.title || location?.address_line1}
           {location?.city ? `, ${location.city}` : ""}
         </p>

@@ -46,20 +46,26 @@ export const EventHeader: React.FC<EventHeaderProps> = ({ title, eventId }) => {
 
   return (
     <section aria-labelledby="event-title-and-images">
-      <div className="flex justify-between items-start">
-        <h1 id="event-title-and-images" className="text-h-middle text-gray-700 max-w-3xl">
+      <div className="flex justify-between md:items-start items-center">
+        <h1
+          id="event-title-and-images"
+          className="text-sub-descript-18 md:text-h-middle text-gray-700 max-w-3xl self-stretch line-clamp-2"
+        >
           {title}
         </h1>
         <div className="flex items-center gap-5">
-          <button onClick={handleShareClick} className="text-gray-500 text-middle-header-22">
+          <button
+            onClick={handleShareClick}
+            className="hidden md:block text-gray-500 text-middle-header-22"
+          >
             Share
           </button>
-          <div className="w-[44px] h-[44px] flex items-center justify-center">
+          <div className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center">
             <button onClick={handleBookmarkClick} aria-label="Toggle bookmark" className="p-2">
               {isBookmarked ? (
-                <ActiveBookmarkIcon className="w-7 h-7 sm:w-9 sm:h-9 text-brand-green" />
+                <ActiveBookmarkIcon className="w-8 h-8 sm:w-9 sm:h-9 text-brand-green" />
               ) : (
-                <BookmarkIcon className="w-7 h-7 sm:w-9 sm:h-9 cursor-pointer" />
+                <BookmarkIcon className="w-8 h-8 sm:w-9 sm:h-9 cursor-pointer" />
               )}
             </button>
           </div>

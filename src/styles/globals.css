@@ -117,6 +117,11 @@
   --text-h-middle--line-height: 30px;
   --text-h-middle--font-weight: 600;
 
+  /* h_small: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 30) */
+  --text-h-small: 22px;
+  --text-h-small--line-height: 30px;
+  --text-h-small--font-weight: 500;
+  
   /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
   --text-descr-under-big-head: 24px;
   --text-descr-under-big-head--line-height: 30px;
@@ -152,6 +157,11 @@
   --text-m-descript--line-height: 18px;
   --text-m-descript--font-weight: 400;
 
+    /* m_header: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
+    --text-m-header: 15px;
+    --text-m-header--line-height: 18px;
+    --text-m-header--font-weight: 500;
+  
   /* m_sunscript_font: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
   --text-m-sunscript-font: 15px;
   --text-m-sunscript-font--line-height: 18px;

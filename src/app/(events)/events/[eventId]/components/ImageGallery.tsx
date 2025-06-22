@@ -45,7 +45,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
   return (
     <Dialog>
       <div className="relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-[22px] min-h-[340px]">
+        {/* Desktop */}
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-3 mt-[22px] min-h-[340px]">
           {/* Main Image */}
           <DynamicCloudinaryImage
             imageId={image_ids[0]}
@@ -73,9 +74,26 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
             ))}
           </div>
         </div>
+        {/* Mobile */}
+        <div className="md:hidden flex gap-1 w-full pt-3">
+          <DynamicCloudinaryImage
+            imageId={image_ids[0]}
+            alt={title}
+            className="rounded-l-[11px] rounded-r-[4px] w-full object-cover max-h-[110px]"
+            priority
+            containerClass="w-full"
+          />
+          <DynamicCloudinaryImage
+            imageId={image_ids[1]}
+            alt={title}
+            className="rounded-r-[11px] rounded-l-[4px] w-full object-cover max-h-[110px]"
+            priority
+            containerClass="w-full"
+          />
+        </div>
         <DialogTrigger asChild>
           <Button
-            className="absolute bottom-4 right-4 rounded-full"
+            className="absolute md:bottom-4 md:right-4 bottom-2 right-2 rounded-full"
             variant="secondary"
             size="icon"
           >

@@ -81,14 +81,14 @@ const EventDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-white pb-10">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="bg-white pb-20 md:pb-10">
+      <div className="container mx-auto p-4 pb-3 md:p-8">
         <EventHeader title={event.title} eventId={eventId} />
         <ImageGallery title={event.title} image_ids={event.image_ids || []} />
 
-        <div className="grid grid-cols-2 lg:grid-cols-[1fr_1fr_400px] gap-x-16 mt-[44px]">
-          <EventMainContent event={event} />
-          <EventSidebar event={event} />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_400px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">
+          <EventSidebar event={event} className="lg:col-span-1 order-1 lg:order-2" />
+          <EventMainContent event={event} className="lg:col-span-2 order-2 lg:order-1" />
         </div>
 
         <div className="mt-[44px]">

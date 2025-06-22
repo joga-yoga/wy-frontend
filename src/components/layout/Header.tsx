@@ -14,6 +14,7 @@ import { useEventsFilter } from "@/context/EventsFilterContext";
 import { cn } from "@/lib/utils";
 
 import CustomBurgerIcon from "../icons/CustomBurgerIcon";
+import CustomSearchIcon from "../icons/CustomSearchIcon";
 import LogoBlackIcon from "../icons/LogoBlackIcon";
 
 export const ProfileHeader: React.FC = () => {
@@ -74,52 +75,62 @@ export const EventsHeader: React.FC = () => {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-5 md:px-8 py-3 md:py-8 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <LogoBlackIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-        </Link>
+    <>
+      <header className="sticky top-0 z-50 w-full border-b bg-background">
+        <div className="container mx-auto px-5 md:px-8 py-3 md:py-8 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <LogoBlackIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+          </Link>
 
-        {/* Right Section: Actions & Profile */}
-        <div className="flex items-center gap-5">
-          <Link href="/dashboard" passHref>
-            <button className="hidden md:inline-block text-sm py-4 px-5 mr-[-20px] hover:underline">
-              <p className="text-gray-700 text-middle-header-22">Dodaj wydarzenie za 5 min</p>
-            </button>
-          </Link>
-          {/* Bookmark Toggle Button */}
-          {pathname === "/" && (
+          {/* Right Section: Actions & Profile */}
+          <div className="flex items-center gap-2 md:gap-5">
+            <Link href="/dashboard" passHref>
+              <button className="hidden md:inline-block text-sm py-4 px-5 mr-[-20px] hover:underline">
+                <p className="text-gray-700 text-middle-header-22">Dodaj wydarzenie za 5 min</p>
+              </button>
+            </Link>
             <button
-              aria-label="Toggle Bookmarks"
-              onClick={toggleBookmarksView}
-              className={cn("hidden md:block", isBookmarksActive && "text-brand-green")}
+              aria-label="Search"
+              className="group text-muted-foreground h-[36px] w-[36px] md:h-[88px] md:w-[88px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative"
+              // onClick={() => setIsSearchActiveAndReset(true)}
             >
-              {isBookmarksActive ? (
-                <ActiveBookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-              ) : (
-                <BookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-              )}
+              <CustomSearchIcon className="h-[32px] w-[32px] md:h-[88px] md:w-[88px]" />
             </button>
-          )}
-          <Link href="/dashboard" passHref className="flex items-center justify-center">
-            <button aria-label="Account">
-              {user?.organizer?.image_id ? (
-                <Image
-                  src={getImageUrl(user.organizer.image_id)}
-                  alt="Organizer Avatar"
-                  className="h-[32px] w-[32px] md:h-[64px] md:w-[64px] rounded-full object-cover"
-                  width={128}
-                  height={128}
-                  objectFit="cover"
-                />
-              ) : (
-                <CustomBurgerIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-              )}
-            </button>
-          </Link>
+
+            {/* Bookmark Toggle Button */}
+            {pathname === "/" && (
+              <button
+                aria-label="Toggle Bookmarks"
+                onClick={toggleBookmarksView}
+                className={cn("hidden md:block", isBookmarksActive && "text-brand-green")}
+              >
+                {isBookmarksActive ? (
+                  <ActiveBookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+                ) : (
+                  <BookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+                )}
+              </button>
+            )}
+            <Link href="/dashboard" passHref className="flex items-center justify-center">
+              <button aria-label="Account">
+                {user?.organizer?.image_id ? (
+                  <Image
+                    src={getImageUrl(user.organizer.image_id)}
+                    alt="Organizer Avatar"
+                    className="h-[32px] w-[32px] md:h-[64px] md:w-[64px] rounded-full object-cover"
+                    width={128}
+                    height={128}
+                    objectFit="cover"
+                  />
+                ) : (
+                  <CustomBurgerIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+                )}
+              </button>
+            </Link>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 };

@@ -9,8 +9,11 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  Globe,
   Search,
 } from "lucide-react";
 import Image from "next/image"; // Import next/image
@@ -29,17 +32,22 @@ import PortugalIcon from "@/components/icons/countries/PortugalIcon";
 import SpainIcon from "@/components/icons/countries/SpainIcon";
 import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
 import ThailandIcon from "@/components/icons/countries/ThailandIcon";
+import CustomBurgerIcon from "@/components/icons/CustomBurgerIcon";
 import CustomCalendarIcon from "@/components/icons/CustomCalendarIcon";
 import CustomPriceIcon from "@/components/icons/CustomPriceIcon";
 import CustomSearchIcon from "@/components/icons/CustomSearchIcon";
 import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon";
 import PolandFlagIcon from "@/components/icons/flags/PolandFlagIcon"; // Import PolandFlagIcon
+import LogoBlackIcon from "@/components/icons/LogoBlackIcon";
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext"; // Import context
 import { axiosInstance } from "@/lib/axiosInstance"; // Import axios instance
 import { cn } from "@/lib/utils";
+
+import { getImageUrl } from "./events/[eventId]/helpers";
 
 // Define the structure of a Location object based on the API response
 interface Location {
@@ -80,6 +88,8 @@ interface Event {
 }
 
 const Filters: React.FC = () => {
+  const { user } = useAuth();
+
   const {
     searchTerm,
     setSearchTerm,
@@ -93,6 +103,9 @@ const Filters: React.FC = () => {
     toggleBookmarksView,
   } = useEventsFilter();
 
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+
   const filterItems = [
     { Icon: BaliIcon, label: "Bali", filterValue: "Bali", name: "BAL" },
     { Icon: SrilankaIcon, label: "Shrilanka", filterValue: "Shrilanka", name: "SRI" },
@@ -104,6 +117,11 @@ const Filters: React.FC = () => {
     { Icon: ThailandIcon, label: "Thailand", filterValue: "Thailand", name: "THA" },
   ];
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedCountry = countryFilter
+    ? filterItems.find((item) => item.filterValue === countryFilter)
+    : null;
+  const SelectedCountryIcon = selectedCountry?.Icon;
 
   useEffect(() => {
     if (isSearchActive && searchInputRef.current) {
@@ -145,6 +163,27 @@ const Filters: React.FC = () => {
     };
   }, [isSearchActive, setIsSearchActiveAndReset]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        countryDropdownRef.current &&
+        !countryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCountryDropdownOpen(false);
+      }
+    };
+
+    if (isCountryDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCountryDropdownOpen]);
+
   const countrySwiperRef = useRef<SwiperClass | null>(null);
   const slidesPerViewCountries = 5;
   const initialSlideCountries = Math.max(0, filterItems.length - slidesPerViewCountries);
@@ -167,6 +206,116 @@ const Filters: React.FC = () => {
 
   return (
     <>
+      {/* Mobile version of filters */}
+      <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
+        <div className="container mx-auto px-5 md:px-8 py-3 md:py-8 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <LogoBlackIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <button
+              aria-label="Calendar"
+              className={cn(
+                "group text-muted-foreground h-[36px] w-[36px] md:h-[88px] md:w-[88px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative",
+                sortConfig?.field === "start_date" && "border-brand-green hover:border-brand-green",
+              )}
+              onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })} // Simplified, logic is in context
+            >
+              <CustomCalendarIcon className="h-[32px] w-[32px] md:h-[88px] md:w-[88px]" />
+              {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+                <ArrowUp className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
+              )}
+              {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+                <ArrowDown className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
+              )}
+            </button>
+
+            <button
+              aria-label="Price"
+              className={cn(
+                "group text-muted-foreground h-[36px] w-[36px] md:h-[88px] md:w-[88px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative",
+                sortConfig?.field === "price" && "border-brand-green hover:border-brand-green",
+              )}
+              onClick={() => setSortConfigAndReset({ field: "price", order: "desc" })} // Simplified, logic is in context
+            >
+              <CustomPriceIcon className="h-[32px] w-[32px] md:h-[88px] md:w-[88px]" />
+              {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+                <ArrowDown className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
+              )}
+              {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+                <ArrowUp className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
+              )}
+            </button>
+            <button
+              aria-label="Toggle Bookmarks"
+              onClick={toggleBookmarksView}
+              className={cn("", isBookmarksActive && "text-brand-green")}
+            >
+              {isBookmarksActive ? (
+                <ActiveBookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+              ) : (
+                <BookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
+              )}
+            </button>
+            <div className="relative" ref={countryDropdownRef}>
+              <button
+                aria-label="Toggle country filter"
+                onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
+                className="h-[32px] w-[32px] flex items-center justify-center rounded-full text-gray-700 bg-gray-100"
+              >
+                {isCountryDropdownOpen ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : SelectedCountryIcon ? (
+                  <SelectedCountryIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronUp className="h-5 w-5" />
+                )}
+              </button>
+              {isCountryDropdownOpen && (
+                <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                  <ul className="py-1 max-h-60 overflow-y-auto">
+                    <li>
+                      <button
+                        onClick={() => {
+                          setCountryFilterAndReset("");
+                          setIsCountryDropdownOpen(false);
+                        }}
+                        className={cn(
+                          "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2",
+                          !countryFilter && "bg-gray-200",
+                        )}
+                      >
+                        <Globe className="h-5 w-5" />
+                        <span>Wszystkie kraje</span>
+                      </button>
+                    </li>
+                    {filterItems.map((item) => (
+                      <li key={item.filterValue}>
+                        <button
+                          onClick={() => {
+                            setCountryFilterAndReset(item.filterValue);
+                            setIsCountryDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2",
+                            countryFilter === item.filterValue && "bg-gray-200",
+                          )}
+                        >
+                          <item.Icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div
         className={cn(
           "container mx-auto hidden md:flex justify-between gap-10 py-5",
