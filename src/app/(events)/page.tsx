@@ -157,15 +157,15 @@ const EventsPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-0 md:px-8 pt-0 md:pt-2 pb-[calc(72px+1px+20px)] md:pb-8 min-h-[100dvh]">
+    <div className="container mx-auto px-0 md:px-8 pt-0 md:pt-2 pb-[calc(72px+1px+20px)] md:pb-8 md:min-h-[100dvh]">
       <Filters />
       <main>
         {loading && events.length === 0 && (
-          <p className="text-center py-10 min-h-[100dvh]">Loading events...</p>
+          <p className="text-center py-10 md:min-h-[100dvh]">Loading events...</p>
         )}
         {error && <p className="text-center text-red-600 py-10">Error: {error}</p>}
         {!loading && !error && events.length === 0 && (
-          <p className="text-center py-10 text-gray-500 min-h-[100dvh]">
+          <p className="text-center py-10 text-gray-500 md:min-h-[100dvh]">
             {isBookmarksActive
               ? "No bookmarked events found."
               : debouncedSearchTerm
