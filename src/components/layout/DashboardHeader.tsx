@@ -52,7 +52,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <Button
             variant="default"
             onClick={() => {
-              console.log("🚀 ~ onUpdate:");
               onUpdate();
             }}
             disabled={isSubmitting}

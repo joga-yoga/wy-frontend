@@ -19,7 +19,6 @@ export const trackEvent = (event_name: MixpanelEventType, props?: any) => {
 };
 
 export const trackPageview = (props?: any) => {
-  console.log("🚀 ~ trackPageview ~ trackPageview:");
   try {
     if ((window as any).mixpanel) {
       (window as any).mixpanel.track_pageview(props);

@@ -46,7 +46,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className }) 
                   href="#cancellation-policy"
                   className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500 underline"
                 >
-                  Bezpłatna anulacja
+                  Zasady anulacji
                 </a>
               </div>
               <Button variant="cta" size="cta">
@@ -59,7 +59,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className }) 
           <div className="p-5">
             <div className="space-y-4">
               <a href="#map" className="flex items-center gap-3">
-                <div className="w-[32px] h-[32px] md:h-12 md:w-12 border-2 border-gray-500 rounded-[6px] md:rounded-md flex items-center justify-center overflow-hidden">
+                <div className="w-[32px] h-[32px] min-w-[32px] md:h-12 md:w-12 md:min-w-12 border-2 border-gray-500 rounded-[6px] md:rounded-md flex items-center justify-center overflow-hidden">
                   <Image src="/images/map.png" alt="Map icon" width={48} height={48} />
                 </div>
                 <p className="text-m-header md:text-sub-descript-18">

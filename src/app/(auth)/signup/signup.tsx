@@ -48,7 +48,6 @@ export function SignUp() {
       toast({
         description: "Registration successful. Please check your email for verification.",
       });
-      console.log("🚀 ~ Registration successful:", response.data);
     } catch (error) {
       toast({
         description: "Registration failed. Please try again.",

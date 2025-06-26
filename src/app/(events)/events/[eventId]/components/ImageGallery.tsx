@@ -1,6 +1,6 @@
 import React from "react";
 
-import { DynamicCloudinaryImage } from "@/components/custom/dynamic-image";
+import { DynamicCloudinaryImage } from "@/components/custom/DynamicCloudinaryImage";
 import CustomGalleryIcon from "@/components/icons/CustomGalleryIcon";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";

@@ -132,7 +132,6 @@ const prepareEventPayload = (data: EventFormData): Partial<EventFormData> => {
 };
 
 export function EventForm({ eventId, initialData }: EventFormProps) {
-  console.log("🚀 ~ EventForm ~ initialData:", initialData);
   const { toast } = useToast();
   const router = useRouter();
   const isEditMode = !!eventId;

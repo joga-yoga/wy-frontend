@@ -4,803 +4,107 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  Globe,
-  Search,
-} from "lucide-react";
-import Image from "next/image"; // Import next/image
 import Link from "next/link"; // Import Link from next/link
-import React, { useEffect, useRef, useState } from "react";
-import { Navigation } from "swiper/modules";
-import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
+import React, { useCallback, useEffect, useState } from "react";
 
-import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
-import BookmarkIcon from "@/components/icons/BookmarkIcon"; // Import custom BookmarkIcon
-import BaliIcon from "@/components/icons/countries/BaliIcon";
-import IndiaIcon from "@/components/icons/countries/IndiaIcon";
-import ItalyIcon from "@/components/icons/countries/ItalyIcon";
-import PolandIcon from "@/components/icons/countries/PolandIcon";
-import PortugalIcon from "@/components/icons/countries/PortugalIcon";
-import SpainIcon from "@/components/icons/countries/SpainIcon";
-import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
-import ThailandIcon from "@/components/icons/countries/ThailandIcon";
-import CustomBurgerIcon from "@/components/icons/CustomBurgerIcon";
-import CustomCalendarIcon from "@/components/icons/CustomCalendarIcon";
-import CustomPriceIcon from "@/components/icons/CustomPriceIcon";
-import CustomSearchIcon from "@/components/icons/CustomSearchIcon";
-import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon";
-import PolandFlagIcon from "@/components/icons/flags/PolandFlagIcon"; // Import PolandFlagIcon
-import LogoBlackIcon from "@/components/icons/LogoBlackIcon";
 import { Button } from "@/components/ui/button"; // Import shadcn Button
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext"; // Import context
 import { axiosInstance } from "@/lib/axiosInstance"; // Import axios instance
-import { cn } from "@/lib/utils";
 
-import { getImageUrl } from "./events/[eventId]/helpers";
-
-// Define the structure of a Location object based on the API response
-interface Location {
-  id: string;
-  title: string | null;
-  country: string | null;
-}
-
-// Define the structure of an event based on the API response
-interface Event {
-  id: string;
-  title: string;
-  description: string | null;
-  start_date: string;
-  end_date: string | null;
-  location: Location | null;
-  price: number | null;
-  image_ids?: string[];
-  is_public: boolean;
-  currency: string | null;
-  main_attractions?: string | null;
-  language?: string | null;
-  skill_level?: string | null;
-  min_age?: number | null;
-  max_age?: number | null;
-  min_child_age?: number | null;
-  itinerary?: string | null;
-  included_trips?: string | null;
-  food_description?: string | null;
-  price_includes?: string | null;
-  price_excludes?: string | null;
-  accommodation_description?: string | null;
-  guest_welcome_description?: string | null;
-  paid_attractions?: string | null;
-  cancellation_policy?: string | null;
-  important_info?: string | null;
-  program?: string[] | null;
-}
-
-const Filters: React.FC = () => {
-  const { user } = useAuth();
-
-  const {
-    searchTerm,
-    setSearchTerm,
-    countryFilter,
-    setCountryFilterAndReset,
-    sortConfig,
-    setSortConfigAndReset,
-    isSearchActive,
-    setIsSearchActiveAndReset,
-    isBookmarksActive,
-    toggleBookmarksView,
-  } = useEventsFilter();
-
-  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
-  const countryDropdownRef = useRef<HTMLDivElement>(null);
-
-  const filterItems = [
-    { Icon: BaliIcon, label: "Bali", filterValue: "Bali", name: "BAL" },
-    { Icon: SrilankaIcon, label: "Shrilanka", filterValue: "Shrilanka", name: "SRI" },
-    { Icon: PortugalIcon, label: "Portugal", filterValue: "Portugal", name: "POR" },
-    { Icon: PolandIcon, label: "Poland", filterValue: "Poland", name: "PLN" },
-    { Icon: ItalyIcon, label: "Italy", filterValue: "Italy", name: "ITA" },
-    { Icon: IndiaIcon, label: "India", filterValue: "India", name: "IND" },
-    { Icon: SpainIcon, label: "Spain", filterValue: "Spain", name: "ESP" },
-    { Icon: ThailandIcon, label: "Thailand", filterValue: "Thailand", name: "THA" },
-  ];
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const selectedCountry = countryFilter
-    ? filterItems.find((item) => item.filterValue === countryFilter)
-    : null;
-  const SelectedCountryIcon = selectedCountry?.Icon;
-
-  useEffect(() => {
-    if (isSearchActive && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsSearchActiveAndReset(false);
-      }
-    };
-
-    if (isSearchActive) {
-      document.addEventListener("keydown", handleKeyDown);
-    } else {
-      document.removeEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isSearchActive, setIsSearchActiveAndReset]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
-        setIsSearchActiveAndReset(false);
-      }
-    };
-
-    if (isSearchActive) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isSearchActive, setIsSearchActiveAndReset]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        countryDropdownRef.current &&
-        !countryDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsCountryDropdownOpen(false);
-      }
-    };
-
-    if (isCountryDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isCountryDropdownOpen]);
-
-  const countrySwiperRef = useRef<SwiperClass | null>(null);
-  const slidesPerViewCountries = 5;
-  const initialSlideCountries = Math.max(0, filterItems.length - slidesPerViewCountries);
-
-  const [hideCountryPrev, setHideCountryPrev] = useState(
-    // true
-    false,
-  );
-  const [hideCountryNext, setHideCountryNext] = useState(
-    // filterItems.length <= slidesPerViewCountries,
-    false,
-  );
-
-  const updateCountryNavVisibility = (swiper: SwiperClass) => {
-    setHideCountryPrev(swiper.isBeginning);
-    setHideCountryNext(
-      swiper.isEnd || filterItems.length <= (swiper.params.slidesPerView as number)!,
-    );
-  };
-
-  return (
-    <>
-      {/* Mobile version of filters */}
-      <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
-        <div className="container mx-auto px-5 md:px-8 py-3 md:py-8 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <LogoBlackIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <button
-              aria-label="Calendar"
-              className={cn(
-                "group text-muted-foreground h-[36px] w-[36px] md:h-[88px] md:w-[88px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative",
-                sortConfig?.field === "start_date" && "border-brand-green hover:border-brand-green",
-              )}
-              onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })} // Simplified, logic is in context
-            >
-              <CustomCalendarIcon className="h-[32px] w-[32px] md:h-[88px] md:w-[88px]" />
-              {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
-                <ArrowUp className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
-              )}
-              {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
-                <ArrowDown className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
-              )}
-            </button>
-
-            <button
-              aria-label="Price"
-              className={cn(
-                "group text-muted-foreground h-[36px] w-[36px] md:h-[88px] md:w-[88px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative",
-                sortConfig?.field === "price" && "border-brand-green hover:border-brand-green",
-              )}
-              onClick={() => setSortConfigAndReset({ field: "price", order: "desc" })} // Simplified, logic is in context
-            >
-              <CustomPriceIcon className="h-[32px] w-[32px] md:h-[88px] md:w-[88px]" />
-              {sortConfig?.field === "price" && sortConfig.order === "desc" && (
-                <ArrowDown className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
-              )}
-              {sortConfig?.field === "price" && sortConfig.order === "asc" && (
-                <ArrowUp className="absolute bottom-0 right-0 md:right-1 md:bottom-1 h-3 w-3 md:h-4 md:w-4 text-brand-green" />
-              )}
-            </button>
-            <button
-              aria-label="Toggle Bookmarks"
-              onClick={toggleBookmarksView}
-              className={cn("", isBookmarksActive && "text-brand-green")}
-            >
-              {isBookmarksActive ? (
-                <ActiveBookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-              ) : (
-                <BookmarkIcon className="h-[32px] w-[32px] md:h-[64px] md:w-[64px]" />
-              )}
-            </button>
-            <div className="relative" ref={countryDropdownRef}>
-              <button
-                aria-label="Toggle country filter"
-                onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
-                className="h-[32px] w-[32px] flex items-center justify-center rounded-full text-gray-700 bg-gray-100"
-              >
-                {isCountryDropdownOpen ? (
-                  <ChevronDown className="h-5 w-5" />
-                ) : SelectedCountryIcon ? (
-                  <SelectedCountryIcon className="h-5 w-5" />
-                ) : (
-                  <ChevronUp className="h-5 w-5" />
-                )}
-              </button>
-              {isCountryDropdownOpen && (
-                <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                  <ul className="py-1 max-h-60 overflow-y-auto">
-                    <li>
-                      <button
-                        onClick={() => {
-                          setCountryFilterAndReset("");
-                          setIsCountryDropdownOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2",
-                          !countryFilter && "bg-gray-200",
-                        )}
-                      >
-                        <Globe className="h-5 w-5" />
-                        <span>Wszystkie kraje</span>
-                      </button>
-                    </li>
-                    {filterItems.map((item) => (
-                      <li key={item.filterValue}>
-                        <button
-                          onClick={() => {
-                            setCountryFilterAndReset(item.filterValue);
-                            setIsCountryDropdownOpen(false);
-                          }}
-                          className={cn(
-                            "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2",
-                            countryFilter === item.filterValue && "bg-gray-200",
-                          )}
-                        >
-                          <item.Icon className="h-5 w-5" />
-                          <span>{item.label}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={cn(
-          "container mx-auto hidden md:flex justify-between gap-10 py-5",
-          isSearchActive && "hidden",
-        )}
-      >
-        <div
-          // className="w-[calc(100%-280px-40px)]"
-          className="w-full relative"
-        >
-          <button
-            aria-label="Previous country"
-            onClick={() => {
-              countrySwiperRef.current?.slidePrev();
-            }}
-            className={`text-gray-600 absolute left-[-68px] top-[20px] ${hideCountryPrev ? "hidden" : ""}`}
-            disabled={hideCountryPrev}
-          >
-            <ChevronLeft className="h-[48px] w-[48px]" />
-          </button>
-          <Swiper
-            modules={[Navigation]}
-            spaceBetween="0px"
-            // slidesPerView={6}
-            breakpoints={{
-              // when window width is >= 320px
-              320: {
-                slidesPerView: 2,
-              },
-              // when window width is >= 480px
-              480: {
-                slidesPerView: 3,
-              },
-              // when window width is >= 640px
-              640: {
-                slidesPerView: 10,
-              },
-            }}
-            // initialSlide={initialSlideCountries}
-            onSwiper={(swiper) => {
-              countrySwiperRef.current = swiper;
-              updateCountryNavVisibility(swiper);
-            }}
-            onSlideChange={updateCountryNavVisibility}
-            // className="w-[calc(100%-280px)]"
-          >
-            {filterItems.map((item, index) => (
-              <SwiperSlide
-                key={index}
-                className="h-[88px] w-[108px] min-w-[108px]"
-                style={{ width: 88 }}
-              >
-                <button
-                  aria-label={item.label}
-                  className={cn(
-                    "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
-                    countryFilter === item.filterValue &&
-                      "border-brand-green hover:border-brand-green",
-                  )}
-                  onClick={() => setCountryFilterAndReset(item.filterValue)}
-                >
-                  <item.Icon className="h-[88px] w-[88px]" />
-                  <span className="absolute top-0 left-0 text-2xl/6 font-medium text-black opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                    {item.name}
-                  </span>
-                </button>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-          <button
-            aria-label="Next country"
-            onClick={() => {
-              countrySwiperRef.current?.slideNext();
-            }}
-            className={`text-gray-600 absolute right-[-48px] top-[20px] ${hideCountryNext ? "hidden" : ""}`}
-            disabled={hideCountryNext}
-          >
-            <ChevronRight className="h-[48px] w-[48px]" />
-          </button>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 min-w-[280px]">
-          <button
-            aria-label="Calendar"
-            className={cn(
-              "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
-              sortConfig?.field === "start_date" && "border-brand-green hover:border-brand-green",
-            )}
-            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })} // Simplified, logic is in context
-          >
-            <CustomCalendarIcon className="h-[88px] w-[88px]" />
-            {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
-              <ArrowUp className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-            {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
-              <ArrowDown className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-          </button>
-
-          <button
-            aria-label="Price"
-            className={cn(
-              "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
-              sortConfig?.field === "price" && "border-brand-green hover:border-brand-green",
-            )}
-            onClick={() => setSortConfigAndReset({ field: "price", order: "desc" })} // Simplified, logic is in context
-          >
-            <CustomPriceIcon className="h-[88px] w-[88px]" />
-            {sortConfig?.field === "price" && sortConfig.order === "desc" && (
-              <ArrowDown className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-            {sortConfig?.field === "price" && sortConfig.order === "asc" && (
-              <ArrowUp className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-          </button>
-          {/* Bookmark button is managed by context, can be moved to header later */}
-          {/* This button in Filters will now use toggleBookmarksView */}
-          <button
-            aria-label="Search"
-            className="group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative"
-            onClick={() => setIsSearchActiveAndReset(true)}
-          >
-            <CustomSearchIcon className="h-[88px] w-[88px]" />
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={cn(
-          "container mx-auto items-center py-5 relative gap-1 h-[120px] hidden",
-          isSearchActive && "flex",
-        )}
-      >
-        <div className="relative flex-grow w-full">
-          <Input
-            type="search"
-            ref={searchInputRef}
-            placeholder="Search events..."
-            className="pl-[52px] w-full md:text-xl rounded-[44px] h-[64px]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="h-5 w-5 absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        </div>
-      </div>
-    </>
-  );
-};
-
-// Moved and updated formatDateRange function
-const formatDateRange = (start: string, end: string | null): string => {
-  try {
-    if (!start || typeof start !== "string") {
-      return "Brak daty";
-    }
-    const startDateObj = new Date(start);
-    if (isNaN(startDateObj.getTime())) {
-      return "Nieprawidłowa data";
-    }
-
-    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    const startDateFormatted = startDateObj.toLocaleDateString("pl-PL", options).replace(".", "");
-
-    if (!end || typeof end !== "string") {
-      return startDateFormatted;
-    }
-    const endDateObj = new Date(end);
-    if (isNaN(endDateObj.getTime())) {
-      return startDateFormatted;
-    }
-    const endDateFormatted = endDateObj.toLocaleDateString("pl-PL", options).replace(".", "");
-
-    return `${startDateFormatted} - ${endDateFormatted}`;
-  } catch (e) {
-    console.error("Error formatting date range:", start, end, e);
-    return "Błąd daty";
-  }
-};
-
-// Helper function to calculate price per day
-const calculatePricePerDay = (
-  price: number | null,
-  startDateStr: string,
-  endDateStr: string | null,
-): string | null => {
-  if (price === null || !startDateStr) {
-    return null;
-  }
-
-  try {
-    const startDate = new Date(startDateStr);
-    if (isNaN(startDate.getTime())) return null;
-
-    let durationDays = 1;
-    if (endDateStr) {
-      const endDate = new Date(endDateStr);
-      if (isNaN(endDate.getTime())) return null;
-      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      if (endDate.getTime() < startDate.getTime()) return null;
-      if (durationDays <= 0) durationDays = 1;
-    } else {
-      durationDays = 1;
-    }
-
-    const pricePerDay = price / durationDays;
-    return `${Math.round(pricePerDay)} zł./dobę`;
-  } catch (e) {
-    console.error("Error calculating price per day:", e);
-    return null;
-  }
-};
-
-interface EventCardProps {
-  event: Event;
-  isBookmarkedInitial: boolean;
-  onBookmarkToggle: (eventId: string, isBookmarked: boolean) => void;
-}
-
-const EventCard: React.FC<EventCardProps> = ({ event, isBookmarkedInitial, onBookmarkToggle }) => {
-  const baseImageUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo"}/image/upload/`;
-  const placeholderImageUrl = `https://via.placeholder.com/616x380?text=No+Image`;
-
-  const displayCountry = event.location?.country || "Lokalizacja N/A";
-  const displayLocationTitle = event.location?.title || "";
-
-  const [hidePrev, setHidePrev] = useState(true);
-  const [hideNext, setHideNext] = useState(!(event.image_ids && event.image_ids.length > 1));
-
-  const [isBookmarkedLocal, setIsBookmarkedLocal] = useState(isBookmarkedInitial);
-
-  useEffect(() => {
-    setIsBookmarkedLocal(isBookmarkedInitial);
-  }, [isBookmarkedInitial]);
-
-  const handleBookmarkClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const newBookmarkState = !isBookmarkedLocal;
-    setIsBookmarkedLocal(newBookmarkState);
-    onBookmarkToggle(event.id, newBookmarkState);
-  };
-
-  const updateNavVisibility = (swiper: SwiperClass) => {
-    setHidePrev(swiper.isBeginning);
-    setHideNext(swiper.isEnd);
-  };
-
-  const prevButtonClass = `event-swiper-prev-${event.id}`;
-  const nextButtonClass = `event-swiper-next-${event.id}`;
-
-  return (
-    <div className="box-border flex flex-col items-start p-5 md:p-[22px] gap-4 md:gap-[22px] w-full md:bg-white md:border-[4px] md:border-gray-50 md:shadow-[0px_8px_16px_8px_#FAFAFA] md:rounded-[22px]">
-      <div className="flex flex-row items-center p-0 gap-2 md:gap-4 w-full h-[32px] md:h-[55px] self-stretch">
-        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-6 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
-          <CustomSmallCalendarIcon className="w-[28px] h-[28px] md:w-[32px] md:h-[32px]" />{" "}
-          <span className="text-subheader md:text-h-middle text-black whitespace-nowrap">
-            {formatDateRange(event.start_date, event.end_date)}
-          </span>
-        </div>
-        <div className="flex flex-row items-center p-0 gap-2">
-          {event.location?.country?.toLowerCase() === "polska" ||
-          event.location?.country?.toLowerCase() === "poland" ? (
-            <PolandFlagIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300" />
-          ) : null}
-          <span className="hidden md:inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
-            {displayCountry}
-          </span>
-          <span className="inline-block md:hidden text-subheader text-gray-500 whitespace-nowrap">
-            {displayCountry.slice(0, 3).toUpperCase()}
-          </span>
-        </div>
-        <div className="flex-grow"></div>
-        <div className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center">
-          <button onClick={handleBookmarkClick} aria-label="Toggle bookmark" className="p-2">
-            {isBookmarkedLocal ? (
-              <ActiveBookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] text-brand-green" />
-            ) : (
-              <BookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] cursor-pointer" />
-            )}
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row items-start md:items-center p-0 gap-5 md:gap-[45px] w-full self-stretch">
-        <div className="flex flex-col gap-[12px] w-full md:w-[485px] flex-shrink-0">
-          <div className="relative w-full h-[220px] md:h-[300px] rounded-[11px] overflow-hidden">
-            {event.image_ids && event.image_ids.length > 0 ? (
-              <Swiper
-                modules={[Navigation]}
-                spaceBetween={0}
-                slidesPerView={1}
-                navigation={{
-                  prevEl: `.${prevButtonClass}`,
-                  nextEl: `.${nextButtonClass}`,
-                }}
-                pagination={false}
-                className="h-full w-full"
-                loop={false}
-                onSwiper={updateNavVisibility}
-                onSlideChange={updateNavVisibility}
-              >
-                {event.image_ids.map((imageId) => (
-                  <SwiperSlide key={imageId} className="h-full w-full">
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={`${baseImageUrl}${imageId}`}
-                        alt={event.title || "Event image"}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 485px"
-                        style={{ objectFit: "cover" }}
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            ) : (
-              <div className="relative h-full w-full">
-                <Image
-                  src={placeholderImageUrl}
-                  alt="No image available"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 485px"
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
-            )}
-            {event.image_ids && event.image_ids.length > 1 && (
-              <>
-                <button
-                  className={`${prevButtonClass} absolute top-1/2 left-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hidePrev ? "opacity-0" : "opacity-100"}`}
-                >
-                  <ArrowLeft className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
-                </button>
-                <button
-                  className={`${nextButtonClass} absolute top-1/2 right-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hideNext ? "opacity-0" : "opacity-100"}`}
-                >
-                  <ArrowRight className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
-                </button>
-              </>
-            )}
-          </div>
-          {displayLocationTitle && (
-            <p className="text-sub-descript-18 md:text-descr-under-big-head text-gray-500">
-              {displayLocationTitle}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col justify-center items-start gap-[20px] flex-grow self-stretch md:h-[300px]">
-          <div className="flex flex-col items-start gap-2 md:gap-3 w-full">
-            <h2 className="text-m-subtitle md:text-h-middle text-gray-800 self-stretch line-clamp-2">
-              {event.title || "Tytuł Wydarzenia"}
-            </h2>
-            <p className="text-m-descript md:text-descrip-under-header text-gray-500 self-stretch line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
-              {event.description || "Brak opisu."}
-            </p>
-          </div>
-          <div className="flex-grow"></div>
-          <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
-            <div className="flex flex-row justify-end items-center w-full">
-              <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
-                {event.price !== null ? `od ${event.price} ${event.currency || "PLN"}` : "Cena N/A"}
-              </span>
-            </div>
-            {event.price !== null && event.start_date && (
-              <div className="flex flex-row justify-end items-center w-full h-[22px]">
-                <span className="text-m-sunscript-font md:text-sub-descript-18 text-gray-400 text-right flex-grow">
-                  {calculatePricePerDay(event.price, event.start_date, event.end_date)}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const mapApiItemToEvent = (item: any): Event => ({
-  id: item.id,
-  title: item.title,
-  description: item.description,
-  start_date: item.start_date,
-  end_date: item.end_date,
-  location: item.location,
-  price: item.price,
-  image_ids: item.image_ids,
-  is_public: item.is_public,
-  currency: item.currency,
-  main_attractions: item.main_attractions,
-  language: item.language,
-  skill_level: item.skill_level,
-  min_age: item.min_age,
-  max_age: item.max_age,
-  min_child_age: item.min_child_age,
-  itinerary: item.itinerary,
-  included_trips: item.included_trips,
-  food_description: item.food_description,
-  price_includes: item.price_includes,
-  price_excludes: item.price_excludes,
-  accommodation_description: item.accommodation_description,
-  guest_welcome_description: item.guest_welcome_description,
-  paid_attractions: item.paid_attractions,
-  cancellation_policy: item.cancellation_policy,
-  important_info: item.important_info,
-  program: item.program,
-});
+import EventCard from "./components/EventCard";
+import Filters from "./components/Filters";
+import { mapApiItemToEvent } from "./helpers";
+import { Event } from "./types";
 
 const EVENTS_PER_PAGE = 10;
 
-// Component that uses the context
-const EventsPageContent: React.FC = () => {
-  const {
-    debouncedSearchTerm,
-    countryFilter,
-    sortConfig,
-    isBookmarksActive,
-    bookmarkedEventIds,
-    addBookmark,
-    removeBookmark,
-  } = useEventsFilter();
+const EventsPage: React.FC = () => {
+  const { debouncedSearchTerm, countryFilter, sortConfig, isBookmarksActive, bookmarkedEventIds } =
+    useEventsFilter();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [skip, setSkip] = useState<number>(0);
   const [totalEvents, setTotalEvents] = useState<number>(0);
 
-  // Fetch events - depends on context values
+  const getBookmarkedEvents = useCallback(async () => {
+    if (bookmarkedEventIds.length === 0) return [];
+    const response = await axiosInstance.post(`/events/public/by-ids`, {
+      event_ids: bookmarkedEventIds,
+    });
+    return response.data;
+  }, [bookmarkedEventIds]);
+
+  // Fetch bookmarked events
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchBookmarkedEvents = async () => {
+      if (!isBookmarksActive) return;
       setLoading(true);
       setError(null);
       setSkip(0); // Reset skip for new fetches
 
       try {
-        if (isBookmarksActive) {
-          if (bookmarkedEventIds.length === 0) {
-            setEvents([]);
-            setTotalEvents(0);
-            setLoading(false);
-            return;
-          }
+        const response = await getBookmarkedEvents();
 
-          console.log(`Fetching bookmarked events by IDs:`, bookmarkedEventIds);
-          const response = await axiosInstance.post(`/events/public/by-ids`, {
-            event_ids: bookmarkedEventIds,
-          });
-
-          if (response.data && Array.isArray(response.data)) {
-            const processedEvents = response.data.map(mapApiItemToEvent);
-            setEvents(processedEvents);
-            setTotalEvents(processedEvents.length);
-            setSkip(processedEvents.length); // All bookmarked events are loaded
-          } else {
-            setEvents([]);
-            setTotalEvents(0);
-          }
+        if (response && Array.isArray(response)) {
+          const processedEvents = response.map(mapApiItemToEvent);
+          setEvents(processedEvents);
+          setTotalEvents(processedEvents.length);
+          setSkip(processedEvents.length); // All bookmarked events are loaded
         } else {
-          const params = new URLSearchParams();
-          if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
-          if (countryFilter) params.append("country", countryFilter);
-          if (sortConfig && sortConfig.field && sortConfig.order) {
-            params.append("sortBy", sortConfig.field);
-            params.append("sortOrder", sortConfig.order);
-          }
-          params.append("limit", EVENTS_PER_PAGE.toString());
-          params.append("skip", "0");
+          setEvents([]);
+          setTotalEvents(0);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        setError(`Failed to fetch events: ${errorMessage}. Please try again.`);
+        setEvents([]);
+        setTotalEvents(0);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-          const apiUrl = `/events/public?${params.toString()}`;
-          console.log(`Fetching initial/filtered events from: ${apiUrl}`);
-          const response = await axiosInstance.get(apiUrl);
-          const responseData = response.data;
+    fetchBookmarkedEvents();
+  }, [isBookmarksActive, getBookmarkedEvents]);
 
-          if (
-            responseData &&
-            typeof responseData === "object" &&
-            Array.isArray(responseData.items)
-          ) {
-            const processedEvents = responseData.items.map(mapApiItemToEvent);
-            setEvents(processedEvents);
-            setTotalEvents(responseData.total || 0);
-            setSkip(processedEvents.length);
-          } else {
-            setEvents([]);
-            setTotalEvents(0);
-          }
+  // Fetch events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (isBookmarksActive) return;
+      setLoading(true);
+      setError(null);
+      setSkip(0); // Reset skip for new fetches
+
+      try {
+        const params = new URLSearchParams();
+        if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
+        if (countryFilter) params.append("country", countryFilter);
+        if (sortConfig && sortConfig.field && sortConfig.order) {
+          params.append("sortBy", sortConfig.field);
+          params.append("sortOrder", sortConfig.order);
+        }
+        params.append("limit", EVENTS_PER_PAGE.toString());
+        params.append("skip", "0");
+
+        const apiUrl = `/events/public?${params.toString()}`;
+        console.log(`Fetching initial/filtered events from: ${apiUrl}`);
+        const response = await axiosInstance.get(apiUrl);
+        const responseData = response.data;
+
+        if (responseData && typeof responseData === "object" && Array.isArray(responseData.items)) {
+          const processedEvents = responseData.items.map(mapApiItemToEvent);
+          setEvents(processedEvents);
+          setTotalEvents(responseData.total || 0);
+          setSkip(processedEvents.length);
+        } else {
+          setEvents([]);
+          setTotalEvents(0);
         }
       } catch (err) {
         console.error("Failed to fetch events:", err);
@@ -814,12 +118,12 @@ const EventsPageContent: React.FC = () => {
     };
 
     fetchEvents();
-  }, [debouncedSearchTerm, countryFilter, sortConfig, isBookmarksActive, bookmarkedEventIds]);
+  }, [debouncedSearchTerm, countryFilter, sortConfig, isBookmarksActive]);
 
   const handleLoadMore = async () => {
-    if (loading || skip >= totalEvents) return;
+    if (loading || skip >= totalEvents || isLoadingMore) return;
 
-    setLoading(true);
+    setIsLoadingMore(true);
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -848,41 +152,19 @@ const EventsPageContent: React.FC = () => {
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
       setError(`Failed to load more events: ${errorMessage}. Please try again.`);
     } finally {
-      setLoading(false);
+      setIsLoadingMore(false);
     }
   };
-
-  const handleBookmarkToggleInCard = (eventId: string, newBookmarkState: boolean) => {
-    if (newBookmarkState) {
-      addBookmark(eventId);
-    } else {
-      removeBookmark(eventId);
-    }
-
-    // If viewing bookmarks and an event is unbookmarked, remove it from the currently displayed list
-    // This filtering is now more robust as it relies on bookmarkedEventIds from context for re-filtering if needed
-    if (isBookmarksActive && !newBookmarkState) {
-      setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventId));
-    }
-  };
-
-  // displayedEvents will be filtered by the fetch logic if isBookmarksActive.
-  // Or, we can re-filter here based on context for absolute certainty after toggles.
-  // For simplicity, the primary filtering now happens in the useEffect that fetches data.
-  // However, for immediate UI update when unbookmarking while in bookmark view:
-  const displayedEvents = isBookmarksActive
-    ? events.filter((event) => bookmarkedEventIds.includes(event.id))
-    : events;
 
   return (
-    <div className="container mx-auto px-0 md:px-12 pt-0 md:pt-2 pb-8 min-h-[100dvh]">
+    <div className="container mx-auto px-0 md:px-8 pt-0 md:pt-2 pb-[calc(72px+1px+20px)] md:pb-8 min-h-[100dvh]">
       <Filters />
       <main>
         {loading && events.length === 0 && (
           <p className="text-center py-10 min-h-[100dvh]">Loading events...</p>
         )}
         {error && <p className="text-center text-red-600 py-10">Error: {error}</p>}
-        {!loading && !error && displayedEvents.length === 0 && (
+        {!loading && !error && events.length === 0 && (
           <p className="text-center py-10 text-gray-500 min-h-[100dvh]">
             {isBookmarksActive
               ? "No bookmarked events found."
@@ -891,18 +173,14 @@ const EventsPageContent: React.FC = () => {
                 : "No events found."}
           </p>
         )}
-        {!loading && !error && displayedEvents.length > 0 && (
+        {!loading && !error && events.length > 0 && (
           <div className="flex flex-col gap-3 md:gap-6">
-            {displayedEvents.map((event, index) => (
+            {events.map((event, index) => (
               <React.Fragment key={event.id}>
                 <Link href={`/events/${event.id}`} passHref>
-                  <EventCard
-                    event={event}
-                    isBookmarkedInitial={bookmarkedEventIds.includes(event.id)}
-                    onBookmarkToggle={handleBookmarkToggleInCard}
-                  />
+                  <EventCard event={event} />
                 </Link>
-                {index < displayedEvents.length - 1 && (
+                {index < events.length - 1 && (
                   <div className="w-full px-5">
                     <Separator className="bg-gray-400" />
                   </div>
@@ -911,33 +189,16 @@ const EventsPageContent: React.FC = () => {
             ))}
           </div>
         )}
-        {!loading && displayedEvents.length > 0 && skip < totalEvents && (
+        {events.length > 0 && skip < totalEvents && !isBookmarksActive && (
           <div className="text-center mt-8">
             <Button variant="default" size="lg" onClick={handleLoadMore} disabled={loading}>
-              {loading ? "Ładowanie..." : "Pokaż więcej"}
-            </Button>
-          </div>
-        )}
-        {/* Special "Load More" for bookmarks when current page is empty but more items might exist */}
-        {!loading && isBookmarksActive && displayedEvents.length === 0 && skip < totalEvents && (
-          <div className="text-center mt-8">
-            <p className="text-gray-500 mb-4">
-              Na tej stronie nie ma więcej zapisanych wydarzeń. Spróbuj załadować więcej, aby
-              zobaczyć, czy pojawią się inne zapisane wydarzenia.
-            </p>
-            <Button variant="default" size="lg" onClick={handleLoadMore} disabled={loading}>
-              {loading ? "Ładowanie..." : "Load More Events"}
+              {isLoadingMore ? "Ładowanie..." : "Pokaż więcej"}
             </Button>
           </div>
         )}
       </main>
     </div>
   );
-};
-
-// Main page component that wraps content with the provider
-const EventsPage: React.FC = () => {
-  return <EventsPageContent />;
 };
 
 export default EventsPage;

@@ -103,12 +103,13 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
     } else if (newSortConfig) {
       setSortConfig({
         field: newSortConfig.field,
-        order: newSortConfig.field === "price" ? "desc" : "asc",
+        order: "asc",
       });
     } else {
       setSortConfig(null);
     }
     setIsBookmarksActive(false);
+    setIsSearchActive(false);
     // Keep search term and country filter
   };
 
@@ -116,9 +117,9 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
     setIsSearchActive(newIsSearchActive);
     if (newIsSearchActive) {
       // Optionally clear other filters when activating search, or preserve them
-      // setCountryFilter("");
-      // setSortConfig(null);
-      // setIsBookmarksActive(false);
+      setCountryFilter("");
+      setSortConfig(null);
+      setIsBookmarksActive(false);
     } else {
       // When search is deactivated, clear the search term
       setSearchTerm("");
