@@ -130,10 +130,12 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </span>
         </div>
         <div className="flex flex-row items-center p-0 gap-2">
-          <FlagIcon
-            country={event.location?.country_code || "PL"}
-            className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300"
-          />
+          {event.location?.country_code ? (
+            <FlagIcon
+              country={event.location.country_code}
+              className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300"
+            />
+          ) : null}
           <span className="hidden md:inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
             {displayCountry}
           </span>

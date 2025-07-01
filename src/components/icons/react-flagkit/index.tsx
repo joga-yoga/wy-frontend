@@ -17,15 +17,12 @@ export interface FlagIconProps extends HTMLAttributes<HTMLImageElement> {
   size?: number;
   alt?: string;
   className?: string;
-  containerClassName?: string;
 }
 
 export const FlagIcon = ({
   country = "US",
   size = 48,
   alt,
-  className,
-  containerClassName,
   ...props
 }: FlagIconProps): JSX.Element | null => {
   if (!country) return null;
