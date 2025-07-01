@@ -15,6 +15,7 @@ import BookmarkIcon from "@/components/icons/BookmarkIcon";
 import CustomGalleryIcon from "@/components/icons/CustomGalleryIcon";
 import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon";
 import PolandFlagIcon from "@/components/icons/flags/PolandFlagIcon";
+import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 
 import { getImageUrl } from "../events/[eventId]/helpers";
@@ -129,10 +130,10 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </span>
         </div>
         <div className="flex flex-row items-center p-0 gap-2">
-          {event.location?.country?.toLowerCase() === "polska" ||
-          event.location?.country?.toLowerCase() === "poland" ? (
-            <PolandFlagIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300" />
-          ) : null}
+          <FlagIcon
+            country={event.location?.country_code || "PL"}
+            className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300"
+          />
           <span className="hidden md:inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
             {displayCountry}
           </span>

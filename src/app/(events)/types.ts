@@ -3,6 +3,7 @@ export interface Location {
   id: string;
   title: string | null;
   country: string | null;
+  country_code: string | null;
 }
 
 // Define the structure of an event based on the API response
