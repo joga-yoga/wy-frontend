@@ -38,46 +38,6 @@ export const formatMultiLineText = (text: string | undefined | null): React.Reac
   });
 };
 
-// Helper function to format date range (reuse or import)
-export const formatDateRange = (start: string | null, end: string | null) => {
-  try {
-    if (!start || !end || typeof start !== "string" || typeof end !== "string") return "N/A";
-    const startDateObj = new Date(start);
-    const endDateObj = new Date(end);
-    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) return "Invalid Date";
-
-    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    const startDate = startDateObj.toLocaleDateString("pl-PL", options);
-    const endDate = endDateObj.toLocaleDateString("pl-PL", { day: "numeric" });
-    const endMonth = endDateObj.toLocaleDateString("pl-PL", { month: "short" });
-
-    const polishAbbreviation = (month: string): string => {
-      const map: { [key: string]: string } = {
-        sty: "sty",
-        lut: "lut",
-        mar: "mar",
-        kwi: "kwi",
-        maj: "maj",
-        cze: "cze",
-        lip: "lip",
-        sie: "sie",
-        wrz: "wrz",
-        paź: "paź",
-        lis: "lis",
-        gru: "gru",
-      };
-      const monthLower = month.toLowerCase().replace(".", "");
-      return map[monthLower] || month;
-    };
-    const finalEndMonth = typeof endMonth === "string" ? polishAbbreviation(endMonth) : "";
-
-    return `${startDate} - ${endDate} ${finalEndMonth}`; // e.g., "maj 23 - 25 maj"
-  } catch (e) {
-    console.error("Error formatting date range:", start, end, e);
-    return "Date Error";
-  }
-};
-
 // Predefined Unsplash image URLs for fallbacks
 const unsplashImageUrls = [
   "https://images.unsplash.com/photo-1505238680356-667803448bb6?auto=format&fit=crop&w=1170&q=80", // travel/outdoors

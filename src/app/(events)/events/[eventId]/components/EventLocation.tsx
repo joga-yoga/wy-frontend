@@ -1,6 +1,7 @@
 import React from "react";
 
 import CustomLocationIcon from "@/components/icons/CustomLocationIcon";
+import { renderLocation } from "@/lib/renderLocation";
 
 import { LocationDetail } from "../types";
 import EventLeafletMap from "./EventLeafletMap";
@@ -23,8 +24,7 @@ export const EventLocation: React.FC<EventLocationProps> = ({ location, title, i
           Lokalizacja
         </h2>
         <p className="text-m-sunscript-font md:text-listing-description text-gray-500 pl-10">
-          {location?.title || location?.address_line1}
-          {location?.city ? `, ${location.city}` : ""}
+          {renderLocation(location as any)}
         </p>
       </div>
       {location?.latitude && location?.longitude ? (

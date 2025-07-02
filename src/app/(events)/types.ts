@@ -4,6 +4,14 @@ export interface Location {
   title: string | null;
   country: string | null;
   country_code: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state_province: string | null;
+  postal_code: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  google_place_id: string | null;
 }
 
 // Define the structure of an event based on the API response

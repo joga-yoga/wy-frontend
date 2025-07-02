@@ -5,8 +5,10 @@ import React from "react";
 import CustomLangIcon from "@/components/icons/CustomLangIcon";
 import CustomSkillLevelIcon from "@/components/icons/CustomSkillLevelIcon";
 import { Button } from "@/components/ui/button";
+import { formatDateRange } from "@/lib/formatDateRange";
+import { renderLocation } from "@/lib/renderLocation";
 
-import { formatDateRange, getImageUrl } from "../helpers";
+import { getImageUrl } from "../helpers";
 import { EventDetail } from "../types";
 
 interface EventSidebarProps {
@@ -63,8 +65,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className }) 
                   <Image src="/images/map.png" alt="Map icon" width={48} height={48} />
                 </div>
                 <p className="text-m-header md:text-sub-descript-18">
-                  {event.location?.title || event.location?.address_line1 || "N/A"}
-                  {event.location?.country ? `, ${event.location.country}` : ""}
+                  {renderLocation(event.location as any)}
                 </p>
               </a>
               <div className="flex items-center gap-3">

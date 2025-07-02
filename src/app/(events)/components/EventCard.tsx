@@ -12,44 +12,14 @@ import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
 import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
 import BookmarkIcon from "@/components/icons/BookmarkIcon";
-import CustomGalleryIcon from "@/components/icons/CustomGalleryIcon";
 import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon";
-import PolandFlagIcon from "@/components/icons/flags/PolandFlagIcon";
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
+import { formatDateRange } from "@/lib/formatDateRange";
+import { renderLocation } from "@/lib/renderLocation";
 
 import { getImageUrl } from "../events/[eventId]/helpers";
 import { Event } from "../types";
-
-// Moved and updated formatDateRange function
-const formatDateRange = (start: string, end: string | null): string => {
-  try {
-    if (!start || typeof start !== "string") {
-      return "Brak daty";
-    }
-    const startDateObj = new Date(start);
-    if (isNaN(startDateObj.getTime())) {
-      return "Nieprawidłowa data";
-    }
-
-    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    const startDateFormatted = startDateObj.toLocaleDateString("pl-PL", options).replace(".", "");
-
-    if (!end || typeof end !== "string") {
-      return startDateFormatted;
-    }
-    const endDateObj = new Date(end);
-    if (isNaN(endDateObj.getTime())) {
-      return startDateFormatted;
-    }
-    const endDateFormatted = endDateObj.toLocaleDateString("pl-PL", options).replace(".", "");
-
-    return `${startDateFormatted} - ${endDateFormatted}`;
-  } catch (e) {
-    console.error("Error formatting date range:", start, end, e);
-    return "Błąd daty";
-  }
-};
 
 // Helper function to calculate price per day
 const calculatePricePerDay = (
@@ -90,10 +60,11 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
+  console.log("🚀 ~ event:", event);
   const { bookmarkedEventIds, addBookmark, removeBookmark } = useEventsFilter();
 
   const displayCountry = event.location?.country || "Lokalizacja N/A";
-  const displayLocationTitle = event.location?.title || "";
+  const displayLocationTitle = renderLocation(event.location);
 
   const [hidePrev, setHidePrev] = useState(true);
   const [hideNext, setHideNext] = useState(!(event.image_ids && event.image_ids.length > 1));
@@ -136,11 +107,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
               className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300"
             />
           ) : null}
-          <span className="hidden md:inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
+          <span className="inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
             {displayCountry}
-          </span>
-          <span className="inline-block md:hidden text-subheader text-gray-500 whitespace-nowrap">
-            {displayCountry.slice(0, 3).toUpperCase()}
           </span>
         </div>
         <div className="flex-grow"></div>
