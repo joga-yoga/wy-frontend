@@ -16,7 +16,7 @@ import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon"
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { formatDateRange } from "@/lib/formatDateRange";
-import { renderLocation } from "@/lib/renderLocation";
+import { renderLocation, renderShortLocation } from "@/lib/renderLocation";
 
 import { getImageUrl } from "../events/[eventId]/helpers";
 import { Event } from "../types";
@@ -63,8 +63,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   console.log("🚀 ~ event:", event);
   const { bookmarkedEventIds, addBookmark, removeBookmark } = useEventsFilter();
 
-  const displayCountry = event.location?.country || "Lokalizacja N/A";
-  const displayLocationTitle = renderLocation(event.location);
+  const displayCountry = event.location?.country || "";
+  const displayLocationTitle = renderShortLocation(event.location);
 
   const [hidePrev, setHidePrev] = useState(true);
   const [hideNext, setHideNext] = useState(!(event.image_ids && event.image_ids.length > 1));

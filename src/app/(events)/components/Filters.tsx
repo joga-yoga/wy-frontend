@@ -10,19 +10,14 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   Earth,
-  Globe,
   Search,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
-import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
-import BookmarkIcon from "@/components/icons/BookmarkIcon";
 import BookmarkIconMobile from "@/components/icons/BookmarkIconMobile";
 import BaliIcon from "@/components/icons/countries/BaliIcon";
 import IndiaIcon from "@/components/icons/countries/IndiaIcon";
@@ -37,9 +32,7 @@ import CustomPriceIcon from "@/components/icons/CustomPriceIcon";
 import CustomPriceIconMobile from "@/components/icons/CustomPriceIconMobile";
 import CustomSearchIcon from "@/components/icons/CustomSearchIcon";
 import CustomSearchIconMobile from "@/components/icons/CustomSearchIconMobile";
-import LogoBlackIcon from "@/components/icons/LogoBlackIcon";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import useIsMobile from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
@@ -190,30 +183,6 @@ const Filters: React.FC = () => {
               <ArrowUp className="absolute bottom-0.5 right-0.5 h-3 w-3 text-brand-green" />
             )}
           </button>
-          <button
-            aria-label="Search"
-            onClick={() => setIsSearchActiveAndReset(!isSearchActive)}
-            className={cn(
-              "group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 border-transparent hover:border-[#CBD5E1] relative",
-              isSearchActive && "border-brand-green hover:border-brand-green",
-            )}
-          >
-            <CustomSearchIconMobile className="h-[44px] w-[44px]" />
-          </button>
-          <button
-            aria-label="Toggle Bookmarks"
-            onClick={toggleBookmarksView}
-            className={cn("", isBookmarksActive && "text-brand-green")}
-          >
-            {isBookmarksActive ? (
-              <div className="flex items-center justify-center relative">
-                <BookmarkIconMobile className="h-[44px] w-[44px] z-10" />
-                <div className="absolute top-1 right-1 bg-brand-green rounded-full p-4" />
-              </div>
-            ) : (
-              <BookmarkIconMobile className="h-[44px] w-[44px]" />
-            )}
-          </button>
           <div className="relative" ref={countryDropdownRef}>
             <button
               aria-label="Toggle country filter"
@@ -229,7 +198,7 @@ const Filters: React.FC = () => {
               )}
             </button>
             {isCountryDropdownOpen && (
-              <div className="absolute bottom-full right-0 mb-2 w-[calc(60dvw)] bg-white rounded-md shadow-lg border border-gray-200 z-10">
+              <div className="absolute bottom-[50px] left-[calc(-225px/2+44px/2)] mb-2 w-[calc(60dvw)] bg-white rounded-md shadow-lg border border-gray-200 z-10">
                 <ul className="py-1 max-h-[50dvh] overflow-y-auto">
                   <li>
                     <button
@@ -267,6 +236,30 @@ const Filters: React.FC = () => {
               </div>
             )}
           </div>
+          <button
+            aria-label="Search"
+            onClick={() => setIsSearchActiveAndReset(!isSearchActive)}
+            className={cn(
+              "group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 border-transparent hover:border-[#CBD5E1] relative",
+              isSearchActive && "border-brand-green hover:border-brand-green",
+            )}
+          >
+            <CustomSearchIconMobile className="h-[44px] w-[44px]" />
+          </button>
+          <button
+            aria-label="Toggle Bookmarks"
+            onClick={toggleBookmarksView}
+            className={cn("", isBookmarksActive && "text-brand-green")}
+          >
+            {isBookmarksActive ? (
+              <div className="flex items-center justify-center relative">
+                <BookmarkIconMobile className="h-[44px] w-[44px] z-10" />
+                <div className="absolute top-1 right-1 bg-brand-green rounded-full p-4" />
+              </div>
+            ) : (
+              <BookmarkIconMobile className="h-[44px] w-[44px]" />
+            )}
+          </button>
         </div>
       </div>
 

@@ -22,13 +22,17 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
       return;
     }
 
-    let responsiveColumns = 2;
+    let responsiveColumns = 1;
     if (windowWidth > 1920) {
       responsiveColumns = 5;
     } else if (windowWidth > 1200) {
       responsiveColumns = 4;
     } else if (windowWidth > 950) {
       responsiveColumns = 3;
+    } else if (windowWidth > 768) {
+      responsiveColumns = 2;
+    } else {
+      responsiveColumns = 1;
     }
 
     setColumns(Math.min(responsiveColumns, image_ids.length));
@@ -75,21 +79,23 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
           </div>
         </div>
         {/* Mobile */}
-        <div className="md:hidden flex gap-1 w-full pt-3">
-          <DynamicCloudinaryImage
-            imageId={image_ids[0]}
-            alt={title}
-            className="rounded-l-[11px] rounded-r-[4px] w-full object-cover max-h-[110px]"
-            priority
-            containerClass="w-full"
-          />
-          <DynamicCloudinaryImage
-            imageId={image_ids[1]}
-            alt={title}
-            className="rounded-r-[11px] rounded-l-[4px] w-full object-cover max-h-[110px]"
-            priority
-            containerClass="w-full"
-          />
+        <div className="md:hidden grid grid-cols-2 gap-1 w-full pt-3 min-h-[236px]">
+          {image_ids.slice(0, 4).map((id, index) => (
+            <DynamicCloudinaryImage
+              key={id}
+              imageId={id}
+              alt={title}
+              className={cn(
+                "w-full object-cover max-h-[110px] rounded-[4px]",
+                index === 0 && "rounded-tl-[11px]",
+                index === 1 && "rounded-tr-[11px]",
+                index === 2 && "rounded-bl-[11px]",
+                index === 3 && "rounded-br-[11px]",
+              )}
+              priority
+              containerClass="w-full"
+            />
+          ))}
         </div>
         <DialogTrigger asChild>
           <Button

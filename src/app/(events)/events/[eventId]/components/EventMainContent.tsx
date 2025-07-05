@@ -1,9 +1,9 @@
-import { DollarSign } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
 import { formatMultiLineText, getImageUrl } from "../helpers";
 import { EventDetail } from "../types";
+import { CancellationPolicySection, InstructorSection, OrganizerSection } from "./";
 
 interface EventMainContentProps {
   event: EventDetail;
@@ -93,6 +93,12 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
           </p>
         </div>
       )}
+
+      {/* Instructor Section (Mobile Only) */}
+      <div className="block lg:hidden">
+        <InstructorSection event={event} />
+      </div>
+
       <hr />
       <div>
         <h2 className="text-listing-description mb-3 flex items-center gap-2">
@@ -148,17 +154,15 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
               {formatMultiLineText(event.important_info)}
             </div>
           )}
-          {/* {event.organizer && (
-            <div>
-              <h3 className="text-subheader text-gray-800">
-                Organizator jako osoba prywatna
-              </h3>
-              <p className="text-sub-descript-18 text-gray-500">
-                {event.organizer.name} odpowiada za to wydarzenie jako osoba indywidualna
-              </p>
-            </div>
-          )} */}
         </div>
+      </div>
+
+      {/* Organizer and Cancellation Policy (Mobile Only) */}
+      <div className="block lg:hidden space-y-5">
+        <hr />
+        <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
+        <hr />
+        <OrganizerSection event={event} />
       </div>
     </div>
   );

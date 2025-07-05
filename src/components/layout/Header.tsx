@@ -1,5 +1,5 @@
 "use client";
-import { LogOut, PlusCircle, User } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,8 +15,6 @@ import { cn } from "@/lib/utils";
 
 import CustomBurgerIcon from "../icons/CustomBurgerIcon";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
-import CustomSearchIcon from "../icons/CustomSearchIcon";
-import CustomSearchIconMobile from "../icons/CustomSearchIconMobile";
 import LogoBlackIcon from "../icons/LogoBlackIcon";
 
 export const ProfileHeader: React.FC = () => {
@@ -83,7 +81,16 @@ export const EventsHeader: React.FC = () => {
         <div className="container mx-auto px-5 md:px-8 py-3 md:py-5 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <LogoBlackIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
+            {pathname === "/" ? (
+              <LogoBlackIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
+            ) : (
+              <>
+                <LogoBlackIcon className="hidden md:block h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
+                <div className="md:hidden flex items-center justify-center h-[44px] w-[44px] bg-gray-600 rounded-full text-white">
+                  <ChevronLeft className="h-[28px] w-[28px] " />
+                </div>
+              </>
+            )}
           </Link>
 
           {/* Right Section: Actions & Profile */}

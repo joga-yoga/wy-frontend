@@ -25,6 +25,7 @@ export interface OrganizerDetail {
   id: string; // Assuming organizer has an ID, though schema might not show it at top level
   name: string;
   image_id: string | null;
+  phone_number?: string | null;
   // Add other fields like url if available and needed
   // url: string | null;
 }

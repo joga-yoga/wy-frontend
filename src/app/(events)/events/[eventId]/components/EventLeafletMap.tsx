@@ -6,7 +6,12 @@ import L from "leaflet";
 import MarkerIcon from "leaflet/dist/images/marker-icon.png";
 import MarkerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import MarkerShadow from "leaflet/dist/images/marker-shadow.png";
+import { Expand } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import useIsMobile from "@/hooks/useIsMobile";
 
 interface EventLeafletMapProps {
   latitude: number;
@@ -16,6 +21,8 @@ interface EventLeafletMapProps {
 
 const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) => {
   const [Map, setMap] = useState<any>(null);
+  const isMobile = useIsMobile();
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
     // Import Leaflet components only on client side
@@ -46,12 +53,13 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
 
   const { MapContainer, TileLayer, Marker } = Map;
 
-  return (
+  const renderMap = (isFullScreenMap = false) => (
     <MapContainer
       center={[latitude, longitude]}
       zoom={13}
-      scrollWheelZoom={false}
-      className="h-[440px] w-full rounded-lg z-0"
+      scrollWheelZoom={isFullScreenMap}
+      dragging={isFullScreenMap || !isMobile}
+      className="h-full w-full rounded-lg z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -59,6 +67,31 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
       />
       <Marker position={[latitude, longitude]} />
     </MapContainer>
+  );
+
+  return (
+    <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
+      <div className="relative h-[440px] w-full">
+        {renderMap(false)}
+        {isMobile && (
+          <DialogTrigger asChild>
+            <Button
+              className="absolute top-2 right-2 rounded-full z-10"
+              variant="secondary"
+              size="icon"
+            >
+              <Expand className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+        )}
+      </div>
+      <DialogContent className="sm:max-w-[calc(100dvw-8px)] h-[calc(100dvh-8px)] w-full p-1">
+        <div className="hidden">
+          <DialogTitle>Map</DialogTitle>
+        </div>
+        {renderMap(true)}
+      </DialogContent>
+    </Dialog>
   );
 };
 
