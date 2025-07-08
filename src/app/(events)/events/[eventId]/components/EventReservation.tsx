@@ -16,6 +16,7 @@ interface EventReservationProps {
 export const EventReservation: React.FC<EventReservationProps> = ({ event }) => {
   const isMobile = useIsMobile();
   const [showFixed, setShowFixed] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,17 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event }) => 
     };
   }, [isMobile]);
 
+  useEffect(() => {
+    if (showFixed) {
+      setIsRendered(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsRendered(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [showFixed]);
+
   const handleReserveClick = () => {
     setIsModalOpen(true);
   };
@@ -59,21 +71,29 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event }) => 
         />
       </div>
 
-      {showFixed && (
+      {isRendered && (
         <div
           className={cn(
-            "fixed bottom-0 right-0 md:right-[32px] z-50",
-            "w-full md:w-[400px] rounded-t-[20px]",
-            "border-t border-gray-100 md:border-x",
-            "bg-white",
-            showFixed ? "block" : "block md:hidden",
+            "fixed bottom-0 left-0 right-0 z-50",
+            "flex justify-end w-full mx-auto container md:pr-[32px]",
+            "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-2",
+            "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-2",
           )}
+          data-state={showFixed ? "open" : "closed"}
         >
-          <ReservationBox
-            startDate={event.start_date}
-            endDate={event.end_date}
-            onReserveClick={handleReserveClick}
-          />
+          <div
+            className={cn(
+              "w-full md:w-[400px] rounded-t-[20px]",
+              "border-t border-gray-100 md:border-x",
+              "bg-white",
+            )}
+          >
+            <ReservationBox
+              startDate={event.start_date}
+              endDate={event.end_date}
+              onReserveClick={handleReserveClick}
+            />
+          </div>
         </div>
       )}
       <ReservationModal event={event} isOpen={isModalOpen} onOpenChange={setIsModalOpen} />

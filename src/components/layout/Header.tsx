@@ -74,6 +74,7 @@ export const EventsHeader: React.FC = () => {
   const { isBookmarksActive, toggleBookmarksView, setIsSearchActiveAndReset, isSearchActive } =
     useEventsFilter();
   const pathname = usePathname();
+  const isMainPage = pathname === "/";
 
   return (
     <>
@@ -81,7 +82,7 @@ export const EventsHeader: React.FC = () => {
         <div className="container mx-auto px-5 md:px-8 py-3 md:py-5 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            {pathname === "/" ? (
+            {isMainPage ? (
               <LogoBlackIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
             ) : (
               <>
@@ -95,22 +96,28 @@ export const EventsHeader: React.FC = () => {
 
           {/* Right Section: Actions & Profile */}
           <div className="flex items-center gap-2 md:gap-5">
-            <Link href="/dashboard" passHref>
-              <button className="hidden md:inline-block text-sm py-4 px-5 mr-[-20px] hover:underline">
-                <p className="text-gray-700 text-middle-header-22">Dodaj wyjazd za 5 min</p>
+            <Link
+              href="/dashboard"
+              passHref
+              className={cn(isMainPage ? undefined : "hidden md:inline-block")}
+            >
+              <button className="text-sm py-4 px-5 mr-[-20px] hover:underline">
+                <p className="text-gray-700 text-m-header md:text-middle-header-22">
+                  Dodaj wyjazd za 5 min
+                </p>
               </button>
             </Link>
-            <Link href="/dashboard" passHref>
+            <Link href="/dashboard" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
               <button
                 aria-label="Search"
-                className="md:hidden group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative"
+                className="group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative"
               >
                 <CustomPlusIconMobile className="h-[44px] w-[44px] md:h-[88px] md:w-[88px]" />
               </button>
             </Link>
 
             {/* Bookmark Toggle Button */}
-            {pathname === "/" && (
+            {isMainPage && (
               <button
                 aria-label="Toggle Bookmarks"
                 onClick={toggleBookmarksView}

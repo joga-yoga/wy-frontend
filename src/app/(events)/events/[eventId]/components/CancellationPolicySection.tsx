@@ -16,7 +16,7 @@ export const CancellationPolicySection: React.FC<CancellationPolicySectionProps>
   }
 
   return (
-    <div className="p-5 border border-gray-100 rounded-[22px] text-center" id={id}>
+    <div className="p-5 border border-gray-100 rounded-[22px] md:text-center" id={id}>
       <h3 className="text-m-header md:text-subheader text-gray-800">
         Zasady anulowania rezerwacji
       </h3>

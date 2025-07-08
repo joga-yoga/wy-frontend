@@ -194,7 +194,7 @@ const Filters: React.FC = () => {
               ) : SelectedCountryIcon ? (
                 <SelectedCountryIcon className="h-[28px] w-[28px]" />
               ) : (
-                <Earth className="h-8 w-8 stroke-[0.5px]" />
+                <Earth className="h-8 w-8 stroke-[1.25px]" />
               )}
             </button>
             {isCountryDropdownOpen && (
@@ -211,7 +211,7 @@ const Filters: React.FC = () => {
                         !countryFilter && "text-brand-green",
                       )}
                     >
-                      <Earth className="h-8 w-8 stroke-[0.5px] text-black" />
+                      <Earth className="h-8 w-8 stroke-[1.25px] text-black" />
                       <span>Wszystkie kraje</span>
                     </button>
                   </li>
