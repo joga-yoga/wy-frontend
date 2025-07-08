@@ -56,14 +56,14 @@ const Filters: React.FC = () => {
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   const filterItems = [
-    { Icon: BaliIcon, label: "Bali", filterValue: "Bali", name: "BAL" },
-    { Icon: SrilankaIcon, label: "Shrilanka", filterValue: "Shrilanka", name: "SRI" },
-    { Icon: PortugalIcon, label: "Portugal", filterValue: "Portugal", name: "POR" },
     { Icon: PolandIcon, label: "Poland", filterValue: "Poland", name: "PLN" },
-    { Icon: ItalyIcon, label: "Italy", filterValue: "Italy", name: "ITA" },
     { Icon: IndiaIcon, label: "India", filterValue: "India", name: "IND" },
+    { Icon: ItalyIcon, label: "Italy", filterValue: "Italy", name: "ITA" },
     { Icon: SpainIcon, label: "Spain", filterValue: "Spain", name: "ESP" },
+    { Icon: BaliIcon, label: "Bali", filterValue: "Bali", name: "BAL" },
+    { Icon: PortugalIcon, label: "Portugal", filterValue: "Portugal", name: "POR" },
     { Icon: ThailandIcon, label: "Thailand", filterValue: "Thailand", name: "THA" },
+    { Icon: SrilankaIcon, label: "Shrilanka", filterValue: "Shrilanka", name: "SRI" },
   ];
   const searchInputRef = useRef<HTMLInputElement>(null);
 
