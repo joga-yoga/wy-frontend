@@ -49,7 +49,7 @@ export function EventSidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "sticky top-[65px] h-[calc(100vh-65px)] border-r bg-background flex flex-col items-center pt-4 pb-4 px-2 w-[84px]",
+        "hidden md:flex flex-col items-center sticky top-[65px] h-[calc(100vh-65px)] border-r bg-background  pt-4 pb-4 px-2 w-[84px]",
         className,
       )}
     >

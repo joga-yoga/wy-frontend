@@ -50,13 +50,13 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
   return (
     <div>
       <div className="h-[64px]" />
-      <div className="fixed bottom-0 left-[81px] right-0 z-10 h-[64px] bg-background py-3 border-t flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6">
+      <div className="md:fixed bottom-0 left-0 md:left-[81px] right-0 z-10 md:h-[64px] bg-background py-3 border-t flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6">
         <div>
           <h1 className="text-lg font-bold text-gray-900">{title}</h1>
           {/* You can place breadcrumbs or subtitle here using children prop if needed */}
           {children}
         </div>
-        <div className="flex gap-2 flex-shrink-0 items-center">
+        <div className="flex flex-col md:flex-row gap-2 flex-shrink-0 items-center">
           {/* Use items-center for alignment */}
           {/* Render Create button if handler exists */}
           {onCreate && (

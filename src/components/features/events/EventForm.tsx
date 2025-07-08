@@ -720,7 +720,7 @@ export function EventForm({ eventId, initialData }: EventFormProps) {
   return (
     <div className="" id="event-form-wrapper">
       {!isHelpBarOpen ? (
-        <div className="fixed top-[80px] bottom-[48px] right-4 z-1">
+        <div className="hidden md:block fixed top-[80px] bottom-[48px] right-4 z-1">
           <Button
             variant="outline"
             size="icon"
@@ -733,7 +733,7 @@ export function EventForm({ eventId, initialData }: EventFormProps) {
       ) : null}
 
       <div className="flex flex-row gap-6 space-y-8">
-        <div className="flex-grow space-y-[64px] max-w-3xl mx-auto py-10">
+        <div className="flex-grow space-y-[64px] max-w-3xl mx-auto py-10 px-4 md:mx-10">
           <div className="space-y-[64px]" id="event-details">
             <div className="space-y-2">
               <Label htmlFor="title" size="event">
