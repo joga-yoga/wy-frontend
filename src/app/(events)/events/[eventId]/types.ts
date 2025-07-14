@@ -17,10 +17,16 @@ export interface InstructorDetail {
 
 export interface LocationDetail {
   id: string;
-  title: string | null;
-  country: string | null;
+  title: string;
   address_line1: string | null;
+  address_line2: string | null;
   city: string | null;
+  state_province: string | null;
+  postal_code: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  google_place_id: string | null;
 }
 
 export interface ProgramDay {
