@@ -2,10 +2,12 @@
 
 import { format } from "date-fns";
 import { CalendarDays, DollarSign, MapPin } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +37,7 @@ interface Event {
   start_date: string;
   end_date: string;
   price: number;
+  image_ids?: string[];
   image_id?: string;
   is_public: boolean;
 }
@@ -111,13 +114,13 @@ export default function DashboardPage() {
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/events/${eventIdToDelete}`);
-      toast({ description: "Wydarzenie usunięte pomyślnie!" });
+      toast({ description: "Wyjazd usunięty pomyślnie!" });
       setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventIdToDelete));
       setEventIdToDelete(null);
     } catch (error: any) {
       console.error("Failed to delete event:", error);
       toast({
-        description: `Nie udało się usunąć wydarzenia: ${error.response?.data?.detail || error.message}`,
+        description: `Nie udało się usunąć wyjazdu: ${error.response?.data?.detail || error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -148,94 +151,96 @@ export default function DashboardPage() {
           <div className="text-center py-10 border rounded-lg bg-gray-50">
             <p className="text-gray-500 mb-4">Nie utworzyłeś jeszcze żadnych wydarzeń.</p>
             <Button variant="default" onClick={() => router.push("/dashboard/events/create")}>
-              Utwórz swoje pierwsze wydarzenie
+              Utwórz swoje pierwsze wyjazd
             </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {events.map((event) => (
-              <div key={event.id} className="border rounded-lg p-4 shadow-sm bg-white">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
-                  <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-md ${
-                      event.is_public
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-700 border border-gray-300"
-                    }`}
-                  >
-                    {event.is_public ? "Publiczne" : "Prywatne"}
-                  </span>
+              <div
+                key={event.id}
+                className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px]"
+              >
+                <div className="relative w-full md:w-[200px] md:flex-shrink-0 h-48 md:h-auto">
+                  <Image
+                    src={getImageUrl(event.image_ids?.[0] || event.image_id)}
+                    alt={event.title}
+                    layout="fill"
+                    objectFit="cover"
+                    className="w-full h-full"
+                  />
                 </div>
-
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
-
-                <div className="mt-3 text-sm text-gray-500 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" /> Do poprawy
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <CalendarDays className="h-4 w-4" /> {formatDate(event.start_date)}
-                  </span>
-                  {event.end_date && (
-                    <span className="flex items-center gap-1">
-                      <CalendarDays className="h-4 w-4" /> {formatDate(event.end_date)}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" /> ${event.price?.toFixed(2) ?? "Brak danych"}
-                  </span>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2 items-center">
-                  <Link href={`/dashboard/events/${event.id}/edit`} passHref>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      Edytuj
-                    </Button>
-                  </Link>
-                  <AlertDialog onOpenChange={(open: boolean) => !open && setEventIdToDelete(null)}>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setEventIdToDelete(event.id)}
-                        disabled={isDeleting}
-                        className="text-xs"
+                <div className="flex-grow p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
+                      <span
+                        className={`px-2 py-0.5 text-xs font-semibold rounded-md ${
+                          event.is_public
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-700 border border-gray-300"
+                        }`}
                       >
-                        Usuń
+                        {event.is_public ? "Publiczne" : "Prywatne"}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2 items-center">
+                    <Link href={`/dashboard/events/${event.id}/edit`} passHref>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        Edytuj
                       </Button>
-                    </AlertDialogTrigger>
-                    {eventIdToDelete === event.id && (
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie wydarzenia
-                            &quot;<strong>{event.title}</strong>&quot;.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-                          <AlertDialogAction
-                            disabled={isDeleting}
-                            onClick={handleDelete}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            {isDeleting ? "Usuwanie..." : "Tak, usuń wydarzenie"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    )}
-                  </AlertDialog>
-                  <Link href={`/events/${event.id}`} passHref>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-blue-600 hover:text-blue-800"
+                    </Link>
+                    <AlertDialog
+                      onOpenChange={(open: boolean) => !open && setEventIdToDelete(null)}
                     >
-                      Zobacz stronę publiczną
-                    </Button>
-                  </Link>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setEventIdToDelete(event.id)}
+                          disabled={isDeleting}
+                          className="text-xs"
+                        >
+                          Usuń
+                        </Button>
+                      </AlertDialogTrigger>
+                      {eventIdToDelete === event.id && (
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie wyjazdu
+                              &quot;
+                              <strong>{event.title}</strong>&quot;.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                            <AlertDialogAction
+                              disabled={isDeleting}
+                              onClick={handleDelete}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              {isDeleting ? "Usuwanie..." : "Tak, usuń wyjazd"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      )}
+                    </AlertDialog>
+                    <Link href={`/events/${event.id}`} passHref>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Zobacz stronę publiczną
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -244,7 +249,7 @@ export default function DashboardPage() {
         {!loadingEvents && events.length > 0 && (
           <div className="mt-8 flex justify-center">
             <Button variant="default" onClick={() => router.push("/dashboard/events/create")}>
-              Utwórz nowe wydarzenie
+              Utwórz nowy wyjazd
             </Button>
           </div>
         )}

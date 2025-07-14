@@ -3,8 +3,6 @@
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
-import { EventSidebar } from "@/components/layout/EventSidebar";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
@@ -21,12 +19,5 @@ export default function EventLayout({ children }: { children: React.ReactNode })
     return <div>Loading...</div>;
   }
 
-  return (
-    <div className="flex min-h-screen bg-background">
-      <EventSidebar />
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1">{children}</main>
-      </div>
-    </div>
-  );
+  return <div className="flex min-h-screen bg-background">{children}</div>;
 }

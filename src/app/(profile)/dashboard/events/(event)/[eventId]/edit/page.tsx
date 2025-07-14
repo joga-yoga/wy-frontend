@@ -1,13 +1,18 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
-import { EventForm } from "@/components/features/events/EventForm";
+import { EventSidebar } from "../../components/EventForm/components/EventSidebar";
+import { EventForm } from "../../components/EventForm/EventForm";
 
 export default function EditEventPage() {
   const params = useParams();
   const eventId = params.eventId as string;
 
-  return <EventForm eventId={eventId} />;
+  return (
+    <>
+      <EventSidebar />
+      <EventForm eventId={eventId} />
+    </>
+  );
 }

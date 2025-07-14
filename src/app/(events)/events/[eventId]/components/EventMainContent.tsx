@@ -27,7 +27,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
             const startDateObj = new Date(event.start_date);
             const isStartDateValid = !isNaN(startDateObj.getTime());
 
-            return event.program!.map((dayDesc, index) => {
+            return event.program!.map((day, index) => {
               let displayDayTitle = `Dzień ${index + 1}`;
               if (isStartDateValid) {
                 const currentDate = new Date(startDateObj);
@@ -48,7 +48,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
                   <div className="flex items-start gap-5 md:gap-[44px]">
                     <div className="relative w-20 h-20 md:w-40 md:h-40 flex-shrink-0">
                       <Image
-                        src={getImageUrl(undefined, index + 5)} // Use other unsplash images
+                        src={getImageUrl(day.imageId ?? undefined, index + 5)} // Use program imageId or fallback
                         alt={`Program day ${index + 1}`}
                         fill
                         style={{ objectFit: "cover" }}
@@ -61,7 +61,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
                         {displayDayTitle}
                       </h3>
                       <div className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
-                        {formatMultiLineText(dayDesc)}
+                        {formatMultiLineText(day.description)}
                       </div>
                     </div>
                   </div>

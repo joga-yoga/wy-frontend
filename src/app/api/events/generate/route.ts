@@ -35,11 +35,6 @@ export async function GET() {
       "Transfer z lotniska",
     ],
     price_excludes: ["Bilety lotnicze", "Wydatki własne", "Opcjonalne atrakcje", "Alkohol"],
-    included_trips: [
-      "Dzienny trekking do jeziora górskiego",
-      "Wspinaczka na szczyt",
-      "Wycieczka do jaskini",
-    ],
     paid_attractions: ["Paralotniarstwo", "Wypożyczenie dodatkowego sprzętu", "Masaż relaksacyjny"],
     cancellation_policy:
       "Rezygnacja do 30 dni przed wyjazdem - zwrot 100% wpłaty. Rezygnacja 15-30 dni przed wyjazdem - zwrot 50% wpłaty. Rezygnacja późniejsza - brak zwrotu.",

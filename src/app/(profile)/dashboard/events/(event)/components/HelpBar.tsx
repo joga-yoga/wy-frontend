@@ -19,43 +19,30 @@ interface Tip {
 const tips: Tip[] = [
   {
     id: "title",
-    title: "Tytuł wydarzenia",
+    title: "Tytuł wyjazdu",
     content: "Wprowadź krótki, wyrazisty tytuł, który przyciągnie uwagę uczestników.",
     example: "Weekend z jogą w górach lub Letni retreat z medytacją i pranajamą",
-    details: ['Unikaj ogólników typu "Warsztat jogi". Dodaj czas, miejsce lub formę wydarzenia.'],
+    details: ['Unikaj ogólników typu "Warsztat jogi". Dodaj czas, miejsce lub formę wyjazdu.'],
   },
   {
     id: "description",
-    title: "Opis wydarzenia",
+    title: "Opis wyjazdu",
     content:
-      "Wprowadzenie do wydarzenia w formie krótkiego streszczenia. Ma przyciągnąć uwagę, zaciekawić.",
+      "Wprowadzenie do wyjazdu w formie krótkiego streszczenia. Ma przyciągnąć uwagę, zaciekawić.",
     details: ["Zalecana długość: 4–5 linijek."],
     example:
       "Zapraszamy na weekendowy wyjazd z jogą i medytacją w sercu Beskidów. Czekają na Ciebie codzienne sesje jogi, wyciszenie i głęboki oddech w otoczeniu natury.",
   },
   {
-    id: "location_id",
-    title: "Lokalizacja",
-    content: "Podaj dokładną nazwę miejsca oraz lokalizację geograficzną.",
-    example: "Centrum Odnowy Natura, Beskid Mały",
-    details: ["Dobrze, by było to miejsce rozpoznawalne lub z linkiem do mapy."],
-  },
-  {
-    id: "date",
-    title: "Termin",
-    content:
-      "Podaj datę początkową i końcową wydarzenia. Upewnij się, że są zgodne z harmonogramem.",
-  },
-  {
-    id: "price",
-    title: "Cena",
-    content: "Podaj cenę za jedną osobę. Bez dodatkowych znaków, tylko liczba.",
-  },
-  {
     id: "main_attractions",
-    title: "Główne atrakcje",
-    content: "Wymień 3–6 rzeczy, które wyróżniają Twoje wydarzenie. Krótko, hasłowo.",
+    title: "Najważniejsze atrakcje",
+    content: "Wymień 3-6 rzeczy, które wyróżniają Twoje wyjazd. Krótko, hasłowo.",
     example: "Codzienna joga, medytacja, warsztat oddechowy, ziołowe SPA, wycieczka górska.",
+  },
+  {
+    id: "language",
+    title: "Język wyjazdu",
+    content: "W jakim języku będzie prowadzony wyjazd?",
   },
   {
     id: "skill_level",
@@ -64,9 +51,9 @@ const tips: Tip[] = [
     example: "Początkujący, Średniozaawansowany lub Dla każdego",
   },
   {
-    id: "language",
-    title: "Język zajęć",
-    content: "W jakim języku będą prowadzone zajęcia?",
+    id: "date",
+    title: "Termin",
+    content: "Podaj datę początkową i końcową wyjazdu. Upewnij się, że są zgodne z harmonogramem.",
   },
   {
     id: "program",
@@ -76,11 +63,24 @@ const tips: Tip[] = [
       "Dzień 1: Przyjazd uczestników od godziny 15:00, zakwaterowanie w pokojach, powitalne spotkanie o 17:30, następnie relaksacyjna sesja jogi i wspólna kolacja o 19:00.",
   },
   {
+    id: "location_id",
+    title: "Lokalizacja",
+    content: "Podaj dokładną nazwę miejsca oraz lokalizację geograficzną.",
+    example: "Centrum Odnowy Natura, Beskid Mały",
+    details: ["Dobrze, by było to miejsce rozpoznawalne lub z linkiem do mapy."],
+  },
+  {
     id: "accommodation_description",
-    title: "Opis zakwaterowania",
+    title: "Nocleg",
     content: "Krótki opis miejsca noclegowego. Dodaj atmosferę i udogodnienia.",
     example:
       "Drewniane pokoje z widokiem na las. Każdy pokój z łazienką. Bliskość natury i cisza zapewniają komfortowy wypoczynek.",
+  },
+  {
+    id: "guest_welcome_description",
+    title: "Powitanie gości",
+    content: "Co czeka na uczestników po przyjeździe?",
+    example: "Od godziny 16:00 zakwaterowanie, o 18:00 wspólna kolacja i spotkanie organizacyjne.",
   },
   {
     id: "food_description",
@@ -90,42 +90,35 @@ const tips: Tip[] = [
       "Trzy posiłki dziennie w wersji wegetariańskiej. Dostępne opcje wegańskie i bezglutenowe.",
   },
   {
-    id: "guest_welcome_description",
-    title: "Powitanie gości",
-    content: "Co czeka na uczestników po przyjeździe?",
-    example: "Od godziny 16:00 zakwaterowanie, o 18:00 wspólna kolacja i spotkanie organizacyjne.",
+    id: "price",
+    title: "Cena",
+    content: "Podaj cenę za jedną osobę. Bez dodatkowych znaków, tylko liczba.",
+  },
+  {
+    id: "price_includes",
+    title: "Co jest wliczone w cenę",
+    content: "Lista rzeczy zawartych w cenie pakietu.",
+    example: "Zakwaterowanie, wyżywienie, joga, warsztaty, wycieczki.",
+  },
+  {
+    id: "price_excludes",
+    title: "Co nie jest wliczone w cenę",
+    content: "Co uczestnik musi pokryć samodzielnie?",
+    example: "Dojazd, ubezpieczenie, masaże.",
   },
   {
     id: "paid_attractions",
-    title: "Zabiegi SPA / Dodatkowe atrakcje",
+    title: "Dodatkowe atrakcje za dopłatą",
     content:
       "Jakie zabiegi są dostępne na miejscu? Czy są wliczone? Co można wykupić dodatkowo na miejscu?",
     example:
       "Sauna i masaże relaksacyjne dostępne za dodatkową opłatą. Masaże, warsztaty kosmetyczne, konsultacje indywidualne.",
   },
   {
-    id: "included_trips",
-    title: "Wliczone wycieczki",
-    content: "Wymień wycieczki zawarte w pakiecie.",
-    example: "Spacer z przewodnikiem po lesie, wycieczka nad jezioro, medytacja w plenerze.",
-  },
-  {
-    id: "price_includes",
-    title: "Co zawiera cena",
-    content: "Lista rzeczy zawartych w cenie pakietu.",
-    example: "Zakwaterowanie, wyżywienie, joga, warsztaty, wycieczki.",
-  },
-  {
-    id: "price_excludes",
-    title: "Czego nie zawiera cena",
-    content: "Co uczestnik musi pokryć samodzielnie?",
-    example: "Dojazd, ubezpieczenie, masaże.",
-  },
-  {
     id: "cancellation_policy",
     title: "Zasady anulowania",
     content: "Jakie są warunki rezygnacji? Czy zadatek jest zwrotny?",
-    example: "Zadatek bezzwrotny. Zwrot 50% przy rezygnacji do 14 dni przed wydarzeniem.",
+    example: "Zadatek bezzwrotny. Zwrot 50% przy rezygnacji do 14 dni przed wyjazdem.",
   },
   {
     id: "important_info",
@@ -136,7 +129,7 @@ const tips: Tip[] = [
   {
     id: "images",
     title: "Zdjęcia",
-    content: "Dodaj jasne, wysokiej jakości zdjęcia, które pokazują atmosferę wydarzenia.",
+    content: "Dodaj jasne, wysokiej jakości zdjęcia, które pokazują atmosferę wyjazdu.",
     details: [
       "✔ Przynajmniej jedno zdjęcie główne (1280x960 lub większe, bez znaków wodnych)",
       "✔ Dobrze, jeśli zdjęcia przedstawiają:",

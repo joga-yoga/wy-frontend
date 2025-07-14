@@ -3,7 +3,7 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
-    domains: ["res.cloudinary.com", "via.placeholder.com", "images.unsplash.com"]
+    domains: ["res.cloudinary.com", "via.placeholder.com", "images.unsplash.com", "avatar.vercel.sh"]
   },
 };
 

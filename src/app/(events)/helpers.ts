@@ -18,7 +18,6 @@ export const mapApiItemToEvent = (item: any): Event => ({
   max_age: item.max_age,
   min_child_age: item.min_child_age,
   itinerary: item.itinerary,
-  included_trips: item.included_trips,
   food_description: item.food_description,
   price_includes: item.price_includes,
   price_excludes: item.price_excludes,

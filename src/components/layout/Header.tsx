@@ -21,7 +21,7 @@ export const ProfileHeader: React.FC = () => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-10 w-full text-primary border-b bg-background">
+    <header className="sticky top-0 z-100 w-full text-primary border-b bg-background">
       <div className="w-full px-4 pl-[22px] h-16 flex items-center justify-between">
         {/* Placeholder for logo space */}
         <Link href="/dashboard" className="flex items-center justify-center w-[40px] h-[40px]">

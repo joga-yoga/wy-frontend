@@ -1,14 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image"; // Import next/image
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +24,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 const schema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   description: z.string().optional(),
-  image: z.any().optional(), // For the file input, RHF will manage FileList
+  image: z.any().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -33,15 +40,22 @@ export default function OrganizerProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      description: "",
+      image: undefined,
+    },
+  });
+
   const {
-    register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+    control,
+    formState: { isSubmitting },
+  } = form;
 
   const imageFile = watch("image");
 
@@ -50,10 +64,10 @@ export default function OrganizerProfilePage() {
     axiosInstance
       .get("/organizer/me")
       .then((res) => {
-        setValue("name", res.data.name || ""); // Ensure name is not null
+        setValue("name", res.data.name || "");
         setValue("description", res.data.description || "");
         setCurrentImageId(res.data.image_id || null);
-        setRemoveCurrentImage(false); // Reset remove flag on load
+        setRemoveCurrentImage(false);
       })
       .catch((err) => {
         if (err.response?.status === 404) {
@@ -80,19 +94,17 @@ export default function OrganizerProfilePage() {
       const currentPreview = imagePreviewUrl;
       const newPreview = URL.createObjectURL(file);
       setImagePreviewUrl(newPreview);
-      setNewlyUploadedImageId(null); // Clear any previously uploaded new image ID, as a new file is selected
-      setRemoveCurrentImage(false); // If user selects a new file, they don't intend to remove without replacement
+      setNewlyUploadedImageId(null);
+      setRemoveCurrentImage(false);
       handleImageUpload(file);
       if (currentPreview) {
         URL.revokeObjectURL(currentPreview);
       }
     } else if (!file && imagePreviewUrl) {
-      // File cleared from input
       URL.revokeObjectURL(imagePreviewUrl);
       setImagePreviewUrl(null);
-      setNewlyUploadedImageId(null); // Clear new image ID if selection is cleared
+      setNewlyUploadedImageId(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageFile]);
 
   useEffect(() => {
@@ -115,7 +127,7 @@ export default function OrganizerProfilePage() {
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
       setImagePreviewUrl(null);
       setNewlyUploadedImageId(null);
-      setValue("image", null); // Clear RHF image state
+      setValue("image", null);
       toast({
         title: "Przesyłanie obrazu nie powiodło się",
         description: err.response?.data?.detail || "Nie można przesłać obrazu.",
@@ -129,43 +141,33 @@ export default function OrganizerProfilePage() {
   function handleRemoveImageClick() {
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImagePreviewUrl(null);
-    setValue("image", null); // Clear the file input
-    setNewlyUploadedImageId(null); // No new image will be uploaded
-    setRemoveCurrentImage(true); // Mark that current image should be removed
-    toast({ description: "Obecne zdjęcie zostanie usunięte po zapisaniu." });
+    setValue("image", null);
+    setNewlyUploadedImageId(null);
+    setRemoveCurrentImage(true);
+    toast({ description: "Zdjęcie usunięte. Zapisz zmiany, aby potwierdzić." });
   }
 
   async function onSubmit(data: FormData) {
     const payload: { name?: string; description?: string; image_id?: string | null } = {};
 
-    // Only add fields to payload if they have changed or are being explicitly set.
-    // For strings, we might want to compare with initial values if we want to send only diffs.
-    // For simplicity here, we send them if they are part of the form data.
     payload.name = data.name;
-    payload.description = data.description; // Will be empty string if cleared, or undefined if optional and not touched
+    payload.description = data.description;
 
     if (newlyUploadedImageId) {
       payload.image_id = newlyUploadedImageId;
     } else if (removeCurrentImage) {
-      payload.image_id = null; // Signal to backend to remove the image
-    }
-    // If neither newlyUploadedImageId is set nor removeCurrentImage is true, image_id is not sent,
-    // so backend should not change the existing image.
-
-    if (Object.keys(payload).length === 0 && !newlyUploadedImageId && !removeCurrentImage) {
-      toast({ description: "Brak zmian do przesłania." });
-      return;
+      payload.image_id = null;
     }
 
     try {
       const response = await axiosInstance.put("/organizer", payload);
       toast({ description: "Profil zaktualizowany pomyślnie!" });
-      setCurrentImageId(response.data.image_id || null); // Update current image from response
-      setNewlyUploadedImageId(null); // Reset after successful save
+      setCurrentImageId(response.data.image_id || null);
+      setNewlyUploadedImageId(null);
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-      setImagePreviewUrl(null); // Clear preview
-      setValue("image", null); // Clear file input
-      setRemoveCurrentImage(false); // Reset remove flag
+      setImagePreviewUrl(null);
+      setValue("image", null);
+      setRemoveCurrentImage(false);
     } catch (error: any) {
       toast({
         description: `Aktualizacja nie powiodła się: ${error?.response?.data?.detail || error?.message || "Unknown error"}`,
@@ -177,100 +179,65 @@ export default function OrganizerProfilePage() {
   if (loading) return <p className="text-center mt-20">Ładowanie...</p>;
 
   return (
-    <div className="p-6">
+    <div className="">
       <DashboardHeader
         title="Profil Organizatora"
         onUpdate={handleSubmit(onSubmit)}
         updateLabel={isSubmitting || isUploadingImage ? "Zapisywanie..." : "Zapisz Zmiany"}
-        isSubmitting={isSubmitting || isUploadingImage} // Disable button during upload too
+        isSubmitting={isSubmitting || isUploadingImage}
       />
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mx-auto max-w-xl mt-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Nazwa *
-          </label>
-          <Input id="name" placeholder="Nazwa Organizatora" {...register("name")} />
-          {errors.name && (
-            <p className="text-sm text-red-500 mt-1">{errors.name.message?.toString()}</p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium mb-1">
-            Opis
-          </label>
-          <Textarea
-            id="description"
-            placeholder="Opowiedz nam o swojej organizacji"
-            {...register("description")}
+      <Form {...form}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mx-auto max-w-xl mt-6 px-6">
+          <FormField
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nazwa *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nazwa Organizatora" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Zdjęcie Profilowe</label>
-          {/* Current Image Display */}
-          {currentImageId && !imagePreviewUrl && !removeCurrentImage && (
-            <div className="mb-2">
-              <p className="text-xs text-gray-600 mb-1">Obecne Zdjęcie:</p>
-              <Image
-                src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_200,h_200,c_fill/${currentImageId}`}
-                alt="Current Organizer Profile"
-                width={150}
-                height={150}
-                className="rounded-md border object-cover"
-                onError={() => setCurrentImageId(null)}
-              />
-            </div>
-          )}
-          {/* New Image Preview */}
-          {imagePreviewUrl && (
-            <div className="mb-2">
-              <p className="text-xs text-gray-600 mb-1">Podgląd Nowego Zdjęcia:</p>
-              <Image
-                src={imagePreviewUrl}
-                alt="New image preview"
-                width={150}
-                height={150}
-                className="rounded-md border object-cover"
-              />
-            </div>
-          )}
-          {(isUploadingImage || (currentImageId && !imagePreviewUrl && !removeCurrentImage)) && (
-            <div className="mb-2" />
-          )}{" "}
-          {/* Spacing adjustment */}
-          <Input
-            id="image"
-            type="file"
-            accept="image/*"
-            {...register("image")}
-            disabled={isUploadingImage}
-            className="mb-2"
+          <FormField
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Opis</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Opowiedz nam o swojej organizacji" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {isUploadingImage && <p className="text-sm text-blue-500">Przesyłanie zdjęcia...</p>}
-          {!isUploadingImage && newlyUploadedImageId && (
-            <p className="text-sm text-green-500">Nowe zdjęcie przesłane. Kliknij Zapisz Zmiany.</p>
-          )}
-          {currentImageId && !removeCurrentImage && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRemoveImageClick}
-              disabled={isUploadingImage}
-              className="mt-2"
-            >
-              Usuń Obecne Zdjęcie
-            </Button>
-          )}
-          {removeCurrentImage && (
-            <p className="text-sm text-orange-600 mt-1">
-              Obecne zdjęcie zostanie usunięte po zapisaniu.
-            </p>
-          )}
-        </div>
-      </form>
+
+          <FormField
+            control={control}
+            name="image"
+            render={() => (
+              <FormItem>
+                <FormLabel>Zdjęcie Profilowe</FormLabel>
+                <SingleImageUpload
+                  name="image"
+                  control={control}
+                  existingImageId={currentImageId}
+                  imagePreviewUrl={imagePreviewUrl}
+                  isUploading={isUploadingImage}
+                  onRemove={handleRemoveImageClick}
+                  disabled={isSubmitting}
+                  isRemoved={removeCurrentImage}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
     </div>
   );
 }

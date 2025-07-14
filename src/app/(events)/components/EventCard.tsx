@@ -183,7 +183,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <div className="flex flex-col justify-center items-start gap-[20px] flex-grow self-stretch md:h-[300px]">
           <div className="flex flex-col items-start gap-2 md:gap-3 w-full">
             <h2 className="text-m-subtitle md:text-h-middle text-gray-800 self-stretch line-clamp-2">
-              {event.title || "Tytuł Wydarzenia"}
+              {event.title || "Tytuł Wyjazdu"}
             </h2>
             <p className="text-m-descript md:text-descrip-under-header text-gray-500 self-stretch line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
               {event.description || "Brak opisu."}

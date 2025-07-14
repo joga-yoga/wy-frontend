@@ -28,7 +28,6 @@ export const eventFormSchema = yup
     guest_welcome_description: yup.string().optional(),
     food_description: yup.string().optional(),
     price_excludes: yup.array().of(yup.string()).optional().default([]),
-    included_trips: yup.array().of(yup.string()).optional().default([]),
     paid_attractions: yup.array().of(yup.string()).optional().default([]),
     cancellation_policy: yup.string().optional(),
     important_info: yup.string().optional(),
@@ -36,7 +35,16 @@ export const eventFormSchema = yup
     location_id: yup.string().uuid("Nieprawidłowy format ID lokalizacji").nullable().optional(),
     is_public: yup.boolean().default(false),
     price_includes: yup.array().of(yup.string()).optional().default([]),
-    program: yup.array().of(yup.string().required()).optional().default([]),
+    program: yup
+      .array()
+      .of(
+        yup.object().shape({
+          description: yup.string().required("Opis jest wymagany."),
+          imageId: yup.string().nullable().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
     instructor_ids: yup.array().of(yup.string().required()).default([]),
   })
   .test(
@@ -78,11 +86,10 @@ export type EventInitialData = Partial<
     is_public: boolean;
     location_id?: string | null;
     location?: LocationInitialInfo | null;
-    program?: string[];
+    program?: { description: string; imageId?: string | null }[];
     instructor_ids?: string[];
     price_excludes?: string[];
     skill_level?: string[];
-    included_trips?: string[];
     paid_attractions?: string[];
     main_attractions?: string[];
   }

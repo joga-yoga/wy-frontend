@@ -33,7 +33,6 @@ export interface Event {
   max_age?: number | null;
   min_child_age?: number | null;
   itinerary?: string | null;
-  included_trips?: string | null;
   food_description?: string | null;
   price_includes?: string | null;
   price_excludes?: string | null;
@@ -42,5 +41,10 @@ export interface Event {
   paid_attractions?: string | null;
   cancellation_policy?: string | null;
   important_info?: string | null;
-  program?: string[] | null;
+  program?: ProgramDay[] | null;
+}
+
+export interface ProgramDay {
+  description: string;
+  imageId?: string | null;
 }

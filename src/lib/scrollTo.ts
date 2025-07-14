@@ -1,4 +1,7 @@
 export const scrollTo = (id: string, offset = 124) => {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
   const element = document.getElementById(id);
 
   if (element) {

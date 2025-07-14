@@ -85,7 +85,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className }) 
                     <CustomLangIcon className="h-8 w-8 text-gray-500" />
                   </div>
                   <div>
-                    <p className="text-m-header md:text-subheader">Język wydarzenia</p>
+                    <p className="text-m-header md:text-subheader">Język wyjazdu</p>
                     <p className="text-m-descript md:text-sub-descript-18 text-gray-500">
                       {(languageTranslations as any)[event.language.toLowerCase()] ||
                         event.language}

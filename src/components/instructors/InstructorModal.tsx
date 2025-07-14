@@ -59,6 +59,7 @@ export function InstructorModal({
     reset,
     watch,
     setValue,
+    getValues,
     formState: { isSubmitting },
   } = form;
 
@@ -129,7 +130,7 @@ export function InstructorModal({
       setRemoveCurrentImage(false);
       setIsUploadingImage(false);
     }
-  }, [initialInstructor, isOpen, reset, imagePreviewUrl]);
+  }, [initialInstructor, isOpen, reset]);
 
   function handleRemoveImageClick() {
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
@@ -137,7 +138,7 @@ export function InstructorModal({
     setValue("image", null); // Clear the file input in RHF
     setNewlyUploadedImageId(null); // No new image will be uploaded
     setRemoveCurrentImage(true); // Mark that current image should be removed
-    toast({ description: "Current image will be removed on save." });
+    toast({ description: "Image removed. Save changes to confirm." });
   }
 
   async function onSubmit(data: InstructorFormData) {

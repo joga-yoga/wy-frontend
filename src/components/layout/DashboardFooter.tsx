@@ -8,10 +8,12 @@ interface DashboardFooterProps {
   onCreate?: () => void; // Function to call when Create is clicked
   onUpdate?: () => void; // Function to call when Update is clicked
   createLabel?: string; // Optional custom label for Create button
+  createIcon?: React.ReactNode; // Optional icon for Create button
   updateLabel?: string; // Optional custom label for Update button
   updateIcon?: React.ReactNode; // Optional icon for Update button
   viewPublicHref?: string; // New prop for the link href
   viewPublicLabel?: string; // Optional label for the new button
+  viewPublicIcon?: React.ReactNode; // Optional icon for View Public button
   children?: React.ReactNode; // Optional slot for extra elements like breadcrumbs or filters
   // Props for the Publish/Unpublish button
   showPublishButton?: boolean;
@@ -31,17 +33,19 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
   onCreate,
   onUpdate,
   createLabel = "Create New",
+  createIcon,
   updateLabel = "Update",
   updateIcon,
   viewPublicHref,
   viewPublicLabel = "View Public Page", // Default label
+  viewPublicIcon,
   children,
   showPublishButton,
   isPublished,
   isPublishing,
   onPublishToggle,
-  publishButtonLabel = "Opublikuj wydarzenie",
-  unpublishButtonLabel = "Ukryj wydarzenie",
+  publishButtonLabel = "Opublikuj wyjazd",
+  unpublishButtonLabel = "Ukryj wyjazd",
   publishingButtonLabel = "Zmieniam...",
   publishIcon,
   unpublishIcon,
@@ -50,24 +54,37 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
   return (
     <div>
       <div className="h-[64px]" />
-      <div className="md:fixed bottom-0 left-0 md:left-[81px] right-0 z-10 md:h-[64px] bg-background py-3 border-t flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6">
+      <div className="fixed bottom-0 left-0 right-0 z-10 h-[64px] bg-background border-t flex flex-row justify-between items-center gap-0 md:gap-4 px-6 md:left-[81px]">
         <div>
-          <h1 className="text-lg font-bold text-gray-900">{title}</h1>
+          <h1 className="hidden text-lg font-bold text-gray-900 md:block">{title}</h1>
           {/* You can place breadcrumbs or subtitle here using children prop if needed */}
           {children}
         </div>
-        <div className="flex flex-col md:flex-row gap-2 flex-shrink-0 items-center">
+        <div className="flex w-full flex-row items-center gap-2 md:w-auto">
           {/* Use items-center for alignment */}
           {/* Render Create button if handler exists */}
           {onCreate && (
-            <Button variant="default" onClick={onCreate}>
-              {createLabel}
+            <Button
+              variant="default"
+              onClick={onCreate}
+              className="flex-1 w-full md:w-auto md:flex-none"
+            >
+              {createIcon}
+              <span className="hidden ml-2 md:inline-block">{createLabel}</span>
             </Button>
           )}
           {/* Render View Public button if href exists */}
           {viewPublicHref && (
-            <Link href={viewPublicHref} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline">{viewPublicLabel}</Button>
+            <Link
+              href={viewPublicHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 w-full md:w-auto md:flex-none"
+            >
+              <Button variant="outline" className="w-full">
+                {viewPublicIcon}
+                <span className="hidden ml-2 md:inline-block">{viewPublicLabel}</span>
+              </Button>
             </Link>
           )}
           {/* Render Publish/Unpublish button */}
@@ -76,13 +93,16 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
               variant={isPublished ? "destructive" : "default"}
               onClick={onPublishToggle}
               disabled={isPublishing}
+              className="flex-1 w-full md:w-auto md:flex-none"
             >
-              {isPublishing
-                ? publishingButtonLabel
-                : isPublished
-                  ? unpublishButtonLabel
-                  : publishButtonLabel}
               {isPublishing ? publishingIcon : isPublished ? unpublishIcon : publishIcon}
+              <span className="hidden ml-2 md:inline-block">
+                {isPublishing
+                  ? publishingButtonLabel
+                  : isPublished
+                    ? unpublishButtonLabel
+                    : publishButtonLabel}
+              </span>
             </Button>
           )}
           {/* Render Update button if handler exists */}
@@ -93,9 +113,10 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
                 onUpdate();
               }}
               disabled={isPublishing} // Assuming isPublishing also means other actions might be blocked or it's a general loading state
+              className="flex-1 w-full md:w-auto md:flex-none"
             >
-              {updateLabel}
               {updateIcon}
+              <span className="hidden ml-2 md:inline-block">{updateLabel}</span>
             </Button>
           )}
         </div>

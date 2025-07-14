@@ -4,11 +4,12 @@ import axios from "axios";
 import { Loader2, PenLine, Sparkles } from "lucide-react";
 import { useState } from "react";
 
-import { EventForm } from "@/components/features/events/EventForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { axiosInstance } from "@/lib/axiosInstance";
+
+import { EventSidebar } from "../components/EventForm/components/EventSidebar";
+import { EventForm } from "../components/EventForm/EventForm";
 
 export default function CreateEventPage() {
   const [selectedOption, setSelectedOption] = useState<"manual" | "autofill" | null>(null);
@@ -30,7 +31,7 @@ export default function CreateEventPage() {
     } catch (error) {
       toast({
         title: "Błąd",
-        description: "Nie udało się wygenerować danych wydarzenia. Spróbuj ponownie.",
+        description: "Nie udało się wygenerować danych wyjazdu. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -41,7 +42,7 @@ export default function CreateEventPage() {
   if (selectedOption === null) {
     return (
       <div className="container max-w-4xl mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-8">Utwórz nowe wydarzenie</h1>
+        <h1 className="text-3xl font-bold mb-8">Utwórz nowy wyjazd</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -50,7 +51,7 @@ export default function CreateEventPage() {
                 Ręczne tworzenie
               </CardTitle>
               <CardDescription>
-                Utwórz wydarzenie od podstaw, wypełniając wszystkie pola formularza ręcznie.
+                Utwórz wyjazd od podstaw, wypełniając wszystkie pola formularza ręcznie.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -67,7 +68,7 @@ export default function CreateEventPage() {
                 Automatyczne wypełnienie
               </CardTitle>
               <CardDescription>
-                Pozwól nam wygenerować podstawowe dane wydarzenia, które później możesz dostosować.
+                Pozwól nam wygenerować podstawowe dane wyjazdu, które później możesz dostosować.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -88,5 +89,14 @@ export default function CreateEventPage() {
     );
   }
 
-  return <EventForm initialData={generatedData} />;
+  return (
+    <>
+      <EventSidebar />
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1">
+          <EventForm initialData={generatedData} />
+        </main>
+      </div>
+    </>
+  );
 }
