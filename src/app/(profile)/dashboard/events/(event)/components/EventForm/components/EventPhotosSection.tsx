@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { EventFormData } from "@/lib/schemas/event";
 
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
+import { EventHelpBarTipButton } from "./EventHelpBar";
+
 interface EventPhotosSectionProps {
   errors: FieldErrors<EventFormData>;
   watchedImageIds: string[];
@@ -16,8 +19,6 @@ interface EventPhotosSectionProps {
   handleImageSelected: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isUploadingImage: boolean;
   directUploadError: string | null;
-  handleFocusField: (tipId: string) => void;
-  setIsHelpBarOpen: (isOpen: boolean) => void;
   pendingImages: File[];
 }
 
@@ -28,29 +29,16 @@ export const EventPhotosSection = ({
   handleImageSelected,
   isUploadingImage,
   directUploadError,
-  handleFocusField,
-  setIsHelpBarOpen,
   pendingImages,
 }: EventPhotosSectionProps) => {
+  const { focusTip } = useEventHelpBar();
   return (
     <div className="space-y-4 md:space-y-6" id="event-photos-section">
       <div className="flex items-center gap-2">
         <Label htmlFor="images" size="event">
           Zdjęcia wyjazdu
         </Label>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-          onClick={() => {
-            setIsHelpBarOpen(true);
-            handleFocusField("images");
-          }}
-          aria-label="Pomoc dla sekcji zdjęcia"
-        >
-          <HelpCircle size={16} />
-        </Button>
+        <EventHelpBarTipButton tipId="images" />
       </div>
       <Label htmlFor="images" size="event-description">
         Dodaj zdjęcia, które pomogą uczestnikom zrozumieć, co czeka ich na wyjazdzie
@@ -97,7 +85,7 @@ export const EventPhotosSection = ({
         <label
           htmlFor="image-upload-input"
           className="aspect-[4/3] rounded border-2 border-dashed border-muted-foreground/50 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary cursor-pointer transition-colors"
-          onFocus={() => handleFocusField("images")}
+          onFocus={() => focusTip("images")}
         >
           {isUploadingImage ? (
             <Loader2 className="h-8 w-8 animate-spin" />

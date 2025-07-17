@@ -5,6 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { EventFormData } from "@/lib/schemas/event";
 
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
+import { EventHelpBarTipButton } from "./EventHelpBar";
+
 const OPTIONS: Option[] = [
   { label: "Początkujący", value: "beginner" },
   { label: "Średni", value: "intermediate" },
@@ -14,22 +17,30 @@ const OPTIONS: Option[] = [
 interface EventSkillLevelProps {
   control: Control<EventFormData>;
   errors: FieldErrors<EventFormData>;
-  handleFocusField: (tipId: string) => void;
 }
 
-export const EventSkillLevel = ({ control, errors, handleFocusField }: EventSkillLevelProps) => {
+export const EventSkillLevel = ({ control, errors }: EventSkillLevelProps) => {
+  const { focusTip } = useEventHelpBar();
   return (
     <div className="space-y-4 md:space-y-6" id="event-details-continued">
       <div className="space-y-2">
-        <Label htmlFor="skill_level" size="event">
-          Poziom zaawansowania
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="skill_level" size="event">
+            Poziom zaawansowania
+          </Label>
+          <EventHelpBarTipButton tipId="skill_level" />
+        </div>
         <Separator className="my-4 md:my-8" />
         <Controller
           name="skill_level"
           control={control}
           render={({ field }) => (
-            <div onFocus={() => handleFocusField("skill_level")} tabIndex={0}>
+            <div
+              onFocus={() => {
+                focusTip("skill_level");
+              }}
+              tabIndex={0}
+            >
               <MultipleSelector
                 defaultOptions={OPTIONS}
                 selectFirstItem={false}

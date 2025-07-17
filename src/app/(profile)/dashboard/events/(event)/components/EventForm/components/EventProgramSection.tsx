@@ -23,6 +23,8 @@ import { EventFormData } from "@/lib/schemas/event";
 import { cn } from "@/lib/utils";
 
 import { defaultImagesIds } from "../../default-images-ids";
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
+import { EventHelpBarTipButton } from "./EventHelpBar";
 
 interface EventProgramSectionProps {
   control: Control<EventFormData>;
@@ -32,7 +34,6 @@ interface EventProgramSectionProps {
   append: (value: { description: string; imageId: string | null }) => void;
   remove: UseFieldArrayRemove;
   calculatedDuration: number;
-  handleFocusField: (tipId: string) => void;
   dateRange: DateRange | undefined;
   setDateRange: (dateRange: DateRange | undefined) => void;
   setValue: UseFormSetValue<EventFormData>;
@@ -49,7 +50,6 @@ export const EventProgramSection = ({
   append,
   remove,
   calculatedDuration,
-  handleFocusField,
   dateRange,
   setDateRange,
   setValue,
@@ -57,6 +57,7 @@ export const EventProgramSection = ({
   onRemoveProgramImage,
   onProgramImageChange,
 }: EventProgramSectionProps) => {
+  const { focusTip } = useEventHelpBar();
   const watchedProgram = useWatch({ control, name: "program" });
 
   const handleAddDay = () => {
@@ -68,9 +69,12 @@ export const EventProgramSection = ({
   return (
     <div className="space-y-4 md:space-y-6" id="event-program-section">
       <div className="space-y-2">
-        <Label htmlFor="start_date" size="event">
-          Termin wyjazdu
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="start_date" size="event">
+            Termin wyjazdu
+          </Label>
+          <EventHelpBarTipButton tipId="date" />
+        </div>
         <Separator className="my-4 md:my-8" />
         <Popover>
           <PopoverTrigger asChild>
@@ -81,7 +85,7 @@ export const EventProgramSection = ({
                 "w-full justify-start text-left font-normal",
                 !dateRange && "text-muted-foreground",
               )}
-              onClick={() => handleFocusField("date")}
+              onClick={() => focusTip("date")}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dateRange?.from ? (
@@ -160,9 +164,12 @@ export const EventProgramSection = ({
         )}
       </div>
 
-      <Label htmlFor="program" size="event">
-        Program wyjazdu (dzień po dniu)
-      </Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor="program" size="event">
+          Program wyjazdu (dzień po dniu)
+        </Label>
+        <EventHelpBarTipButton tipId="program" />
+      </div>
       <Label htmlFor="program" size="event-description">
         Opisz pełny program dla uczestników i podziel się z nimi, jak będą wyglądały ich dni
       </Label>
@@ -194,7 +201,7 @@ export const EventProgramSection = ({
                 placeholder={`Opis programu na dzień ${index + 1}`}
                 rows={5}
                 className="bg-background min-h-[126px]"
-                onFocus={() => handleFocusField("program")}
+                onFocus={() => focusTip("program")}
               />
               {errors.program?.[index]?.description && (
                 <p className="text-sm text-destructive">

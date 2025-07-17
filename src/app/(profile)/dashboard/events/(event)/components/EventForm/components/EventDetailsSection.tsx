@@ -14,26 +14,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { EventFormData } from "@/lib/schemas/event";
 
 import { DynamicArrayInput } from "../../DynamicArrayInput";
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
+import { EventHelpBarTipButton } from "./EventHelpBar";
 
 interface EventDetailsSectionProps {
   control: Control<EventFormData>;
   register: UseFormRegister<EventFormData>;
   errors: FieldErrors<EventFormData>;
-  handleFocusField: (tipId: string) => void;
 }
 
-export const EventDetailsSection = ({
-  control,
-  register,
-  errors,
-  handleFocusField,
-}: EventDetailsSectionProps) => {
+export const EventDetailsSection = ({ control, register, errors }: EventDetailsSectionProps) => {
+  const { focusTip } = useEventHelpBar();
   return (
     <div className="space-y-4 md:space-y-6" id="event-details-section">
       <div className="space-y-2">
-        <Label htmlFor="title" size="event">
-          Tytuł
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="title" size="event">
+            Tytuł
+          </Label>
+          <EventHelpBarTipButton tipId="title" />
+        </div>
+
         <Label htmlFor="title" size="event-description">
           Przyciągnij klientów tytułem, który podkreśla czas trwania, miejsce docelowe i atrakcje
           programu
@@ -43,14 +44,19 @@ export const EventDetailsSection = ({
           id="title"
           {...register("title")}
           placeholder="Tytuł"
-          onFocus={() => handleFocusField("title")}
+          onFocus={() => {
+            focusTip("title");
+          }}
         />
         {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description" size="event">
-          Opis
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="description" size="event">
+            Opis
+          </Label>
+          <EventHelpBarTipButton tipId="description" />
+        </div>
         <Label htmlFor="description" size="event-description">
           Przedstaw swoją ofertę w krótkim podsumowaniu, aby przyciągnąć uwagę klientów
         </Label>
@@ -60,16 +66,21 @@ export const EventDetailsSection = ({
           {...register("description")}
           rows={4}
           placeholder="Opis"
-          onFocus={() => handleFocusField("description")}
+          onFocus={() => {
+            focusTip("description");
+          }}
         />
         {errors.description && (
           <p className="text-sm text-destructive">{errors.description.message}</p>
         )}
       </div>
       <div className="space-y-2" id="event-main-attractions">
-        <Label htmlFor="main_attractions" size="event">
-          Najważniejsze atrakcje
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="main_attractions" size="event">
+            Najważniejsze atrakcje
+          </Label>
+          <EventHelpBarTipButton tipId="main_attractions" />
+        </div>
         <Label htmlFor="main_attractions" size="event-description">
           Wyróżnij to, co jest wyjątkowe w tej podróży, w 6–8 punktach
         </Label>
@@ -86,16 +97,21 @@ export const EventDetailsSection = ({
               placeholder="Wymień główny punkt programu lub unikalną cechę..."
               ariaLabel="Lista najważniejszych atrakcji"
               error={fieldState.error}
-              onFocus={() => handleFocusField("main_attractions")}
+              onFocus={() => {
+                focusTip("main_attractions");
+              }}
             />
           )}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" size="event">
-          Język prowadzenia zajęć
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="language" size="event">
+            Język prowadzenia zajęć
+          </Label>
+          <EventHelpBarTipButton tipId="language" />
+        </div>
         <Separator className="my-4 md:my-8" />
         <Controller
           name="language"
@@ -104,9 +120,9 @@ export const EventDetailsSection = ({
             <Select
               onValueChange={field.onChange}
               value={field.value || "pl"}
-              onOpenChange={(isOpen) => isOpen && handleFocusField("language")}
+              onOpenChange={(isOpen) => isOpen && focusTip("language")}
             >
-              <SelectTrigger onFocus={() => handleFocusField("language")}>
+              <SelectTrigger onFocus={() => focusTip("language")}>
                 <SelectValue placeholder="Wybierz język" />
               </SelectTrigger>
               <SelectContent>

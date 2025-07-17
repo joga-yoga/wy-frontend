@@ -9,6 +9,7 @@ import { DateRange } from "react-day-picker";
 import { FieldArrayPath, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import * as yup from "yup";
 
+import { EventHelpBarProvider } from "@/app/(profile)/dashboard/events/(event)/components/EventForm/contexts/EventHelpBarContext";
 import { Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
 import { LocationModal } from "@/components/locations/LocationModal";
@@ -115,8 +116,6 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [locationModalMode, setLocationModalMode] = useState<"create" | "edit">("create");
-  const [isHelpBarOpen, setIsHelpBarOpen] = useState(true);
-  const [activeTipId, setActiveTipId] = useState<string | undefined>(undefined);
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ id: string; file: File }[]>([]);
   const [uploadingProgramImages, setUploadingProgramImages] = useState<Record<number, boolean>>({});
@@ -124,12 +123,6 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
   useEffect(() => {
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
-
-  const handleFocusField = (tipId: string) => {
-    if (isHelpBarOpen) {
-      setActiveTipId(tipId);
-    }
-  };
 
   const {
     register,
@@ -748,230 +741,160 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
   }
 
   return (
-    <div className="mx-auto" id="event-form-wrapper">
-      {!isHelpBarOpen ? (
-        <div className="hidden md:block fixed top-[80px] bottom-[48px] right-4 z-1">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsHelpBarOpen(!isHelpBarOpen)}
-            aria-label={isHelpBarOpen ? "Zamknij pomoc" : "Otwórz pomoc"}
-          >
-            {isHelpBarOpen ? <X className="h-5 w-5" /> : <HelpCircle className="h-5 w-5" />}
-          </Button>
-        </div>
-      ) : null}
-
-      <div className="flex flex-row gap-6 space-y-8">
-        <div className="flex-grow space-y-4 md:space-y-6 max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
-          {/* Details */}
-          <EventDetailsSection
-            control={control}
-            register={register}
-            errors={errors}
-            handleFocusField={handleFocusField}
-          />
-          {/* Instructors */}
-          <EventInstructorsSection
-            control={control}
-            errors={errors}
-            setValue={setValue}
-            handleFocusField={handleFocusField}
-            setIsHelpBarOpen={setIsHelpBarOpen}
-            instructors={instructors}
-            setIsInstructorModalOpen={setIsInstructorModalOpen}
-            handleEditInstructor={handleEditInstructor}
-            instructorToDelete={instructorToDelete}
-            setInstructorToDelete={setInstructorToDelete}
-            isDeletingInstructor={isDeletingInstructor}
-            handleDeleteInstructor={handleDeleteInstructor}
-          />
-          <EventSkillLevel control={control} errors={errors} handleFocusField={handleFocusField} />
-          {/* Program */}
-          <EventProgramSection
-            control={control}
-            register={register}
-            errors={errors}
-            programFields={programFields}
-            append={append as (value: { description: string; imageId: string | null }) => void}
-            remove={remove}
-            calculatedDuration={calculatedDuration}
-            handleFocusField={handleFocusField}
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            setValue={setValue}
-            uploadingProgramImages={uploadingProgramImages}
-            onRemoveProgramImage={handleRemoveProgramImage}
-            onProgramImageChange={handleProgramImageChange}
-          />
-          {/* Location */}
-          <EventLocationSection
-            control={control}
-            errors={errors}
-            locations={locations}
-            handleFocusField={handleFocusField}
-            setIsHelpBarOpen={setIsHelpBarOpen}
-            setIsLocationModalOpen={setIsLocationModalOpen}
-            setEditingLocation={setEditingLocation}
-            setLocationModalMode={setLocationModalMode}
-            toast={toast}
-          />
-          <EventHospitalitySection
-            register={register}
-            errors={errors}
-            handleFocusField={handleFocusField}
-          />
-          {/* Pricing */}
-          <EventPricingSection
-            control={control}
-            register={register}
-            errors={errors}
-            handleFocusField={handleFocusField}
-          />
-          {/* Other */}
-          <EventImportantInfoSection
-            register={register}
-            errors={errors}
-            handleFocusField={handleFocusField}
-          />
-          {/* Photos */}
-          <EventPhotosSection
-            errors={errors}
-            watchedImageIds={watchedImageIds ?? []}
-            handleRemoveImage={handleRemoveImage}
-            handleImageSelected={handleImageSelected}
-            isUploadingImage={isUploadingImage}
-            directUploadError={directUploadError}
-            handleFocusField={handleFocusField}
-            setIsHelpBarOpen={setIsHelpBarOpen}
-            pendingImages={pendingImages.map((p) => p.file)}
-          />
-
-          {Object.keys(errors).length > 0 && (
-            <div
-              className="mt-6 p-4 border border-red-300 bg-red-50 rounded-md space-y-2"
-              id="form-errors-summary"
-            >
-              <h3 className="text-lg font-semibold text-red-700">Wystąpiły błędy w formularzu:</h3>
-              <ul className="list-disc list-inside pl-2 text-red-600 text-sm">
-                {Object.entries(errors).map(([fieldName, fieldError]) => {
-                  if (fieldError && fieldError.message) {
-                    return <li key={fieldName}>{`${fieldName}: ${fieldError.message}`}</li>;
-                  } else if (Array.isArray(fieldError)) {
-                    return fieldError.map((errorItem, index) =>
-                      errorItem && errorItem.message ? (
-                        <li
-                          key={`${fieldName}.${index}`}
-                        >{`${fieldName}[${index}]: ${errorItem.message}`}</li>
-                      ) : null,
-                    );
-                  } else if (typeof fieldError === "object" && fieldError !== null) {
-                    const message = (fieldError as any).message;
-                    if (message) {
-                      return <li key={`${fieldName}-root`}>{`${fieldName}: ${message}`}</li>;
-                    }
-                  }
-                  return null;
-                })}
-              </ul>
-            </div>
-          )}
+    <EventHelpBarProvider>
+      <div className="mx-auto" id="event-form-wrapper">
+        <div className="flex flex-row gap-6 space-y-8">
+          <div className="flex-grow space-y-4 md:space-y-6 max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
+            {/* Details */}
+            <EventDetailsSection control={control} register={register} errors={errors} />
+            {/* Instructors */}
+            <EventInstructorsSection
+              control={control}
+              errors={errors}
+              setValue={setValue}
+              instructors={instructors}
+              setIsInstructorModalOpen={setIsInstructorModalOpen}
+              handleEditInstructor={handleEditInstructor}
+              instructorToDelete={instructorToDelete}
+              setInstructorToDelete={setInstructorToDelete}
+              isDeletingInstructor={isDeletingInstructor}
+              handleDeleteInstructor={handleDeleteInstructor}
+            />
+            <EventSkillLevel control={control} errors={errors} />
+            {/* Program */}
+            <EventProgramSection
+              control={control}
+              register={register}
+              errors={errors}
+              programFields={programFields}
+              append={append as (value: { description: string; imageId: string | null }) => void}
+              remove={remove}
+              calculatedDuration={calculatedDuration}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              setValue={setValue}
+              uploadingProgramImages={uploadingProgramImages}
+              onRemoveProgramImage={handleRemoveProgramImage}
+              onProgramImageChange={handleProgramImageChange}
+            />
+            <EventLocationSection
+              control={control}
+              errors={errors}
+              locations={locations}
+              setIsLocationModalOpen={setIsLocationModalOpen}
+              setEditingLocation={setEditingLocation}
+              setLocationModalMode={setLocationModalMode}
+            />
+            <EventHospitalitySection register={register} errors={errors} />
+            <EventPricingSection control={control} register={register} errors={errors} />
+            <EventImportantInfoSection register={register} errors={errors} />
+            <EventPhotosSection
+              errors={errors}
+              watchedImageIds={watchedImageIds ?? []}
+              handleRemoveImage={handleRemoveImage}
+              handleImageSelected={handleImageSelected}
+              isUploadingImage={isUploadingImage}
+              directUploadError={directUploadError}
+              pendingImages={pendingImages.map((p) => p.file)}
+            />
+          </div>
+          <EventHelpBar />
         </div>
 
-        {isHelpBarOpen && (
-          <EventHelpBar
-            isOpen={isHelpBarOpen}
-            onClose={() => setIsHelpBarOpen(false)}
-            activeTipId={activeTipId}
+        <DashboardFooter
+          title={isEditMode ? "Edytuj wyjazd" : "Utwórz nowy wyjazd"}
+          onCreate={!isEditMode ? handleSubmit(onSubmit) : undefined}
+          createLabel={isSubmitting ? "Tworzenie..." : "Utwórz wyjazd"}
+          createLabelShort={isSubmitting ? "Tworzenie..." : "Utwórz"}
+          createIcon={
+            isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )
+          }
+          onUpdate={isEditMode ? handleSubmit(onSubmit) : undefined}
+          updateLabel={isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
+          updateLabelShort={isSubmitting ? "Zapisuję..." : "Zapisz"}
+          updateIcon={
+            isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )
+          }
+          viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
+          viewPublicLabel="Zobacz stronę publiczną"
+          viewPublicLabelShort="Zobacz"
+          viewPublicIcon={<ExternalLink className="h-4 w-4" />}
+          showPublishButton={isEditMode}
+          isPublished={currentIsPublic}
+          isPublishing={isTogglingVisibility}
+          onPublishToggle={handlePublishButtonClick}
+          publishButtonLabel="Opublikuj wyjazd"
+          publishButtonLabelShort="Opublikuj"
+          unpublishButtonLabel="Ukryj wyjazd"
+          unpublishButtonLabelShort="Ukryj"
+          publishingButtonLabel="Zmieniam..."
+          publishingButtonLabelShort="Zmieniam..."
+          publishIcon={<Send className="h-4 w-4" />}
+          unpublishIcon={<EyeOff className="h-4 w-4" />}
+          publishingIcon={<Loader2 className="h-4 w-4 animate-spin" />}
+        />
+
+        <InstructorModal
+          isOpen={isInstructorModalOpen}
+          onClose={() => {
+            setIsInstructorModalOpen(false);
+            setEditingInstructor(null);
+          }}
+          onInstructorSaved={handleInstructorSaved}
+          initialInstructor={editingInstructor}
+        />
+
+        {isLocationModalOpen && (
+          <LocationModal
+            isOpen={isLocationModalOpen}
+            onClose={() => {
+              setIsLocationModalOpen(false);
+              setEditingLocation(null);
+            }}
+            onLocationSaved={handleLocationSaved}
+            initialData={editingLocation}
+            mode={locationModalMode}
+            onLocationDeleted={handleLocationDeleted}
           />
         )}
+
+        <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Potwierdź publikację</AlertDialogTitle>
+              <AlertDialogDescription>
+                Czy na pewno chcesz opublikować to wyjazd? Stanie się ono widoczne dla wszystkich
+                użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={isTogglingVisibility}
+                onClick={() => setIsPublishConfirmModalOpen(false)}
+              >
+                Anuluj
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isTogglingVisibility}
+                onClick={() => {
+                  setIsPublishConfirmModalOpen(false);
+                  handleToggleVisibility();
+                }}
+              >
+                {isTogglingVisibility ? "Publikowanie..." : "Tak, opublikuj i zapisz"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-
-      <DashboardFooter
-        title={isEditMode ? "Edytuj wyjazd" : "Utwórz nowy wyjazd"}
-        onCreate={!isEditMode ? handleSubmit(onSubmit) : undefined}
-        createLabel={isSubmitting ? "Tworzenie..." : "Utwórz wyjazd"}
-        createLabelShort={isSubmitting ? "Tworzenie..." : "Utwórz"}
-        createIcon={
-          isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />
-        }
-        onUpdate={isEditMode ? handleSubmit(onSubmit) : undefined}
-        updateLabel={isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
-        updateLabelShort={isSubmitting ? "Zapisuję..." : "Zapisz"}
-        updateIcon={
-          isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />
-        }
-        viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
-        viewPublicLabel="Zobacz stronę publiczną"
-        viewPublicLabelShort="Zobacz"
-        viewPublicIcon={<ExternalLink className="h-4 w-4" />}
-        showPublishButton={isEditMode}
-        isPublished={currentIsPublic}
-        isPublishing={isTogglingVisibility}
-        onPublishToggle={handlePublishButtonClick}
-        publishButtonLabel="Opublikuj wyjazd"
-        publishButtonLabelShort="Opublikuj"
-        unpublishButtonLabel="Ukryj wyjazd"
-        unpublishButtonLabelShort="Ukryj"
-        publishingButtonLabel="Zmieniam..."
-        publishingButtonLabelShort="Zmieniam..."
-        publishIcon={<Send className="h-4 w-4" />}
-        unpublishIcon={<EyeOff className="h-4 w-4" />}
-        publishingIcon={<Loader2 className="h-4 w-4 animate-spin" />}
-      />
-
-      <InstructorModal
-        isOpen={isInstructorModalOpen}
-        onClose={() => {
-          setIsInstructorModalOpen(false);
-          setEditingInstructor(null);
-        }}
-        onInstructorSaved={handleInstructorSaved}
-        initialInstructor={editingInstructor}
-      />
-
-      {isLocationModalOpen && (
-        <LocationModal
-          isOpen={isLocationModalOpen}
-          onClose={() => {
-            setIsLocationModalOpen(false);
-            setEditingLocation(null);
-          }}
-          onLocationSaved={handleLocationSaved}
-          initialData={editingLocation}
-          mode={locationModalMode}
-          onLocationDeleted={handleLocationDeleted}
-        />
-      )}
-
-      <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Potwierdź publikację</AlertDialogTitle>
-            <AlertDialogDescription>
-              Czy na pewno chcesz opublikować to wyjazd? Stanie się ono widoczne dla wszystkich
-              użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={isTogglingVisibility}
-              onClick={() => setIsPublishConfirmModalOpen(false)}
-            >
-              Anuluj
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isTogglingVisibility}
-              onClick={() => {
-                setIsPublishConfirmModalOpen(false);
-                handleToggleVisibility();
-              }}
-            >
-              {isTogglingVisibility ? "Publikowanie..." : "Tak, opublikuj i zapisz"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    </EventHelpBarProvider>
   );
 }

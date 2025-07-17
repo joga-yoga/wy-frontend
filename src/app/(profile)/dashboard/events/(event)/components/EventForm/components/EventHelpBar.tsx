@@ -1,12 +1,21 @@
 "use client";
 
-import { X } from "lucide-react";
+import { HelpCircle, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import useIsMobile from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
+
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
 
 interface Tip {
   id: string;
@@ -43,6 +52,12 @@ const tips: Tip[] = [
     id: "language",
     title: "Język wyjazdu",
     content: "W jakim języku będzie prowadzony wyjazd?",
+  },
+  {
+    id: "instructors",
+    title: "Instruktorzy",
+    content:
+      "Wybierz instruktorów, którzy będą prowadzić wyjazd. Możesz dodać nowych lub wybrać z listy.",
   },
   {
     id: "skill_level",
@@ -143,35 +158,116 @@ const tips: Tip[] = [
   },
 ];
 
-interface EventHelpBarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  activeTipId?: string;
-}
+const TipContent = ({ tip }: { tip: Tip }) => (
+  <>
+    <h3 className="font-semibold text-lg md:text-base mb-1.5 text-black">{tip.title}</h3>
+    <p className="text-base md:text-sm md:text-muted-foreground whitespace-pre-line text-left">
+      {tip.content}
+    </p>
+    {tip.example && (
+      <p className="text-base md:text-sm md:text-primary/80 mt-1 whitespace-pre-line text-left">
+        <span className="font-medium">Przykład:</span> {tip.example}
+      </p>
+    )}
+    {tip.details && tip.details.length > 0 && (
+      <ul className="list-none mt-1.5 space-y-0.5 text-left">
+        {tip.details.map((detail, i) => (
+          <li key={i} className="text-base md:text-xs text-muted-foreground/90 whitespace-pre-line">
+            {detail}
+          </li>
+        ))}
+      </ul>
+    )}
+  </>
+);
 
-export function EventHelpBar({ isOpen, onClose, activeTipId }: EventHelpBarProps) {
+export const EventHelpBarTipButton = ({ tipId }: { tipId: string }) => {
+  const { openTip } = useEventHelpBar();
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+      onClick={() => {
+        openTip(tipId);
+      }}
+      aria-label="Pomoc dla sekcji instruktorzy"
+    >
+      <HelpCircle size={16} />
+    </Button>
+  );
+};
+
+export function EventHelpBar() {
+  const {
+    activeTipId,
+    isMobileHelpModalOpen,
+    isHelpBarOpen,
+    setIsHelpBarOpen,
+    setIsMobileHelpModalOpen,
+  } = useEventHelpBar();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (activeTipId) {
+    if (activeTipId && !isMobile) {
       const tipElement = document.getElementById(`tip-${activeTipId}`);
       if (tipElement) {
         tipElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
-  }, [activeTipId]);
+  }, [activeTipId, isMobile]);
+
+  if (isMobile) {
+    const activeTip = tips.find((tip) => tip.id === activeTipId);
+    return (
+      <Drawer open={isMobileHelpModalOpen} onOpenChange={setIsMobileHelpModalOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle className="hidden">Pomoc</DrawerTitle>
+            <DrawerDescription asChild>
+              <div className="flex flex-col gap-1 pt-4 pb-10">
+                {activeTip ? <TipContent tip={activeTip} /> : <p>Nie znaleziono podpowiedzi.</p>}
+              </div>
+            </DrawerDescription>
+          </DrawerHeader>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  if (!isHelpBarOpen) {
+    return (
+      <div className="hidden md:block fixed top-[80px] bottom-[48px] right-4 z-1">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsHelpBarOpen(!isHelpBarOpen)}
+          aria-label={isHelpBarOpen ? "Zamknij pomoc" : "Otwórz pomoc"}
+        >
+          {isHelpBarOpen ? <X className="h-5 w-5" /> : <HelpCircle className="h-5 w-5" />}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="hidden md:flex flex-col w-[360px] bg-card border-l border-border shadow-lg z-1 sticky top-[65px] h-[calc(100vh-130px)] overflow-y-auto">
       <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
         <h2 className="text-lg font-semibold">Pomoc</h2>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Zamknij pomoc">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsHelpBarOpen(false)}
+          aria-label="Zamknij pomoc"
+        >
           <X className="h-5 w-5" />
         </Button>
       </div>
       <ScrollArea className="flex-grow p-1">
         <div ref={scrollAreaRef} className="space-y-3 p-3">
-          {tips.map((tip, index) => (
+          {tips.map((tip) => (
             <div
               key={tip.id}
               id={`tip-${tip.id}`}
@@ -180,23 +276,7 @@ export function EventHelpBar({ isOpen, onClose, activeTipId }: EventHelpBarProps
                 tip.id === activeTipId && "border-2 border-brand-green animate-pulse-border",
               )}
             >
-              <h3 className="font-semibold text-base mb-1.5">{tip.title}</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{tip.content}</p>
-              {tip.example && (
-                <p className="text-sm text-primary/80 mt-1 whitespace-pre-line">
-                  <span className="font-medium">Przykład:</span> {tip.example}
-                </p>
-              )}
-              {tip.details && tip.details.length > 0 && (
-                <ul className="list-none mt-1.5 space-y-0.5">
-                  {tip.details.map((detail, i) => (
-                    <li key={i} className="text-xs text-muted-foreground/90 whitespace-pre-line">
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {index < tips.length - 1 && <Separator className="my-3" />}
+              <TipContent tip={tip} />
             </div>
           ))}
         </div>

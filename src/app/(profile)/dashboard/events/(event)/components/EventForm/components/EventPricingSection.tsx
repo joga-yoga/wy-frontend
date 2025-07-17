@@ -14,26 +14,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { EventFormData } from "@/lib/schemas/event";
 
 import { DynamicArrayInput } from "../../DynamicArrayInput";
-
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
+import { EventHelpBarTipButton } from "./EventHelpBar";
 interface EventPricingSectionProps {
   control: Control<EventFormData>;
   register: UseFormRegister<EventFormData>;
   errors: FieldErrors<EventFormData>;
-  handleFocusField: (tipId: string) => void;
 }
 
-export const EventPricingSection = ({
-  control,
-  register,
-  errors,
-  handleFocusField,
-}: EventPricingSectionProps) => {
+export const EventPricingSection = ({ control, register, errors }: EventPricingSectionProps) => {
+  const { focusTip } = useEventHelpBar();
+
   return (
     <div className="space-y-4 md:space-y-6" id="event-pricing-section">
       <div className="space-y-2">
-        <Label htmlFor="price" size="event">
-          Cena
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="price" size="event">
+            Cena
+          </Label>
+          <EventHelpBarTipButton tipId="price" />
+        </div>
         <Label htmlFor="price" size="event-description">
           Podaj pełną cenę za udział w wyjazdzie za jedną osobę
         </Label>
@@ -52,7 +52,7 @@ export const EventPricingSection = ({
                 setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
               })}
               placeholder="Cena za jedną osobę"
-              onFocus={() => handleFocusField("price")}
+              onFocus={() => focusTip("price")}
             />
             {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
           </div>
@@ -66,7 +66,7 @@ export const EventPricingSection = ({
               defaultValue="PLN"
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value || "PLN"}>
-                  <SelectTrigger id="currency" onFocus={() => handleFocusField("price")}>
+                  <SelectTrigger id="currency" onFocus={() => focusTip("price")}>
                     <SelectValue placeholder="Wybierz walutę" />
                   </SelectTrigger>
                   <SelectContent>
@@ -82,9 +82,12 @@ export const EventPricingSection = ({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="price_includes" size="event">
-          Co jest wliczone w cenę
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="price_includes" size="event">
+            Co jest wliczone w cenę
+          </Label>
+          <EventHelpBarTipButton tipId="price_includes" />
+        </div>
         <Label htmlFor="price_includes" size="event-description">
           Wymień wszystkie aktywności, udogodnienia i usługi, które są zawarte w cenie pakietu.
         </Label>
@@ -101,15 +104,18 @@ export const EventPricingSection = ({
               placeholder="Np. Śniadanie, Transfer z lotniska"
               ariaLabel="Lista rzeczy wliczonych w cenę"
               error={fieldState.error}
-              onFocus={() => handleFocusField("price_includes")}
+              onFocus={() => focusTip("price_includes")}
             />
           )}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="price_excludes" size="event">
-          Co nie jest wliczone w cenę
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="price_excludes" size="event">
+            Co nie jest wliczone w cenę
+          </Label>
+          <EventHelpBarTipButton tipId="price_excludes" />
+        </div>
         <Label htmlFor="price_excludes" size="event-description">
           Wymień wszystkie elementy istotne dla uczestników, które nie są zawarte w cenie pakietu
         </Label>
@@ -126,15 +132,18 @@ export const EventPricingSection = ({
               placeholder="Np. Lunch, Opłaty klimatyczne"
               ariaLabel="Lista rzeczy niewliczonych w cenę"
               error={fieldState.error}
-              onFocus={() => handleFocusField("price_excludes")}
+              onFocus={() => focusTip("price_excludes")}
             />
           )}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="paid_attractions" size="event">
-          Dodatkowe atrakcje za dopłatą
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="paid_attractions" size="event">
+            Dodatkowe atrakcje za dopłatą
+          </Label>
+          <EventHelpBarTipButton tipId="paid_attractions" />
+        </div>
         <Label htmlFor="paid_attractions" size="event-description">
           Podziel się informacjami o innych aktywnościach, które uczestnicy mogą zrobić w okolicy za
           dodatkową opłatę
@@ -152,15 +161,18 @@ export const EventPricingSection = ({
               placeholder="Np. Masaż, Wypożyczenie sprzętu"
               ariaLabel="Lista dodatkowych płatnych atrakcji"
               error={fieldState.error}
-              onFocus={() => handleFocusField("paid_attractions")}
+              onFocus={() => focusTip("paid_attractions")}
             />
           )}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="cancellation_policy" size="event">
-          Zasady anulowania rezerwacji
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="cancellation_policy" size="event">
+            Zasady anulowania rezerwacji
+          </Label>
+          <EventHelpBarTipButton tipId="cancellation_policy" />
+        </div>
         <Label htmlFor="cancellation_policy" size="event-description">
           Tutaj należy opisać, na jakich warunkach uczestnik może odwołać swój udział w wyjazdzie
         </Label>
@@ -170,7 +182,7 @@ export const EventPricingSection = ({
           {...register("cancellation_policy")}
           rows={3}
           placeholder="Zasady anulowania rezerwacji"
-          onFocus={() => handleFocusField("cancellation_policy")}
+          onFocus={() => focusTip("cancellation_policy")}
         />
         {errors.cancellation_policy && (
           <p className="text-sm text-destructive">{errors.cancellation_policy.message}</p>

@@ -14,50 +14,36 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { EventFormData } from "@/lib/schemas/event";
 
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
 import { Location } from "../EventForm";
+import { EventHelpBarTipButton } from "./EventHelpBar";
 
 interface EventLocationSectionProps {
   control: Control<EventFormData>;
   errors: FieldErrors<EventFormData>;
   locations: Location[];
-  handleFocusField: (tipId: string) => void;
-  setIsHelpBarOpen: (isOpen: boolean) => void;
   setIsLocationModalOpen: (isOpen: boolean) => void;
   setEditingLocation: (location: Location | null) => void;
   setLocationModalMode: (mode: "create" | "edit") => void;
-  toast: ReturnType<typeof useToast>["toast"];
 }
 
 export const EventLocationSection = ({
   control,
   errors,
   locations,
-  handleFocusField,
-  setIsHelpBarOpen,
   setIsLocationModalOpen,
   setEditingLocation,
   setLocationModalMode,
-  toast,
 }: EventLocationSectionProps) => {
+  const { focusTip } = useEventHelpBar();
+  const { toast } = useToast();
   return (
     <div className="space-y-2" id="event-location-section">
       <div className="flex items-center gap-2">
         <Label htmlFor="location_id" size="event">
           Lokalizacja
         </Label>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-          onClick={() => {
-            setIsHelpBarOpen(true);
-            handleFocusField("location_id");
-          }}
-          aria-label="Pomoc dla sekcji lokalizacja"
-        >
-          <HelpCircle size={16} />
-        </Button>
+        <EventHelpBarTipButton tipId="location_id" />
       </div>
       <Separator className="my-4 md:my-8" />
       <Controller
@@ -70,9 +56,9 @@ export const EventLocationSection = ({
                 <Select
                   onValueChange={field.onChange}
                   value={field.value || ""}
-                  onOpenChange={(isOpen) => isOpen && handleFocusField("location_id")}
+                  onOpenChange={(isOpen) => isOpen && focusTip("location_id")}
                 >
-                  <SelectTrigger onFocus={() => handleFocusField("location_id")}>
+                  <SelectTrigger onFocus={() => focusTip("location_id")}>
                     <SelectValue placeholder="Wybierz lokalizację" />
                   </SelectTrigger>
                   <SelectContent>

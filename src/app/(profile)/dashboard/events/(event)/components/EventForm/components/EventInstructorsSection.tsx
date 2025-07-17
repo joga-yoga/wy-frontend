@@ -20,12 +20,13 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { EventFormData } from "@/lib/schemas/event";
 
+import { useEventHelpBar } from "../contexts/EventHelpBarContext";
+import { EventHelpBarTipButton } from "./EventHelpBar";
+
 interface EventInstructorsSectionProps {
   control: Control<EventFormData>;
   errors: FieldErrors<EventFormData>;
   setValue: UseFormSetValue<EventFormData>;
-  handleFocusField: (tipId: string) => void;
-  setIsHelpBarOpen: (isOpen: boolean) => void;
   instructors: Instructor[];
   setIsInstructorModalOpen: (isOpen: boolean) => void;
   handleEditInstructor: (instructor: Instructor) => void;
@@ -39,8 +40,6 @@ export const EventInstructorsSection = ({
   control,
   errors,
   setValue,
-  handleFocusField,
-  setIsHelpBarOpen,
   instructors,
   setIsInstructorModalOpen,
   handleEditInstructor,
@@ -49,6 +48,7 @@ export const EventInstructorsSection = ({
   isDeletingInstructor,
   handleDeleteInstructor,
 }: EventInstructorsSectionProps) => {
+  const { focusTip } = useEventHelpBar();
   return (
     <div className="space-y-4 md:space-y-6" id="event-instructors-section">
       <div className="space-y-2">
@@ -56,19 +56,7 @@ export const EventInstructorsSection = ({
           <Label htmlFor="instructors" size="event">
             Instruktorzy
           </Label>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-            onClick={() => {
-              setIsHelpBarOpen(true);
-              handleFocusField("instructors");
-            }}
-            aria-label="Pomoc dla sekcji instruktorzy"
-          >
-            <HelpCircle size={16} />
-          </Button>
+          <EventHelpBarTipButton tipId="instructors" />
         </div>
         <Label htmlFor="instructors" size="event-description">
           Wybierz instruktorów, którzy będą prowadzić wyjazd
@@ -89,10 +77,7 @@ export const EventInstructorsSection = ({
           name="instructor_ids"
           render={({ field }) => (
             <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
-              <div
-                className="w-full rounded-md p-1"
-                onFocusCapture={() => handleFocusField("instructors")}
-              >
+              <div className="w-full rounded-md p-1" onFocusCapture={() => focusTip("instructors")}>
                 <div className="space-y-3">
                   {instructors.length > 0 ? (
                     instructors.map((instructor) => (
