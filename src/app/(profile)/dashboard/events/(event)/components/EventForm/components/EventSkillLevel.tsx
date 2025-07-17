@@ -44,7 +44,7 @@ export const EventSkillLevel = ({ control, errors, handleFocusField }: EventSkil
                 }}
                 placeholder="Wybierz poziom zaawansowania"
                 emptyIndicator={
-                  <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                  <p className="text-center text-smlg:text-lg leading-10 text-gray-600 dark:text-gray-400">
                     Brak wyników.
                   </p>
                 }

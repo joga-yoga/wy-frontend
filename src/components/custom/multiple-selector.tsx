@@ -441,7 +441,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
       >
         <div
           className={cn(
-            "min-h-10 rounded-md border border-input text-base ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 md:text-sm",
+            "min-h-10 rounded-md border border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 text-base md:text-sm",
             {
               "px-3 py-2": selected.length !== 0,
               "cursor-text": !disabled && selected.length !== 0,
@@ -461,6 +461,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                   className={cn(
                     "data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground",
                     "data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground",
+                    "text-sm md:text-base",
                     "py-1",
                     badgeClassName,
                   )}
@@ -487,7 +488,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                     }}
                     onClick={() => handleUnselect(option)}
                   >
-                    <X className="h-3 w-3 md:h-4 md:w-4 text-white" />
+                    <X className="h-2.5 w-2.5 md:h-4 md:w-4 text-white" />
                   </button>
                 </Badge>
               );
@@ -531,7 +532,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                 onChange?.(selected.filter((s) => s.fixed));
               }}
               className={cn(
-                "absolute right-0 h-8 w-6 p-0",
+                "absolute right-0 h-5 w-4 md:h-8 md:w-6 p-0",
                 (hideClearAllButton ||
                   disabled ||
                   selected.length < 1 ||
@@ -539,7 +540,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                   "hidden",
               )}
             >
-              <X />
+              <X className="h-5 w-5 md:h-6 md:w-6" />
             </button>
           </div>
         </div>

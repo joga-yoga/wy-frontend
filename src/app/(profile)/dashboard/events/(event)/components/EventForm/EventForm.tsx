@@ -28,8 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { EventFormData, eventFormSchema, EventInitialData } from "@/lib/schemas/event";
 
-import { HelpBar } from "../HelpBar";
 import { EventDetailsSection } from "./components/EventDetailsSection";
+import { EventHelpBar } from "./components/EventHelpBar";
 import { EventHospitalitySection } from "./components/EventHospitalitySection";
 import { EventImportantInfoSection } from "./components/EventImportantInfoSection";
 import { EventInstructorsSection } from "./components/EventInstructorsSection";
@@ -48,6 +48,7 @@ export interface Location {
 interface EventFormProps {
   eventId?: string;
   initialData?: Partial<EventFormData>;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 // 1. Helper function to prepare event payload
@@ -92,7 +93,7 @@ const prepareEventPayload = (data: EventFormData): Partial<EventFormData> => {
   return payload as Partial<EventFormData>; // Adjust cast if a more specific return type is defined
 };
 
-export function EventForm({ eventId, initialData }: EventFormProps) {
+export function EventForm({ eventId, initialData, onLoadingChange }: EventFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const isEditMode = !!eventId;
@@ -119,6 +120,10 @@ export function EventForm({ eventId, initialData }: EventFormProps) {
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ id: string; file: File }[]>([]);
   const [uploadingProgramImages, setUploadingProgramImages] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   const handleFocusField = (tipId: string) => {
     if (isHelpBarOpen) {
@@ -758,7 +763,7 @@ export function EventForm({ eventId, initialData }: EventFormProps) {
       ) : null}
 
       <div className="flex flex-row gap-6 space-y-8">
-        <div className="flex-grow space-y-4 md:space-y-6 max-w-3xl mx-auto py-10 px-4 md:mx-10">
+        <div className="flex-grow space-y-4 md:space-y-6 max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
           {/* Details */}
           <EventDetailsSection
             control={control}
@@ -874,7 +879,7 @@ export function EventForm({ eventId, initialData }: EventFormProps) {
         </div>
 
         {isHelpBarOpen && (
-          <HelpBar
+          <EventHelpBar
             isOpen={isHelpBarOpen}
             onClose={() => setIsHelpBarOpen(false)}
             activeTipId={activeTipId}
@@ -886,21 +891,30 @@ export function EventForm({ eventId, initialData }: EventFormProps) {
         title={isEditMode ? "Edytuj wyjazd" : "Utwórz nowy wyjazd"}
         onCreate={!isEditMode ? handleSubmit(onSubmit) : undefined}
         createLabel={isSubmitting ? "Tworzenie..." : "Utwórz wyjazd"}
+        createLabelShort={isSubmitting ? "Tworzenie..." : "Utwórz"}
         createIcon={
           isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />
         }
         onUpdate={isEditMode ? handleSubmit(onSubmit) : undefined}
         updateLabel={isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
+        updateLabelShort={isSubmitting ? "Zapisuję..." : "Zapisz"}
         updateIcon={
           isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />
         }
         viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
         viewPublicLabel="Zobacz stronę publiczną"
+        viewPublicLabelShort="Zobacz"
         viewPublicIcon={<ExternalLink className="h-4 w-4" />}
         showPublishButton={isEditMode}
         isPublished={currentIsPublic}
         isPublishing={isTogglingVisibility}
         onPublishToggle={handlePublishButtonClick}
+        publishButtonLabel="Opublikuj wyjazd"
+        publishButtonLabelShort="Opublikuj"
+        unpublishButtonLabel="Ukryj wyjazd"
+        unpublishButtonLabelShort="Ukryj"
+        publishingButtonLabel="Zmieniam..."
+        publishingButtonLabelShort="Zmieniam..."
         publishIcon={<Send className="h-4 w-4" />}
         unpublishIcon={<EyeOff className="h-4 w-4" />}
         publishingIcon={<Loader2 className="h-4 w-4 animate-spin" />}

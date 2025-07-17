@@ -170,8 +170,8 @@ export const EventProgramSection = ({
       {programFields.map((field, index) => (
         <div key={field.id} className="border-b pb-6 last:border-b-0">
           <Label className="text-lg font-semibold">Dzień {index + 1}</Label>
-          <div className="flex items-start gap-6 mt-2">
-            <div className="flex-shrink-0">
+          <div className="flex items-start flex-col md:flex-row gap-2 md:gap-6 mt-2">
+            <div className="flex-shrink-0 w-full md:w-auto">
               <SingleImageUpload
                 name={`program.${index}.imageFile`}
                 control={control}
@@ -187,7 +187,7 @@ export const EventProgramSection = ({
               )}
             </div>
 
-            <div className="flex-grow space-y-1">
+            <div className="flex-grow space-y-1 w-full md:w-auto">
               <Textarea
                 id={`program.${index}.description`}
                 {...register(`program.${index}.description` as const)}

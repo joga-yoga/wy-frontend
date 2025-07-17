@@ -19,5 +19,5 @@ export default function EventLayout({ children }: { children: React.ReactNode })
     return <div>Loading...</div>;
   }
 
-  return <div className="flex min-h-screen bg-background">{children}</div>;
+  return <div className="flex flex-col md:flex-row min-h-screen bg-background">{children}</div>;
 }

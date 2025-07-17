@@ -29,7 +29,7 @@ const tips: Tip[] = [
     title: "Opis wyjazdu",
     content:
       "Wprowadzenie do wyjazdu w formie krótkiego streszczenia. Ma przyciągnąć uwagę, zaciekawić.",
-    details: ["Zalecana długość: 4–5 linijek."],
+    details: ["Zalecana długość: 4-5 linijek."],
     example:
       "Zapraszamy na weekendowy wyjazd z jogą i medytacją w sercu Beskidów. Czekają na Ciebie codzienne sesje jogi, wyciszenie i głęboki oddech w otoczeniu natury.",
   },
@@ -133,23 +133,23 @@ const tips: Tip[] = [
     details: [
       "✔ Przynajmniej jedno zdjęcie główne (1280x960 lub większe, bez znaków wodnych)",
       "✔ Dobrze, jeśli zdjęcia przedstawiają:",
-      "– miejsce praktyki,",
-      "– zakwaterowanie,",
-      "– jedzenie,",
-      "– ludzi w ruchu (np. joga w plenerze),",
-      "– okolicę / naturę.",
+      "- miejsce praktyki,",
+      "- zakwaterowanie,",
+      "- jedzenie,",
+      "- ludzi w ruchu (np. joga w plenerze),",
+      "- okolicę / naturę.",
       "Unikaj kolaży i białego tła. Dodawaj tylko zdjęcia, do których masz prawa.",
     ],
   },
 ];
 
-interface HelpBarProps {
+interface EventHelpBarProps {
   isOpen: boolean;
   onClose: () => void;
   activeTipId?: string;
 }
 
-export function HelpBar({ isOpen, onClose, activeTipId }: HelpBarProps) {
+export function EventHelpBar({ isOpen, onClose, activeTipId }: EventHelpBarProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

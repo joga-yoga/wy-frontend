@@ -102,16 +102,16 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
         const itemError = Array.isArray(error) ? error[index] : null;
         return (
           <div key={index} className="space-y-1">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center md:gap-2">
               <div className="relative flex-grow">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 w-1 h-1 bg-black rounded-full"></div>
+                <div className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 w-1 h-1 bg-black rounded-full"></div>
                 <Input
                   type="text"
                   value={item}
                   onChange={(e) => handleInputChange(index, e.target.value)}
                   placeholder={placeholder}
                   aria-label={`Element ${index + 1}`}
-                  className={`flex-grow rounded-[20px] h-10 pl-[44px] placeholder:text-gray-300 ${itemError ? "border-red-500" : ""}`}
+                  className={`flex-grow rounded-[20px] h-10 pl-[24px] md:pl-[44px] placeholder:text-gray-300 ${itemError ? "border-red-500" : ""}`}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   ref={inputRefs.current[index]}
                 />
@@ -138,15 +138,15 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
         );
       })}
       {/* Visually distinct placeholder for the "next" item, always disabled */}
-      <div className="flex items-center space-x-2 mt-1 opacity-50">
+      <div className="flex items-center md:gap-2 mt-1 opacity-50">
         <div className="relative flex-grow">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-400 rounded-full"></div>
+          <div className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-400 rounded-full"></div>
           <Input
             type="text"
             placeholder={placeholder}
             disabled
             aria-label="Dodaj kolejny element (wskazówka wizualna)"
-            className="flex-grow rounded-[20px] h-10 pl-[44px] placeholder:text-gray-300"
+            className="flex-grow rounded-[20px] h-10 pl-[24px] md:pl-[44px] placeholder:text-gray-300"
           />
         </div>
         <div className="w-9 h-9"> {/* Placeholder for button alignment */} </div>

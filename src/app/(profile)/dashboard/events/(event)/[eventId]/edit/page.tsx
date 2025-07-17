@@ -1,18 +1,20 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState } from "react";
 
-import { EventSidebar } from "../../components/EventForm/components/EventSidebar";
+import { EventDashboardSidebar } from "../../components/EventForm/components/EventDashboardSidebar";
 import { EventForm } from "../../components/EventForm/EventForm";
 
 export default function EditEventPage() {
   const params = useParams();
   const eventId = params.eventId as string;
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <>
-      <EventSidebar />
-      <EventForm eventId={eventId} />
+      <EventDashboardSidebar isLoading={isLoading} />
+      <EventForm eventId={eventId} onLoadingChange={setIsLoading} />
     </>
   );
 }

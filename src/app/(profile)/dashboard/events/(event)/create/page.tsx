@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-import { EventSidebar } from "../components/EventForm/components/EventSidebar";
+import { EventDashboardSidebar } from "../components/EventForm/components/EventDashboardSidebar";
 import { EventForm } from "../components/EventForm/EventForm";
 
 export default function CreateEventPage() {
   const [selectedOption, setSelectedOption] = useState<"manual" | "autofill" | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAutofilling, setIsAutofilling] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(true);
   const [generatedData, setGeneratedData] = useState<any>(null);
   const { toast } = useToast();
 
@@ -22,7 +23,7 @@ export default function CreateEventPage() {
   };
 
   const handleAutofill = async () => {
-    setIsLoading(true);
+    setIsAutofilling(true);
     try {
       // Mock API call - replace with actual API endpoint when ready
       const response = await axios.get("/api/events/generate");
@@ -35,7 +36,7 @@ export default function CreateEventPage() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsAutofilling(false);
     }
   };
 
@@ -72,8 +73,8 @@ export default function CreateEventPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={handleAutofill} className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button onClick={handleAutofill} className="w-full" disabled={isAutofilling}>
+                {isAutofilling ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Generowanie...
@@ -91,10 +92,10 @@ export default function CreateEventPage() {
 
   return (
     <>
-      <EventSidebar />
+      <EventDashboardSidebar isLoading={isFormLoading} />
       <div className="flex-1 flex flex-col">
         <main className="flex-1">
-          <EventForm initialData={generatedData} />
+          <EventForm initialData={generatedData} onLoadingChange={setIsFormLoading} />
         </main>
       </div>
     </>
