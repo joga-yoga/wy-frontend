@@ -1,86 +1,93 @@
-import { Camera, CheckCircle, FileText, Users } from "lucide-react";
+import { Camera, CheckCircle, Clock, FileText, Send, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const PartnersPage = () => {
   return (
     <div className="bg-white text-gray-800">
       {/* Hero Section */}
       <section
-        className="relative h-[60vh] bg-cover bg-center"
+        className="relative h-[70vh] bg-cover bg-center rounded-b-2xl"
         style={{
-          backgroundImage: "url('https://placehold.co/1920x1080/2c3e50/ffffff?text=Wielki+Las')",
+          backgroundImage: "url('/images/partners/hero.png')",
         }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white">
+        <div className="absolute inset-0 bg-[#000]/0" />
+        <div className="container relative z-10 mx-auto flex h-full flex-col items-start justify-center px-4 md:px-8 text-left text-white">
           <Link href="/" className="mb-4 text-2xl font-bold">
             wyjazdy.yoga
           </Link>
-          <h1 className="text-5xl font-extrabold md:text-7xl">Współpraca Partnerska</h1>
-          <p className="mt-4 text-lg md:text-xl">
+          <h1 className="text-5xl font-extrabold md:text-7xl">
+            Współpraca <br />
+            Partnerska
+          </h1>
+          <p className="mt-4 max-w-xl text-lg md:text-xl">
             Publikacja gratis. Podlinkuj nas w podziękowaniu.
           </p>
+          <Link href="/dashboard">
+            <Button size="lg" className="mt-8 text-black bg-white hover:bg-white/90 duration-200">
+              Dołącz do nas
+            </Button>
+          </Link>
         </div>
       </section>
 
       {/* "Jak to wygląda krok po kroku" Section */}
       <section className="py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="mb-12 text-4xl font-bold">Jak to wygląda krok po kroku</h2>
-          <div className="grid gap-8 md:grid-cols-3">
-            <Card className="text-center">
-              <CardHeader>
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <CardTitle>Dodaj szczegóły wyjazdu</CardTitle>
+        <div className="container mx-auto px-4 md:px-8">
+          <h2 className="mb-12 text-center text-4xl font-bold">Jak to wygląda krok po kroku</h2>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-0 shadow-none">
+              <CardHeader className="flex-row items-center gap-4 space-y-0">
+                <FileText className="h-8 w-8 text-primary" />
+                <CardTitle>Dodaj szczegóły</CardTitle>
               </CardHeader>
               <CardContent>
                 <p>
                   Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie.
                 </p>
               </CardContent>
-              <CardFooter className="justify-center text-sm text-gray-500">
-                <span>&#128337; 3 min</span>
-              </CardFooter>
+              <CardContent className="flex items-center text-sm text-gray-500">
+                <Clock className="mr-2 h-4 w-4" /> 3 min
+              </CardContent>
             </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                  <Camera className="h-6 w-6" />
-                </div>
+            <Card className="border-0 shadow-none">
+              <CardHeader className="flex-row items-center gap-4 space-y-0">
+                <Camera className="h-8 w-8 text-primary" />
                 <CardTitle>Dodaj zdjęcia</CardTitle>
               </CardHeader>
               <CardContent>
                 <p>
-                  Dodaj atrakcyjne zdjęcia, pokazujące atmosferę, miejsce praktyki i najważniejsze
-                  elementy programu.
+                  Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy programu.
                 </p>
               </CardContent>
-              <CardFooter className="justify-center text-sm text-gray-500">
-                <span>&#128337; 1 min</span>
-              </CardFooter>
+              <CardContent className="flex items-center text-sm text-gray-500">
+                <Clock className="mr-2 h-4 w-4" /> 1 min
+              </CardContent>
             </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                  <CheckCircle className="h-6 w-6" />
-                </div>
+            <Card className="border-0 shadow-none">
+              <CardHeader className="flex-row items-center gap-4 space-y-0">
+                <CheckCircle className="h-8 w-8 text-primary" />
                 <CardTitle>Sprawdź i zatwierdź</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>
-                  Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe przed
-                  publikacją.
-                </p>
+                <p>Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe.</p>
               </CardContent>
-              <CardFooter className="justify-center text-sm text-gray-500">
-                <span>&#128337; 1 min</span>
-              </CardFooter>
+              <CardContent className="flex items-center text-sm text-gray-500">
+                <Clock className="mr-2 h-4 w-4" /> 1 min
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-none">
+              <CardHeader className="flex-row items-center gap-4 space-y-0">
+                <Send className="h-8 w-8 text-primary" />
+                <CardTitle>Publikacja</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Udostępnij swoją podróż i rozpocznij zapisy na praktykę.</p>
+              </CardContent>
             </Card>
           </div>
         </div>
@@ -88,60 +95,74 @@ const PartnersPage = () => {
 
       {/* "Co dostaniesz w spówpracy" Section */}
       <section className="bg-gray-50 py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-4xl font-bold">
-            Co dostaniesz w spówprace z wyjazdy.yoga
+        <div className="container mx-auto px-4 md:px-8">
+          <h2 className="mb-12 text-left text-4xl font-bold">
+            Co dostaniesz w spówpracy z wyjazdy.yoga
           </h2>
-          <div className="grid items-center gap-12 md:grid-cols-2">
-            <div className="space-y-8">
-              <div>
-                <h3 className="mb-2 text-2xl font-semibold">Więcej rezerwacji</h3>
-                <p>Zwiększ liczbę rezerwacji bez dodatkowego nakładu pracy.</p>
-              </div>
-              <div>
-                <h3 className="mb-2 text-2xl font-semibold">Transparentne warunki</h3>
-                <p>Zero ukrytych kosztów, tylko prośba o link.</p>
-              </div>
-              <div>
-                <h3 className="mb-2 text-2xl font-semibold">Szerszy zasięg marki</h3>
-                <p>Twoja nazwa trafia jeszce dalej.</p>
-              </div>
-            </div>
-            <div className="relative h-96 w-full">
-              <Image
-                src="https://placehold.co/600x400/d1d5db/374151?text=Meditacja"
-                alt="Meditation"
-                layout="fill"
-                objectFit="cover"
-                className="rounded-lg"
-              />
-            </div>
-          </div>
-          <div className="mt-16 grid items-center gap-12 md:grid-cols-2">
-            <div className="relative h-96 w-full md:order-last">
-              <Image
-                src="https://placehold.co/600x400/e5e7eb/4b5563?text=Społeczność"
-                alt="Community"
-                layout="fill"
-                objectFit="cover"
-                className="rounded-lg"
-              />
-            </div>
-            <div className="space-y-8 md:order-first">
-              <div className="flex items-start">
-                <Users className="mr-4 h-8 w-8 text-primary-600" />
+          <div className="flex flex-col md:flex-row md:gap-8 rounded-xl bg-white p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row gap-4 w-full">
+              <div className="space-y-8">
                 <div>
-                  <h3 className="mb-2 text-2xl font-semibold">Siła wspólnoty</h3>
-                  <p>Społeczność wyjazdy.yoga wspiera Twoje wyjazdy.</p>
+                  <h3 className="mb-2 text-subheader">Więcej rezerwacji</h3>
+                  <p className="text-sub-description">
+                    Zwiększ liczbę rezerwacji bez dodatkowego nakładu pracy.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="mb-2 text-subheader">Transparentne warunki</h3>
+                  <p className="text-sub-description">
+                    Zero ukrytych kosztów, tylko prośba o link.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="mb-2 text-subheader">Szerszy zasięg marki</h3>
+                  <p className="text-sub-description">Twoja nazwa trafia jeszce dalej.</p>
                 </div>
               </div>
-              <div>
-                <h3 className="mb-2 text-2xl font-semibold">Zaufanie społeczności</h3>
-                <p>Budujesz zaufanie wśród joginek i joginów.</p>
+              <div className="relative min-w-[280px]">
+                <Image
+                  src="/images/partners/meditation1.png"
+                  alt="Meditation"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-lg"
+                />
               </div>
-              <div>
-                <h3 className="mb-2 text-2xl font-semibold">Wspólna misja</h3>
-                <p>Razem szerzymy spokój i radość jogi.</p>
+            </div>
+            <div className="flex flex-col gap-4 w-full">
+              <div className="rounded-lg border p-4">
+                <div className="flex items-start">
+                  <Users className="mr-4 h-8 w-8 flex-shrink-0 text-primary" />
+                  <div>
+                    <h3 className="mb-2 text-subheader">Siła wspólnoty</h3>
+                    <p className="text-sub-description">
+                      Społeczność wyjazdy.yoga wspiera Twoje wyjazdy.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4 w-full">
+                <div className="space-y-8 w-full">
+                  <div>
+                    <h3 className="mb-2 text-subheader">Zaufanie społeczności</h3>
+                    <p className="text-sub-description">
+                      Budujesz zaufanie wśród joginek i joginów.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-subheader">Wspólna misja</h3>
+                    <p className="text-sub-description">Razem szerzymy spokój i radość jogi.</p>
+                  </div>
+                </div>
+                <div className="relative min-w-[200px] h-[200px]">
+                  <Image
+                    src="/images/partners/meditation2.png"
+                    alt="Community"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-lg"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -150,36 +171,49 @@ const PartnersPage = () => {
 
       {/* "Intencja" Section */}
       <section className="py-20">
-        <div className="container mx-auto flex flex-col items-center px-4 text-center">
-          <h2 className="mb-12 text-4xl font-bold">Intencja</h2>
-          <div className="mb-8 text-2xl font-bold">wyjazdy.yoga</div>
-          <div className="space-y-6">
-            <p className="text-lg">
-              <span className="font-serif italic">ekam</span> — Działaj z serca - reszta przyjdzie
-              naturalnie
-            </p>
-            <p className="text-lg">
-              <span className="font-serif italic">dve</span> — Najważniejsze dzieje się w trakcie
-            </p>
-            <p className="text-lg">
-              <span className="font-serif italic">trīṇi</span> — Możesz nie być doskonały, ale bądź
-              prawdziwy
-            </p>
+        <div className="container mx-auto px-4 md:px-8">
+          <h2 className="mb-12 text-left text-4xl font-bold">Intencja</h2>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 w-full rounded-lg bg-gray-50 p-8">
+              <div className="mb-8 text-center text-2xl font-bold w-full">wyjazdy.yoga</div>
+              <div className="space-y-6 w-full">
+                <div className="flex items-center text-lg">
+                  <span className="mr-4 w-12 font-serif text-2xl italic text-gray-400">एकम</span>
+                  <span>Działaj z serca - reszta przyjdzie naturalnie</span>
+                </div>
+                <div className="flex items-center text-lg">
+                  <span className="mr-4 w-12 font-serif text-2xl italic text-gray-400">द्वे</span>
+                  <span>Najważniejsze dzieje się w trakcie</span>
+                </div>
+                <div className="flex items-center text-lg">
+                  <span className="mr-4 w-12 font-serif text-2xl italic text-gray-400">त्रीणि</span>
+                  <span>Możesz nie być doskonały, ale bądź prawdziwy</span>
+                </div>
+              </div>
+            </div>
+            <div className="text-center md:text-left">
+              <div className="flex justify-center md:justify-start">
+                <Image
+                  src="/images/partners/cat.png"
+                  alt="Cat on a yoga mat"
+                  width={350}
+                  height={175}
+                  className="rounded-lg"
+                />
+              </div>
+              <div className="mt-8 flex items-center text-lg">
+                <span className="mr-4 w-12 font-serif text-2xl italic text-gray-400">चत्वारि</span>
+                <span>
+                  Nie musisz być wielki, by zacząć. Zacznij teraz - to zajmie tylko chwilę
+                </span>
+              </div>
+              <Link href="/dashboard">
+                <Button size="lg" className="mt-8 w-full" variant="secondary">
+                  Dołącz
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="my-12">
-            <Image
-              src="https://placehold.co/400x300/e0e0e0/555555?text=Kot+na+macie"
-              alt="Cat on a yoga mat"
-              width={400}
-              height={300}
-              className="rounded-lg"
-            />
-          </div>
-          <p className="mb-8 text-lg">
-            <span className="font-serif italic">catvāri</span> — Nie musisz być wielki, by zacząć.
-            Zacznij teraz - to zajmie tylko chwilę
-          </p>
-          <Button size="lg">Dołącz</Button>
         </div>
       </section>
     </div>

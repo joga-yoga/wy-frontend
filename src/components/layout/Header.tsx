@@ -103,7 +103,7 @@ export const EventsHeader: React.FC = () => {
           {/* Right Section: Actions & Profile */}
           <div className="flex items-center gap-3 md:gap-4">
             <Link
-              href="/dashboard"
+              href="/partners"
               passHref
               className={cn(isMainPage ? undefined : "hidden md:inline-block")}
             >
@@ -113,7 +113,7 @@ export const EventsHeader: React.FC = () => {
                 </p>
               </button>
             </Link>
-            <Link href="/dashboard" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
+            <Link href="/partners" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
               <button
                 aria-label="Add Event"
                 className="group text-muted-foreground h-10 w-10 flex items-center justify-center relative"
