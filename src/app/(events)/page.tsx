@@ -60,9 +60,9 @@ const EventsPage: React.FC = () => {
         }
         setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch events:", err);
-        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
-        setError(`Failed to fetch events: ${errorMessage}. Please try again.`);
+        console.error("Nie udało się załadować wyjazdów:", err);
+        const errorMessage = err instanceof Error ? err.message : "Wystąpił nieznany błąd";
+        setError(`Nie udało się załadować wyjazdów: ${errorMessage}. Proszę spróbować ponownie.`);
         setEvents([]);
         setTotalEvents(0);
       } finally {
@@ -88,6 +88,9 @@ const EventsPage: React.FC = () => {
         if (sortConfig && sortConfig.field && sortConfig.order) {
           params.append("sortBy", sortConfig.field);
           params.append("sortOrder", sortConfig.order);
+        } else {
+          params.append("sortBy", "published_at");
+          params.append("sortOrder", "desc");
         }
         params.append("limit", EVENTS_PER_PAGE.toString());
         params.append("skip", "0");
@@ -107,9 +110,9 @@ const EventsPage: React.FC = () => {
           setTotalEvents(0);
         }
       } catch (err) {
-        console.error("Failed to fetch events:", err);
-        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
-        setError(`Failed to fetch events: ${errorMessage}. Please try again.`);
+        console.error("Nie udało się załadować wyjazdów:", err);
+        const errorMessage = err instanceof Error ? err.message : "Wystąpił nieznany błąd";
+        setError(`Nie udało się załadować wyjazdów: ${errorMessage}. Proszę spróbować ponownie.`);
         setEvents([]);
         setTotalEvents(0);
       } finally {
@@ -150,27 +153,29 @@ const EventsPage: React.FC = () => {
     } catch (err) {
       console.error("Failed to load more events:", err);
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
-      setError(`Failed to load more events: ${errorMessage}. Please try again.`);
+      setError(
+        `Nie udało się załadować więcej wyjazdów: ${errorMessage}. Proszę spróbować ponownie.`,
+      );
     } finally {
       setIsLoadingMore(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-0 md:px-8 pt-0 md:pt-2 pb-[calc(72px+1px+20px)] md:pb-8 md:min-h-[100dvh]">
+    <div className="">
       <Filters />
-      <main>
+      <main className="container mx-auto px-0 md:px-8 pt-0 md:pt-2 pb-[calc(72px+1px+20px)] md:pb-8">
         {loading && events.length === 0 && (
-          <p className="text-center py-10 md:min-h-[100dvh]">Loading events...</p>
+          <p className="text-center py-10">Ładowanie wyjazdów...</p>
         )}
         {error && <p className="text-center text-red-600 py-10">Error: {error}</p>}
         {!loading && !error && events.length === 0 && (
-          <p className="text-center py-10 text-gray-500 md:min-h-[100dvh]">
+          <p className="text-center py-10 text-gray-500">
             {isBookmarksActive
-              ? "No bookmarked events found."
+              ? "Nie znaleziono zapisanych wyjazdów."
               : debouncedSearchTerm
-                ? `No events found for "${debouncedSearchTerm}".`
-                : "No events found."}
+                ? `Nie znaleziono wyjazdów dla "${debouncedSearchTerm}".`
+                : "Nie znaleziono wyjazdów."}
           </p>
         )}
         {!loading && !error && events.length > 0 && (

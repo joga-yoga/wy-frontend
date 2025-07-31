@@ -27,3 +27,9 @@ export const defaultImagesIds = [
   "program/w.yoga28_gh7x1m",
   "program/w.yoga29_w11ire",
 ];
+
+export const getRandomDefaultImageId = () => {
+  const randomIndex = Math.floor(Math.random() * defaultImagesIds.length);
+  const randomImageId = defaultImagesIds[randomIndex];
+  return randomImageId;
+};

@@ -14,7 +14,7 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event }) => 
   }
 
   return (
-    <div className="px-5">
+    <div className="md:px-5">
       <div className="flex items-center gap-5">
         <div className="relative h-[80px] w-[80px] flex-shrink-0">
           <Image

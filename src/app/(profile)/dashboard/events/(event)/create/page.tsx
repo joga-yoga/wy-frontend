@@ -1,34 +1,55 @@
 "use client";
 
 import axios from "axios";
-import { Loader2, PenLine, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText, Link as LinkIcon, Loader2, PenLine } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { axiosInstance } from "@/lib/axiosInstance";
+import { getRandomDefaultImageId } from "@/lib/getRandomDefaultImageId";
 
 import { EventDashboardSidebar } from "../components/EventForm/components/EventDashboardSidebar";
 import { EventForm } from "../components/EventForm/EventForm";
 
+type View = "options" | "url-input" | "prompt-input" | "form";
+
 export default function CreateEventPage() {
-  const [selectedOption, setSelectedOption] = useState<"manual" | "autofill" | null>(null);
+  const [view, setView] = useState<View>("options");
   const [isAutofilling, setIsAutofilling] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(true);
   const [generatedData, setGeneratedData] = useState<any>(null);
+  const [url, setUrl] = useState("");
+  const [prompt, setPrompt] = useState("");
   const { toast } = useToast();
 
-  const handleManualCreate = () => {
-    setSelectedOption("manual");
-  };
-
-  const handleAutofill = async () => {
+  const handleGenerate = async (text: string) => {
+    if (!text.trim()) {
+      toast({
+        title: "Błąd",
+        description: "Pole nie może być puste.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsAutofilling(true);
     try {
-      // Mock API call - replace with actual API endpoint when ready
-      const response = await axios.get("/api/events/generate");
-      setGeneratedData(response.data);
-      setSelectedOption("autofill");
+      const formData = new FormData();
+      formData.append("prompt", text);
+      const response = await axiosInstance.post("/events/generate/url", formData);
+      const data = response.data;
+      if (data.program) {
+        data.program = data.program.map((day: any) => ({
+          ...day,
+          imageId: getRandomDefaultImageId(),
+        }));
+      }
+      setGeneratedData(data);
+      setView("form");
     } catch (error) {
       toast({
         title: "Błąd",
@@ -40,64 +61,157 @@ export default function CreateEventPage() {
     }
   };
 
-  if (selectedOption === null) {
+  if (view === "form") {
     return (
-      <div className="container max-w-4xl mx-auto py-10 px-4 md:px-10">
-        <h1 className="text-3xl font-bold mb-8">Utwórz nowy wyjazd</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PenLine className="h-5 w-5" />
-                Ręczne tworzenie
-              </CardTitle>
-              <CardDescription>
-                Utwórz wyjazd od podstaw, wypełniając wszystkie pola formularza ręcznie.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleManualCreate} className="w-full">
-                Wybierz
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                Automatyczne wypełnienie
-              </CardTitle>
-              <CardDescription>
-                Pozwól nam wygenerować podstawowe dane wyjazdu, które później możesz dostosować.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleAutofill} className="w-full" disabled={isAutofilling}>
-                {isAutofilling ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generowanie...
-                  </>
-                ) : (
-                  "Wybierz"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+      <>
+        <EventDashboardSidebar isLoading={isFormLoading} />
+        <div className="flex-1 flex flex-col">
+          <main className="flex-1">
+            <EventForm initialData={generatedData} onLoadingChange={setIsFormLoading} />
+          </main>
         </div>
-      </div>
+      </>
     );
   }
 
+  const handleBack = () => setView("options");
+
   return (
-    <>
-      <EventDashboardSidebar isLoading={isFormLoading} />
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1">
-          <EventForm initialData={generatedData} onLoadingChange={setIsFormLoading} />
-        </main>
-      </div>
-    </>
+    <div className="container max-w-4xl mx-auto py-10 px-4 md:px-10">
+      {view === "options" && (
+        <>
+          <h1 className="text-3xl font-bold mb-8">Utwórz nowy wyjazd</h1>
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PenLine className="h-5 w-5" />
+                  Ręczne tworzenie
+                </CardTitle>
+                <CardDescription>
+                  Utwórz wyjazd od podstaw, wypełniając wszystkie pola formularza ręcznie.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => {
+                    setGeneratedData(null);
+                    setView("form");
+                  }}
+                  className="w-full"
+                >
+                  Wybierz
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LinkIcon className="h-5 w-5" />
+                  Generuj z linku
+                </CardTitle>
+                <CardDescription>
+                  Wklej link do strony wydarzenia, a my spróbujemy wyciągnąć dane.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setView("url-input")} className="w-full">
+                  Wybierz
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Generuj z opisu
+                </CardTitle>
+                <CardDescription>
+                  Opisz swój wyjazd w kilku zdaniach, a my wygenerujemy resztę.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setView("prompt-input")} className="w-full">
+                  Wybierz
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
+
+      {view === "url-input" && (
+        <div>
+          <Button variant="ghost" onClick={handleBack} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Powrót
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Generuj z linku</h1>
+          <p className="text-muted-foreground mb-8">
+            Wklej adres URL strony z Twoim wyjazdem, a my zajmiemy się resztą.
+          </p>
+          <div className="space-y-4">
+            <Label htmlFor="event-url">URL wydarzenia</Label>
+            <Input
+              id="event-url"
+              placeholder="https://przykladowa-strona.com/wyjazd"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={isAutofilling}
+            />
+            <Button onClick={() => handleGenerate(url)} className="w-full" disabled={isAutofilling}>
+              {isAutofilling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generowanie...
+                </>
+              ) : (
+                "Generuj dane wyjazdu"
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {view === "prompt-input" && (
+        <div>
+          <Button variant="ghost" onClick={handleBack} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Powrót
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Generuj z opisu</h1>
+          <p className="text-muted-foreground mb-8">
+            Opisz swój wyjazd, a my pomożemy go uzupełnić.
+          </p>
+          <div className="space-y-4">
+            <Label htmlFor="event-prompt">Opis wyjazdu</Label>
+            <Textarea
+              id="event-prompt"
+              placeholder="Np. 'Wyjazd narciarski w Alpy dla zaawansowanych, 7 dni w hotelu z pełnym wyżywieniem...'"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={6}
+              disabled={isAutofilling}
+            />
+            <Button
+              onClick={() => handleGenerate(prompt)}
+              className="w-full"
+              disabled={isAutofilling}
+            >
+              {isAutofilling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generowanie...
+                </>
+              ) : (
+                "Generuj dane wyjazdu"
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

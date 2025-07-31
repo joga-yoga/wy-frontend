@@ -14,7 +14,11 @@ export default function EditEventPage() {
   return (
     <>
       <EventDashboardSidebar isLoading={isLoading} />
-      <EventForm eventId={eventId} onLoadingChange={setIsLoading} />
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1">
+          <EventForm eventId={eventId} onLoadingChange={setIsLoading} />
+        </main>
+      </div>
     </>
   );
 }

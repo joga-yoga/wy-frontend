@@ -7,18 +7,23 @@ import "swiper/css/pagination";
 import {
   ArrowDown,
   ArrowUp,
+  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  DollarSign,
   Earth,
+  MapPin,
   Search,
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { IoStarOutline } from "react-icons/io5";
+import { IoStar } from "react-icons/io5";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
-import BookmarkIconMobile from "@/components/icons/BookmarkIconMobile";
+import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import BaliIcon from "@/components/icons/countries/BaliIcon";
 import IndiaIcon from "@/components/icons/countries/IndiaIcon";
 import ItalyIcon from "@/components/icons/countries/ItalyIcon";
@@ -32,7 +37,10 @@ import CustomPriceIcon from "@/components/icons/CustomPriceIcon";
 import CustomPriceIconMobile from "@/components/icons/CustomPriceIconMobile";
 import CustomSearchIcon from "@/components/icons/CustomSearchIcon";
 import CustomSearchIconMobile from "@/components/icons/CustomSearchIconMobile";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import useIsMobile from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
@@ -149,52 +157,64 @@ const Filters: React.FC = () => {
     <>
       {/* Mobile version of filters */}
       <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
-        <div className="flex items-center justify-between gap-2 px-5 py-3">
+        <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
-            aria-label="Calendar"
-            className={cn(
-              "group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative",
-              sortConfig?.field === "start_date" && "border-brand-green hover:border-brand-green",
-            )}
             onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
-          >
-            <CustomCalendarIcon className="h-[44px] w-[44px]" />
-            {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
-              <ArrowUp className="absolute bottom-0.5 right-0.5 h-3 w-3 text-brand-green" />
-            )}
-            {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
-              <ArrowDown className="absolute bottom-0.5 right-0.5 h-3 w-3 text-brand-green" />
-            )}
-          </button>
-
-          <button
-            aria-label="Price"
             className={cn(
-              "group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative",
-              sortConfig?.field === "price" && "border-brand-green hover:border-brand-green",
+              "flex items-center justify-center rounded-full relative",
+              "h-12 w-12",
+              "hover:bg-gray-100 duration-200",
+              sortConfig?.field === "start_date" &&
+                "border-2 border-brand-green hover:border-brand-green",
             )}
-            onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
           >
-            <CustomPriceIconMobile className="h-[44px] w-[44px]" />
-            {sortConfig?.field === "price" && sortConfig.order === "desc" && (
-              <ArrowDown className="absolute bottom-0.5 right-0.5 h-3 w-3 text-brand-green" />
+            <Calendar className="w-6 h-6" />
+            <div className="absolute bottom-[-6px] right-[-6px]">
+              {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+                <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+              {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+                <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+            </div>
+          </button>
+          <button
+            onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
+            className={cn(
+              "flex items-center justify-center rounded-full relative",
+              "h-12 w-12",
+              "hover:bg-gray-100 duration-200",
+              sortConfig?.field === "price" &&
+                "border-2 border-brand-green hover:border-brand-green",
             )}
-            {sortConfig?.field === "price" && sortConfig.order === "asc" && (
-              <ArrowUp className="absolute bottom-0.5 right-0.5 h-3 w-3 text-brand-green" />
-            )}
+          >
+            <DollarSign className="w-6 h-6" />
+            <div className="absolute bottom-[-6px] right-[-6px]">
+              {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+                <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+              {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+                <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+            </div>
           </button>
           <div className="relative" ref={countryDropdownRef}>
             <button
-              aria-label="Toggle country filter"
               onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
-              className="h-[44px] w-[44px] flex items-center justify-center rounded-full text-gray-700 bg-gray-100"
+              className={cn(
+                "flex items-center justify-center rounded-full",
+                "h-12 w-12",
+                "hover:bg-gray-100 duration-200",
+                (SelectedCountryIcon || isCountryDropdownOpen) &&
+                  "border-2 border-brand-green hover:border-brand-green",
+              )}
             >
               {isCountryDropdownOpen ? (
-                <ChevronDown className="h-[28px] w-[28px]" />
+                <ChevronDown className="h-6 w-6" />
               ) : SelectedCountryIcon ? (
-                <SelectedCountryIcon className="h-[28px] w-[28px]" />
+                <SelectedCountryIcon className="h-8 w-8" />
               ) : (
-                <Earth className="h-8 w-8 stroke-[1.25px]" />
+                <MapPin className="h-6 w-6" />
               )}
             </button>
             {isCountryDropdownOpen && (
@@ -211,7 +231,7 @@ const Filters: React.FC = () => {
                         !countryFilter && "text-brand-green",
                       )}
                     >
-                      <Earth className="h-8 w-8 stroke-[1.25px] text-black" />
+                      <MapPin className="h-8 w-8 text-gray-700 stroke-1" />
                       <span>Wszystkie kraje</span>
                     </button>
                   </li>
@@ -237,179 +257,158 @@ const Filters: React.FC = () => {
             )}
           </div>
           <button
-            aria-label="Search"
             onClick={() => setIsSearchActiveAndReset(!isSearchActive)}
             className={cn(
-              "group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 border-transparent hover:border-[#CBD5E1] relative",
-              isSearchActive && "border-brand-green hover:border-brand-green",
+              "flex items-center justify-center rounded-full relative",
+              "h-12 w-12",
+              "hover:bg-gray-100 duration-200",
+              isSearchActive && "border-2 border-brand-green hover:border-brand-green",
             )}
           >
-            <CustomSearchIconMobile className="h-[44px] w-[44px]" />
+            <Search className="w-6 h-6" />
           </button>
-          <button
-            aria-label="Toggle Bookmarks"
-            onClick={toggleBookmarksView}
-            className={cn("", isBookmarksActive && "text-brand-green")}
-          >
-            {isBookmarksActive ? (
-              <div className="flex items-center justify-center relative">
-                <BookmarkIconMobile className="h-[44px] w-[44px] z-10" />
-                <div className="absolute top-1 right-1 bg-brand-green rounded-full p-4" />
-              </div>
-            ) : (
-              <BookmarkIconMobile className="h-[44px] w-[44px]" />
-            )}
-          </button>
+
+          <BookmarkButton
+            isActive={isBookmarksActive}
+            toggleHandler={toggleBookmarksView}
+            size="mobile-footer"
+            className={
+              isBookmarksActive
+                ? "border-2 border-brand-green hover:border-brand-green bg-transparent"
+                : "bg-transparent"
+            }
+          />
         </div>
       </div>
 
       {/* Desktop version of filters */}
       <div
         className={cn(
-          "container mx-auto hidden md:flex justify-between gap-10 py-5",
-          isSearchActive && "md:hidden",
+          "sticky top-[calc(64px+1px)] md:top-[calc(80px+1px)] z-50 w-full border-b bg-background",
         )}
       >
-        <div className="w-full relative">
-          <button
-            aria-label="Previous country"
-            onClick={() => {
-              countrySwiperRef.current?.slidePrev();
-            }}
-            className={`text-gray-600 absolute left-[-68px] top-[20px] ${hideCountryPrev ? "hidden" : ""}`}
-            disabled={hideCountryPrev}
-          >
-            <ChevronLeft className="h-[48px] w-[48px]" />
-          </button>
-          <Swiper
-            modules={[Navigation]}
-            spaceBetween="0px"
-            // slidesPerView={6}
-            breakpoints={{
-              // when window width is >= 320px
-              320: {
-                slidesPerView: 2,
-              },
-              // when window width is >= 480px
-              480: {
-                slidesPerView: 3,
-              },
-              // when window width is >= 640px
-              640: {
-                slidesPerView: 10,
-              },
-            }}
-            // initialSlide={initialSlideCountries}
-            onSwiper={(swiper) => {
-              countrySwiperRef.current = swiper;
-              updateCountryNavVisibility(swiper);
-            }}
-            onSlideChange={updateCountryNavVisibility}
-            // className="w-[calc(100%-280px)]"
-          >
-            {filterItems.map((item, index) => (
-              <SwiperSlide
-                key={index}
-                className="h-[88px] w-[108px] min-w-[108px]"
-                style={{ width: 88 }}
-              >
-                <button
-                  aria-label={item.label}
-                  className={cn(
-                    "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
-                    countryFilter === item.filterValue &&
-                      "border-brand-green hover:border-brand-green",
-                  )}
-                  onClick={() => setCountryFilterAndReset(item.filterValue)}
-                >
-                  <item.Icon className="h-[88px] w-[88px]" />
-                  <span className="absolute top-0 left-0 text-2xl/6 font-medium text-black opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                    {item.name}
-                  </span>
-                </button>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-          <button
-            aria-label="Next country"
-            onClick={() => {
-              countrySwiperRef.current?.slideNext();
-            }}
-            className={`text-gray-600 absolute right-[-48px] top-[20px] ${hideCountryNext ? "hidden" : ""}`}
-            disabled={hideCountryNext}
-          >
-            <ChevronRight className="h-[48px] w-[48px]" />
-          </button>
+        <div
+          className={cn(
+            "flex container mx-auto justify-between gap-10 py-5 md:px-8",
+            "hidden md:flex",
+            isSearchActive && "md:hidden",
+          )}
+        >
+          <div className="w-full relative">
+            <div className="flex items-center gap-4">
+              <TooltipProvider>
+                {filterItems.map((item, index) => (
+                  <Tooltip key={index} delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <button
+                        key={index}
+                        aria-label={item.label}
+                        className={cn(
+                          "group text-muted-foreground h-[calc(80px)] w-[calc(80px)] flex items-center justify-center  rounded-full border-transparent relative hover:bg-gray-100 duration-200 border-2",
+                          countryFilter === item.filterValue &&
+                            "border-brand-green hover:border-brand-green",
+                        )}
+                        onClick={() => setCountryFilterAndReset(item.filterValue)}
+                      >
+                        <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)]" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
+              className={cn(
+                "flex items-center justify-center rounded-full relative",
+                "h-[80px] w-[80px]",
+                "hover:bg-gray-100 duration-200",
+                sortConfig?.field === "start_date" &&
+                  "border-2 border-brand-green hover:border-brand-green",
+              )}
+            >
+              <Calendar className="w-[48px] h-[48px] stroke-1" />
+              <div className="absolute bottom-[-6px] right-[-6px]">
+                {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+                  <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
+                )}
+                {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+                  <ArrowDown className="h-4 w-4 text-brand-green stroke-3" />
+                )}
+              </div>
+            </button>
+            <button
+              onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
+              className={cn(
+                "flex items-center justify-center rounded-full relative",
+                "h-[80px] w-[80px]",
+                "hover:bg-gray-100 duration-200",
+                sortConfig?.field === "price" &&
+                  "border-2 border-brand-green hover:border-brand-green",
+              )}
+            >
+              <DollarSign className="w-[48px] h-[48px] stroke-1" />
+              <div className="absolute bottom-[-6px] right-[-6px]">
+                {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+                  <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
+                )}
+                {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+                  <ArrowDown className="h-4 w-4 text-brand-green stroke-3" />
+                )}
+              </div>
+            </button>
+            <button
+              onClick={() => setIsSearchActiveAndReset(true)}
+              className={cn(
+                "flex items-center justify-center rounded-full",
+                "h-[80px] w-[80px]",
+                "hover:bg-gray-100 duration-200",
+              )}
+            >
+              <Search className="w-[48px] h-[48px] stroke-1" />
+            </button>
+            {/* <BookmarkButton
+              isActive={isBookmarksActive}
+              toggleHandler={toggleBookmarksView}
+              size="desktop-filter"
+              className={
+                isBookmarksActive
+                  ? "border-2 border-brand-green hover:border-brand-green bg-transparent"
+                  : "bg-transparent"
+              }
+            /> */}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 min-w-[280px]">
-          <button
-            aria-label="Calendar"
-            className={cn(
-              "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
-              sortConfig?.field === "start_date" && "border-brand-green hover:border-brand-green",
-            )}
-            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
-          >
-            <CustomCalendarIcon className="h-[64px] w-[64px]" />
-            {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
-              <ArrowUp className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-            {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
-              <ArrowDown className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-          </button>
 
-          <button
-            aria-label="Price"
-            className={cn(
-              "group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative",
-              sortConfig?.field === "price" && "border-brand-green hover:border-brand-green",
-            )}
-            onClick={() => setSortConfigAndReset({ field: "price", order: "desc" })}
-          >
-            <CustomPriceIcon className="h-[88px] w-[88px]" />
-            {sortConfig?.field === "price" && sortConfig.order === "desc" && (
-              <ArrowDown className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-            {sortConfig?.field === "price" && sortConfig.order === "asc" && (
-              <ArrowUp className="absolute bottom-1 right-1 h-4 w-4 text-brand-green" />
-            )}
-          </button>
-          {/* Bookmark button is managed by context, can be moved to header later */}
-          {/* This button in Filters will now use toggleBookmarksView */}
-          <button
-            aria-label="Search"
-            className="group text-muted-foreground h-[88px] w-[88px] flex items-center justify-center border-4 border-transparent hover:border-[#CBD5E1] relative"
-            onClick={() => setIsSearchActiveAndReset(true)}
-          >
-            <CustomSearchIcon className="h-[88px] w-[88px]" />
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={cn(
-          "container mx-auto items-center pt-5 md:py-5 relative gap-1 md:h-[128px] px-5 md:px-0",
-          isSearchActive ? "flex" : "hidden",
-        )}
-      >
-        <div className="relative flex-grow w-full">
-          <Input
-            type="text"
-            ref={searchInputRef}
-            placeholder="Search events..."
-            className="pl-[48px] md:pl-[52px] w-full text-base md:text-xl rounded-[44px] h-[48px] md:h-[64px] pr-12"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="h-5 w-5 absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <button
-            aria-label="Close search"
-            onClick={() => setIsSearchActiveAndReset(false)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-          >
-            <X className="h-6 w-6" />
-          </button>
+        <div
+          className={cn(
+            "container mx-auto items-center py-3 md:py-5 relative gap-1 md:h-[120px] px-5 md:px-0",
+            isSearchActive ? "flex" : "hidden",
+          )}
+        >
+          <div className="relative flex-grow w-full">
+            <Input
+              type="text"
+              ref={searchInputRef}
+              placeholder="Search events..."
+              className="pl-[48px] md:pl-[52px] w-full text-base md:text-xl rounded-[44px] h-[48px] md:h-[64px] pr-12"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Search className="h-5 w-5 absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <button
+              aria-label="Close search"
+              onClick={() => setIsSearchActiveAndReset(false)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </div>
     </>

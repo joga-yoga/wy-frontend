@@ -109,7 +109,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
           <div>
-            <h3 className="text-subheader text-gray-800">Wliczone w cenę</h3>
+            <h3 className="text-m-header md:text-subheader text-gray-800">Wliczone w cenę</h3>
             {event.price_includes && event.price_includes.length > 0 && (
               <ul className="list-disc pl-5 text-m-sunscript-font md:text-sub-descript-18 text-gray-500 space-y-1 mt-2">
                 {event.price_includes.map((item, index) => (

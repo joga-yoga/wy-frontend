@@ -253,7 +253,7 @@ export function EventHelpBar() {
   }
 
   return (
-    <div className="hidden md:flex flex-col w-[360px] bg-card border-l border-border shadow-lg z-1 sticky top-[65px] h-[calc(100vh-130px)] overflow-y-auto">
+    <div className="hidden md:flex flex-col w-[360px] bg-card border-l border-border shadow-lg z-1 sticky top-[65px] h-[calc(100dvh-130px)] overflow-y-auto">
       <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
         <h2 className="text-lg font-semibold">Pomoc</h2>
         <Button

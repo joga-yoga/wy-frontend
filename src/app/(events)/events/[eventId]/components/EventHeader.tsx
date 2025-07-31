@@ -2,10 +2,11 @@
 
 import { ShareIcon } from "lucide-react";
 import React from "react";
+import { IoStar, IoStarOutline } from "react-icons/io5";
 
-import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
-import BookmarkIcon from "@/components/icons/BookmarkIcon";
+import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { useEventsFilter } from "@/context/EventsFilterContext";
+import { cn } from "@/lib/utils";
 
 interface EventHeaderProps {
   title: string;
@@ -54,22 +55,22 @@ export const EventHeader: React.FC<EventHeaderProps> = ({ title, eventId }) => {
         >
           {title}
         </h1>
-        <div className="flex items-center gap-1 md:gap-3">
-          <div className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center bg-gray-600 rounded-full">
-            <button onClick={handleShareClick} className="text-white">
-              <ShareIcon className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
-          </div>
-
-          <div className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center">
-            <button onClick={handleBookmarkClick} aria-label="Toggle bookmark" className="p-2">
-              {isBookmarked ? (
-                <ActiveBookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] text-brand-green" />
-              ) : (
-                <BookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] cursor-pointer" />
-              )}
-            </button>
-          </div>
+        <div className="flex items-center gap-1 md:gap-2">
+          <button
+            onClick={handleShareClick}
+            className={cn(
+              "flex items-center justify-center bg-gray-100 rounded-full",
+              "h-8 w-8 md:h-10 md:w-10",
+              "hover:bg-gray-200 duration-200",
+            )}
+          >
+            <ShareIcon className="w-4 h-4 md:w-6 md:h-6 stroke-2 md:stroke-[1.5px]" />
+          </button>
+          <BookmarkButton
+            isActive={isBookmarked}
+            toggleHandler={handleBookmarkClick}
+            size="small"
+          />
         </div>
       </div>
     </section>

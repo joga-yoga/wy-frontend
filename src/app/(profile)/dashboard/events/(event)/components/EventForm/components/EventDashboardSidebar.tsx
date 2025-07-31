@@ -82,7 +82,7 @@ export function EventDashboardSidebar({ className, isLoading }: SidebarProps) {
     <aside
       className={cn(
         "sticky border-b md:border-b-0 md:border-r bg-background z-20",
-        "md:flex flex-col items-center md:h-[calc(100vh-65px)] py-2 md:py-4 md:px-2 md:w-[84px]",
+        "md:flex flex-col items-center md:h-[calc(100dvh-65px)] py-2 md:py-4 md:px-2 md:w-[84px]",
         "top-0 md:top-[65px] w-full",
         className,
       )}

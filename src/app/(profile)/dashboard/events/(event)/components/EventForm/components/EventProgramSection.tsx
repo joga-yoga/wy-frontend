@@ -19,10 +19,10 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { getRandomDefaultImageId } from "@/lib/getRandomDefaultImageId";
 import { EventFormData } from "@/lib/schemas/event";
 import { cn } from "@/lib/utils";
 
-import { defaultImagesIds } from "../../default-images-ids";
 import { useEventHelpBar } from "../contexts/EventHelpBarContext";
 import { EventHelpBarTipButton } from "./EventHelpBar";
 
@@ -61,8 +61,7 @@ export const EventProgramSection = ({
   const watchedProgram = useWatch({ control, name: "program" });
 
   const handleAddDay = () => {
-    const randomIndex = Math.floor(Math.random() * defaultImagesIds.length);
-    const randomImageId = defaultImagesIds[randomIndex];
+    const randomImageId = getRandomDefaultImageId();
     append({ description: "", imageId: randomImageId });
   };
 

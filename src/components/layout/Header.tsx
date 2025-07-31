@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { IoStar, IoStarOutline } from "react-icons/io5";
 
 import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
-import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
-import BookmarkIcon from "@/components/icons/BookmarkIcon";
+import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext";
@@ -85,70 +85,66 @@ export const EventsHeader: React.FC = () => {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background">
-        <div className="container mx-auto px-5 md:px-8 py-3 md:py-5 flex items-center justify-between">
+        <div className="container mx-auto px-5 md:px-8 py-3 md:py-4 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             {isMainPage ? (
-              <LogoBlackIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
+              <LogoBlackIcon className="h-10 w-10 md:h-12 md:w-12" />
             ) : (
               <>
-                <LogoBlackIcon className="hidden md:block h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
-                <div className="md:hidden flex items-center justify-center h-[44px] w-[44px] bg-gray-600 rounded-full text-white">
-                  <ChevronLeft className="h-[28px] w-[28px] " />
+                <LogoBlackIcon className="hidden md:block h-10 w-10 md:h-12 md:w-12" />
+                <div className="md:hidden flex items-center justify-center h-10 w-10 md:h-12 md:w-12 bg-gray-600 rounded-full text-white">
+                  <ChevronLeft className="h-7 w-7 stroke-2 ml-[-2px]" />
                 </div>
               </>
             )}
           </Link>
 
           {/* Right Section: Actions & Profile */}
-          <div className="flex items-center gap-2 md:gap-5">
+          <div className="flex items-center gap-3 md:gap-4">
             <Link
               href="/dashboard"
               passHref
               className={cn(isMainPage ? undefined : "hidden md:inline-block")}
             >
-              <button className="text-sm py-4 px-5 mr-[-20px] hover:underline">
-                <p className="text-gray-700 text-m-header md:text-middle-header-22">
+              <button className="text-sm py-2.5 hover:underline">
+                <p className="text-gray-700 text-m-header md:text-xl font-medium">
                   Dodaj wyjazd za 5 min
                 </p>
               </button>
             </Link>
             <Link href="/dashboard" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
               <button
-                aria-label="Search"
-                className="group text-muted-foreground h-[48px] w-[48px] flex items-center justify-center border-2 md:border-4 border-transparent hover:border-[#CBD5E1] relative"
+                aria-label="Add Event"
+                className="group text-muted-foreground h-10 w-10 flex items-center justify-center relative"
               >
-                <CustomPlusIconMobile className="h-[44px] w-[44px] md:h-[88px] md:w-[88px]" />
+                <CustomPlusIconMobile className="h-10 w-10" />
               </button>
             </Link>
 
             {/* Bookmark Toggle Button */}
             {isMainPage && (
-              <button
-                aria-label="Toggle Bookmarks"
-                onClick={toggleBookmarksView}
-                className={cn("hidden md:block", isBookmarksActive && "text-brand-green")}
-              >
-                {isBookmarksActive ? (
-                  <ActiveBookmarkIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
-                ) : (
-                  <BookmarkIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
-                )}
-              </button>
+              <BookmarkButton
+                isActive={isBookmarksActive}
+                toggleHandler={toggleBookmarksView}
+                size="large"
+                className="hidden md:flex"
+              />
             )}
+
             <Link href="/dashboard" passHref className="flex items-center justify-center">
               <button aria-label="Account">
                 {user?.organizer?.image_id ? (
                   <Image
                     src={getImageUrl(user.organizer.image_id)}
                     alt="Organizer Avatar"
-                    className="h-[44px] w-[44px] md:h-[64px] md:w-[64px] rounded-full object-cover"
+                    className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover"
                     width={128}
                     height={128}
                     objectFit="cover"
                   />
                 ) : (
-                  <CustomBurgerIcon className="h-[44px] w-[44px] md:h-[64px] md:w-[64px]" />
+                  <CustomBurgerIcon className="h-10 w-10 md:h-12 md:w-12" />
                 )}
               </button>
             </Link>

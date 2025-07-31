@@ -7,11 +7,11 @@ import "swiper/css/pagination";
 import { ArrowLeft, ArrowRight, ImageOff } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import { IoStar, IoStarOutline } from "react-icons/io5";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
-import ActiveBookmarkIcon from "@/components/icons/ActiveBookmarkIcon";
-import BookmarkIcon from "@/components/icons/BookmarkIcon";
+import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon";
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
@@ -20,7 +20,6 @@ import { renderLocation, renderShortLocation } from "@/lib/renderLocation";
 
 import { getImageUrl } from "../events/[eventId]/helpers";
 import { Event } from "../types";
-
 // Helper function to calculate price per day
 const calculatePricePerDay = (
   price: number | null,
@@ -104,7 +103,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           {event.location?.country_code ? (
             <FlagIcon
               country={event.location.country_code}
-              className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] rounded-full object-cover border border-gray-300"
+              className="w-[32px] h-[32px] md:w-10 md:h-10 rounded-full object-cover border border-gray-300"
             />
           ) : null}
           <span className="inline-block text-subheader md:text-descr-under-big-head text-gray-500 whitespace-nowrap">
@@ -112,15 +111,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </span>
         </div>
         <div className="flex-grow"></div>
-        <div className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] flex items-center justify-center">
-          <button onClick={handleBookmarkClick} aria-label="Toggle bookmark" className="p-2">
-            {isBookmarkedLocal ? (
-              <ActiveBookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] text-brand-green" />
-            ) : (
-              <BookmarkIcon className="w-[32px] h-[32px] md:w-[44px] md:h-[44px] cursor-pointer" />
-            )}
-          </button>
-        </div>
+        <BookmarkButton
+          isActive={isBookmarkedLocal}
+          toggleHandler={handleBookmarkClick}
+          size="small"
+        />
       </div>
       <div className="flex flex-col md:flex-row items-start md:items-center p-0 gap-5 md:gap-[45px] w-full self-stretch">
         <div className="flex flex-col gap-[12px] w-full md:w-[485px] flex-shrink-0">

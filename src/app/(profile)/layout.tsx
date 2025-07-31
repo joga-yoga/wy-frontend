@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
-import { ProfileHeader } from "@/components/layout/ProfileHeader";
+import { ProfileHeader } from "@/components/layout/Header";
 import { useAuth } from "@/context/AuthContext";
 import useIsMobile from "@/hooks/useIsMobile";
 
