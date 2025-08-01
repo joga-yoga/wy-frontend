@@ -124,11 +124,16 @@
 
   --font-family-hind: "Hind Siliguri", sans-serif;
 
+  /* h_big: Font(family: "Hind Siliguri", style: SemiBold, size: 46, weight: 600, lineHeight: 50) */
+  --text-h-big: 46px;
+  --text-h-big--line-height: 50px;
+  --text-h-big--font-weight: 600;
+
   /* h_middle: Font(family: "Hind Siliguri", style: SemiBold, size: 30, weight: 600, lineHeight: 30) */
   --text-h-middle: 30px;
   --text-h-middle--line-height: 30px;
   --text-h-middle--font-weight: 600;
-
+  
   /* h_small: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 30) */
   --text-h-small: 22px;
   --text-h-small--line-height: 30px;
@@ -154,6 +159,12 @@
   --text-descrip-under-header--line-height: 30px;
   --text-descrip-under-header--font-weight: 500;
 
+  /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
+  --text-descr-under-big-head: 24px;
+  --text-descr-under-big-head--line-height: 30px;
+  --text-descr-under-big-head--font-weight: 500;
+
+    
   /* subheader: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 28) */
   --text-subheader: 18px;
   --text-subheader--line-height: 28px;
