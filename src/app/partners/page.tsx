@@ -16,6 +16,7 @@ import Link from "next/link";
 import CustomPartnersComunityIcon from "@/components/icons/CustomPartnersComunityIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 import { LogoPartners } from "./components/LogoPartners";
 
@@ -56,7 +57,7 @@ const PartnersPage = () => {
       </section>
 
       {/* "Jak to wygląda krok po kroku" Section */}
-      <section className="py-12">
+      <section className="pt-10">
         <div className="container mx-auto px-4 md:px-8">
           <h2 className="mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
             Jak to wygląda krok po kroku
@@ -69,8 +70,8 @@ const PartnersPage = () => {
                   Dodaj szczegóły wyjazdu
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-0">
-                <p className="text-gray-500">
+              <CardContent className="px-0 pb-4 md:pb-6">
+                <p className="text-gray-500 text-sub-descript-18">
                   Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie.
                 </p>
               </CardContent>
@@ -83,8 +84,8 @@ const PartnersPage = () => {
                 <ImagePlus className="h-8 w-8 text-primary mx-auto md:mx-0" />
                 <CardTitle className="text-subheader font-medium">Dodaj zdjęcia</CardTitle>
               </CardHeader>
-              <CardContent className="px-0">
-                <p className="text-gray-500">
+              <CardContent className="px-0 pb-4 md:pb-6">
+                <p className="text-gray-500 text-sub-descript-18">
                   Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy programu.
                 </p>
               </CardContent>
@@ -97,8 +98,8 @@ const PartnersPage = () => {
                 <CheckCheck className="h-8 w-8 text-primary mx-auto md:mx-0" />
                 <CardTitle className="text-subheader font-medium">Sprawdź i zatwierdź</CardTitle>
               </CardHeader>
-              <CardContent className="px-0">
-                <p className="text-gray-500">
+              <CardContent className="px-0 pb-4 md:pb-6">
+                <p className="text-gray-500 text-sub-descript-18 md:min-h-[66px]">
                   Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe.
                 </p>
               </CardContent>
@@ -111,8 +112,8 @@ const PartnersPage = () => {
                 <Megaphone className="h-8 w-8 text-primary mx-auto md:mx-0" />
                 <CardTitle className="text-subheader font-medium">Publikacja</CardTitle>
               </CardHeader>
-              <CardContent className="px-0">
-                <p className="text-gray-500">
+              <CardContent className="px-0 pb-4 md:pb-6">
+                <p className="text-gray-500 text-sub-descript-18">
                   Udostępnij swoją podróż i rozpocznij zapisy na praktykę.
                 </p>
               </CardContent>
@@ -120,19 +121,19 @@ const PartnersPage = () => {
           </div>
         </div>
       </section>
-
+      <Separator className="container mx-auto my-6 md:my-10" />
       {/* "Co dostaniesz w spówpracy" Section */}
-      <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4 md:px-8">
-          <h2 className="mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
+      <section className="">
+        <div className="container mx-auto px-0 md:px-8">
+          <h2 className="px-4 md:px-0 mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
             Co dostaniesz w spówpracy z wyjazdy
             <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
               .yoga
             </span>
           </h2>
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 rounded-xl bg-gray-100 p-8 border border-gray-50 ">
-            <div className="flex flex-col md:flex-row gap-4 w-full">
-              <div className="space-y-8 w-full flex flex-col justify-between gap-4">
+            <div className="flex flex-col md:flex-row gap-8 md:gap-4 w-full">
+              <div className="w-full flex flex-col justify-between gap-8 md:gap-4">
                 <div>
                   <h3 className="text-subheader">Więcej rezerwacji</h3>
                   <p className="text-sub-description text-gray-500">
@@ -162,20 +163,20 @@ const PartnersPage = () => {
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-4 w-full">
-              <div className="rounded-lg p-4 bg-white border border-gray-300">
+            <div className="flex flex-col gap-6 w-full">
+              <div className="rounded-lg pl-0 py-4 pr-4 md:p-4 bg-white border border-gray-300">
                 <div className="flex items-center">
-                  <CustomPartnersComunityIcon className="mr-6 text-primary" />
+                  <CustomPartnersComunityIcon className="mr-6 text-primary w-[96px] min-w-[96px] md:w-[128px]" />
                   <div>
                     <h3 className="text-subheader">Siła wspólnoty</h3>
-                    <p className="text-sub-description text-gray-500">
+                    <p className="text-m-sunscript-font md:text-sub-description text-gray-500">
                       Społeczność wyjazdy.yoga wspiera Twoje wyjazdy
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col md:flex-row gap-4 w-full">
-                <div className="space-y-8 w-full h-full flex flex-col justify-around gap-4">
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="gap-6 w-full h-full flex flex-col justify-around">
                   <div>
                     <h3 className="text-subheader">Zaufanie społeczności</h3>
                     <p className="text-sub-description text-gray-500">
@@ -203,58 +204,75 @@ const PartnersPage = () => {
           </div>
         </div>
       </section>
-
+      <Separator className="container mx-auto my-6 md:my-10" />
       {/* "Intencja" Section */}
-      <section className="py-12">
+      <section className="pb-10">
         <div className="container mx-auto px-4 md:px-8">
           <h2 className="mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
             Intencja
           </h2>
-          <div className="flex flex-col md:flex-row gap-10">
-            <div className="flex flex-col md:flex-row md:items-center gap-4 w-full rounded-2xl bg-white p-8 border border-gray-100 shadow-[0px_8px_16px_8px_#F2F2F3]">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-10">
+            <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-4 w-full rounded-2xl bg-white p-8 border border-gray-100 shadow-[0px_8px_16px_8px_#F2F2F3]">
               <LogoPartners variant="black" className="w-full" />
               <div className="space-y-6 w-full">
-                <div className="flex items-center text-gray-800 text-listing-description">
-                  <span className="mr-5 w-12 font-serif text-2xl italic text-gray-700">एकम</span>
+                <div className="flex items-center text-gray-800 text-m-descript md:text-listing-description">
+                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
+                    एकम
+                  </span>
                   <span>Działaj z serca - reszta przyjdzie naturalnie</span>
                 </div>
-                <div className="flex items-center text-gray-800 text-listing-description">
-                  <span className="mr-5 w-12 font-serif text-2xl italic text-gray-700">द्वे</span>
+                <div className="flex items-center text-gray-800 text-m-descript md:text-listing-description">
+                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
+                    द्वे
+                  </span>
                   <span>Najważniejsze dzieje się w trakcie</span>
                 </div>
-                <div className="flex items-center text-gray-800 text-listing-description">
-                  <span className="mr-5 w-12 font-serif text-2xl italic text-gray-700">त्रीणि</span>
+                <div className="flex items-center text-gray-800 text-m-descript md:text-listing-description">
+                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
+                    त्रीणि
+                  </span>
                   <span>Możesz nie być doskonały, ale bądź prawdziwy</span>
                 </div>
               </div>
             </div>
-            <div className="text-center md:text-left">
-              <div className="flex justify-center md:justify-start min-w-[370px]">
+            <div className="flex flex-row md:flex-col text-center md:text-left gap-5">
+              <div className="flex justify-center md:justify-start md:min-w-[370px]">
                 <Image
                   src="/images/partners/cat.png"
                   alt="Cat on a yoga mat"
                   width={370}
                   height={175}
-                  className="rounded-2xl"
+                  className="rounded-2xl hidden md:block"
+                />
+                <Image
+                  src="/images/partners/dog.png"
+                  alt="Dog on a yoga mat"
+                  width={205}
+                  height={140}
+                  className="rounded-2xl block md:hidden"
                 />
               </div>
 
-              <div className="mt-8 flex justify-between items-center text-lg max-w-[370px] w-full">
-                <span className="mr-2 w-12 font-serif text-2xl italic text-gray-700">चत्वारि</span>
-                <div className="flex flex-col gap-2">
-                  <span className="text-center text-subheader text-gray-800">
-                    Nie musisz być wielki, by zacząć
+              <div className="flex flex-col gap-6">
+                <div className="flex justify-between md:items-center text-lg md:max-w-[370px] w-full h-full">
+                  <span className="mr-2 min-w-12 w-12 font-serif text-2xl italic text-gray-700 hidden md:block">
+                    चत्वारि
                   </span>
-                  <span className="text-center text-sub-description text-gray-500">
-                    Zacznij teraz — to zajmie tylko chwilę
-                  </span>
+                  <div className="flex flex-col gap-0">
+                    <span className="text-left md:text-center text-subheader text-gray-800">
+                      Nie musisz być wielki, by zacząć
+                    </span>
+                    <span className="hidden md:block md:text-center text-sub-description text-gray-500">
+                      Zacznij teraz — to zajmie tylko chwilę
+                    </span>
+                  </div>
                 </div>
+                <Link href="/dashboard">
+                  <Button size="lg" className="w-full" variant="secondary">
+                    Dołącz
+                  </Button>
+                </Link>
               </div>
-              <Link href="/dashboard">
-                <Button size="lg" className="mt-8 w-full" variant="secondary">
-                  Dołącz
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
