@@ -120,10 +120,7 @@ export function LoginPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[100svh] px-4">
       {step === "email" && (
-        <form
-          onSubmit={handleEmailSubmit(onSubmitEmail)}
-          className="space-y-4 max-w-md w-full pt-[1000px]"
-        >
+        <form onSubmit={handleEmailSubmit(onSubmitEmail)} className="space-y-4 max-w-md w-full">
           <h1 className="text-2xl font-bold text-center">Enter your email</h1>
           <Input placeholder="Your email" {...registerEmail("email")} type="email" />
           <Button type="submit" className="w-full">
