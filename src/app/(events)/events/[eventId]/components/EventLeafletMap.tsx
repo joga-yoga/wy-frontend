@@ -59,7 +59,7 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
       zoom={13}
       scrollWheelZoom={isFullScreenMap}
       dragging={isFullScreenMap || !isMobile}
-      className="h-full w-full rounded-lg z-0"
+      className="h-full w-full md:rounded-lg z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -85,7 +85,7 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
           </DialogTrigger>
         )}
       </div>
-      <DialogContent className="sm:max-w-[calc(100dvw-8px)] h-[calc(100dvh-8px)] w-full p-1">
+      <DialogContent className="h-full w-full p-0 max-w-full rounded-none">
         <div className="hidden">
           <DialogTitle>Map</DialogTitle>
         </div>

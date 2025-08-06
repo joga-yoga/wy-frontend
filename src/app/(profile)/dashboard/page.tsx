@@ -170,7 +170,7 @@ export default function DashboardPage() {
                     className="w-full h-full"
                   />
                 </div>
-                <div className="flex-grow p-4 flex flex-col justify-between">
+                <div className="p-4 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
@@ -232,11 +232,7 @@ export default function DashboardPage() {
                       )}
                     </AlertDialog>
                     <Link href={`/events/${event.id}`} passHref>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                      >
+                      <Button variant="ghost" size="sm" className="text-xs">
                         Zobacz stronę publiczną
                       </Button>
                     </Link>

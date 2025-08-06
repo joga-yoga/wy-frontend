@@ -250,7 +250,7 @@ export function LocationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="flex flex-col w-full h-full md:h-auto rounded-none md:rounded-lg overflow-y-scroll max-h-screen max-w-full md:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Dodaj nową lokalizację" : "Edytuj lokalizację"}
@@ -345,7 +345,7 @@ export function LocationModal({
                   <Button
                     type="button"
                     variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-100 hover:text-red-700 mr-2"
+                    className="text-red-600 border-red-600 hover:bg-red-100 hover:text-red-700 md:mr-2"
                   >
                     Usuń
                   </Button>

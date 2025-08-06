@@ -25,19 +25,16 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
   if (loading || !user) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col bg-background">
         <main className="flex-1">Loading...</main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* <Sidebar /> */}
-      <div className="flex-1 flex flex-col">
-        <ProfileHeader isSticky={isSticky} />
-        <main className="flex-1">{children}</main>
-      </div>
-    </div>
+    <>
+      <ProfileHeader isSticky={isSticky} />
+      {children}
+    </>
   );
 }

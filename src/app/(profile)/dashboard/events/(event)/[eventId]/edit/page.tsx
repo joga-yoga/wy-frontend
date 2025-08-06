@@ -12,13 +12,9 @@ export default function EditEventPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <>
+    <div className="flex flex-col md:flex-row">
       <EventDashboardSidebar isLoading={isLoading} />
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1">
-          <EventForm eventId={eventId} onLoadingChange={setIsLoading} />
-        </main>
-      </div>
-    </>
+      <EventForm eventId={eventId} onLoadingChange={setIsLoading} />
+    </div>
   );
 }

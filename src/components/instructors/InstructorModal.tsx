@@ -201,8 +201,8 @@ export function InstructorModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleModalChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={handleModalChange} modal>
+      <DialogContent className="flex flex-col w-full h-full md:h-auto rounded-none md:rounded-lg overflow-y-scroll max-h-screen max-w-full md:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {initialInstructor ? "Edit Instructor" : "Create New Instructor"}

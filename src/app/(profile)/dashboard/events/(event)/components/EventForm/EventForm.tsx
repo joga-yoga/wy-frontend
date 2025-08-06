@@ -742,159 +742,152 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
 
   return (
     <EventHelpBarProvider>
-      <div className="mx-auto" id="event-form-wrapper">
-        <div className="flex flex-row gap-6 space-y-8">
-          <div className="flex-grow space-y-4 md:space-y-6 max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
-            {/* Details */}
-            <EventDetailsSection control={control} register={register} errors={errors} />
-            {/* Instructors */}
-            <EventInstructorsSection
-              control={control}
-              errors={errors}
-              setValue={setValue}
-              instructors={instructors}
-              setIsInstructorModalOpen={setIsInstructorModalOpen}
-              handleEditInstructor={handleEditInstructor}
-              instructorToDelete={instructorToDelete}
-              setInstructorToDelete={setInstructorToDelete}
-              isDeletingInstructor={isDeletingInstructor}
-              handleDeleteInstructor={handleDeleteInstructor}
-            />
-            <EventSkillLevel control={control} errors={errors} />
-            {/* Program */}
-            <EventProgramSection
-              control={control}
-              register={register}
-              errors={errors}
-              programFields={programFields}
-              append={append as (value: { description: string; imageId: string | null }) => void}
-              remove={remove}
-              calculatedDuration={calculatedDuration}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-              setValue={setValue}
-              uploadingProgramImages={uploadingProgramImages}
-              onRemoveProgramImage={handleRemoveProgramImage}
-              onProgramImageChange={handleProgramImageChange}
-            />
-            <EventLocationSection
-              control={control}
-              errors={errors}
-              locations={locations}
-              setIsLocationModalOpen={setIsLocationModalOpen}
-              setEditingLocation={setEditingLocation}
-              setLocationModalMode={setLocationModalMode}
-            />
-            <EventHospitalitySection register={register} errors={errors} />
-            <EventPricingSection control={control} register={register} errors={errors} />
-            <EventImportantInfoSection register={register} errors={errors} />
-            <EventPhotosSection
-              errors={errors}
-              watchedImageIds={watchedImageIds ?? []}
-              handleRemoveImage={handleRemoveImage}
-              handleImageSelected={handleImageSelected}
-              isUploadingImage={isUploadingImage}
-              directUploadError={directUploadError}
-              pendingImages={pendingImages.map((p) => p.file)}
-            />
-          </div>
-          <EventHelpBar />
-        </div>
-
-        <DashboardFooter
-          title={isEditMode ? "Edytuj wyjazd" : "Utwórz nowy wyjazd"}
-          onCreate={!isEditMode ? handleSubmit(onSubmit) : undefined}
-          createLabel={isSubmitting ? "Tworzenie..." : "Utwórz wyjazd"}
-          createLabelShort={isSubmitting ? "Tworzenie..." : "Utwórz"}
-          createIcon={
-            isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )
-          }
-          onUpdate={isEditMode ? handleSubmit(onSubmit) : undefined}
-          updateLabel={isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
-          updateLabelShort={isSubmitting ? "Zapisuję..." : "Zapisz"}
-          updateIcon={
-            isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )
-          }
-          viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
-          viewPublicLabel="Zobacz stronę publiczną"
-          viewPublicLabelShort="Zobacz"
-          viewPublicIcon={<ExternalLink className="h-4 w-4" />}
-          showPublishButton={isEditMode}
-          isPublished={currentIsPublic}
-          isPublishing={isTogglingVisibility}
-          onPublishToggle={handlePublishButtonClick}
-          publishButtonLabel="Opublikuj wyjazd"
-          publishButtonLabelShort="Opublikuj"
-          unpublishButtonLabel="Ukryj wyjazd"
-          unpublishButtonLabelShort="Ukryj"
-          publishingButtonLabel="Zmieniam..."
-          publishingButtonLabelShort="Zmieniam..."
-          publishIcon={<Send className="h-4 w-4" />}
-          unpublishIcon={<EyeOff className="h-4 w-4" />}
-          publishingIcon={<Loader2 className="h-4 w-4 animate-spin" />}
-        />
-
-        <InstructorModal
-          isOpen={isInstructorModalOpen}
-          onClose={() => {
-            setIsInstructorModalOpen(false);
-            setEditingInstructor(null);
-          }}
-          onInstructorSaved={handleInstructorSaved}
-          initialInstructor={editingInstructor}
-        />
-
-        {isLocationModalOpen && (
-          <LocationModal
-            isOpen={isLocationModalOpen}
-            onClose={() => {
-              setIsLocationModalOpen(false);
-              setEditingLocation(null);
-            }}
-            onLocationSaved={handleLocationSaved}
-            initialData={editingLocation}
-            mode={locationModalMode}
-            onLocationDeleted={handleLocationDeleted}
+      <div
+        className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto"
+        id="event-form-wrapper"
+      >
+        <div className="space-y-4 md:space-y-6 max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
+          {/* Details */}
+          <EventDetailsSection control={control} register={register} errors={errors} />
+          {/* Instructors */}
+          <EventInstructorsSection
+            control={control}
+            errors={errors}
+            setValue={setValue}
+            instructors={instructors}
+            setIsInstructorModalOpen={setIsInstructorModalOpen}
+            handleEditInstructor={handleEditInstructor}
+            instructorToDelete={instructorToDelete}
+            setInstructorToDelete={setInstructorToDelete}
+            isDeletingInstructor={isDeletingInstructor}
+            handleDeleteInstructor={handleDeleteInstructor}
           />
-        )}
-
-        <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Potwierdź publikację</AlertDialogTitle>
-              <AlertDialogDescription>
-                Czy na pewno chcesz opublikować to wyjazd? Stanie się ono widoczne dla wszystkich
-                użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                disabled={isTogglingVisibility}
-                onClick={() => setIsPublishConfirmModalOpen(false)}
-              >
-                Anuluj
-              </AlertDialogCancel>
-              <AlertDialogAction
-                disabled={isTogglingVisibility}
-                onClick={() => {
-                  setIsPublishConfirmModalOpen(false);
-                  handleToggleVisibility();
-                }}
-              >
-                {isTogglingVisibility ? "Publikowanie..." : "Tak, opublikuj i zapisz"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          <EventSkillLevel control={control} errors={errors} />
+          {/* Program */}
+          <EventProgramSection
+            control={control}
+            register={register}
+            errors={errors}
+            programFields={programFields}
+            append={append as (value: { description: string; imageId: string | null }) => void}
+            remove={remove}
+            calculatedDuration={calculatedDuration}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            setValue={setValue}
+            uploadingProgramImages={uploadingProgramImages}
+            onRemoveProgramImage={handleRemoveProgramImage}
+            onProgramImageChange={handleProgramImageChange}
+          />
+          <EventLocationSection
+            control={control}
+            errors={errors}
+            locations={locations}
+            setIsLocationModalOpen={setIsLocationModalOpen}
+            setEditingLocation={setEditingLocation}
+            setLocationModalMode={setLocationModalMode}
+          />
+          <EventHospitalitySection register={register} errors={errors} />
+          <EventPricingSection control={control} register={register} errors={errors} />
+          <EventImportantInfoSection register={register} errors={errors} />
+          <EventPhotosSection
+            errors={errors}
+            watchedImageIds={watchedImageIds ?? []}
+            handleRemoveImage={handleRemoveImage}
+            handleImageSelected={handleImageSelected}
+            isUploadingImage={isUploadingImage}
+            directUploadError={directUploadError}
+            pendingImages={pendingImages.map((p) => p.file)}
+          />
+        </div>
+        <EventHelpBar />
       </div>
+
+      <DashboardFooter
+        title={isEditMode ? "Edytuj wyjazd" : "Utwórz nowy wyjazd"}
+        onCreate={!isEditMode ? handleSubmit(onSubmit) : undefined}
+        createLabel={isSubmitting ? "Tworzenie..." : "Utwórz wyjazd"}
+        createLabelShort={isSubmitting ? "Tworzenie..." : "Utwórz"}
+        createIcon={
+          isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />
+        }
+        onUpdate={isEditMode ? handleSubmit(onSubmit) : undefined}
+        updateLabel={isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
+        updateLabelShort={isSubmitting ? "Zapisuję..." : "Zapisz"}
+        updateIcon={
+          isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />
+        }
+        viewPublicHref={isEditMode && eventId ? `/events/${eventId}` : undefined}
+        viewPublicLabel="Zobacz stronę publiczną"
+        viewPublicLabelShort="Zobacz"
+        viewPublicIcon={<ExternalLink className="h-4 w-4" />}
+        showPublishButton={isEditMode}
+        isPublished={currentIsPublic}
+        isPublishing={isTogglingVisibility}
+        onPublishToggle={handlePublishButtonClick}
+        publishButtonLabel="Opublikuj wyjazd"
+        publishButtonLabelShort="Opublikuj"
+        unpublishButtonLabel="Ukryj wyjazd"
+        unpublishButtonLabelShort="Ukryj"
+        publishingButtonLabel="Zmieniam..."
+        publishingButtonLabelShort="Zmieniam..."
+        publishIcon={<Send className="h-4 w-4" />}
+        unpublishIcon={<EyeOff className="h-4 w-4" />}
+        publishingIcon={<Loader2 className="h-4 w-4 animate-spin" />}
+      />
+
+      <InstructorModal
+        isOpen={isInstructorModalOpen}
+        onClose={() => {
+          setIsInstructorModalOpen(false);
+          setEditingInstructor(null);
+        }}
+        onInstructorSaved={handleInstructorSaved}
+        initialInstructor={editingInstructor}
+      />
+
+      {isLocationModalOpen && (
+        <LocationModal
+          isOpen={isLocationModalOpen}
+          onClose={() => {
+            setIsLocationModalOpen(false);
+            setEditingLocation(null);
+          }}
+          onLocationSaved={handleLocationSaved}
+          initialData={editingLocation}
+          mode={locationModalMode}
+          onLocationDeleted={handleLocationDeleted}
+        />
+      )}
+
+      <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Potwierdź publikację</AlertDialogTitle>
+            <AlertDialogDescription>
+              Czy na pewno chcesz opublikować to wyjazd? Stanie się ono widoczne dla wszystkich
+              użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isTogglingVisibility}
+              onClick={() => setIsPublishConfirmModalOpen(false)}
+            >
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isTogglingVisibility}
+              onClick={() => {
+                setIsPublishConfirmModalOpen(false);
+                handleToggleVisibility();
+              }}
+            >
+              {isTogglingVisibility ? "Publikowanie..." : "Tak, opublikuj i zapisz"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </EventHelpBarProvider>
   );
 }
