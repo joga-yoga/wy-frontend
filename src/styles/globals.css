@@ -156,7 +156,7 @@
 
   /* descrip_under_header: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 30) */
   --text-descrip-under-header: 20px;
-  --text-descrip-under-header--line-height: 30px;
+  --text-descrip-under-header--line-height: 22px;
   --text-descrip-under-header--font-weight: 500;
 
   /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
