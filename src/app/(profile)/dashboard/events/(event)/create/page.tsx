@@ -63,14 +63,10 @@ export default function CreateEventPage() {
 
   if (view === "form") {
     return (
-      <>
+      <div className="flex flex-col md:flex-row">
         <EventDashboardSidebar isLoading={isFormLoading} />
-        <div className="flex-1 flex flex-col">
-          <main className="flex-1">
-            <EventForm initialData={generatedData} onLoadingChange={setIsFormLoading} />
-          </main>
-        </div>
-      </>
+        <EventForm initialData={generatedData} onLoadingChange={setIsFormLoading} />
+      </div>
     );
   }
 
