@@ -26,7 +26,7 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
   const { focusTip } = useEventHelpBar();
 
   return (
-    <div className="space-y-4 md:space-y-6" id="event-pricing-section">
+    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-pricing-section">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="price" size="event">

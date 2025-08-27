@@ -26,7 +26,7 @@ interface EventDetailsSectionProps {
 export const EventDetailsSection = ({ control, register, errors }: EventDetailsSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="space-y-4 md:space-y-6" id="event-details-section">
+    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-details-section">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="title" size="event">

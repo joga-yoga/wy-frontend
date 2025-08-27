@@ -15,7 +15,7 @@ interface EventHospitalitySectionProps {
 export const EventHospitalitySection = ({ register, errors }: EventHospitalitySectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="space-y-4 md:space-y-6" id="event-hospitality">
+    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-hospitality">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="accommodation_description" size="event">

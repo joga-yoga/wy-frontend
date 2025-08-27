@@ -746,7 +746,7 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
         className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto"
         id="event-form-wrapper"
       >
-        <div className="space-y-4 md:space-y-6 max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
+        <div className="flex flex-col gap-10 md:gap-[80px] max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
           {/* Details */}
           <EventDetailsSection control={control} register={register} errors={errors} />
           {/* Instructors */}

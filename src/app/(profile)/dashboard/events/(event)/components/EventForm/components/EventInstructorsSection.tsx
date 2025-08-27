@@ -50,7 +50,7 @@ export const EventInstructorsSection = ({
 }: EventInstructorsSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="space-y-4 md:space-y-6" id="event-instructors-section">
+    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-instructors-section">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="instructors" size="event">
@@ -77,7 +77,7 @@ export const EventInstructorsSection = ({
           name="instructor_ids"
           render={({ field }) => (
             <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
-              <div className="w-full rounded-md p-1" onFocusCapture={() => focusTip("instructors")}>
+              <div className="w-full rounded-md p-1" onFocus={() => focusTip("instructors")}>
                 <div className="space-y-3">
                   {instructors.length > 0 ? (
                     instructors.map((instructor) => (
