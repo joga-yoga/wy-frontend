@@ -17,17 +17,22 @@ export interface SortConfig {
   order: "asc" | "desc" | null;
 }
 
+export interface LocationFilter {
+  country?: string;
+  state_province?: string;
+}
+
 // Define the shape of the context state
 interface EventsFilterContextState {
   searchTerm: string;
   debouncedSearchTerm: string;
-  countryFilter: string;
+  locationFilter: LocationFilter | null;
   sortConfig: SortConfig | null;
   isSearchActive: boolean;
   isBookmarksActive: boolean;
   bookmarkedEventIds: string[];
   setSearchTerm: (term: string) => void;
-  setCountryFilterAndReset: (country: string) => void;
+  setLocationFilterAndReset: (filter: LocationFilter | null) => void;
   setSortConfigAndReset: (config: SortConfig | null) => void;
   setIsSearchActiveAndReset: (isActive: boolean) => void;
   toggleBookmarksView: () => void;
@@ -47,7 +52,7 @@ interface EventsFilterProviderProps {
 export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [countryFilter, setCountryFilter] = useState<string>("");
+  const [locationFilter, setLocationFilter] = useState<LocationFilter | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
   const [isBookmarksActive, setIsBookmarksActive] = useState<boolean>(false);
@@ -81,9 +86,11 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
   };
 
   // Handlers that also reset other filters
-  const setCountryFilterAndReset = (newCountryFilter: string) => {
-    setCountryFilter((prevCountryFilter) =>
-      newCountryFilter === prevCountryFilter ? "" : newCountryFilter,
+  const setLocationFilterAndReset = (newLocationFilter: LocationFilter | null) => {
+    setLocationFilter((prevLocationFilter) =>
+      JSON.stringify(newLocationFilter) === JSON.stringify(prevLocationFilter)
+        ? null
+        : newLocationFilter,
     );
     setIsBookmarksActive(false);
     // Keep search term and sort config as they can be complementary
@@ -117,7 +124,7 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
     setIsSearchActive(newIsSearchActive);
     if (newIsSearchActive) {
       // Optionally clear other filters when activating search, or preserve them
-      setCountryFilter("");
+      setLocationFilter(null);
       setSortConfig(null);
       setIsBookmarksActive(false);
     } else {
@@ -130,7 +137,7 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
     const newIsBookmarksActive = !isBookmarksActive;
     setIsBookmarksActive(newIsBookmarksActive);
     if (newIsBookmarksActive) {
-      setCountryFilter("");
+      setLocationFilter(null);
       setSortConfig(null);
       setSearchTerm("");
       setIsSearchActive(false);
@@ -145,8 +152,8 @@ export const EventsFilterProvider: React.FC<EventsFilterProviderProps> = ({ chil
     searchTerm,
     setSearchTerm,
     debouncedSearchTerm,
-    countryFilter,
-    setCountryFilterAndReset,
+    locationFilter,
+    setLocationFilterAndReset,
     sortConfig,
     setSortConfigAndReset,
     isSearchActive,

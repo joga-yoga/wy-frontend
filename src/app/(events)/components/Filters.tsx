@@ -1,27 +1,16 @@
 "use client";
 
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-
 import {
   ArrowDown,
   ArrowUp,
   Calendar,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   DollarSign,
-  Earth,
   MapPin,
   Search,
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { IoStarOutline } from "react-icons/io5";
-import { IoStar } from "react-icons/io5";
-import { Navigation } from "swiper/modules";
-import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import BaliIcon from "@/components/icons/countries/BaliIcon";
@@ -32,12 +21,6 @@ import PortugalIcon from "@/components/icons/countries/PortugalIcon";
 import SpainIcon from "@/components/icons/countries/SpainIcon";
 import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
 import ThailandIcon from "@/components/icons/countries/ThailandIcon";
-import CustomCalendarIcon from "@/components/icons/CustomCalendarIcon";
-import CustomPriceIcon from "@/components/icons/CustomPriceIcon";
-import CustomPriceIconMobile from "@/components/icons/CustomPriceIconMobile";
-import CustomSearchIcon from "@/components/icons/CustomSearchIcon";
-import CustomSearchIconMobile from "@/components/icons/CustomSearchIconMobile";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,8 +32,8 @@ const Filters: React.FC = () => {
   const {
     searchTerm,
     setSearchTerm,
-    countryFilter,
-    setCountryFilterAndReset,
+    locationFilter,
+    setLocationFilterAndReset,
     sortConfig,
     setSortConfigAndReset,
     isSearchActive,
@@ -64,21 +47,21 @@ const Filters: React.FC = () => {
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   const filterItems = [
-    { Icon: PolandIcon, label: "Poland", filterValue: "Poland", name: "PLN" },
-    { Icon: IndiaIcon, label: "India", filterValue: "India", name: "IND" },
-    { Icon: ItalyIcon, label: "Italy", filterValue: "Italy", name: "ITA" },
-    { Icon: SpainIcon, label: "Spain", filterValue: "Spain", name: "ESP" },
-    { Icon: BaliIcon, label: "Bali", filterValue: "Bali", name: "BAL" },
-    { Icon: PortugalIcon, label: "Portugal", filterValue: "Portugal", name: "POR" },
-    { Icon: ThailandIcon, label: "Thailand", filterValue: "Thailand", name: "THA" },
-    { Icon: SrilankaIcon, label: "Shrilanka", filterValue: "Shrilanka", name: "SRI" },
+    { Icon: PolandIcon, label: "Poland", filter: { country: "Poland" }, name: "PLN" },
+    { Icon: IndiaIcon, label: "India", filter: { country: "India" }, name: "IND" },
+    { Icon: ItalyIcon, label: "Italy", filter: { country: "Italy" }, name: "ITA" },
+    { Icon: SpainIcon, label: "Spain", filter: { country: "Spain" }, name: "ESP" },
+    { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
+    { Icon: PortugalIcon, label: "Portugal", filter: { country: "Portugal" }, name: "POR" },
+    { Icon: ThailandIcon, label: "Thailand", filter: { country: "Thailand" }, name: "THA" },
+    { Icon: SrilankaIcon, label: "Shrilanka", filter: { country: "Shrilanka" }, name: "SRI" },
   ];
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedCountry = countryFilter
-    ? filterItems.find((item) => item.filterValue === countryFilter)
+  const selectedFilterItem = locationFilter
+    ? filterItems.find((item) => JSON.stringify(item.filter) === JSON.stringify(locationFilter))
     : null;
-  const SelectedCountryIcon = selectedCountry?.Icon;
+  const SelectedCountryIcon = selectedFilterItem?.Icon;
 
   useEffect(() => {
     if (isSearchActive && searchInputRef.current) {
@@ -138,21 +121,6 @@ const Filters: React.FC = () => {
     };
   }, [isCountryDropdownOpen]);
 
-  const countrySwiperRef = useRef<SwiperClass | null>(null);
-
-  const [hideCountryPrev, setHideCountryPrev] = useState(
-    // true
-    false,
-  );
-  const [hideCountryNext, setHideCountryNext] = useState(false);
-
-  const updateCountryNavVisibility = (swiper: SwiperClass) => {
-    setHideCountryPrev(swiper.isBeginning);
-    setHideCountryNext(
-      swiper.isEnd || filterItems.length <= (swiper.params.slidesPerView as number)!,
-    );
-  };
-
   return (
     <>
       {/* Mobile version of filters */}
@@ -205,7 +173,9 @@ const Filters: React.FC = () => {
                 "flex items-center justify-center rounded-full",
                 "h-12 w-12",
                 "hover:bg-gray-100 duration-200",
-                (SelectedCountryIcon || isCountryDropdownOpen) &&
+                // (SelectedCountryIcon || isCountryDropdownOpen) &&
+                !isSearchActive &&
+                  !isBookmarksActive &&
                   "border-2 border-brand-green hover:border-brand-green",
               )}
             >
@@ -223,12 +193,12 @@ const Filters: React.FC = () => {
                   <li>
                     <button
                       onClick={() => {
-                        setCountryFilterAndReset("");
+                        setLocationFilterAndReset(null);
                         setIsCountryDropdownOpen(false);
                       }}
                       className={cn(
                         "w-full text-left px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-4",
-                        !countryFilter && "text-brand-green",
+                        !locationFilter && "text-brand-green",
                       )}
                     >
                       <MapPin className="h-8 w-8 text-gray-700 stroke-1" />
@@ -236,15 +206,17 @@ const Filters: React.FC = () => {
                     </button>
                   </li>
                   {filterItems.map((item) => (
-                    <li key={item.filterValue}>
+                    <li key={item.label}>
                       <button
                         onClick={() => {
-                          setCountryFilterAndReset(item.filterValue);
+                          setLocationFilterAndReset(item.filter);
                           setIsCountryDropdownOpen(false);
                         }}
                         className={cn(
                           "w-full text-left px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-4",
-                          countryFilter === item.filterValue && "text-brand-green",
+                          locationFilter &&
+                            JSON.stringify(locationFilter) === JSON.stringify(item.filter) &&
+                            "text-brand-green",
                         )}
                       >
                         <item.Icon className="h-8 w-8" />
@@ -305,10 +277,11 @@ const Filters: React.FC = () => {
                         aria-label={item.label}
                         className={cn(
                           "group text-muted-foreground h-[calc(80px)] w-[calc(80px)] flex items-center justify-center  rounded-full border-transparent relative hover:bg-gray-100 duration-200 border-2",
-                          countryFilter === item.filterValue &&
+                          locationFilter &&
+                            JSON.stringify(locationFilter) === JSON.stringify(item.filter) &&
                             "border-brand-green hover:border-brand-green",
                         )}
-                        onClick={() => setCountryFilterAndReset(item.filterValue)}
+                        onClick={() => setLocationFilterAndReset(item.filter)}
                       >
                         <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)]" />
                       </button>
@@ -387,7 +360,7 @@ const Filters: React.FC = () => {
 
         <div
           className={cn(
-            "container mx-auto items-center py-3 md:py-5 relative gap-1 md:h-[120px] px-5 md:px-0",
+            "container mx-auto items-center py-3 md:py-5 relative gap-1 md:h-[120px] px-5 md:px-8",
             isSearchActive ? "flex" : "hidden",
           )}
         >
@@ -395,7 +368,7 @@ const Filters: React.FC = () => {
             <Input
               type="text"
               ref={searchInputRef}
-              placeholder="Search events..."
+              placeholder="Wyszukaj wyjazdy..."
               className="pl-[48px] md:pl-[52px] w-full text-base md:text-xl rounded-[44px] h-[48px] md:h-[64px] pr-12"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

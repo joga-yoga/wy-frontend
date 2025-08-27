@@ -20,7 +20,7 @@ import { Event } from "./types";
 const EVENTS_PER_PAGE = 10;
 
 const EventsPage: React.FC = () => {
-  const { debouncedSearchTerm, countryFilter, sortConfig, isBookmarksActive, bookmarkedEventIds } =
+  const { debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive, bookmarkedEventIds } =
     useEventsFilter();
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -84,7 +84,9 @@ const EventsPage: React.FC = () => {
       try {
         const params = new URLSearchParams();
         if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
-        if (countryFilter) params.append("country", countryFilter);
+        if (locationFilter?.country) params.append("country", locationFilter.country);
+        if (locationFilter?.state_province)
+          params.append("state_province", locationFilter.state_province);
         if (sortConfig && sortConfig.field && sortConfig.order) {
           params.append("sortBy", sortConfig.field);
           params.append("sortOrder", sortConfig.order);
@@ -121,7 +123,7 @@ const EventsPage: React.FC = () => {
     };
 
     fetchEvents();
-  }, [debouncedSearchTerm, countryFilter, sortConfig, isBookmarksActive]);
+  }, [debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive]);
 
   const handleLoadMore = async () => {
     if (loading || skip >= totalEvents || isLoadingMore) return;
@@ -131,7 +133,9 @@ const EventsPage: React.FC = () => {
     try {
       const params = new URLSearchParams();
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
-      if (countryFilter) params.append("country", countryFilter);
+      if (locationFilter?.country) params.append("country", locationFilter.country);
+      if (locationFilter?.state_province)
+        params.append("state_province", locationFilter.state_province);
       if (sortConfig && sortConfig.field && sortConfig.order) {
         params.append("sortBy", sortConfig.field);
         params.append("sortOrder", sortConfig.order);
@@ -164,7 +168,7 @@ const EventsPage: React.FC = () => {
   return (
     <div className="">
       <Filters />
-      <main className="container mx-auto px-0 md:px-8 pt-0 md:pt-2 pb-[calc(72px+1px+20px)] md:pb-8">
+      <main className="container-wy mx-auto px-0 md:px-8 pt-0 md:pt-5 pb-[calc(72px+1px+20px)] md:pb-8">
         {loading && events.length === 0 && (
           <p className="text-center py-10">Ładowanie wyjazdów...</p>
         )}

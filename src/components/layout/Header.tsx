@@ -81,6 +81,10 @@ export const EventsHeader: React.FC = () => {
     useEventsFilter();
   const pathname = usePathname();
   const isMainPage = pathname === "/";
+  const isPartnersPage = pathname === "/partners";
+  if (isPartnersPage) {
+    return null;
+  }
 
   return (
     <>

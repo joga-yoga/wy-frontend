@@ -7,6 +7,7 @@ export const BookmarkButton = ({
   isActive,
   toggleHandler,
   size = "small",
+  variant = "default",
   className,
   iconClassName,
   activeIconClassName,
@@ -14,6 +15,7 @@ export const BookmarkButton = ({
   isActive: boolean;
   toggleHandler: (e?: any) => void;
   size?: "small" | "large" | "mobile-footer" | "desktop-filter";
+  variant?: "default" | "black";
   className?: string;
   iconClassName?: string;
   activeIconClassName?: string;
@@ -28,9 +30,25 @@ export const BookmarkButton = ({
         size === "mobile-footer" && "h-12 w-12",
         size === "desktop-filter" && "h-[80px] w-[80px]",
         "hover:bg-gray-200 duration-200",
+        variant === "black" && "bg-gray-600 hover:bg-gray-600/90",
         className,
       )}
     >
+      <IoStarOutline
+        strokeWidth={0.5}
+        className={cn(
+          "absolute",
+          size === "small" &&
+            "w-[calc(20px+2px)] h-[calc(20px+2px)] md:w-[calc(24px+2px)] md:h-[calc(24px+2px)]",
+          size === "large" &&
+            "w-[calc(24px+2px)] h-[calc(24px+2px)] md:w-[calc(28px+2px)] md:h-[calc(28px+2px)]",
+          size === "mobile-footer" && "w-[calc(24px)] h-[calc(24px)]",
+          size === "desktop-filter" && "w-10 h-10",
+          variant === "black" && "text-white z-1",
+          iconClassName,
+        )}
+      />
+
       {isActive ? (
         <IoStar
           className={cn(
@@ -43,16 +61,19 @@ export const BookmarkButton = ({
           )}
         />
       ) : (
-        <IoStarOutline
-          className={cn(
-            "stroke-[1.25px]",
-            size === "small" && "w-5 h-5 md:w-6 md:h-6",
-            size === "large" && "w-6 h-6 md:w-7 md:h-7",
-            size === "mobile-footer" && "w-6 h-6",
-            size === "desktop-filter" && "w-10 h-10",
-            iconClassName,
+        <>
+          {variant === "black" && (
+            <IoStar
+              className={cn(
+                "absolute z-0 text-white",
+                size === "small" && "w-5 h-5 md:w-6 md:h-6",
+                size === "large" && "w-6 h-6 md:w-7 md:h-7",
+                size === "mobile-footer" && "w-6 h-6",
+                size === "desktop-filter" && "w-10 h-10",
+              )}
+            />
           )}
-        />
+        </>
       )}
     </button>
   );

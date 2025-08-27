@@ -75,7 +75,7 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event }) => 
         <div
           className={cn(
             "fixed bottom-0 left-0 right-0 z-50",
-            "flex justify-end w-full mx-auto container md:pr-[32px]",
+            "flex justify-end w-full mx-auto container-wy md:pr-[32px]",
             "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-2",
             "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-2",
           )}

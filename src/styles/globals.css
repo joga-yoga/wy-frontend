@@ -40,6 +40,24 @@
 }
 
 @layer utilities {
+  .container-wy {
+    width: 100%;
+    @media (width >= 40rem) {
+      max-width: 40rem;
+    }
+    @media (width >= 48rem) {
+      max-width: 48rem;
+    }
+    @media (width >= 64rem) {
+      max-width: 64rem;
+    }
+    @media (width >= 80rem) {
+      max-width: 72rem;
+    }
+    @media (width >= 96rem) {
+      max-width: 72rem;
+    }
+  }
   .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -194,6 +212,11 @@
   --text-listing-description: 20px;
   --text-listing-description--line-height: 25px;
   --text-listing-description--font-weight: 500;
+
+  /* footer_links */
+  --text-footer-links: 16px;
+  --text-footer-links--line-height: 15px;
+  --text-footer-links--font-weight: 400;
 }
 
 :root {

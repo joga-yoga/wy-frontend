@@ -31,7 +31,7 @@ const PartnersPage = () => {
         }}
       >
         <div className="absolute inset-0 bg-[#000]/30 md:bg-[#000]/0 rounded-b-2xl" />
-        <div className="container relative z-10 mx-auto flex h-full flex-col items-center md:items-start md:justify-between px-4 md:px-8 py-8 md:py-[80px] text-left text-white">
+        <div className="container-wy relative z-10 mx-auto flex h-full flex-col items-center md:items-start md:justify-between px-4 md:px-8 py-8 md:py-[80px] text-left text-white">
           <Link href="/" className="mb-4 text-2xl font-bold">
             <LogoPartners />
           </Link>
@@ -58,7 +58,7 @@ const PartnersPage = () => {
 
       {/* "Jak to wygląda krok po kroku" Section */}
       <section className="pt-10">
-        <div className="container mx-auto px-4 md:px-8">
+        <div className="container-wy mx-auto px-4 md:px-8">
           <h2 className="mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
             Jak to wygląda krok po kroku
           </h2>
@@ -121,10 +121,10 @@ const PartnersPage = () => {
           </div>
         </div>
       </section>
-      <Separator className="container mx-auto my-6 md:my-10" />
+      <Separator className="container-wy mx-auto my-6 md:my-10" />
       {/* "Co dostaniesz w spówpracy" Section */}
       <section className="">
-        <div className="container mx-auto px-0 md:px-8">
+        <div className="container-wy mx-auto px-0 md:px-8">
           <h2 className="px-4 md:px-0 mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
             Co dostaniesz w spówpracy z wyjazdy
             <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
@@ -133,22 +133,22 @@ const PartnersPage = () => {
           </h2>
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 rounded-xl bg-gray-100 p-8 border border-gray-50 ">
             <div className="flex flex-col md:flex-row gap-8 md:gap-4 w-full">
-              <div className="w-full flex flex-col justify-between gap-8 md:gap-4">
+              <div className="w-full flex flex-col justify-between gap-8 md:gap-4 md:py-3">
                 <div>
                   <h3 className="text-subheader">Więcej rezerwacji</h3>
-                  <p className="text-sub-description text-gray-500">
+                  <p className="text-sub-descript-18 text-gray-500">
                     Zwiększ liczbę rezerwacji bez dodatkowego nakładu pracy.
                   </p>
                 </div>
                 <div>
                   <h3 className="text-subheader">Transparentne warunki</h3>
-                  <p className="text-sub-description text-gray-500">
+                  <p className="text-sub-descript-18 text-gray-500">
                     Zero ukrytych kosztów, tylko prośba o link.
                   </p>
                 </div>
                 <div>
                   <h3 className="text-subheader">Szerszy zasięg marki</h3>
-                  <p className="text-sub-description text-gray-500">
+                  <p className="text-sub-descript-18 text-gray-500">
                     Twoja nazwa trafia jeszce dalej.
                   </p>
                 </div>
@@ -169,7 +169,7 @@ const PartnersPage = () => {
                   <CustomPartnersComunityIcon className="mr-6 text-primary w-[96px] min-w-[96px] md:w-[128px]" />
                   <div>
                     <h3 className="text-subheader">Siła wspólnoty</h3>
-                    <p className="text-m-sunscript-font md:text-sub-description text-gray-500">
+                    <p className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
                       Społeczność wyjazdy.yoga wspiera Twoje wyjazdy
                     </p>
                   </div>
@@ -179,18 +179,18 @@ const PartnersPage = () => {
                 <div className="gap-6 w-full h-full flex flex-col justify-around">
                   <div>
                     <h3 className="text-subheader">Zaufanie społeczności</h3>
-                    <p className="text-sub-description text-gray-500">
+                    <p className="text-sub-descript-18 text-gray-500">
                       Budujesz zaufanie wśród joginek i joginów
                     </p>
                   </div>
                   <div>
                     <h3 className="text-subheader">Wspólna misja</h3>
-                    <p className="text-sub-description text-gray-500">
+                    <p className="text-sub-descript-18 text-gray-500">
                       Razem szerzymy spokój i radość jogi.
                     </p>
                   </div>
                 </div>
-                <div className="relative min-w-[300px] h-[300px]">
+                <div className="relative min-w-[212px] h-[212px]">
                   <Image
                     src="/images/partners/meditation2.png"
                     alt="Community"
@@ -204,10 +204,10 @@ const PartnersPage = () => {
           </div>
         </div>
       </section>
-      <Separator className="container mx-auto my-6 md:my-10" />
+      <Separator className="container-wy mx-auto my-6 md:my-10" />
       {/* "Intencja" Section */}
       <section className="pb-10">
-        <div className="container mx-auto px-4 md:px-8">
+        <div className="container-wy mx-auto px-4 md:px-8">
           <h2 className="mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
             Intencja
           </h2>
@@ -215,19 +215,19 @@ const PartnersPage = () => {
             <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-4 w-full rounded-2xl bg-white p-8 border border-gray-100 shadow-[0px_8px_16px_8px_#F2F2F3]">
               <LogoPartners variant="black" className="w-full" />
               <div className="space-y-6 w-full">
-                <div className="flex items-center text-gray-800 text-m-descript md:text-listing-description">
+                <div className="flex text-gray-800 text-m-descript md:text-listing-description">
                   <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
                     एकम
                   </span>
                   <span>Działaj z serca - reszta przyjdzie naturalnie</span>
                 </div>
-                <div className="flex items-center text-gray-800 text-m-descript md:text-listing-description">
+                <div className="flex text-gray-800 text-m-descript md:text-listing-description">
                   <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
                     द्वे
                   </span>
                   <span>Najważniejsze dzieje się w trakcie</span>
                 </div>
-                <div className="flex items-center text-gray-800 text-m-descript md:text-listing-description">
+                <div className="flex text-gray-800 text-m-descript md:text-listing-description">
                   <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
                     त्रीणि
                   </span>
@@ -254,7 +254,7 @@ const PartnersPage = () => {
               </div>
 
               <div className="flex flex-col gap-6">
-                <div className="flex justify-between md:items-center text-lg md:max-w-[370px] w-full h-full">
+                <div className="flex justify-between text-lg md:max-w-[370px] w-full h-full">
                   <span className="mr-2 min-w-12 w-12 font-serif text-2xl italic text-gray-700 hidden md:block">
                     चत्वारि
                   </span>
@@ -262,13 +262,17 @@ const PartnersPage = () => {
                     <span className="text-left md:text-center text-subheader text-gray-800">
                       Nie musisz być wielki, by zacząć
                     </span>
-                    <span className="hidden md:block md:text-center text-sub-description text-gray-500">
+                    <span className="hidden md:block md:text-center text-sub-descript-18 text-gray-500">
                       Zacznij teraz — to zajmie tylko chwilę
                     </span>
                   </div>
                 </div>
                 <Link href="/dashboard">
-                  <Button size="lg" className="w-full" variant="secondary">
+                  <Button
+                    size="lg"
+                    className="w-full bg-gray-600 text-white hover:bg-gray-600/90"
+                    variant="secondary"
+                  >
                     Dołącz
                   </Button>
                 </Link>

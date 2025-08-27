@@ -7,5 +7,5 @@ export const renderLocation = (location?: Location | null) => {
 
 export const renderShortLocation = (location?: Location | null) => {
   if (!location) return "";
-  return location.city || "";
+  return location.city || location.state_province || location.title || location.address_line1;
 };

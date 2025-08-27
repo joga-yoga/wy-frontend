@@ -63,7 +63,7 @@ const tips: Tip[] = [
     id: "skill_level",
     title: "Poziom zaawansowania",
     content: "Określ poziom uczestników. Możesz wybrać kilka opcji.",
-    example: "Początkujący, Średniozaawansowany lub Dla każdego",
+    example: "Początkujący, Średni lub Dla każdego",
   },
   {
     id: "date",

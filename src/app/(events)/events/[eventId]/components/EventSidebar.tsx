@@ -17,7 +17,7 @@ interface EventSidebarProps {
 
 const skillLevelTranslations: { [key: string]: string } = {
   beginner: "Początkujący",
-  intermediate: "Średniozaawansowany",
+  intermediate: "Średni",
   advanced: "Zaawansowany",
 };
 

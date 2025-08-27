@@ -4,19 +4,17 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import { ArrowLeft, ArrowRight, ImageOff } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, ImageOff } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
-import { IoStar, IoStarOutline } from "react-icons/io5";
+import React, { useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
-import CustomSmallCalendarIcon from "@/components/icons/CustomSmallCalendarIcon";
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { formatDateRange } from "@/lib/formatDateRange";
-import { renderLocation, renderShortLocation } from "@/lib/renderLocation";
+import { renderShortLocation } from "@/lib/renderLocation";
 
 import { getImageUrl } from "../events/[eventId]/helpers";
 import { Event } from "../types";
@@ -59,7 +57,6 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  console.log("🚀 ~ event:", event);
   const { bookmarkedEventIds, addBookmark, removeBookmark } = useEventsFilter();
 
   const displayCountry = event.location?.country || "";
@@ -93,9 +90,9 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
     <div className="box-border flex flex-col items-start p-5 md:p-[22px] gap-4 md:gap-[22px] w-full md:bg-white md:border-[4px] md:border-gray-50 md:shadow-[0px_8px_16px_8px_#FAFAFA] md:rounded-[22px]">
       <div className="flex flex-row items-center p-0 gap-2 md:gap-4 w-full h-[32px] md:h-[55px] self-stretch">
-        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-6 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
-          <CustomSmallCalendarIcon className="w-[28px] h-[28px] md:w-[32px] md:h-[32px]" />{" "}
-          <span className="text-subheader md:text-h-middle text-black whitespace-nowrap">
+        <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-4 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
+          <Calendar className="w-[28px] h-[28px] md:w-[28px] md:h-[28px]" />
+          <span className="text-subheader md:text-h-middle text-black whitespace-nowrap leading-1 md:pt-[2px]">
             {formatDateRange(event.start_date, event.end_date)}
           </span>
         </div>
@@ -115,6 +112,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           isActive={isBookmarkedLocal}
           toggleHandler={handleBookmarkClick}
           size="small"
+          variant="black"
         />
       </div>
       <div className="flex flex-col md:flex-row items-start md:items-center p-0 gap-5 md:gap-[45px] w-full self-stretch">
