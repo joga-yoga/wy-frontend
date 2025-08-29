@@ -1,14 +1,14 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import React, { createRef, RefObject, useEffect, useRef, useState } from "react";
+import React, { createRef, RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { FieldError, FieldErrorsImpl, Merge } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface DynamicArrayInputProps {
-  initialValues?: string[];
+  initialValues?: (string | undefined)[];
   onChange: (values: string[]) => void;
   placeholder?: string;
   ariaLabel?: string;
@@ -17,7 +17,7 @@ interface DynamicArrayInputProps {
 }
 
 export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
-  initialValues = [], // Default to empty array if undefined
+  initialValues = [""], // Default to empty array if undefined
   onChange,
   placeholder = "Wpisz wartość...",
   ariaLabel = "Lista elementów",
@@ -27,7 +27,17 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
   // Initialize items. If initialValues is empty, start with [""]. Otherwise, use initialValues.
   // The useEffect below will ensure the trailing empty string rule.
   const [items, setItems] = useState<string[]>(
-    initialValues.length > 0 ? [...initialValues] : [""],
+    initialValues.length > 0
+      ? initialValues.filter((item): item is string => typeof item === "string")
+      : [""],
+  );
+  const updateValues = useCallback(
+    (values: string[]) => {
+      setItems(values);
+      // Effect to propagate changes up to the parent form
+      onChange(values);
+    },
+    [onChange],
   );
   const inputRefs = useRef<RefObject<HTMLInputElement>[]>([]);
 
@@ -35,16 +45,16 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
   // or is [""] if logically empty.
   useEffect(() => {
     if (items.length === 0) {
-      setItems([""]); // Ensure it's never a completely empty array, always at least one input field.
+      updateValues([""]); // Ensure it's never a completely empty array, always at least one input field.
     } else if (items[items.length - 1].trim() !== "") {
-      setItems((prevItems) => [...prevItems, ""]); // Add a new empty input if the last one isn't empty.
+      setItems([...items, ""]); // Add a new empty input if the last one isn't empty.
     }
-  }, [items]); // This effect runs whenever 'items' changes.
+  }, [items, updateValues]); // This effect runs whenever 'items' changes.
 
-  // Effect to propagate changes up to the parent form
-  useEffect(() => {
-    onChange(items);
-  }, [items, onChange]);
+  // // Effect to propagate changes up to the parent form
+  // useEffect(() => {
+  //   onChange(items);
+  // }, [items, onChange]);
 
   // Effect to manage input refs for focusing
   useEffect(() => {
@@ -54,12 +64,12 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
   const handleInputChange = (index: number, value: string) => {
     const newItems = [...items];
     newItems[index] = value;
-    setItems(newItems); // The useEffect above will handle adding a new empty input if necessary.
+    updateValues(newItems); // The useEffect above will handle adding a new empty input if necessary.
   };
 
   const handleRemoveItem = (index: number) => {
     const newItems = items.filter((_, i) => i !== index);
-    setItems(newItems); // The useEffect above will handle ensuring [""] or adding a trailing "" if needed.
+    updateValues(newItems); // The useEffect above will handle ensuring [""] or adding a trailing "" if needed.
   };
 
   const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -67,7 +77,7 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
       event.preventDefault();
       const newItems = [...items];
       newItems.splice(index + 1, 0, "");
-      setItems(newItems);
+      updateValues(newItems);
       setTimeout(() => {
         inputRefs.current[index + 1]?.current?.focus();
       }, 100);
@@ -75,9 +85,9 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
       if (items.length > 1) {
         // Only remove if it's not the last single empty item
         event.preventDefault();
-        // Directly call the version of setItems used in handleRemoveItem to trigger the effect correctly
+        // Directly call the version of updateValues used in handleRemoveItem to trigger the effect correctly
         const newItems = items.filter((_, i) => i !== index);
-        setItems(newItems);
+        updateValues(newItems);
         setTimeout(() => {
           let focusIndexToSet = index > 0 ? index - 1 : 0;
           inputRefs.current[focusIndexToSet]?.current?.focus();

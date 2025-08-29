@@ -22,7 +22,7 @@ interface EventSkillLevelProps {
 export const EventSkillLevel = ({ control, errors }: EventSkillLevelProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-details-continued">
+    <div className="flex flex-col gap-6 md:gap-10" id="event-details-continued">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="skill_level" size="event">

@@ -27,14 +27,14 @@ export const eventFormSchema = yup
     accommodation_description: yup.string().optional(),
     guest_welcome_description: yup.string().optional(),
     food_description: yup.string().optional(),
-    price_excludes: yup.array().of(yup.string()).optional().default([]),
-    paid_attractions: yup.array().of(yup.string()).optional().default([]),
+    price_includes: yup.array().of(yup.string()).default([""]),
+    price_excludes: yup.array().of(yup.string()).default([""]),
+    paid_attractions: yup.array().of(yup.string()).default([""]),
     cancellation_policy: yup.string().optional(),
     important_info: yup.string().optional(),
     image_ids: yup.array().of(yup.string().required()).optional().default([]),
     location_id: yup.string().uuid("Nieprawidłowy format ID lokalizacji").nullable().optional(),
     is_public: yup.boolean().default(false),
-    price_includes: yup.array().of(yup.string()).optional().default([]),
     program: yup
       .array()
       .of(

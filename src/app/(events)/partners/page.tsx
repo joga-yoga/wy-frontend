@@ -153,13 +153,13 @@ const PartnersPage = () => {
                   </p>
                 </div>
               </div>
-              <div className="relative min-w-[280px] w-full h-[200px] md:h-auto order-first md:order-1">
+              <div className="relative min-w-[280px] w-full md:h-auto order-first md:order-1">
                 <Image
                   src="/images/partners/meditation1.png"
                   alt="Meditation"
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-lg"
+                  className="rounded-lg object-cover w-full md:h-full"
+                  width={280}
+                  height={200}
                 />
               </div>
             </div>
@@ -190,13 +190,13 @@ const PartnersPage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="relative min-w-[212px] h-[212px]">
+                <div className="relative min-w-[212px] md:h-[212px]">
                   <Image
                     src="/images/partners/meditation2.png"
                     alt="Community"
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded-lg"
+                    width={212}
+                    height={212}
+                    className="object-cover rounded-lg w-full"
                   />
                 </div>
               </div>

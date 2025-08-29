@@ -187,15 +187,13 @@ export default function DashboardPage() {
                   key={event.id}
                   className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px]"
                 >
-                  <div className="relative w-full md:w-[200px] md:flex-shrink-0 h-48 md:h-auto">
-                    <Image
-                      src={getImageUrl(event.image_ids?.[0] || event.image_id)}
-                      alt={event.title}
-                      layout="fill"
-                      objectFit="cover"
-                      className="w-full h-full"
-                    />
-                  </div>
+                  <Image
+                    src={getImageUrl(event.image_ids?.[0] || event.image_id)}
+                    alt={event.title}
+                    width={200}
+                    height={200}
+                    className="object-cover min-w-[200px] w-full md:w-[200px] h-[200px]"
+                  />
                   <div className="p-4 flex flex-col justify-between w-full">
                     <div>
                       <div className="flex justify-between items-start mb-2">

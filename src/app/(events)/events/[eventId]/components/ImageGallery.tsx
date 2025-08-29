@@ -67,14 +67,14 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
                 imageId={image_ids[index + 1]}
                 alt={`Gallery image ${index + 1}`}
                 fill
-                style={{ objectFit: "cover" }}
-                className={
+                className={cn(
+                  "object-cover",
                   index === 1
                     ? "rounded-tr-[22px] rounded-b-[4px]"
                     : index === 3
                       ? "rounded-br-[22px] rounded-t-[4px]"
-                      : "rounded-[4px]"
-                }
+                      : "rounded-[4px]",
+                )}
               />
             ))}
           </div>

@@ -45,7 +45,7 @@ export const SingleImageUpload = ({
         <>
           <label htmlFor={inputId} className="cursor-pointer">
             <div className="relative w-24 h-24 md:w-32 md:h-32 border rounded-md overflow-hidden">
-              <Image src={currentPreviewUrl} alt="Preview" fill style={{ objectFit: "cover" }} />
+              <Image src={currentPreviewUrl} alt="Preview" fill className="object-cover" />
               {isUploading && (
                 <div className="absolute inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-10">
                   <Loader2 className="h-8 w-8 animate-spin text-white" />

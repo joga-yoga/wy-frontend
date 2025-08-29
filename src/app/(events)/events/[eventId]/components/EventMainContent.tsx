@@ -51,8 +51,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
                         src={getImageUrl(day.imageId ?? undefined, index + 5)} // Use program imageId or fallback
                         alt={`Program day ${index + 1}`}
                         fill
-                        style={{ objectFit: "cover" }}
-                        className="rounded-2xl"
+                        className="object-cover rounded-2xl"
                       />
                     </div>
 

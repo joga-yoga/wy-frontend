@@ -2,7 +2,7 @@
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import { differenceInCalendarDays, isValid, parseISO } from "date-fns";
-import { ExternalLink, EyeOff, HelpCircle, Loader2, Plus, Save, Send, X } from "lucide-react";
+import { ExternalLink, EyeOff, Loader2, Plus, Save, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { EventFormData, eventFormSchema, EventInitialData } from "@/lib/schemas/event";
 
+import { BlockBrowserNavigation, BlockerWhenDirty } from "./block-navigation/navigation-block";
 import { EventDetailsSection } from "./components/EventDetailsSection";
 import { EventHelpBar } from "./components/EventHelpBar";
 import { EventHospitalitySection } from "./components/EventHospitalitySection";
@@ -149,9 +150,9 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
       accommodation_description: undefined,
       guest_welcome_description: undefined,
       food_description: undefined,
-      price_includes: [],
-      price_excludes: [],
-      paid_attractions: [],
+      price_includes: [""],
+      price_excludes: [""],
+      paid_attractions: [""],
       cancellation_policy: undefined,
       important_info: undefined,
       program: [],
@@ -252,16 +253,6 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
   } = useFieldArray({
     control,
     name: "program" as FieldArrayPath<EventFormData>,
-  });
-
-  const {
-    fields: priceIncludesFields,
-    append: appendPriceInclude,
-    remove: removePriceInclude,
-    replace: replacePriceIncludes,
-  } = useFieldArray({
-    control,
-    name: "price_includes" as FieldArrayPath<EventFormData>,
   });
 
   const fetchInstructors = useCallback(async () => {
@@ -422,6 +413,7 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
         await axiosInstance.put(`/events/${eventId}`, payload);
         toast({ description: "Wyjazd zaktualizowany pomyślnie!" });
         setCurrentIsPublic(submissionIsPublic);
+        reset(getValues());
         router.refresh();
       } else {
         const response = await axiosInstance.post<{ id: string }>("/events", payload);
@@ -459,7 +451,7 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
     if (newStatus === true) {
       // Attempting to publish (and save all changes)
       // Validation is now done in handlePublishButtonClick before opening the modal
-      setValue("is_public", true, { shouldDirty: true, shouldValidate: false });
+      setValue("is_public", true, { shouldDirty: false, shouldValidate: false });
       const formDataForPublish = getValues(); // This now has is_public: true
       const payloadForPublish = prepareEventPayload(formDataForPublish);
 
@@ -470,7 +462,7 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
         router.refresh();
       } catch (error: any) {
         setValue("is_public", originalFormIsPublicValue, {
-          shouldDirty: true,
+          shouldDirty: false,
           shouldValidate: false,
         });
         setCurrentIsPublic(originalFormIsPublicValue); // Revert UI if PUT fails
@@ -494,11 +486,11 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
       try {
         await axiosInstance.patch(`/events/${eventId}`, { is_public: false });
         setCurrentIsPublic(false);
-        setValue("is_public", false, { shouldDirty: true, shouldValidate: false });
+        setValue("is_public", false, { shouldDirty: false, shouldValidate: false });
         toast({ description: "Wyjazd ukryty pomyślnie." });
       } catch (error: any) {
         setValue("is_public", originalFormIsPublicValue, {
-          shouldDirty: true,
+          shouldDirty: false,
           shouldValidate: false,
         });
         setCurrentIsPublic(originalFormIsPublicValue); // Revert UI if PATCH fails
@@ -521,10 +513,10 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
     if (!currentIsPublic) {
       // Attempting to publish, validate first
       const originalFormIsPublicValue = getValues("is_public");
-      setValue("is_public", true, { shouldDirty: true, shouldValidate: false });
+      setValue("is_public", true, { shouldDirty: false, shouldValidate: false });
       const isValid = await trigger(undefined, { shouldFocus: true });
       setValue("is_public", originalFormIsPublicValue, {
-        shouldDirty: true,
+        shouldDirty: false,
         shouldValidate: false,
       }); // Revert for now
 
@@ -742,28 +734,29 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
 
   return (
     <EventHelpBarProvider>
+      <BlockerWhenDirty control={control as any} />
+      <BlockBrowserNavigation />
       <div
         className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto"
         id="event-form-wrapper"
       >
-        <div className="flex flex-col gap-10 md:gap-[80px] max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10">
-          {/* Details */}
+        <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10 ">
           <EventDetailsSection control={control} register={register} errors={errors} />
-          {/* Instructors */}
-          <EventInstructorsSection
-            control={control}
-            errors={errors}
-            setValue={setValue}
-            instructors={instructors}
-            setIsInstructorModalOpen={setIsInstructorModalOpen}
-            handleEditInstructor={handleEditInstructor}
-            instructorToDelete={instructorToDelete}
-            setInstructorToDelete={setInstructorToDelete}
-            isDeletingInstructor={isDeletingInstructor}
-            handleDeleteInstructor={handleDeleteInstructor}
-          />
-          <EventSkillLevel control={control} errors={errors} />
-          {/* Program */}
+          <div className="flex flex-col gap-6 md:gap-10">
+            <EventInstructorsSection
+              control={control}
+              errors={errors}
+              setValue={setValue}
+              instructors={instructors}
+              setIsInstructorModalOpen={setIsInstructorModalOpen}
+              handleEditInstructor={handleEditInstructor}
+              instructorToDelete={instructorToDelete}
+              setInstructorToDelete={setInstructorToDelete}
+              isDeletingInstructor={isDeletingInstructor}
+              handleDeleteInstructor={handleDeleteInstructor}
+            />
+            <EventSkillLevel control={control} errors={errors} />
+          </div>
           <EventProgramSection
             control={control}
             register={register}
@@ -779,17 +772,21 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
             onRemoveProgramImage={handleRemoveProgramImage}
             onProgramImageChange={handleProgramImageChange}
           />
-          <EventLocationSection
-            control={control}
-            errors={errors}
-            locations={locations}
-            setIsLocationModalOpen={setIsLocationModalOpen}
-            setEditingLocation={setEditingLocation}
-            setLocationModalMode={setLocationModalMode}
-          />
-          <EventHospitalitySection register={register} errors={errors} />
-          <EventPricingSection control={control} register={register} errors={errors} />
-          <EventImportantInfoSection register={register} errors={errors} />
+          <div className="flex flex-col gap-6 md:gap-10">
+            <EventLocationSection
+              control={control}
+              errors={errors}
+              locations={locations}
+              setIsLocationModalOpen={setIsLocationModalOpen}
+              setEditingLocation={setEditingLocation}
+              setLocationModalMode={setLocationModalMode}
+            />
+            <EventHospitalitySection register={register} errors={errors} />
+          </div>
+          <div className="flex flex-col gap-6 md:gap-10">
+            <EventPricingSection control={control} register={register} errors={errors} />
+            <EventImportantInfoSection register={register} errors={errors} />
+          </div>
           <EventPhotosSection
             errors={errors}
             watchedImageIds={watchedImageIds ?? []}

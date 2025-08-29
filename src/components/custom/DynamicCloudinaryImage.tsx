@@ -51,7 +51,6 @@ export const DynamicCloudinaryImage = ({
         width={0}
         height={0}
         sizes="100vw"
-        objectFit="cover"
         className={cn("w-full h-auto object-cover", className)}
         {...props}
       />

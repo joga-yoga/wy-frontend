@@ -7,6 +7,8 @@ import { ProfileHeader } from "@/components/layout/Header";
 import { useAuth } from "@/context/AuthContext";
 import useIsMobile from "@/hooks/useIsMobile";
 
+import { NavigationBlockerProvider } from "./dashboard/events/(event)/components/EventForm/block-navigation/navigation-block";
+
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -33,8 +35,10 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
   return (
     <>
-      <ProfileHeader isSticky={isSticky} />
-      {children}
+      <NavigationBlockerProvider>
+        <ProfileHeader isSticky={isSticky} />
+        {children}
+      </NavigationBlockerProvider>
     </>
   );
 }

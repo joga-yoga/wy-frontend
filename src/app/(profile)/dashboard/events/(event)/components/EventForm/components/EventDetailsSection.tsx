@@ -26,7 +26,7 @@ interface EventDetailsSectionProps {
 export const EventDetailsSection = ({ control, register, errors }: EventDetailsSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-details-section">
+    <div className="flex flex-col gap-6 md:gap-10" id="event-details-section">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="title" size="event">
@@ -88,20 +88,20 @@ export const EventDetailsSection = ({ control, register, errors }: EventDetailsS
         <Controller
           name="main_attractions"
           control={control}
-          render={({ field, fieldState }) => (
-            <DynamicArrayInput
-              initialValues={(field.value ?? []).filter(
-                (item): item is string => typeof item === "string",
-              )}
-              onChange={field.onChange}
-              placeholder="Wymień główny punkt programu lub unikalną cechę..."
-              ariaLabel="Lista najważniejszych atrakcji"
-              error={fieldState.error}
-              onFocus={() => {
-                focusTip("main_attractions");
-              }}
-            />
-          )}
+          render={({ field, fieldState }) => {
+            return (
+              <DynamicArrayInput
+                initialValues={field.value}
+                onChange={field.onChange}
+                placeholder="Wymień główny punkt programu lub unikalną cechę..."
+                ariaLabel="Lista najważniejszych atrakcji"
+                error={fieldState.error}
+                onFocus={() => {
+                  focusTip("main_attractions");
+                }}
+              />
+            );
+          }}
         />
       </div>
 

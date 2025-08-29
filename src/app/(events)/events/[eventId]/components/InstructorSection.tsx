@@ -31,7 +31,9 @@ export const InstructorSection: React.FC<InstructorSectionProps> = ({ event }) =
           </div>
           <h3 className="text-middle-header-22 text-gray-800">{instructor.name}</h3>
           {instructor.bio && (
-            <p className="text-descrip-under-header text-gray-400">{instructor.bio}</p>
+            <p className="text-m-descript md:text-sub-descript-18 text-gray-500 text-left">
+              {instructor.bio}
+            </p>
           )}
         </div>
       ))}

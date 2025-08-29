@@ -26,7 +26,7 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
   const { focusTip } = useEventHelpBar();
 
   return (
-    <div className="flex flex-col gap-10 md:gap-[80px]" id="event-pricing-section">
+    <div className="flex flex-col gap-6 md:gap-10" id="event-pricing-section">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="price" size="event">
@@ -49,7 +49,8 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
               min="0"
               step=""
               {...register("price", {
-                setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
+                setValueAs: (v) =>
+                  v === "" || typeof v === "undefined" ? undefined : parseFloat(v),
               })}
               placeholder="Cena za jedną osobę"
               onFocus={() => focusTip("price")}
@@ -95,18 +96,18 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
         <Controller
           name="price_includes"
           control={control}
-          render={({ field, fieldState }) => (
-            <DynamicArrayInput
-              initialValues={(field.value ?? []).filter(
-                (item): item is string => typeof item === "string",
-              )}
-              onChange={field.onChange}
-              placeholder="Np. Śniadanie, Transfer z lotniska"
-              ariaLabel="Lista rzeczy wliczonych w cenę"
-              error={fieldState.error}
-              onFocus={() => focusTip("price_includes")}
-            />
-          )}
+          render={({ field, fieldState }) => {
+            return (
+              <DynamicArrayInput
+                initialValues={field.value}
+                onChange={field.onChange}
+                placeholder="Np. Śniadanie, Transfer z lotniska"
+                ariaLabel="Lista rzeczy wliczonych w cenę"
+                error={fieldState.error}
+                onFocus={() => focusTip("price_includes")}
+              />
+            );
+          }}
         />
       </div>
       <div className="space-y-2">
@@ -125,9 +126,7 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
           control={control}
           render={({ field, fieldState }) => (
             <DynamicArrayInput
-              initialValues={(field.value ?? []).filter(
-                (item): item is string => typeof item === "string",
-              )}
+              initialValues={field.value}
               onChange={field.onChange}
               placeholder="Np. Lunch, Opłaty klimatyczne"
               ariaLabel="Lista rzeczy niewliczonych w cenę"
@@ -154,9 +153,7 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
           control={control}
           render={({ field, fieldState }) => (
             <DynamicArrayInput
-              initialValues={(field.value ?? []).filter(
-                (item): item is string => typeof item === "string",
-              )}
+              initialValues={field.value}
               onChange={field.onChange}
               placeholder="Np. Masaż, Wypożyczenie sprzętu"
               ariaLabel="Lista dodatkowych płatnych atrakcji"

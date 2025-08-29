@@ -141,7 +141,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
                         alt={event.title || "Event image"}
                         fill
                         sizes="(max-width: 768px) 100vw, 485px"
-                        style={{ objectFit: "cover" }}
+                        className="object-cover"
                       />
                     </div>
                   </SwiperSlide>

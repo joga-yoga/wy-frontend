@@ -83,6 +83,10 @@
       border-color: oklch(0.73 0.2303 144.24 / 0.5); /* Corresponds to --brand-green 50% opacity */
     }
   }
+
+  .event-form-section-gap {
+    @apply flex flex-col gap-12 md:gap-[80px];
+  }
 }
 
 @custom-variant dark (&:is(.dark *));

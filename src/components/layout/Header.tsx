@@ -7,6 +7,7 @@ import React from "react";
 import { IoStar, IoStarOutline } from "react-icons/io5";
 
 import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
+import { LinkWithBlocker } from "@/app/(profile)/dashboard/events/(event)/components/EventForm/block-navigation/link";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -30,7 +31,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
     >
       <div className="w-full px-3 md:px-4 md:pl-[22px] h-16 flex items-center justify-between">
         {/* Placeholder for logo space */}
-        <Link href="/dashboard" className="flex items-center justify-center w-[40px] h-[40px]">
+        <LinkWithBlocker
+          href="/dashboard"
+          className="flex items-center justify-center w-[40px] h-[40px]"
+        >
           <svg
             viewBox="0 0 50 50"
             fill="none"
@@ -47,17 +51,17 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
               fill="#F8FAFC"
             />
           </svg>
-        </Link>
+        </LinkWithBlocker>
 
         {/* Right Section: User Email & Profile Icon */}
         <div className="flex items-center gap-4">
           {/* Display user email if available */}
           {user && (
-            <Link href="/dashboard/organizer">
+            <LinkWithBlocker href="/dashboard/organizer">
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
-            </Link>
+            </LinkWithBlocker>
           )}
           {/* Log out button */}
           <Button
@@ -145,7 +149,6 @@ export const EventsHeader: React.FC = () => {
                     className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover"
                     width={128}
                     height={128}
-                    objectFit="cover"
                   />
                 ) : (
                   <CustomBurgerIcon className="h-10 w-10 md:h-12 md:w-12" />
