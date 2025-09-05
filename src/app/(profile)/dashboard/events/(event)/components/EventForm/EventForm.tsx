@@ -795,6 +795,8 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
             isUploadingImage={isUploadingImage}
             directUploadError={directUploadError}
             pendingImages={pendingImages.map((p) => p.file)}
+            control={control}
+            name="image_ids"
           />
         </div>
         <EventHelpBar />

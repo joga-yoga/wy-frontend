@@ -105,6 +105,8 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
                 ariaLabel="Lista rzeczy wliczonych w cenę"
                 error={fieldState.error}
                 onFocus={() => focusTip("price_includes")}
+                control={control}
+                name="price_includes"
               />
             );
           }}
@@ -132,6 +134,8 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
               ariaLabel="Lista rzeczy niewliczonych w cenę"
               error={fieldState.error}
               onFocus={() => focusTip("price_excludes")}
+              control={control}
+              name="price_excludes"
             />
           )}
         />
@@ -159,6 +163,8 @@ export const EventPricingSection = ({ control, register, errors }: EventPricingS
               ariaLabel="Lista dodatkowych płatnych atrakcji"
               error={fieldState.error}
               onFocus={() => focusTip("paid_attractions")}
+              control={control}
+              name="paid_attractions"
             />
           )}
         />

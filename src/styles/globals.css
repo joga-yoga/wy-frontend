@@ -143,6 +143,7 @@
   --color-gray-700: var(--gray-700);
   --color-gray-800: var(--gray-800);
   --color-gray-900: var(--gray-900);
+  --color-placeholder: var(--gray-300);
 
   --font-family-hind: "Hind Siliguri", sans-serif;
 
@@ -202,10 +203,10 @@
   --text-m-descript--line-height: 18px;
   --text-m-descript--font-weight: 400;
 
-    /* m_header: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
-    --text-m-header: 15px;
-    --text-m-header--line-height: 18px;
-    --text-m-header--font-weight: 500;
+  /* m_header: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
+  --text-m-header: 15px;
+  --text-m-header--line-height: 18px;
+  --text-m-header--font-weight: 500;
   
   /* m_sunscript_font: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
   --text-m-sunscript-font: 15px;
@@ -231,7 +232,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* --primary: oklch(0.205 0 0); */
+  --primary: #000000;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

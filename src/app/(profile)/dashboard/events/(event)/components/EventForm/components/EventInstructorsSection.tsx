@@ -173,6 +173,11 @@ export const EventInstructorsSection = ({
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 )}
+                <div
+                  ref={field.ref}
+                  tabIndex={-1}
+                  className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                />
               </div>
             </AlertDialog>
           )}

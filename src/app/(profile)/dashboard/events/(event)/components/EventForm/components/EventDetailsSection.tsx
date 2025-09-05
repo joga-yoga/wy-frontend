@@ -99,6 +99,8 @@ export const EventDetailsSection = ({ control, register, errors }: EventDetailsS
                 onFocus={() => {
                   focusTip("main_attractions");
                 }}
+                control={control}
+                name="main_attractions"
               />
             );
           }}

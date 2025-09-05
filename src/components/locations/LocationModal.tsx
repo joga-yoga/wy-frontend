@@ -234,6 +234,7 @@ export function LocationModal({
       toast({ description: "Lokalizacja usunięta pomyślnie." });
       onLocationDeleted(initialData.id);
       setIsDeleteConfirmOpen(false); // Close confirmation dialog
+      await new Promise((resolve) => setTimeout(resolve, 500));
       onClose(); // Close the main modal
     } catch (error: any) {
       console.error("Failed to delete location:", error);

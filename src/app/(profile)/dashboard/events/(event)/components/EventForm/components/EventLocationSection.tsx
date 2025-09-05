@@ -122,6 +122,17 @@ export const EventLocationSection = ({
                 Dodaj pierwszą lokalizację
               </Button>
             )}
+            <Controller
+              name="location_id"
+              control={control}
+              render={({ field }) => (
+                <div
+                  ref={field.ref}
+                  tabIndex={-1}
+                  className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                />
+              )}
+            />
           </div>
         )}
       />

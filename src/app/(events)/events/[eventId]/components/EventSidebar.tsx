@@ -117,11 +117,14 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className }) 
         <InstructorSection event={event} />
       </div>
       <hr className="hidden lg:block" />
-      <div className="hidden lg:block">
-        <CancellationPolicySection event={event} id="cancellation-policy" />
-      </div>
-
-      <hr className="hidden lg:block" />
+      {event.cancellation_policy ? (
+        <>
+          <div className="hidden lg:block">
+            <CancellationPolicySection event={event} id="cancellation-policy" />
+          </div>
+          <hr className="hidden lg:block" />
+        </>
+      ) : null}
       <div className="hidden lg:block">
         <OrganizerSection event={event} />
       </div>

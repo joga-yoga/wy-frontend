@@ -1,8 +1,11 @@
 "use client";
 
 import axios from "axios";
-import { ArrowLeft, FileText, Link as LinkIcon, Loader2, PenLine } from "lucide-react";
+import { ArrowLeft, FileText, Link as LinkIcon, Loader2, PencilIcon, PenLine } from "lucide-react";
 import { useState } from "react";
+import { AiOutlineLink } from "react-icons/ai";
+import { IoIosLink } from "react-icons/io";
+import { IoSparkles } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,13 +79,47 @@ export default function CreateEventPage() {
     <div className="container max-w-4xl mx-auto py-10 px-4 md:px-10">
       {view === "options" && (
         <>
-          <h1 className="text-3xl font-bold mb-8">Utwórz nowy wyjazd</h1>
+          <h1 className="text-3xl font-bold mb-8 text-center">Utwórz nowy wyjazd</h1>
           <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PenLine className="h-5 w-5" />
-                  Ręczne tworzenie
+                <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
+                  <IoSparkles className="h-5 w-5" />
+                  PROMPT
+                </CardTitle>
+                <CardDescription>
+                  Napisz parę słów o swoim wyjeździe – AI przygotuje całą resztę
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setView("prompt-input")} className="w-full">
+                  Wybierz
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
+                  <AiOutlineLink className="h-5 w-5" />
+                  LINK
+                </CardTitle>
+                <CardDescription>
+                  Wklej link do strony, a wszystkie dane zostaną pobrane automatycznie
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setView("url-input")} className="w-full">
+                  Wybierz
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
+                  <PencilIcon className="h-5 w-5" />
+                  RĘCZNIE
                 </CardTitle>
                 <CardDescription>
                   Utwórz wyjazd od podstaw, wypełniając wszystkie pola formularza ręcznie.
@@ -96,40 +133,6 @@ export default function CreateEventPage() {
                   }}
                   className="w-full"
                 >
-                  Wybierz
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LinkIcon className="h-5 w-5" />
-                  Generuj z linku
-                </CardTitle>
-                <CardDescription>
-                  Wklej link do strony wydarzenia, a my spróbujemy wyciągnąć dane.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => setView("url-input")} className="w-full">
-                  Wybierz
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Generuj z opisu
-                </CardTitle>
-                <CardDescription>
-                  Opisz swój wyjazd w kilku zdaniach, a my wygenerujemy resztę.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => setView("prompt-input")} className="w-full">
                   Wybierz
                 </Button>
               </CardContent>

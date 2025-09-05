@@ -1,7 +1,7 @@
 import { HelpCircle, Loader2, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
-import { FieldErrors } from "react-hook-form";
+import { Control, Controller, FieldErrors } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ interface EventPhotosSectionProps {
   isUploadingImage: boolean;
   directUploadError: string | null;
   pendingImages: File[];
+  control: Control<EventFormData>;
+  name: string;
 }
 
 export const EventPhotosSection = ({
@@ -30,6 +32,8 @@ export const EventPhotosSection = ({
   isUploadingImage,
   directUploadError,
   pendingImages,
+  control,
+  name,
 }: EventPhotosSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
@@ -118,6 +122,17 @@ export const EventPhotosSection = ({
         {directUploadError && <p className="text-sm text-destructive">{directUploadError}</p>}
         {errors.image_ids && <p className="text-sm text-destructive">{errors.image_ids.message}</p>}
       </div>
+      <Controller
+        name={name as any}
+        control={control}
+        render={({ field }) => (
+          <div
+            ref={field.ref}
+            tabIndex={-1}
+            className="absolute w-0 h-0 opacity-0 pointer-events-none"
+          />
+        )}
+      />
     </div>
   );
 };

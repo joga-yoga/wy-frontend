@@ -21,6 +21,7 @@ import PortugalIcon from "@/components/icons/countries/PortugalIcon";
 import SpainIcon from "@/components/icons/countries/SpainIcon";
 import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
 import ThailandIcon from "@/components/icons/countries/ThailandIcon";
+import CustomAnalyticsIcon from "@/components/icons/CustomAnalyticsIcon";
 import { Input } from "@/components/ui/input";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -219,7 +220,7 @@ const Filters: React.FC = () => {
                             "text-brand-green",
                         )}
                       >
-                        <item.Icon className="h-8 w-8" />
+                        <item.Icon className="h-8 w-8 stroke-[2px]" />
                         <span>{item.label}</span>
                       </button>
                     </li>
@@ -276,14 +277,14 @@ const Filters: React.FC = () => {
                         key={index}
                         aria-label={item.label}
                         className={cn(
-                          "group text-muted-foreground h-[calc(80px)] w-[calc(80px)] flex items-center justify-center  rounded-full border-transparent relative hover:bg-gray-100 duration-200 border-2",
+                          "text-gray-800 group h-[calc(80px)] w-[calc(80px)] flex items-center justify-center rounded-0 border-transparent relative hover:bg-gray-100 duration-200 border-2",
                           locationFilter &&
                             JSON.stringify(locationFilter) === JSON.stringify(item.filter) &&
                             "border-brand-green hover:border-brand-green",
                         )}
                         onClick={() => setLocationFilterAndReset(item.filter)}
                       >
-                        <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)]" />
+                        <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)] stroke-[1px]" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">

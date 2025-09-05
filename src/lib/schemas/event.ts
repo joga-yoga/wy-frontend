@@ -7,8 +7,16 @@ export const eventFormSchema = yup
     title: yup
       .string()
       .min(3, "Tytuł musi mieć co najmniej 3 znaki")
+      .max(120, "Tytuł może mieć maksymalnie 120 znaków")
       .required("Tytuł jest wymagany."),
-    description: yup.string().optional(),
+    description: yup.string().when("is_public", {
+      is: true,
+      then: (schema) =>
+        schema
+          .required("Opis jest wymagany dla wydarzeń publicznych.")
+          .max(500, "Opis może mieć maksymalnie 500 znaków."),
+      otherwise: (schema) => schema.optional(),
+    }),
     start_date: yup.string().when("is_public", {
       is: true,
       then: (schema) => schema.required("Data rozpoczęcia jest wymagana dla wydarzeń publicznych."),
@@ -19,9 +27,30 @@ export const eventFormSchema = yup
       then: (schema) => schema.required("Data zakończenia jest wymagana dla wydarzeń publicznych."),
       otherwise: (schema) => schema.optional().nullable(),
     }),
-    price: yup.number().positive("Cena musi być dodatnia").optional().nullable(), // Yup numbers are nullable by default if optional
-    currency: yup.string().length(3, "Waluta musi mieć 3 znaki").optional().nullable(), // .transform(val => val ? val.toUpperCase() : val) can be added if toUpperCase is a transform
-    main_attractions: yup.array().of(yup.string()).optional().default([]),
+    price: yup
+      .number()
+      .positive("Cena musi być dodatnia")
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.required("Cena jest wymagana dla wydarzeń publicznych."),
+        otherwise: (schema) => schema.optional().nullable(),
+      }),
+    currency: yup
+      .string()
+      .length(3, "Waluta musi mieć 3 znaki")
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.required("Waluta jest wymagana dla wydarzeń publicznych."),
+        otherwise: (schema) => schema.optional().nullable(),
+      }), // .transform(val => val ? val.toUpperCase() : val) can be added if toUpperCase is a transform
+    main_attractions: yup
+      .array()
+      .of(yup.string().optional())
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.min(4, "Wymagane jest od 4 głównych atrakcji."),
+        otherwise: (schema) => schema.optional().default([]),
+      }),
     language: yup.string().optional(),
     skill_level: yup.array().of(yup.string().required()).optional().default([]),
     accommodation_description: yup.string().optional(),
@@ -32,8 +61,24 @@ export const eventFormSchema = yup
     paid_attractions: yup.array().of(yup.string()).default([""]),
     cancellation_policy: yup.string().optional(),
     important_info: yup.string().optional(),
-    image_ids: yup.array().of(yup.string().required()).optional().default([]),
-    location_id: yup.string().uuid("Nieprawidłowy format ID lokalizacji").nullable().optional(),
+    image_ids: yup
+      .array()
+      .of(yup.string().required())
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.min(5, "Wymagane jest co najmniej 5 zdjęć."),
+        otherwise: (schema) => schema.optional().default([]),
+      }),
+    location_id: yup
+      .string()
+      .nullable()
+      .optional()
+      .uuid("Nieprawidłowy format ID lokalizacji")
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.required("Lokalizacja jest wymagana dla wydarzeń publicznych."),
+        otherwise: (schema) => schema.nullable().optional(),
+      }),
     is_public: yup.boolean().default(false),
     program: yup
       .array()
@@ -45,7 +90,14 @@ export const eventFormSchema = yup
       )
       .optional()
       .default([]),
-    instructor_ids: yup.array().of(yup.string().required()).default([]),
+    instructor_ids: yup
+      .array()
+      .of(yup.string().required())
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.min(1, "Wymagany jest co najmniej jeden instruktor."),
+        otherwise: (schema) => schema.default([]),
+      }),
   })
   .test(
     "date-order",
@@ -67,7 +119,11 @@ export const eventFormSchema = yup
   );
 
 // Type inferred from the schema for form data
-export type EventFormData = yup.InferType<typeof eventFormSchema>;
+export type EventFormData = yup.InferType<
+  typeof eventFormSchema & {
+    location_id: string | null | undefined;
+  }
+>;
 
 // Define a type for the nested location information in initial event data
 interface LocationInitialInfo {

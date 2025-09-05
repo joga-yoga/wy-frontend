@@ -2,10 +2,11 @@
 
 import { Trash2 } from "lucide-react";
 import React, { createRef, RefObject, useCallback, useEffect, useRef, useState } from "react";
-import { FieldError, FieldErrorsImpl, Merge } from "react-hook-form";
+import { Control, Controller, FieldError, FieldErrorsImpl, Merge } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EventFormData } from "@/lib/schemas/event";
 
 interface DynamicArrayInputProps {
   initialValues?: (string | undefined)[];
@@ -14,6 +15,8 @@ interface DynamicArrayInputProps {
   ariaLabel?: string;
   error?: FieldError | Merge<FieldError, FieldErrorsImpl<string[]>> | undefined;
   onFocus?: () => void;
+  control: Control<EventFormData>;
+  name: string;
 }
 
 export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
@@ -23,6 +26,8 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
   ariaLabel = "Lista elementów",
   error,
   onFocus,
+  control,
+  name,
 }) => {
   // Initialize items. If initialValues is empty, start with [""]. Otherwise, use initialValues.
   // The useEffect below will ensure the trailing empty string rule.
@@ -167,6 +172,17 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
           <p className="text-xs text-red-500">{error.message}</p>
         </div>
       )}
+      <Controller
+        name={name as any}
+        control={control}
+        render={({ field }) => (
+          <div
+            ref={field.ref}
+            tabIndex={-1}
+            className="absolute w-0 h-0 opacity-0 pointer-events-none"
+          />
+        )}
+      />
     </div>
   );
 };

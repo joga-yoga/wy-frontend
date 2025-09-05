@@ -15,7 +15,7 @@ import Link from "next/link";
 
 import CustomPartnersComunityIcon from "@/components/icons/CustomPartnersComunityIcon";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import { LogoPartners } from "./components/LogoPartners";
@@ -63,60 +63,71 @@ const PartnersPage = () => {
             Jak to wygląda krok po kroku
           </h2>
           <div className="grid gap-4 md:gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                <Sparkles className="h-8 w-8 text-primary mx-auto md:mx-0" />
-                <CardTitle className="text-subheader font-medium">
-                  Dodaj szczegóły wyjazdu
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <p className="text-gray-500 text-sub-descript-18">
-                  Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie.
-                </p>
-              </CardContent>
-              <CardContent className="px-0 flex items-center text-m-sunscript-font text-gray-500">
+            <Card className="border-0 shadow-none flex flex-col justify-between">
+              <div>
+                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
+                  <Sparkles className="h-8 w-8 text-primary mx-auto md:mx-0" />
+                  <CardTitle className="text-subheader font-medium">
+                    Dodaj szczegóły wyjazdu
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-4 md:pb-6">
+                  <p className="text-gray-500 text-sub-descript-18">
+                    Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie.
+                  </p>
+                </CardContent>
+              </div>
+
+              <CardFooter className="px-0 flex items-center text-m-sunscript-font text-gray-500">
                 <Clock className="mr-2 h-6 w-6" /> 3 min
-              </CardContent>
+              </CardFooter>
             </Card>
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                <ImagePlus className="h-8 w-8 text-primary mx-auto md:mx-0" />
-                <CardTitle className="text-subheader font-medium">Dodaj zdjęcia</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <p className="text-gray-500 text-sub-descript-18">
-                  Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy programu.
-                </p>
-              </CardContent>
-              <CardContent className="px-0 flex items-center text-m-sunscript-font text-gray-500">
+            <Card className="border-0 shadow-none flex flex-col justify-between">
+              <div>
+                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
+                  <ImagePlus className="h-8 w-8 text-primary mx-auto md:mx-0" />
+                  <CardTitle className="text-subheader font-medium">Dodaj zdjęcia</CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-4 md:pb-6">
+                  <p className="text-gray-500 text-sub-descript-18">
+                    Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy
+                    programu.
+                  </p>
+                </CardContent>
+              </div>
+
+              <CardFooter className="px-0 flex items-center text-m-sunscript-font text-gray-500">
                 <Clock className="mr-2 h-6 w-6" /> 1 min
-              </CardContent>
+              </CardFooter>
             </Card>
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                <CheckCheck className="h-8 w-8 text-primary mx-auto md:mx-0" />
-                <CardTitle className="text-subheader font-medium">Sprawdź i zatwierdź</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <p className="text-gray-500 text-sub-descript-18 md:min-h-[66px]">
-                  Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe.
-                </p>
-              </CardContent>
-              <CardContent className="px-0 flex items-center text-m-sunscript-font text-gray-500">
+            <Card className="border-0 shadow-none flex flex-col justify-between">
+              <div>
+                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
+                  <CheckCheck className="h-8 w-8 text-primary mx-auto md:mx-0" />
+                  <CardTitle className="text-subheader font-medium">Sprawdź i zatwierdź</CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-4 md:pb-6">
+                  <p className="text-gray-500 text-sub-descript-18 md:min-h-[66px]">
+                    Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe.
+                  </p>
+                </CardContent>
+              </div>
+              <CardFooter className="px-0 flex items-center text-m-sunscript-font text-gray-500">
                 <Clock className="mr-2 h-6 w-6" /> 1 min
-              </CardContent>
+              </CardFooter>
             </Card>
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                <Megaphone className="h-8 w-8 text-primary mx-auto md:mx-0" />
-                <CardTitle className="text-subheader font-medium">Publikacja</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <p className="text-gray-500 text-sub-descript-18">
-                  Udostępnij swoją podróż i rozpocznij zapisy na praktykę.
-                </p>
-              </CardContent>
+            <Card className="border-0 shadow-none flex flex-col justify-between">
+              <div>
+                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
+                  <Megaphone className="h-8 w-8 text-primary mx-auto md:mx-0" />
+                  <CardTitle className="text-subheader font-medium">Publikacja</CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-4 md:pb-6">
+                  <p className="text-gray-500 text-sub-descript-18">
+                    Udostępnij swoją podróż i rozpocznij zapisy na praktykę.
+                  </p>
+                </CardContent>
+              </div>
             </Card>
           </div>
         </div>
@@ -258,14 +269,9 @@ const PartnersPage = () => {
                   <span className="mr-2 min-w-12 w-12 font-serif text-2xl italic text-gray-700 hidden md:block">
                     चत्वारि
                   </span>
-                  <div className="flex flex-col gap-0">
-                    <span className="text-left md:text-center text-subheader text-gray-800">
-                      Nie musisz być wielki, by zacząć
-                    </span>
-                    <span className="hidden md:block md:text-center text-sub-descript-18 text-gray-500">
-                      Zacznij teraz — to zajmie tylko chwilę
-                    </span>
-                  </div>
+                  <span className="text-left md:text-center text-subheader text-gray-800 md:pr-5">
+                    Nie musisz być wielki, by zacząć
+                  </span>
                 </div>
                 <Link href="/dashboard">
                   <Button
