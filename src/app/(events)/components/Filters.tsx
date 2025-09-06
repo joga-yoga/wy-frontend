@@ -55,7 +55,7 @@ const Filters: React.FC = () => {
     { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
     { Icon: PortugalIcon, label: "Portugal", filter: { country: "Portugal" }, name: "POR" },
     { Icon: ThailandIcon, label: "Thailand", filter: { country: "Thailand" }, name: "THA" },
-    { Icon: SrilankaIcon, label: "Shrilanka", filter: { country: "Shrilanka" }, name: "SRI" },
+    { Icon: SrilankaIcon, label: "Shrilanka", filter: { country: "Sri Lanka" }, name: "SRI" },
   ];
   const searchInputRef = useRef<HTMLInputElement>(null);
 
