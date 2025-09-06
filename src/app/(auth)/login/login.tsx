@@ -6,8 +6,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { IoLogoFacebook, IoLogoGoogle } from "react-icons/io5";
 import { z } from "zod";
 
+import { LogoPartners } from "@/app/(events)/partners/components/LogoPartners";
+import LogoFacebook from "@/components/icons/logos/LogoFacebook";
+import LogoGoogle from "@/components/icons/logos/LogoGoogle";
+import LogoTransparentSmall from "@/components/icons/LogoTransparentSmall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
@@ -118,73 +123,83 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[100svh] px-4">
+    <div className="flex flex-col items-center justify-between min-h-[100svh] px-4">
+      <div className="py-10">
+        <Link href="/">
+          <div className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] text-xl md:text-h-middle bg-gray-600">
+            <LogoTransparentSmall className={`w-10 h-10 md:w-16 md:h-16 text-white`} />
+          </div>
+        </Link>
+      </div>
       {step === "email" && (
         <form onSubmit={handleEmailSubmit(onSubmitEmail)} className="space-y-4 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-center">Enter your email</h1>
-          <Input placeholder="Your email" {...registerEmail("email")} type="email" />
-          <Button type="submit" className="w-full">
-            Continue
+          <h1 className="text-2xl font-bold text-center pb-2">Zaloguj się lub zarejestruj</h1>
+          <Input
+            placeholder="Wprowadź e-mail"
+            {...registerEmail("email")}
+            className="h-10"
+            type="email"
+          />
+          <Button type="submit" className="w-full h-10 hover:bg-gray-800">
+            Dalej
           </Button>
-          {/* TODO: Add prod-ready links */}
           <Link
             href={`${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login`}
-            className="block mt-2"
+            className="block"
           >
-            <Button className="w-full" variant="outline" type="button">
-              Continue with Google
+            <Button className="w-full relative h-10" variant="outline" type="button">
+              <LogoGoogle className="h-6 w-6 size-6 absolute left-4" />
+              <span>Kontynuuj z Google</span>
             </Button>
           </Link>
-          {/* TODO: Add prod-ready links */}
           <Link
             href={`${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login`}
-            className="block mt-2"
+            className="block"
           >
-            <Button className="w-full" variant="outline" type="button">
-              Continue with Facebook
+            <Button className="w-full relative h-10" variant="outline" type="button">
+              <LogoFacebook className="h-6 w-6 size-6 absolute left-4" />
+              <span>Kontynuuj z Facebook</span>
             </Button>
           </Link>
         </form>
       )}
 
       {step === "login" && (
-        <>
-          <form
-            onSubmit={handlePasswordSubmit(onSubmitPasswordLogin)}
-            className="space-y-4 max-w-md w-full"
+        <form
+          onSubmit={handlePasswordSubmit(onSubmitPasswordLogin)}
+          className="space-y-4 max-w-md w-full"
+        >
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setStep("email")}
+            className="flex items-center gap-2"
           >
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setStep("email")}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {/* Back */}
-            </Button>
-            <h1 className="text-2xl font-bold text-center">Welcome back</h1>
-            <Input
-              placeholder="Your email"
-              defaultValue={emailValue}
-              readOnly
-              autoComplete="username"
-            />
-            <Input type="password" placeholder="Your password" {...registerPassword("password")} />
-            <Button type="submit" className="w-full">
-              Log in
-            </Button>
-            <div className="flex flex-col items-center mt-4">
-              <p className="text-center text-sm mt-2">
-                <span
-                  className="text-blue-500 hover:underline cursor-pointer"
-                  onClick={() => setStep("forgot")}
-                >
-                  Forgot password?
-                </span>
-              </p>
-            </div>
-          </form>
-        </>
+            <ArrowLeft className="w-4 h-4" />
+            {/* Wstecz */}
+          </Button>
+          <h1 className="text-2xl font-bold text-center">Witamy ponownie</h1>
+          <Input
+            placeholder="Twój e-mail"
+            defaultValue={emailValue}
+            readOnly
+            autoComplete="username"
+          />
+          <Input type="password" placeholder="Twoje hasło" {...registerPassword("password")} />
+          <Button type="submit" className="w-full">
+            Zaloguj się
+          </Button>
+          <div className="flex flex-col items-center mt-4">
+            <p className="text-center text-sm mt-2">
+              <span
+                className="text-gray-700 hover:underline cursor-pointer"
+                onClick={() => setStep("forgot")}
+              >
+                Zapomniałeś hasła?
+              </span>
+            </p>
+          </div>
+        </form>
       )}
 
       {step === "signup" && (
@@ -192,28 +207,24 @@ export function LoginPage() {
           onSubmit={handlePasswordSubmit(onSubmitPasswordSignup)}
           className="space-y-4 max-w-md w-full"
         >
-          <h1 className="text-2xl font-bold text-center">Sign up</h1>
+          <h1 className="text-2xl font-bold text-center">Zarejestruj się</h1>
           <Input
-            placeholder="Your email"
+            placeholder="Twój e-mail"
             defaultValue={emailValue}
             {...registerEmail("email")}
             autoComplete="username"
           />
-          <Input
-            type="password"
-            placeholder="Create a password"
-            {...registerPassword("password")}
-          />
+          <Input type="password" placeholder="Twoje hasło" {...registerPassword("password")} />
           <Button type="submit" className="w-full">
-            Sign up
+            Zarejestruj się
           </Button>
           <p className="text-center text-sm mt-4">
-            Use another account{" "}
+            Użyj innego konta{" "}
             <span
-              className="text-blue-500 hover:underline cursor-pointer"
+              className="text-gray-700 hover:underline cursor-pointer"
               onClick={() => setStep("email")}
             >
-              here
+              tutaj
             </span>
           </p>
         </form>
@@ -221,26 +232,27 @@ export function LoginPage() {
 
       {step === "forgot" && (
         <form onSubmit={handleForgotSubmit(onSubmitForgot)} className="space-y-4 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-center">Reset password</h1>
+          <h1 className="text-2xl font-bold text-center">Zresetuj hasło</h1>
           <Input
-            placeholder="Your email"
+            placeholder="Twój e-mail"
             defaultValue={emailValue}
             {...registerForgot("email")}
             autoComplete="username"
           />
           <Button type="submit" className="w-full">
-            Send reset link
+            Wyślij link resetowania
           </Button>
           <p className="text-center text-sm mt-4">
             <span
-              className="text-blue-500 hover:underline cursor-pointer"
+              className="text-gray-700 hover:underline cursor-pointer"
               onClick={() => setStep("login")}
             >
-              Back to login
+              Powrót do logowania
             </span>
           </p>
         </form>
       )}
+      <div className="w-full h-[120px] md:h-[144px]" />
     </div>
   );
 }

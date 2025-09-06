@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import React from "react";
 import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5";
 
-import { LogoPartners } from "@/app/(events)/partners/components/LogoPartners";
 import { cn } from "@/lib/utils";
 
 import LogoTransparentSmall from "../icons/LogoTransparentSmall";
@@ -18,8 +17,8 @@ const FOOTER_SECTIONS: {
   {
     title: "Pomoc",
     links: [
-      { label: "FAQ dla organizatorów", href: "#" },
-      { label: "FAQ dla podróżujących", href: "#" },
+      { label: "FAQ dla organizatorów", href: "/faq/organizers" },
+      { label: "FAQ dla podróżujących", href: "/faq/travelers" },
     ],
     description: <p className="text-m-sunscript-font text-gray-500">© 2025 All Rights Reserved</p>,
   },
@@ -30,7 +29,7 @@ const FOOTER_SECTIONS: {
       { label: "Najlepsze wyjazdy jogowe", href: "#" },
     ],
     description: (
-      <Link href="#" className="text-m-sunscript-font text-gray-500 hover:underline">
+      <Link href="/policy" className="text-m-sunscript-font text-gray-500 hover:underline">
         Polityka prywatności
       </Link>
     ),
@@ -52,7 +51,7 @@ const FOOTER_SECTIONS: {
     title: "O nas",
     links: [
       { label: "Blog", href: "#" },
-      { label: "Kontakt", href: "#" },
+      { label: "Kontakt", href: "/contact" },
     ],
     description: (
       <div className="flex gap-2">
