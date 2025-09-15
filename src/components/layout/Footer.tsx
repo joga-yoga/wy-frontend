@@ -41,7 +41,7 @@ const FOOTER_SECTIONS: {
       { label: "Joga w Polsce 2025", href: "#" },
     ],
     description: (
-      <Link href="#" className="text-m-sunscript-font text-gray-500 hover:underline">
+      <Link href="/terms" className="text-m-sunscript-font text-gray-500 hover:underline">
         Regulamin
       </Link>
     ),
