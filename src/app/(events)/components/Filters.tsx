@@ -284,7 +284,7 @@ const Filters: React.FC = () => {
                         )}
                         onClick={() => setLocationFilterAndReset(item.filter)}
                       >
-                        <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)] stroke-[1px]" />
+                        <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)] stroke-[1.75px]" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">

@@ -139,6 +139,9 @@ const EventsPage: React.FC = () => {
       if (sortConfig && sortConfig.field && sortConfig.order) {
         params.append("sortBy", sortConfig.field);
         params.append("sortOrder", sortConfig.order);
+      } else {
+        params.append("sortBy", "published_at");
+        params.append("sortOrder", "desc");
       }
       params.append("limit", EVENTS_PER_PAGE.toString());
       params.append("skip", skip.toString());
