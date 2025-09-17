@@ -5,14 +5,27 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 const ContactPage = () => {
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log("Message submitted:", message);
+    if (!message.trim()) return;
+    setSubmitting(true);
+    setSubmitResult(null);
+    try {
+      await axiosInstance.post("/utils/contact", { message });
+      setMessage("");
+      setSubmitResult("Dziękujemy! Wiadomość została wysłana.");
+    } catch (err) {
+      setSubmitResult("Nie udało się wysłać wiadomości. Spróbuj ponownie później.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -34,7 +47,10 @@ const ContactPage = () => {
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
             />
-            <Button type="submit" className="w-full">
+            {submitResult && (
+              <p className="text-sm text-center text-gray-600 dark:text-gray-400">{submitResult}</p>
+            )}
+            <Button type="submit" className="w-full" disabled={submitting || !message.trim()}>
               Wyślij wiadomość
             </Button>
           </form>
