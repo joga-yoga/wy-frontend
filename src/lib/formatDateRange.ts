@@ -1,5 +1,12 @@
-import { format, isSameMonth, isSameYear, parseISO, setDefaultOptions } from "date-fns";
-import { pl } from "date-fns/locale"; // Import the Polish locale
+import {
+  format,
+  formatDistanceToNow,
+  isSameMonth,
+  isSameYear,
+  parseISO,
+  setDefaultOptions,
+} from "date-fns";
+import { enUS, pl } from "date-fns/locale"; // Import the Polish locale
 
 // Set default options for date-fns to use the Polish locale
 // This should ideally be done once at the entry point of your application
@@ -137,5 +144,23 @@ export function formatDateRange(startDateStr?: string | null, endDateStr?: strin
     // Dates in different years: "31 lip 2023 – 1 sie 2024"
     // 'MMM d yyyy' (abbreviated month day year) for both
     return `${format(startDate, "MMM d yyyy")} - ${format(endDate, "MMM d yyyy")}`;
+  }
+}
+
+export function formatTimeAgo(dateStr: string | Date): string {
+  try {
+    const date = typeof dateStr === "string" ? parseISO(dateStr) : dateStr;
+
+    if (isNaN(date.getTime())) {
+      return "Uncorrect date";
+    }
+
+    return formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: enUS,
+    });
+  } catch (error) {
+    console.error("Date format error:", error);
+    return "Uncorrect date";
   }
 }

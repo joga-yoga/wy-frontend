@@ -14,7 +14,7 @@ export const BookmarkButton = ({
 }: {
   isActive: boolean;
   toggleHandler: (e?: any) => void;
-  size?: "small" | "large" | "mobile-footer" | "desktop-filter";
+  size?: "xs" | "small" | "large" | "mobile-footer" | "desktop-filter";
   variant?: "default" | "black";
   className?: string;
   iconClassName?: string;
@@ -24,7 +24,8 @@ export const BookmarkButton = ({
     <button
       onClick={toggleHandler}
       className={cn(
-        "flex items-center justify-center bg-gray-100 rounded-full",
+        "relative flex items-center justify-center bg-gray-100 rounded-full",
+        size === "xs" && "h-[22px] w-[22px] p-0 min-w-0 min-h-0",
         size === "small" && "h-8 w-8 md:h-10 md:w-10",
         size === "large" && "h-10 w-10 md:h-12 md:w-12",
         size === "mobile-footer" && "h-12 w-12",
@@ -38,6 +39,7 @@ export const BookmarkButton = ({
         strokeWidth={0.5}
         className={cn(
           "absolute",
+          size === "xs" && "w-[13px] h-[13px]",
           size === "small" &&
             "w-[calc(20px+2px)] h-[calc(20px+2px)] md:w-[calc(24px+2px)] md:h-[calc(24px+2px)]",
           size === "large" &&
