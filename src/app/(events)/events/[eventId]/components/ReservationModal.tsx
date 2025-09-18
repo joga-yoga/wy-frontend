@@ -6,13 +6,7 @@ import React from "react";
 
 import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDateRange } from "@/lib/formatDateRange";
 
 import { EventDetail } from "../types";
