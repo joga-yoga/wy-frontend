@@ -19,7 +19,6 @@ const ReviewCard = ({ review, image, className = "w-full max-w-[402px]" }: Revie
 
   return (
     <div className={`${className} flex flex-col items-start`}>
-      {/* Автор */}
       <div className="flex w-full items-center gap-2.5 mt-5 mb-5">
         <div className="relative w-[44px] h-[44px] rounded-full overflow-hidden shrink-0">
           <Image
@@ -37,7 +36,6 @@ const ReviewCard = ({ review, image, className = "w-full max-w-[402px]" }: Revie
         </div>
       </div>
 
-      {/* Рейтинг */}
       <div className="mb-3 flex items-center gap-1">
         {Array.from({ length: 5 }).map((_, i) => {
           const isBlack = i < normalizedRating;
@@ -54,7 +52,6 @@ const ReviewCard = ({ review, image, className = "w-full max-w-[402px]" }: Revie
         })}
       </div>
 
-      {/* Текст */}
       <div className="text-m-descript md:text-m-sunscript-font text-gray-500 break-words line-clamp-6">
         {review.review_text}
       </div>

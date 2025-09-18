@@ -3,6 +3,8 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 
+import useIsMobile from "@/hooks/useIsMobile";
+
 interface CarouselProps<T> {
   title?: string;
   items: T[];
@@ -15,6 +17,7 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = React.useState(false);
   const [canScrollRight, setCanScrollRight] = React.useState(true);
+  const isMobile = useIsMobile();
 
   const updateButtons = () => {
     if (!scrollRef.current) return;
@@ -27,7 +30,11 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
     const { scrollLeft, clientWidth } = scrollRef.current;
-    const amount = clientWidth * 0.8;
+
+    const firstChild = scrollRef.current.firstElementChild as HTMLElement | null;
+    const cardWidth = firstChild ? firstChild.offsetWidth + 29 /* gap */ : clientWidth;
+
+    const amount = isMobile ? cardWidth : clientWidth * 0.8;
 
     scrollRef.current.scrollTo({
       left: dir === "left" ? scrollLeft - amount : scrollLeft + amount,
@@ -49,12 +56,10 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
     };
   }, []);
 
-  // Показываем кнопки только если элементов больше 2
   const showControls = items.length > 2;
 
   return (
     <div className={`w-full ${className || ""}`}>
-      {/* Заголовок + кнопки */}
       {title && (
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-listing-description md:text-h-middle text-gray-800">{title}</h2>
@@ -79,7 +84,6 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
         </div>
       )}
 
-      {/* Горизонтальный скролл */}
       <div
         ref={scrollRef}
         className="
@@ -95,9 +99,9 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
             key={index}
             className="
               flex-shrink-0
-              w-[100%]                 /* мобилка: 1 карточка */
-              sm:w-[calc((100%/1.5)-29px)] /* планшет: 1.5 карточки */
-              md:w-[calc((100%/2.5)-29px)] /* десктоп: 2.5 карточки */
+              w-[100%]
+              sm:w-[calc((100%/1.5)-29px)]
+              md:w-[calc((100%/2.5)-29px)]
             "
           >
             {renderItem(item, index, image)}

@@ -1,10 +1,8 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import Image from "next/image";
 import React from "react";
 
-import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
 import ReviewCard from "@/app/(events)/organizer/[organizerId]/components/ReviewCard";
 import { OrganizerReview } from "@/app/(events)/organizer/[organizerId]/types";
 import {
@@ -39,16 +37,16 @@ export const ReviewsModal = ({
       md:max-w-[800px]
       h-[90vh]
       flex flex-col
-      p-0   /* убираем паддинги у оболочки, чтобы хедер и контент разделять сами */
+      p-0
         "
       >
-        <DialogHeader className="sticky top-0 bg-white z-20 px-6 py-4 border-b  rounded-t-lg ">
-          <DialogTitle>{title}</DialogTitle>
+        <DialogHeader className="sticky top-0 bg-white z-20 px-6 py-4 border-b rounded-t-lg">
+          <DialogTitle className="text-left pr-8">{title}</DialogTitle>
 
           <DialogClose
             className="
-      absolute top-1 right-2
-      rounded-full p-2
+      absolute top-2 right-2
+      rounded-full p-1.5
       bg-secondary text-secondary-foreground
       shadow-md
       hover:bg-secondary/80
@@ -60,7 +58,6 @@ export const ReviewsModal = ({
           </DialogClose>
         </DialogHeader>
 
-        {/* Контент с прокруткой */}
         <div className="flex-1 overflow-y-auto px-6 py-4 pr-4">
           <div className="flex flex-col gap-4">
             {reviews.map((review, index) => (

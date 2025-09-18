@@ -100,7 +100,7 @@ const OrganizerPage = () => {
               <h2 className="text-h-small md:text-h-big text-gray-800 mb-[45px]">
                 {organizer.organizer.name}
               </h2>
-              <p className="text-m-descript md:text-descrip-under-header text-gray-500 line-clamp-5">
+              <p className="text-m-descript md:text-descrip-under-header text-gray-500">
                 {organizer.organizer.description}
               </p>
             </div>
