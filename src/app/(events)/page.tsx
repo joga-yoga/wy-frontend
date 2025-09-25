@@ -5,6 +5,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import Link from "next/link"; // Import Link from next/link
+import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button"; // Import shadcn Button
@@ -20,6 +21,7 @@ import { Event } from "./types";
 const EVENTS_PER_PAGE = 10;
 
 const EventsPage: React.FC = () => {
+  const searchParams = useSearchParams();
   const { debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive, bookmarkedEventIds } =
     useEventsFilter();
 
@@ -83,10 +85,33 @@ const EventsPage: React.FC = () => {
 
       try {
         const params = new URLSearchParams();
+
+        // Add context-based filters (search, location, sort)
         if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
         if (locationFilter?.country) params.append("country", locationFilter.country);
         if (locationFilter?.state_province)
           params.append("state_province", locationFilter.state_province);
+
+        // Add URL-based filter parameters from FiltersModal
+        const urlCountry = searchParams.get("country");
+        if (urlCountry && !locationFilter?.country) params.append("country", urlCountry);
+
+        const startDateFrom = searchParams.get("start_date_from");
+        if (startDateFrom) params.append("start_date_from", startDateFrom);
+
+        const startDateTo = searchParams.get("start_date_to");
+        if (startDateTo) params.append("start_date_to", startDateTo);
+
+        const priceMin = searchParams.get("price_min");
+        if (priceMin) params.append("price_min", priceMin);
+
+        const priceMax = searchParams.get("price_max");
+        if (priceMax) params.append("price_max", priceMax);
+
+        const language = searchParams.get("language");
+        if (language) params.append("language", language);
+
+        // Add sorting
         if (sortConfig && sortConfig.field && sortConfig.order) {
           params.append("sortBy", sortConfig.field);
           params.append("sortOrder", sortConfig.order);
@@ -123,7 +148,7 @@ const EventsPage: React.FC = () => {
     };
 
     fetchEvents();
-  }, [debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive]);
+  }, [debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive, searchParams]);
 
   const handleLoadMore = async () => {
     if (loading || skip >= totalEvents || isLoadingMore) return;
@@ -132,10 +157,33 @@ const EventsPage: React.FC = () => {
     setError(null);
     try {
       const params = new URLSearchParams();
+
+      // Add context-based filters (search, location, sort)
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (locationFilter?.country) params.append("country", locationFilter.country);
       if (locationFilter?.state_province)
         params.append("state_province", locationFilter.state_province);
+
+      // Add URL-based filter parameters from FiltersModal
+      const urlCountry = searchParams.get("country");
+      if (urlCountry && !locationFilter?.country) params.append("country", urlCountry);
+
+      const startDateFrom = searchParams.get("start_date_from");
+      if (startDateFrom) params.append("start_date_from", startDateFrom);
+
+      const startDateTo = searchParams.get("start_date_to");
+      if (startDateTo) params.append("start_date_to", startDateTo);
+
+      const priceMin = searchParams.get("price_min");
+      if (priceMin) params.append("price_min", priceMin);
+
+      const priceMax = searchParams.get("price_max");
+      if (priceMax) params.append("price_max", priceMax);
+
+      const language = searchParams.get("language");
+      if (language) params.append("language", language);
+
+      // Add sorting
       if (sortConfig && sortConfig.field && sortConfig.order) {
         params.append("sortBy", sortConfig.field);
         params.append("sortOrder", sortConfig.order);

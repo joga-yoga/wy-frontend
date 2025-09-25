@@ -1,318 +1,332 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  [role=button],button {
-    cursor: pointer
-  }
+    * {
+        @apply border-border outline-ring/50;
+    }
 
-  /* Disable number input arrows */
-  /* Chrome, Safari, Edge, Opera */
-  input::-webkit-outer-spin-button,
-  input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  /* Firefox */
-  input[type=number] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-  }
+    body {
+        @apply bg-background text-foreground;
+    }
 
-  html {
-    scrollbar-gutter: stable;
-  }
-  body[data-scroll-locked] {
-    margin-right: 0px !important; /* For LTR layout */
-    margin-left: 0px !important;  /* For RTL layout */
-    overflow: visible !important;
-  }
-  .lucide {
-    stroke-width: 1.25;
-  }
+    [role=button], button {
+        cursor: pointer
+    }
+
+    /* Disable number input arrows */
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    html {
+        scrollbar-gutter: stable;
+    }
+
+    body[data-scroll-locked] {
+        margin-right: 0px !important; /* For LTR layout */
+        margin-left: 0px !important; /* For RTL layout */
+        overflow: visible !important;
+    }
+
+    .lucide {
+        stroke-width: 1.25;
+    }
 }
 
 @layer utilities {
-  .container-wy {
-    width: 100%;
-    @media (width >= 40rem) {
-      max-width: 40rem;
+    .container-wy {
+        width: 100%;
+        @media (width >= 40rem) {
+            max-width: 40rem;
+        }
+        @media (width >= 48rem) {
+            max-width: 48rem;
+        }
+        @media (width >= 64rem) {
+            max-width: 64rem;
+        }
+        @media (width >= 80rem) {
+            max-width: 72rem;
+        }
+        @media (width >= 96rem) {
+            max-width: 72rem;
+        }
     }
-    @media (width >= 48rem) {
-      max-width: 48rem;
-    }
-    @media (width >= 64rem) {
-      max-width: 64rem;
-    }
-    @media (width >= 80rem) {
-      max-width: 72rem;
-    }
-    @media (width >= 96rem) {
-      max-width: 72rem;
-    }
-  }
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
 
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-    50% {
-      opacity: .5;
-    }
-  }
 
-  .animate-pulse-border {
-    animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse-border {
-    0%, 100% {
-      border-color: oklch(0.73 0.2303 144.24 / 1); /* Corresponds to --brand-green full opacity */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: .5;
+        }
     }
-    50% {
-      border-color: oklch(0.73 0.2303 144.24 / 0.5); /* Corresponds to --brand-green 50% opacity */
-    }
-  }
 
-  .event-form-section-gap {
-    @apply flex flex-col gap-12 md:gap-[80px];
-  }
+    .animate-pulse-border {
+        animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-border {
+        0%, 100% {
+            border-color: oklch(0.73 0.2303 144.24 / 1); /* Corresponds to --brand-green full opacity */
+        }
+        50% {
+            border-color: oklch(0.73 0.2303 144.24 / 0.5); /* Corresponds to --brand-green 50% opacity */
+        }
+    }
+
+    .event-form-section-gap {
+        @apply flex flex-col gap-12 md:gap-[80px];
+    }
 }
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-brand-green: var(--brand-green);
-  --color-brand-yellow: var(--brand-yellow);
-  --color-brand-aqua: var(--brand-aqua);
-  --color-brand-red: var(--brand-red);
-  --color-brand-blue: var(--brand-blue);
-  --color-brand-pink: var(--brand-pink);
-  --color-gray-50: var(--gray-50);
-  --color-gray-100: var(--gray-100);
-  --color-gray-200: var(--gray-200);
-  --color-gray-300: var(--gray-300);
-  --color-gray-400: var(--gray-400);
-  --color-gray-500: var(--gray-500);
-  --color-gray-600: var(--gray-600);
-  --color-gray-700: var(--gray-700);
-  --color-gray-800: var(--gray-800);
-  --color-gray-900: var(--gray-900);
-  --color-placeholder: var(--gray-300);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-brand-green: var(--brand-green);
+    --color-brand-yellow: var(--brand-yellow);
+    --color-brand-aqua: var(--brand-aqua);
+    --color-brand-red: var(--brand-red);
+    --color-brand-blue: var(--brand-blue);
+    --color-brand-pink: var(--brand-pink);
+    --color-gray-50: var(--gray-50);
+    --color-gray-100: var(--gray-100);
+    --color-gray-200: var(--gray-200);
+    --color-gray-300: var(--gray-300);
+    --color-gray-400: var(--gray-400);
+    --color-gray-500: var(--gray-500);
+    --color-gray-600: var(--gray-600);
+    --color-gray-700: var(--gray-700);
+    --color-gray-800: var(--gray-800);
+    --color-gray-900: var(--gray-900);
+    --color-placeholder: var(--gray-300);
 
-  --font-family-hind: "Hind Siliguri", sans-serif;
+    --font-family-hind: "Hind Siliguri", sans-serif;
 
-  /* h_big: Font(family: "Hind Siliguri", style: SemiBold, size: 46, weight: 600, lineHeight: 50) */
-  --text-h-big: 46px;
-  --text-h-big--line-height: 50px;
-  --text-h-big--font-weight: 600;
+    /* h_big: Font(family: "Hind Siliguri", style: SemiBold, size: 46, weight: 600, lineHeight: 50) */
+    --text-h-big: 46px;
+    --text-h-big--line-height: 50px;
+    --text-h-big--font-weight: 600;
 
-  /* h_middle: Font(family: "Hind Siliguri", style: SemiBold, size: 30, weight: 600, lineHeight: 30) */
-  --text-h-middle: 30px;
-  --text-h-middle--line-height: 30px;
-  --text-h-middle--font-weight: 600;
-  
-  /* h_small: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 30) */
-  --text-h-small: 22px;
-  --text-h-small--line-height: 30px;
-  --text-h-small--font-weight: 500;
-  
-  /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
-  --text-descr-under-big-head: 24px;
-  --text-descr-under-big-head--line-height: 30px;
-  --text-descr-under-big-head--font-weight: 500;
+    /* h_middle: Font(family: "Hind Siliguri", style: SemiBold, size: 30, weight: 600, lineHeight: 30) */
+    --text-h-middle: 30px;
+    --text-h-middle--line-height: 30px;
+    --text-h-middle--font-weight: 600;
 
-  /* middle_header_22: Font(family: "Hind Siliguri", style: Medium, size: 22, weight: 500, lineHeight: 30) */
-  --text-middle-header-22: 22px;
-  --text-middle-header-22--line-height: 30px;
-  --text-middle-header-22--font-weight: 500;
+    /* h_small: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 30) */
+    --text-h-small: 22px;
+    --text-h-small--line-height: 30px;
+    --text-h-small--font-weight: 500;
 
-  /* m_subtitle: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 22) */
-  --text-m-subtitle: 22px;
-  --text-m-subtitle--line-height: 22px;
-  --text-m-subtitle--font-weight: 600;
+    /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
+    --text-descr-under-big-head: 24px;
+    --text-descr-under-big-head--line-height: 30px;
+    --text-descr-under-big-head--font-weight: 500;
 
-  /* descrip_under_header: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 30) */
-  --text-descrip-under-header: 20px;
-  --text-descrip-under-header--line-height: 22px;
-  --text-descrip-under-header--font-weight: 500;
+    /* middle_header_22: Font(family: "Hind Siliguri", style: Medium, size: 22, weight: 500, lineHeight: 30) */
+    --text-middle-header-22: 22px;
+    --text-middle-header-22--line-height: 30px;
+    --text-middle-header-22--font-weight: 500;
 
-  /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
-  --text-descr-under-big-head: 24px;
-  --text-descr-under-big-head--line-height: 30px;
-  --text-descr-under-big-head--font-weight: 500;
+    /* m_subtitle: Font(family: "Hind Siliguri", style: SemiBold, size: 22, weight: 600, lineHeight: 22) */
+    --text-m-subtitle: 22px;
+    --text-m-subtitle--line-height: 22px;
+    --text-m-subtitle--font-weight: 600;
 
-    
-  /* subheader: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 28) */
-  --text-subheader: 18px;
-  --text-subheader--line-height: 28px;
-  --text-subheader--font-weight: 500;
+    /* descrip_under_header: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 30) */
+    --text-descrip-under-header: 20px;
+    --text-descrip-under-header--line-height: 22px;
+    --text-descrip-under-header--font-weight: 500;
 
-  /* sub_descript_18: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 22) */
-  --text-sub-descript-18: 18px;
-  --text-sub-descript-18--line-height: 22px;
-  --text-sub-descript-18--font-weight: 500;
+    /* descr_under_big_head: Font(family: "Hind Siliguri", style: Medium, size: 24, weight: 500, lineHeight: 30) */
+    --text-descr-under-big-head: 24px;
+    --text-descr-under-big-head--line-height: 30px;
+    --text-descr-under-big-head--font-weight: 500;
 
-  /* m_descript: Font(family: "Hind Siliguri", style: Regular, size: 16, weight: 400, lineHeight: 18) */
-  --text-m-descript: 16px;
-  --text-m-descript--line-height: 18px;
-  --text-m-descript--font-weight: 400;
 
-  /* m_header: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
-  --text-m-header: 15px;
-  --text-m-header--line-height: 18px;
-  --text-m-header--font-weight: 500;
-  
-  /* m_sunscript_font: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
-  --text-m-sunscript-font: 15px;
-  --text-m-sunscript-font--line-height: 18px;
-  --text-m-sunscript-font--font-weight: 400;
+    /* subheader: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 28) */
+    --text-subheader: 18px;
+    --text-subheader--line-height: 28px;
+    --text-subheader--font-weight: 500;
 
-  /* listing_description: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 25) */
-  --text-listing-description: 20px;
-  --text-listing-description--line-height: 25px;
-  --text-listing-description--font-weight: 500;
+    /* sub_descript_18: Font(family: "Hind Siliguri", style: Medium, size: 18, weight: 500, lineHeight: 22) */
+    --text-sub-descript-18: 18px;
+    --text-sub-descript-18--line-height: 22px;
+    --text-sub-descript-18--font-weight: 500;
 
-  /* footer_links */
-  --text-footer-links: 16px;
-  --text-footer-links--line-height: 15px;
-  --text-footer-links--font-weight: 400;
+    /* m_descript: Font(family: "Hind Siliguri", style: Regular, size: 16, weight: 400, lineHeight: 18) */
+    --text-m-descript: 16px;
+    --text-m-descript--line-height: 18px;
+    --text-m-descript--font-weight: 400;
+
+    /* m_header: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
+    --text-m-header: 15px;
+    --text-m-header--line-height: 18px;
+    --text-m-header--font-weight: 500;
+
+    /* m_sunscript_font: Font(family: "Hind Siliguri", style: Regular, size: 15, weight: 400, lineHeight: 18) */
+    --text-m-sunscript-font: 15px;
+    --text-m-sunscript-font--line-height: 18px;
+    --text-m-sunscript-font--font-weight: 400;
+
+    /* listing_description: Font(family: "Hind Siliguri", style: Medium, size: 20, weight: 500, lineHeight: 25) */
+    --text-listing-description: 20px;
+    --text-listing-description--line-height: 25px;
+    --text-listing-description--font-weight: 500;
+
+    /* footer_links */
+    --text-filter-subtitle: 14px;
+    --text-filter-subtitle--line-height: 16px;
+    --text-filter-subtitle--font-weight: 600;
+
+    /* filter calendar */
+    --text-calendar: 14px;
+    --text-calendar--line-height: 16px;
+    --text-calendar--font-weight: 400;
+
+    /* footer_links */
+    --text-footer-links: 16px;
+    --text-footer-links--line-height: 15px;
+    --text-footer-links--font-weight: 400;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  /* --primary: oklch(0.205 0 0); */
-  --primary: #000000;
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.63 0.201 25.14);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.71 0.0351 256.79);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --brand-green: oklch(0.73 0.2303 144.24);
-  --brand-yellow: oklch(0.77 0.22 96.93);
-  --brand-aqua: oklch(0.71 0.16 197.37);
-  --brand-red: oklch(0.63 0.201 25.14);
-  --brand-blue: oklch(0.66 0.18 262.89);
-  --brand-pink: oklch(0.61 0.21 330.72);
-  --gray-50: oklch(0.9851 0 0);
-  --gray-100: oklch(0.9614 0.0013 286.38);
-  --gray-200: oklch(0.9197 0.004 286.32);
-  --gray-300: oklch(0.8711 0.0055 286.29);
-  --gray-400: oklch(0.7118 0.0129 286.07);
-  --gray-500: oklch(0.5517 0.0138 285.94);
-  --gray-600: oklch(0.4419 0.0146 285.79);
-  --gray-700: oklch(0.3703 0.0119 285.81);
-  --gray-800: oklch(0.2739 0.0055 286.03);
-  --gray-900: oklch(0.2103 0.0059 285.89);
+    --radius: 0.625rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    /* --primary: oklch(0.205 0 0); */
+    --primary: #000000;
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.63 0.201 25.14);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.71 0.0351 256.79);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+    --brand-green: oklch(0.73 0.2303 144.24);
+    --brand-yellow: oklch(0.77 0.22 96.93);
+    --brand-aqua: oklch(0.71 0.16 197.37);
+    --brand-red: oklch(0.63 0.201 25.14);
+    --brand-blue: oklch(0.66 0.18 262.89);
+    --brand-pink: oklch(0.61 0.21 330.72);
+    --gray-50: oklch(0.9851 0 0);
+    --gray-100: oklch(0.9614 0.0013 286.38);
+    --gray-200: oklch(0.9197 0.004 286.32);
+    --gray-300: oklch(0.8711 0.0055 286.29);
+    --gray-400: oklch(0.7118 0.0129 286.07);
+    --gray-500: oklch(0.5517 0.0138 285.94);
+    --gray-600: oklch(0.4419 0.0146 285.79);
+    --gray-700: oklch(0.3703 0.0119 285.81);
+    --gray-800: oklch(0.2739 0.0055 286.03);
+    --gray-900: oklch(0.2103 0.0059 285.89);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --brand-green: oklch(0.73 0.2303 144.24);
-  --brand-yellow: oklch(0.77 0.22 96.93);
-  --brand-aqua: oklch(0.71 0.16 197.37);
-  --brand-red: oklch(0.63 0.201 25.14);
-  --brand-blue: oklch(0.66 0.18 262.89);
-  --brand-pink: oklch(0.61 0.21 330.72);
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+    --brand-green: oklch(0.73 0.2303 144.24);
+    --brand-yellow: oklch(0.77 0.22 96.93);
+    --brand-aqua: oklch(0.71 0.16 197.37);
+    --brand-red: oklch(0.63 0.201 25.14);
+    --brand-blue: oklch(0.66 0.18 262.89);
+    --brand-pink: oklch(0.61 0.21 330.72);
 }
-
