@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-import { IoStar, IoStarOutline } from "react-icons/io5";
+import { IoPersonOutline } from "react-icons/io5";
 
 import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
 import { LinkWithBlocker } from "@/app/(profile)/dashboard/events/(event)/components/EventForm/block-navigation/link";
@@ -151,7 +151,9 @@ export const EventsHeader: React.FC = () => {
                     height={128}
                   />
                 ) : (
-                  <CustomBurgerIcon className="h-10 w-10 md:h-12 md:w-12" />
+                  <div className="h-10 w-10 md:h-12 md:w-12 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+                    <IoPersonOutline className="h-6 w-6 md:h-8 md:w-8" />
+                  </div>
                 )}
               </button>
             </Link>

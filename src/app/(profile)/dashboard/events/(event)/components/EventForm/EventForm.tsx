@@ -708,6 +708,13 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
     toast({ description: "Zdjęcie usunięte z listy." });
   };
 
+  const handleSetCover = (imageIdToSet: string) => {
+    const currentImageIds = (getValues("image_ids") || []).filter((id) => id !== imageIdToSet);
+    const newOrder = [imageIdToSet, ...currentImageIds];
+    setValue("image_ids", newOrder, { shouldValidate: true, shouldDirty: true });
+    toast({ description: "Ustawiono zdjęcie jako okładkę." });
+  };
+
   if (isLoading && isEditMode) {
     return (
       <div className="p-6 space-y-8">
@@ -797,6 +804,7 @@ export function EventForm({ eventId, initialData, onLoadingChange }: EventFormPr
             pendingImages={pendingImages.map((p) => p.file)}
             control={control}
             name="image_ids"
+            handleSetCover={handleSetCover}
           />
         </div>
         <EventHelpBar />
