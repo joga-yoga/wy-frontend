@@ -56,7 +56,7 @@ const FOOTER_SECTIONS: {
     description: (
       <div className="flex gap-2">
         <Link
-          href="#"
+          href="https://www.facebook.com/groups/wyjazdyjogowe"
           className="text-gray-800 hover:text-gray-600 duration-200"
           target="_blank"
           rel="noopener noreferrer"
@@ -64,7 +64,7 @@ const FOOTER_SECTIONS: {
           <IoLogoFacebook className="w-6 h-6" />
         </Link>
         <Link
-          href="#"
+          href="https://www.instagram.com/wyjazdy.yoga/"
           className="text-gray-800 hover:text-gray-600 duration-200"
           target="_blank"
           rel="noopener noreferrer"

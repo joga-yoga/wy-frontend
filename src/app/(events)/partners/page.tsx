@@ -20,35 +20,121 @@ import { Separator } from "@/components/ui/separator";
 
 import { LogoPartners } from "./components/LogoPartners";
 
-const PartnersPage = () => {
+export const revalidate = 300;
+
+type PublicStats = {
+  total_public_events: number;
+  total_countries_with_public_events: number;
+  total_public_events_in_poland: number;
+  total_organizers: number;
+};
+
+function polishPlural(count: number, forms: [string, string, string]) {
+  const n = Math.abs(count);
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return forms[0];
+  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return forms[1];
+  return forms[2];
+}
+
+function polishCountriesLocativePhrase(count: number) {
+  const n = Math.abs(count);
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  const isSingular = mod10 === 1 && mod100 !== 11;
+  const noun = isSingular ? "kraju" : "krajach";
+  const pronoun = isSingular ? "w którym" : "w których";
+  return `${noun}, ${pronoun} działamy`;
+}
+
+async function fetchPublicStats(): Promise<PublicStats | null> {
+  try {
+    const base = process.env.NEXT_PUBLIC_API_ENDPOINT;
+    if (!base) return null;
+    // We intentionally use fetch here (and not axiosInstance):
+    // - This is a server component; axiosInstance adds a browser-only localStorage interceptor,
+    //   which breaks on the server.
+    // - fetch integrates with Next.js caching/ISR (see revalidate: 300) for better performance.
+    const res = await fetch(`${base}/public/stats`, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    return (await res.json()) as PublicStats;
+  } catch {
+    return null;
+  }
+}
+
+const PartnersPage = async () => {
+  const statsData = await fetchPublicStats();
+  const stats = statsData
+    ? [
+        {
+          title: String(statsData.total_public_events),
+          description: `${polishPlural(statsData.total_public_events, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w kalendarzu`,
+        },
+        {
+          title: String(statsData.total_countries_with_public_events),
+          description: polishCountriesLocativePhrase(statsData.total_countries_with_public_events),
+        },
+        {
+          title: String(statsData.total_public_events_in_poland),
+          description: `${polishPlural(statsData.total_public_events_in_poland, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w Polsce`,
+        },
+        {
+          title: String(statsData.total_organizers),
+          description: `${polishPlural(statsData.total_organizers, ["organizator", "organizatorzy", "organizatorów"])}`,
+        },
+      ]
+    : [];
   return (
     <div className="bg-white text-gray-800">
       {/* Hero Section */}
       <section
-        className="relative md:h-[700px] bg-cover bg-center rounded-b-2xl"
+        className="relative md:h-[700px] bg-cover bg-center rounded-b-2xl flex flex-col md:flex-row md:justify-between md:items-center"
         style={{
           backgroundImage: "url('/images/partners/hero.png')",
         }}
       >
         <div className="absolute inset-0 bg-[#000]/30 md:bg-[#000]/0 rounded-b-2xl" />
-        <div className="container-wy relative z-10 mx-auto flex h-full flex-col items-center md:items-start md:justify-between px-4 md:px-8 py-8 md:py-[80px] text-left text-white">
-          <Link href="/" className="mb-4 text-2xl font-bold">
-            <LogoPartners />
-          </Link>
-          <div className="flex flex-col gap-4">
-            <h1 className="text-center md:text-left font-semibold text-4xl md:text-[92px] md:leading-[88px] tracking-tight">
-              Współpraca <br />
-              Partnerska
-            </h1>
-            <p className="max-w-xl text-sm font-medium md:text-descrip-under-header text-center md:text-left">
-              Publikacja gratis. <br />
-              Podlinkuj nas w podziękowaniu.
-            </p>
-            <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="mt-2 text-black bg-white hover:bg-white/90 duration-200 w-full md:w-auto"
+        <div className="container-wy flex flex-row md:justify-between md:items-end w-full z-10 mx-auto h-full py-8 md:py-[80px]">
+          <div className="flex flex-col items-center md:items-start md:justify-between h-full px-4 md:px-8 text-left text-white w-full">
+            <Link href="/" className="mb-4 text-2xl font-bold">
+              <LogoPartners />
+            </Link>
+            <div className="flex flex-col gap-4">
+              <h1 className="text-center md:text-left font-semibold text-4xl md:text-[92px] md:leading-[88px] tracking-tight">
+                Współpraca <br />
+                Partnerska
+              </h1>
+              <p className="max-w-xl text-sm font-medium md:text-descrip-under-header text-center md:text-left md:mb-[60px]">
+                Publikacja gratis. <br />
+                Podlinkuj nas w podziękowaniu.
+              </p>
+              <Link href="/dashboard" className="md:hidden">
+                <Button
+                  size="lg"
+                  className="mt-2 text-black bg-white hover:bg-white/90 duration-200 w-full md:w-auto"
+                >
+                  Dołącz do nas
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="hidden md:flex flex-col gap-6 p-12 bg-white/95 rounded-xl shadow-lg ">
+            {stats.map((stat, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center md:items-start flex-1 min-w-[300px]"
               >
+                <div className="text-h-middle font-semibold text-gray-900">{stat.title}</div>
+                <div className="text-sub_description text-gray-600 mt-1 text-center md:text-left">
+                  {stat.description}
+                </div>
+              </div>
+            ))}
+            <Link href="/dashboard">
+              <Button size="cta" variant="cta" className="w-full rounded-lg">
                 Dołącz do nas
               </Button>
             </Link>
