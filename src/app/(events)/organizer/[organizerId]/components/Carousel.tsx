@@ -42,6 +42,21 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
     });
   };
 
+  // --- Автоснаппинг только на мобилке ---
+  const snapToCard = React.useCallback(() => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+
+    const firstChild = container.firstElementChild as HTMLElement | null;
+    if (!firstChild) return;
+
+    const cardWidth = firstChild.offsetWidth + 29; // ширина + gap
+    const index = Math.round(container.scrollLeft / cardWidth);
+    const target = index * cardWidth;
+
+    container.scrollTo({ left: target, behavior: "smooth" });
+  }, []);
+
   React.useEffect(() => {
     updateButtons();
     const el = scrollRef.current;
@@ -50,11 +65,27 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
     el.addEventListener("scroll", updateButtons);
     window.addEventListener("resize", updateButtons);
 
+    let timeout: NodeJS.Timeout;
+    if (isMobile && el) {
+      const onScroll = () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(snapToCard, 100); // ждём окончания свайпа
+      };
+      el.addEventListener("scroll", onScroll, { passive: true });
+
+      return () => {
+        el.removeEventListener("scroll", updateButtons);
+        window.removeEventListener("resize", updateButtons);
+        el.removeEventListener("scroll", onScroll);
+        clearTimeout(timeout);
+      };
+    }
+
     return () => {
       el.removeEventListener("scroll", updateButtons);
       window.removeEventListener("resize", updateButtons);
     };
-  }, []);
+  }, [isMobile, snapToCard]);
 
   const showControls = items.length > 2;
 
@@ -92,7 +123,7 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
           [&::-webkit-scrollbar]:hidden
           [-ms-overflow-style:'none'] [scrollbar-width:'none']
           gap-[29px]
-        "
+                  "
       >
         {items.map((item, index) => (
           <div
@@ -102,7 +133,7 @@ export const Carousel = <T,>({ title, items, renderItem, className, image }: Car
               w-[100%]
               sm:w-[calc((100%/1.5)-29px)]
               md:w-[calc((100%/2.5)-29px)]
-            "
+                    "
           >
             {renderItem(item, index, image)}
           </div>

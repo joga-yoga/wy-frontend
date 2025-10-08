@@ -5,7 +5,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import Link from "next/link"; // Import Link from next/link
-import React, { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import { Separator } from "@/components/ui/separator";
@@ -19,7 +20,8 @@ import { Event } from "./types";
 
 const EVENTS_PER_PAGE = 10;
 
-const EventsPage: React.FC = () => {
+const EventsPageContent: React.FC = () => {
+  const searchParams = useSearchParams();
   const { debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive, bookmarkedEventIds } =
     useEventsFilter();
 
@@ -44,7 +46,7 @@ const EventsPage: React.FC = () => {
       if (!isBookmarksActive) return;
       setLoading(true);
       setError(null);
-      setSkip(0); // Reset skip for new fetches
+      setSkip(0);
 
       try {
         const response = await getBookmarkedEvents();
@@ -53,7 +55,7 @@ const EventsPage: React.FC = () => {
           const processedEvents = response.map(mapApiItemToEvent);
           setEvents(processedEvents);
           setTotalEvents(processedEvents.length);
-          setSkip(processedEvents.length); // All bookmarked events are loaded
+          setSkip(processedEvents.length);
         } else {
           setEvents([]);
           setTotalEvents(0);
@@ -79,14 +81,34 @@ const EventsPage: React.FC = () => {
       if (isBookmarksActive) return;
       setLoading(true);
       setError(null);
-      setSkip(0); // Reset skip for new fetches
+      setSkip(0);
 
       try {
         const params = new URLSearchParams();
+
         if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
         if (locationFilter?.country) params.append("country", locationFilter.country);
         if (locationFilter?.state_province)
           params.append("state_province", locationFilter.state_province);
+
+        const urlCountry = searchParams.get("country");
+        if (urlCountry && !locationFilter?.country) params.append("country", urlCountry);
+
+        const startDateFrom = searchParams.get("start_date_from");
+        if (startDateFrom) params.append("start_date_from", startDateFrom);
+
+        const startDateTo = searchParams.get("start_date_to");
+        if (startDateTo) params.append("start_date_to", startDateTo);
+
+        const priceMin = searchParams.get("price_min");
+        if (priceMin) params.append("price_min", priceMin);
+
+        const priceMax = searchParams.get("price_max");
+        if (priceMax) params.append("price_max", priceMax);
+
+        const language = searchParams.get("language");
+        if (language) params.append("language", language);
+
         if (sortConfig && sortConfig.field && sortConfig.order) {
           params.append("sortBy", sortConfig.field);
           params.append("sortOrder", sortConfig.order);
@@ -123,7 +145,7 @@ const EventsPage: React.FC = () => {
     };
 
     fetchEvents();
-  }, [debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive]);
+  }, [debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive, searchParams]);
 
   const handleLoadMore = async () => {
     if (loading || skip >= totalEvents || isLoadingMore) return;
@@ -132,10 +154,30 @@ const EventsPage: React.FC = () => {
     setError(null);
     try {
       const params = new URLSearchParams();
+
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (locationFilter?.country) params.append("country", locationFilter.country);
       if (locationFilter?.state_province)
         params.append("state_province", locationFilter.state_province);
+
+      const urlCountry = searchParams.get("country");
+      if (urlCountry && !locationFilter?.country) params.append("country", urlCountry);
+
+      const startDateFrom = searchParams.get("start_date_from");
+      if (startDateFrom) params.append("start_date_from", startDateFrom);
+
+      const startDateTo = searchParams.get("start_date_to");
+      if (startDateTo) params.append("start_date_to", startDateTo);
+
+      const priceMin = searchParams.get("price_min");
+      if (priceMin) params.append("price_min", priceMin);
+
+      const priceMax = searchParams.get("price_max");
+      if (priceMax) params.append("price_max", priceMax);
+
+      const language = searchParams.get("language");
+      if (language) params.append("language", language);
+
       if (sortConfig && sortConfig.field && sortConfig.order) {
         params.append("sortBy", sortConfig.field);
         params.append("sortOrder", sortConfig.order);
@@ -170,7 +212,9 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="">
-      <Filters />
+      <Suspense>
+        <Filters />
+      </Suspense>
       <main className="container-wy mx-auto px-0 md:px-8 pt-0 md:pt-5 pb-[calc(72px+1px+20px)] md:pb-8">
         {loading && events.length === 0 && (
           <p className="text-center py-10">Ładowanie wyjazdów...</p>
@@ -210,6 +254,14 @@ const EventsPage: React.FC = () => {
         )}
       </main>
     </div>
+  );
+};
+
+const EventsPage: React.FC = () => {
+  return (
+    <Suspense>
+      <EventsPageContent />
+    </Suspense>
   );
 };
 

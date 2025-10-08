@@ -1,17 +1,11 @@
 "use client";
 
-import {
-  ArrowDown,
-  ArrowUp,
-  Calendar,
-  ChevronDown,
-  DollarSign,
-  MapPin,
-  Search,
-  X,
-} from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, Calendar, DollarSign, MapPin, Search, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
+import { FiltersModal } from "@/app/(events)/components/filters-modal";
+import { useFilterInitialData } from "@/app/(events)/components/filters-modal/hooks/useFilterInitialData";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import BaliIcon from "@/components/icons/countries/BaliIcon";
 import IndiaIcon from "@/components/icons/countries/IndiaIcon";
@@ -21,15 +15,15 @@ import PortugalIcon from "@/components/icons/countries/PortugalIcon";
 import SpainIcon from "@/components/icons/countries/SpainIcon";
 import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
 import ThailandIcon from "@/components/icons/countries/ThailandIcon";
-import CustomAnalyticsIcon from "@/components/icons/CustomAnalyticsIcon";
+import FilterIcon from "@/components/icons/CustomFilterIcon";
 import { Input } from "@/components/ui/input";
-import { TooltipContent } from "@/components/ui/tooltip";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipContent } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import useIsMobile from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
-const Filters: React.FC = () => {
+const Filters = () => {
   const {
     searchTerm,
     setSearchTerm,
@@ -43,20 +37,89 @@ const Filters: React.FC = () => {
     toggleBookmarksView,
   } = useEventsFilter();
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const isMobile = useIsMobile();
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
-  const filterItems = [
+  // Load filter initial data to get available countries from server
+  const { data: filterInitialData, loading: filterDataLoading } = useFilterInitialData(true);
+
+  // Check if any filter parameters are present in URL
+  const hasActiveFiltersFromUrl = () => {
+    const country = searchParams.get("country");
+    const startDateFrom = searchParams.get("start_date_from");
+    const startDateTo = searchParams.get("start_date_to");
+    const priceMin = searchParams.get("price_min");
+    const priceMax = searchParams.get("price_max");
+    const language = searchParams.get("language");
+
+    return !!(country || startDateFrom || startDateTo || priceMin || priceMax || language);
+  };
+
+  // Get selected country from URL for highlighting
+  const getSelectedCountryFromUrl = () => {
+    return searchParams.get("country");
+  };
+
+  // Check if selected country from URL exists in current filterItems
+  const isUrlCountryInFilterItems = (countryName: string | null) => {
+    if (!countryName) return false;
+    return allFilterItems.some((item) => item.filter.country === countryName);
+  };
+
+  // Handle country click with URL navigation
+  const handleCountryClick = (countryName: string) => {
+    const currentCountry = searchParams.get("country");
+
+    // If the same country is clicked again, clear the filter (navigate to clean URL)
+    if (currentCountry === countryName) {
+      router.push("/");
+    } else {
+      // Navigate to URL with country parameter
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("country", countryName);
+      router.push(`/?${params.toString()}`);
+    }
+
+    // Also update context state for visual feedback
+    const filter = countryName === currentCountry ? null : { country: countryName };
+    setLocationFilterAndReset(filter);
+  };
+
+  const allFilterItems = [
     { Icon: PolandIcon, label: "Poland", filter: { country: "Poland" }, name: "PLN" },
     { Icon: IndiaIcon, label: "India", filter: { country: "India" }, name: "IND" },
     { Icon: ItalyIcon, label: "Italy", filter: { country: "Italy" }, name: "ITA" },
     { Icon: SpainIcon, label: "Spain", filter: { country: "Spain" }, name: "ESP" },
-    { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
+    // { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
     { Icon: PortugalIcon, label: "Portugal", filter: { country: "Portugal" }, name: "POR" },
     { Icon: ThailandIcon, label: "Thailand", filter: { country: "Thailand" }, name: "THA" },
     { Icon: SrilankaIcon, label: "Shrilanka", filter: { country: "Sri Lanka" }, name: "SRI" },
   ];
+
+  // Filter items based on server data - only show countries that server provides
+  // Don't show any items while loading to prevent content jumping
+  const filterItems = filterDataLoading
+    ? [] // Show empty array while loading to prevent flashing
+    : filterInitialData?.countries
+      ? allFilterItems.filter((item) => {
+          // For countries, check if the country name matches server data
+          if (item.filter.country) {
+            const isCountryInFilterItems = filterInitialData.countries
+              .map((country) => country.name)
+              .includes(item.filter.country);
+            // const isStateProvinceInFilterItems = filterInitialData.state_provinces
+            //   .map((state_province) => state_province.name)
+            //   .includes(item.filter.state_province || "");
+            // return isCountryInFilterItems || isStateProvinceInFilterItems;
+            return isCountryInFilterItems;
+          }
+          return true;
+        })
+      : []; // Show empty array if no server data yet
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedFilterItem = locationFilter
@@ -121,14 +184,13 @@ const Filters: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isCountryDropdownOpen]);
-
   return (
     <>
       {/* Mobile version of filters */}
       <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
-            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
+            onClick={() => setIsFiltersModalOpen(true)}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
@@ -169,24 +231,15 @@ const Filters: React.FC = () => {
           </button>
           <div className="relative" ref={countryDropdownRef}>
             <button
-              onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
+              onClick={() => setIsFiltersModalOpen(true)}
               className={cn(
                 "flex items-center justify-center rounded-full",
                 "h-12 w-12",
                 "hover:bg-gray-100 duration-200",
-                // (SelectedCountryIcon || isCountryDropdownOpen) &&
-                !isSearchActive &&
-                  !isBookmarksActive &&
-                  "border-2 border-brand-green hover:border-brand-green",
+                hasActiveFiltersFromUrl() && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              {isCountryDropdownOpen ? (
-                <ChevronDown className="h-6 w-6" />
-              ) : SelectedCountryIcon ? (
-                <SelectedCountryIcon className="h-8 w-8" />
-              ) : (
-                <MapPin className="h-6 w-6" />
-              )}
+              <FilterIcon />
             </button>
             {isCountryDropdownOpen && (
               <div className="absolute bottom-[50px] left-[calc(-225px/2+44px/2)] mb-2 w-[calc(60dvw)] bg-white rounded-md shadow-lg border border-gray-200 z-10">
@@ -210,13 +263,20 @@ const Filters: React.FC = () => {
                     <li key={item.label}>
                       <button
                         onClick={() => {
-                          setLocationFilterAndReset(item.filter);
+                          if (item.filter.country) {
+                            handleCountryClick(item.filter.country);
+                          } else {
+                            setLocationFilterAndReset(item.filter);
+                          }
                           setIsCountryDropdownOpen(false);
                         }}
                         className={cn(
                           "w-full text-left px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-4",
-                          locationFilter &&
-                            JSON.stringify(locationFilter) === JSON.stringify(item.filter) &&
+                          ((locationFilter &&
+                            JSON.stringify(locationFilter) === JSON.stringify(item.filter)) ||
+                            (item.filter.country &&
+                              getSelectedCountryFromUrl() === item.filter.country &&
+                              isUrlCountryInFilterItems(item.filter.country))) &&
                             "text-brand-green",
                         )}
                       >
@@ -278,11 +338,21 @@ const Filters: React.FC = () => {
                         aria-label={item.label}
                         className={cn(
                           "text-gray-800 group h-[calc(80px)] w-[calc(80px)] flex items-center justify-center rounded-0 border-transparent relative hover:bg-gray-100 duration-200 border-2",
-                          locationFilter &&
-                            JSON.stringify(locationFilter) === JSON.stringify(item.filter) &&
-                            "border-brand-green hover:border-brand-green",
+                          (locationFilter &&
+                            JSON.stringify(locationFilter) === JSON.stringify(item.filter)) ||
+                            (item.filter.country &&
+                              getSelectedCountryFromUrl() === item.filter.country &&
+                              isUrlCountryInFilterItems(item.filter.country))
+                            ? "border-brand-green hover:border-brand-green"
+                            : "",
                         )}
-                        onClick={() => setLocationFilterAndReset(item.filter)}
+                        onClick={() => {
+                          if (item.filter.country) {
+                            handleCountryClick(item.filter.country);
+                          } else {
+                            setLocationFilterAndReset(item.filter);
+                          }
+                        }}
                       >
                         <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)] stroke-[1.75px]" />
                       </button>
@@ -295,7 +365,19 @@ const Filters: React.FC = () => {
               </TooltipProvider>
             </div>
           </div>
+
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsFiltersModalOpen(true)}
+              className={cn(
+                "flex items-center justify-center rounded-full relative",
+                "h-[80px] w-[80px]",
+                "hover:bg-gray-100 duration-200",
+                hasActiveFiltersFromUrl() && "border-2 border-brand-green hover:border-brand-green",
+              )}
+            >
+              <FilterIcon />
+            </button>
             <button
               onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
               className={cn(
@@ -346,16 +428,6 @@ const Filters: React.FC = () => {
             >
               <Search className="w-[48px] h-[48px] stroke-1" />
             </button>
-            {/* <BookmarkButton
-              isActive={isBookmarksActive}
-              toggleHandler={toggleBookmarksView}
-              size="desktop-filter"
-              className={
-                isBookmarksActive
-                  ? "border-2 border-brand-green hover:border-brand-green bg-transparent"
-                  : "bg-transparent"
-              }
-            /> */}
           </div>
         </div>
 
@@ -385,6 +457,12 @@ const Filters: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <FiltersModal
+        isOpen={isFiltersModalOpen}
+        title="Filtr"
+        onOpenChange={setIsFiltersModalOpen}
+      />
     </>
   );
 };
