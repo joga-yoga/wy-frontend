@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { FiltersModal } from "@/app/(events)/components/filters-modal";
 import { useFilterInitialData } from "@/app/(events)/components/filters-modal/hooks/useFilterInitialData";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
+import BaliIcon from "@/components/icons/countries/BaliIcon";
 import IndiaIcon from "@/components/icons/countries/IndiaIcon";
 import ItalyIcon from "@/components/icons/countries/ItalyIcon";
 import PolandIcon from "@/components/icons/countries/PolandIcon";
@@ -93,7 +94,7 @@ const Filters = () => {
     { Icon: IndiaIcon, label: "India", filter: { country: "India" }, name: "IND" },
     { Icon: ItalyIcon, label: "Italy", filter: { country: "Italy" }, name: "ITA" },
     { Icon: SpainIcon, label: "Spain", filter: { country: "Spain" }, name: "ESP" },
-    // {Icon: BaliIcon, label: "Bali", filter: {state_province: "Bali"}, name: "BAL"},
+    // { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
     { Icon: PortugalIcon, label: "Portugal", filter: { country: "Portugal" }, name: "POR" },
     { Icon: ThailandIcon, label: "Thailand", filter: { country: "Thailand" }, name: "THA" },
     { Icon: SrilankaIcon, label: "Shrilanka", filter: { country: "Sri Lanka" }, name: "SRI" },
@@ -107,10 +108,15 @@ const Filters = () => {
       ? allFilterItems.filter((item) => {
           // For countries, check if the country name matches server data
           if (item.filter.country) {
-            return filterInitialData.countries.includes(item.filter.country);
+            const isCountryInFilterItems = filterInitialData.countries
+              .map((country) => country.name)
+              .includes(item.filter.country);
+            // const isStateProvinceInFilterItems = filterInitialData.state_provinces
+            //   .map((state_province) => state_province.name)
+            //   .includes(item.filter.state_province || "");
+            // return isCountryInFilterItems || isStateProvinceInFilterItems;
+            return isCountryInFilterItems;
           }
-          // For state_province (like Bali), we might need different logic
-          // For now, include all state_province items if no specific logic needed
           return true;
         })
       : []; // Show empty array if no server data yet

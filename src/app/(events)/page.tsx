@@ -6,7 +6,7 @@ import "swiper/css/pagination";
 
 import Link from "next/link"; // Import Link from next/link
 import { useSearchParams } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import { Separator } from "@/components/ui/separator";
@@ -20,7 +20,7 @@ import { Event } from "./types";
 
 const EVENTS_PER_PAGE = 10;
 
-const EventsPage: React.FC = () => {
+const EventsPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const { debouncedSearchTerm, locationFilter, sortConfig, isBookmarksActive, bookmarkedEventIds } =
     useEventsFilter();
@@ -46,7 +46,7 @@ const EventsPage: React.FC = () => {
       if (!isBookmarksActive) return;
       setLoading(true);
       setError(null);
-      setSkip(0); // Reset skip for new fetches
+      setSkip(0);
 
       try {
         const response = await getBookmarkedEvents();
@@ -55,7 +55,7 @@ const EventsPage: React.FC = () => {
           const processedEvents = response.map(mapApiItemToEvent);
           setEvents(processedEvents);
           setTotalEvents(processedEvents.length);
-          setSkip(processedEvents.length); // All bookmarked events are loaded
+          setSkip(processedEvents.length);
         } else {
           setEvents([]);
           setTotalEvents(0);
@@ -81,18 +81,16 @@ const EventsPage: React.FC = () => {
       if (isBookmarksActive) return;
       setLoading(true);
       setError(null);
-      setSkip(0); // Reset skip for new fetches
+      setSkip(0);
 
       try {
         const params = new URLSearchParams();
 
-        // Add context-based filters (search, location, sort)
         if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
         if (locationFilter?.country) params.append("country", locationFilter.country);
         if (locationFilter?.state_province)
           params.append("state_province", locationFilter.state_province);
 
-        // Add URL-based filter parameters from FiltersModal
         const urlCountry = searchParams.get("country");
         if (urlCountry && !locationFilter?.country) params.append("country", urlCountry);
 
@@ -111,7 +109,6 @@ const EventsPage: React.FC = () => {
         const language = searchParams.get("language");
         if (language) params.append("language", language);
 
-        // Add sorting
         if (sortConfig && sortConfig.field && sortConfig.order) {
           params.append("sortBy", sortConfig.field);
           params.append("sortOrder", sortConfig.order);
@@ -158,13 +155,11 @@ const EventsPage: React.FC = () => {
     try {
       const params = new URLSearchParams();
 
-      // Add context-based filters (search, location, sort)
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (locationFilter?.country) params.append("country", locationFilter.country);
       if (locationFilter?.state_province)
         params.append("state_province", locationFilter.state_province);
 
-      // Add URL-based filter parameters from FiltersModal
       const urlCountry = searchParams.get("country");
       if (urlCountry && !locationFilter?.country) params.append("country", urlCountry);
 
@@ -183,7 +178,6 @@ const EventsPage: React.FC = () => {
       const language = searchParams.get("language");
       if (language) params.append("language", language);
 
-      // Add sorting
       if (sortConfig && sortConfig.field && sortConfig.order) {
         params.append("sortBy", sortConfig.field);
         params.append("sortOrder", sortConfig.order);
@@ -218,7 +212,9 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="">
-      <Filters />
+      <Suspense>
+        <Filters />
+      </Suspense>
       <main className="container-wy mx-auto px-0 md:px-8 pt-0 md:pt-5 pb-[calc(72px+1px+20px)] md:pb-8">
         {loading && events.length === 0 && (
           <p className="text-center py-10">Ładowanie wyjazdów...</p>
@@ -258,6 +254,14 @@ const EventsPage: React.FC = () => {
         )}
       </main>
     </div>
+  );
+};
+
+const EventsPage: React.FC = () => {
+  return (
+    <Suspense>
+      <EventsPageContent />
+    </Suspense>
   );
 };
 

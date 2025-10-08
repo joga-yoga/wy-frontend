@@ -122,45 +122,19 @@ export default function Calendar({ startDateFrom, startDateTo, onDateSelect }: C
     </svg>
   );
 
+  console.log("🚀 ~ defaultClassNames:", defaultClassNames);
   const calendarClassNames = {
-    ...defaultClassNames,
     month:
-      "bg-white rounded-2xl shadow-[0px_3px_8px_rgba(0,0,0,0.12),0px_6px_16px_rgba(0,0,0,0.08)] w-[254px] p-2",
-    month_caption: "flex justify-between items-center mb-4",
+      "bg-white rounded-2xl shadow-[0px_3px_8px_rgba(0,0,0,0.12),0px_6px_16px_rgba(0,0,0,0.08)]  p-2",
+    month_caption: "flex justify-between items-center mb-4 mt-2",
     caption_label: "text-filter-subtitle text-center flex-1",
-    button_previous:
-      "border border-[#18181B0F] shadow-[0px_1px_0.5px_0.05px_#18181B0A] rounded w-[27px] h-[27px] flex items-center justify-center hover:bg-gray-50",
-    button_next:
-      "border border-[#18181B0F] shadow-[0px_1px_0.5px_0.05px_#18181B0A] rounded w-[27px] h-[27px] flex items-center justify-center hover:bg-gray-50",
     nav: "flex w-full absolute top-0 right-0 flex items-center justify-between h-[var(--rdp-nav-height)] px-2",
-    table: "border-separate",
-    head_row: "flex",
-    head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
-    row: "flex mt-2",
-    cell: "p-0 text-center text-sm w-8 h-8 flex items-center justify-center",
-    day: "h-6 w-6 p-0 rounded-md hover:bg-gray-100 cursor-pointer text-calendar mt-1",
-    day_today: "bg-blue-500 text-white font-normal hover:bg-blue-600",
-    day_selected: "bg-blue-600 text-calendar text-white",
-    day_range_start: "text-white text-calendar",
-    day_range_end: "text-white text-calendar",
-    day_range_middle: "bg-[#18181B14] text-calendar",
   };
 
   return (
     <div className="flex flex-col md:flex-row gap-[14px]">
       <DayPicker
         locale={pl}
-        style={
-          {
-            "--rdp-day_button-height": "34px",
-            "--rdp-day_button-width": "34px",
-            "--rdp-day_button-border-radius": "6px",
-            "--rdp-day_button-padding": "6px 8px 6px 8px",
-            "--rdp-range_middle-background-color": "var(--fill-secondary,#18181B14)",
-            "--rdp-range_start-date-background-color": "#003DD9",
-            "--rdp-range_end-date-background-color": "#003DD9",
-          } as React.CSSProperties
-        }
         mode="range"
         selected={selectedRange}
         onSelect={handleDateSelect}
@@ -178,25 +152,6 @@ export default function Calendar({ startDateFrom, startDateTo, onDateSelect }: C
       <DayPicker
         locale={pl}
         mode="range"
-        style={
-          {
-            "--rdp-day_button-height": "34px",
-            "--rdp-day_button-width": "34px",
-            "--rdp-day_button-border-radius": "6px",
-            "--rdp-day_button-padding": "6px 8px 6px 8px",
-            "--rdp-day_button-background-color": "var(--accent-active,#003DD9)",
-            "--rdp-day_button-color": "#ffffff",
-            "--rdp-day_button-font-weight": "400",
-            "--rdp-range_start-background-color": "var(--accent-active,#003DD9)",
-            "--rdp-range_start-color": "#ffffff",
-            "--rdp-range_start-font-weight": "400",
-            "--rdp-range_end-background-color": "var(--accent-active,#003DD9)",
-            "--rdp-range_end-color": "#ffffff",
-            "--rdp-range_end-font-weight": "400",
-            "--rdp-range_middle-background-color": "var(--fill-secondary,#18181B14)",
-            "--rdp-range_middle-font-weight": "400",
-          } as React.CSSProperties
-        }
         selected={selectedRange}
         onSelect={handleDateSelect}
         month={secondCalendarMonth}

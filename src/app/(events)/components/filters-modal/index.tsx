@@ -152,9 +152,12 @@ export const FiltersModal = ({ isOpen, title, onOpenChange }: FiltersModalProps)
           />
         </div>
 
-        <div className="border-t px-7 py-4 flex justify-between">
-          <div className="text-middle-header-22 cursor-pointer" onClick={actions.clearAll}>
-            Clear All
+        <div className="border-t px-7 py-4 flex justify-between items-center">
+          <div
+            className="text-lg font-medium cursor-pointer hover:text-brand-green duration-200"
+            onClick={actions.clearAll}
+          >
+            Wyczyść wszystko
           </div>
           <Button type="submit" className="h-10 hover:bg-gray-800" onClick={applyFilters}>
             Pokaż wyniki

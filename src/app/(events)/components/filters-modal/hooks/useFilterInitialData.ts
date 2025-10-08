@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 export interface FilterInitialData {
-  countries: string[];
+  countries: { name: string; country_code: string }[];
+  state_provinces: { name: string; state_province_code: string }[];
   price_min: number;
   price_max: number;
 }
@@ -21,11 +22,13 @@ export const useFilterInitialData = (isOpen: boolean) => {
 
     try {
       const response = await axiosInstance.get("/events/public/filters");
+      console.log("🚀 ~ useFilterInitialData ~ response:", response);
       const responseData = response.data;
 
       if (responseData && typeof responseData === "object") {
         setData({
           countries: responseData.countries || [],
+          state_provinces: responseData.state_provinces || [],
           price_min: responseData.price_min || 0,
           price_max: responseData.price_max || 0,
         });

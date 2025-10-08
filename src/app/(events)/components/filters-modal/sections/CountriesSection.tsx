@@ -5,7 +5,7 @@ import FilterItem from "@/app/(events)/components/filters-modal/components/Filte
 interface CountriesSectionProps {
   selectedCountryName?: string | null;
   onCountrySelect?: (countryName: string) => void;
-  countries?: string[];
+  countries?: { name: string; country_code: string }[];
 }
 
 export const CountriesSection = ({
@@ -21,10 +21,11 @@ export const CountriesSection = ({
       <div className="flex flex-wrap gap-x-[12px] gap-y-4 mt-5">
         {countries.map((country) => (
           <FilterItem
-            key={country}
-            title={country}
-            isSelected={selectedCountryName === country}
-            onClick={() => onCountrySelect?.(country)}
+            key={country.name}
+            title={country.name}
+            countryCode={country.country_code}
+            isSelected={selectedCountryName === country.name}
+            onClick={() => onCountrySelect?.(country.name)}
           />
         ))}
       </div>
