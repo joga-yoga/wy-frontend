@@ -5,27 +5,33 @@ import { Suspense, useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/context/AuthContext";
 
-import { trackPageview } from "../constants/mixpanel";
+import { initMixpanel, trackPageview } from "../lib/mixpanelClient";
 
 export const NavigationEvents = () => {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentUrl = useRef("");
+  // Temporary disabled, as we testing autocapture
 
-  useEffect(() => {
-    const url = `${pathname}?${searchParams}`;
-    if (currentUrl.current !== url) {
-      currentUrl.current = url;
-      // Mixpanel rounting events
-      //Send track event when new pages is loaded
-      trackPageview();
-    }
-  }, [pathname, searchParams]);
+  // const pathname = usePathname();
+  // const searchParams = useSearchParams();
+  // const currentUrl = useRef("");
+
+  // useEffect(() => {
+  //   const url = `${pathname}?${searchParams}`;
+  //   if (currentUrl.current !== url) {
+  //     currentUrl.current = url;
+  //     // Mixpanel rounting events
+  //     //Send track event when new pages is loaded
+  //     trackPageview();
+  //   }
+  // }, [pathname, searchParams]);
 
   return null;
 };
 
 export function Providers({ children }: React.PropsWithChildren) {
+  useEffect(() => {
+    initMixpanel();
+  }, []);
+
   return (
     <>
       <AuthProvider>

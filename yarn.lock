@@ -926,6 +926,54 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mixpanel/rrdom@npm:^2.0.0-alpha.18":
+  version: 2.0.0-alpha.18.2
+  resolution: "@mixpanel/rrdom@npm:2.0.0-alpha.18.2"
+  dependencies:
+    "@mixpanel/rrweb-snapshot": "npm:^2.0.0-alpha.18"
+  checksum: 10c0/0b608d965d019026417359a7e341be798e664a1ed20cfe7cd278ec355465482bd55faadfc919764e821efde815935320a47ea246efe3da4a8a813c2ac5566f19
+  languageName: node
+  linkType: hard
+
+"@mixpanel/rrweb-snapshot@npm:^2.0.0-alpha.18":
+  version: 2.0.0-alpha.18.2
+  resolution: "@mixpanel/rrweb-snapshot@npm:2.0.0-alpha.18.2"
+  dependencies:
+    postcss: "npm:^8.4.38"
+  checksum: 10c0/8b9c6853aa97817ea2993679c1108a5f02251c4f52542727b47022f1750d58364fe2ee7e3babf337137734969dd37316ca52ff25bfbd0e60dea02fdecd086c02
+  languageName: node
+  linkType: hard
+
+"@mixpanel/rrweb-types@npm:^2.0.0-alpha.18":
+  version: 2.0.0-alpha.18.2
+  resolution: "@mixpanel/rrweb-types@npm:2.0.0-alpha.18.2"
+  checksum: 10c0/5d24c27d78219431e3f0303cbaa3d4ea6740a5310ae10acc1bfd8727b18f545a4596ba33cd89b375782636c9cf16d322ea4242b670fcdd86ce4b8f0ad84bb45b
+  languageName: node
+  linkType: hard
+
+"@mixpanel/rrweb-utils@npm:^2.0.0-alpha.18":
+  version: 2.0.0-alpha.18.2
+  resolution: "@mixpanel/rrweb-utils@npm:2.0.0-alpha.18.2"
+  checksum: 10c0/8c5af15df6e8e4a04a868cef4b0870e7cab5731ea0078351cffe4646be83129db21fee83d882eee2e583a055e7762340cdc5aa45eefa247be3b0711763e2edf3
+  languageName: node
+  linkType: hard
+
+"@mixpanel/rrweb@npm:2.0.0-alpha.18.1":
+  version: 2.0.0-alpha.18.1
+  resolution: "@mixpanel/rrweb@npm:2.0.0-alpha.18.1"
+  dependencies:
+    "@mixpanel/rrdom": "npm:^2.0.0-alpha.18"
+    "@mixpanel/rrweb-snapshot": "npm:^2.0.0-alpha.18"
+    "@mixpanel/rrweb-types": "npm:^2.0.0-alpha.18"
+    "@mixpanel/rrweb-utils": "npm:^2.0.0-alpha.18"
+    "@types/css-font-loading-module": "npm:0.0.7"
+    "@xstate/fsm": "npm:^1.4.0"
+    base64-arraybuffer: "npm:^1.0.1"
+    mitt: "npm:^3.0.0"
+  checksum: 10c0/d86a346e30070255ecdaa1f1408e25448b4ffc99670e250d666390bef83b82554107e277b8e8b2b45a984be24366797d611018992d9a326528c3fee1bf8b2887
+  languageName: node
+  linkType: hard
+
 "@modelcontextprotocol/sdk@npm:^1.8.0":
   version: 1.11.1
   resolution: "@modelcontextprotocol/sdk@npm:1.11.1"
@@ -2624,6 +2672,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/css-font-loading-module@npm:0.0.7":
+  version: 0.0.7
+  resolution: "@types/css-font-loading-module@npm:0.0.7"
+  checksum: 10c0/a74759a14bcc7d60a1a1d863b53b7638d4aa7f88f1d97347426262cc6fe8f9335d8fa80c7e0608cd67e33ff0067608e9b5475a1227a684e1dfad3cac87df1405
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:^1.0.6":
   version: 1.0.7
   resolution: "@types/estree@npm:1.0.7"
@@ -3060,6 +3115,7 @@ __metadata:
     jwt-decode: "npm:^4.0.0"
     leaflet: "npm:^1.9.4"
     lucide-react: "npm:^0.535.0"
+    mixpanel-browser: "npm:^2.70.0"
     next: "npm:15.3.1"
     next-cloudinary: "npm:^6.16.0"
     next-themes: "npm:^0.4.6"
@@ -3083,6 +3139,13 @@ __metadata:
     zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
+
+"@xstate/fsm@npm:^1.4.0":
+  version: 1.6.5
+  resolution: "@xstate/fsm@npm:1.6.5"
+  checksum: 10c0/472fe625b84b9e7102b8774e80c441b8b7dbc9585e700223d9c7a39c583d38ba50636909a5d749d44b361555daa841862f932a29c52b81c8829a74884e715bf4
+  languageName: node
+  linkType: hard
 
 "abbrev@npm:^3.0.0":
   version: 3.0.0
@@ -3373,6 +3436,13 @@ __metadata:
   version: 1.0.2
   resolution: "balanced-match@npm:1.0.2"
   checksum: 10c0/9308baf0a7e4838a82bbfd11e01b1cb0f0cf2893bc1676c27c2a8c0e70cbae1c59120c3268517a8ae7fb6376b4639ef81ca22582611dbee4ed28df945134aaee
+  languageName: node
+  linkType: hard
+
+"base64-arraybuffer@npm:^1.0.1":
+  version: 1.0.2
+  resolution: "base64-arraybuffer@npm:1.0.2"
+  checksum: 10c0/3acac95c70f9406e87a41073558ba85b6be9dbffb013a3d2a710e3f2d534d506c911847d5d9be4de458af6362c676de0a5c4c2d7bdf4def502d00b313368e72f
   languageName: node
   linkType: hard
 
@@ -5961,6 +6031,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mitt@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "mitt@npm:3.0.1"
+  checksum: 10c0/3ab4fdecf3be8c5255536faa07064d05caa3dd332bd318ff02e04621f7b3069ca1de9106cfe8e7ced675abfc2bec2ce4c4ef321c4a1bb1fb29df8ae090741913
+  languageName: node
+  linkType: hard
+
+"mixpanel-browser@npm:^2.70.0":
+  version: 2.70.0
+  resolution: "mixpanel-browser@npm:2.70.0"
+  dependencies:
+    "@mixpanel/rrweb": "npm:2.0.0-alpha.18.1"
+  checksum: 10c0/5e58c1a3b3bc2b84d76ed983c15be629720546dc69419b7179f5488ef62701fa577894f409392b05a6844b9b16152b0aaf201a3e5cef71689de88ecc5b350f0d
+  languageName: node
+  linkType: hard
+
 "mkdirp@npm:^3.0.1":
   version: 3.0.1
   resolution: "mkdirp@npm:3.0.1"
@@ -5977,7 +6063,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.6, nanoid@npm:^3.3.8":
+"nanoid@npm:^3.3.11, nanoid@npm:^3.3.6, nanoid@npm:^3.3.8":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
   bin:
@@ -6391,6 +6477,17 @@ __metadata:
     picocolors: "npm:^1.0.0"
     source-map-js: "npm:^1.0.2"
   checksum: 10c0/748b82e6e5fc34034dcf2ae88ea3d11fd09f69b6c50ecdd3b4a875cfc7cdca435c958b211e2cb52355422ab6fccb7d8f2f2923161d7a1b281029e4a913d59acf
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^8.4.38":
+  version: 8.5.6
+  resolution: "postcss@npm:8.5.6"
+  dependencies:
+    nanoid: "npm:^3.3.11"
+    picocolors: "npm:^1.1.1"
+    source-map-js: "npm:^1.2.1"
+  checksum: 10c0/5127cc7c91ed7a133a1b7318012d8bfa112da9ef092dddf369ae699a1f10ebbd89b1b9f25f3228795b84585c72aabd5ced5fc11f2ba467eedf7b081a66fad024
   languageName: node
   linkType: hard
 

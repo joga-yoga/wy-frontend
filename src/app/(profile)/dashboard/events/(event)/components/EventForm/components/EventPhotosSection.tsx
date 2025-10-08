@@ -1,12 +1,14 @@
-import { HelpCircle, Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Star, StarOff, Trash2 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { Control, Controller, FieldErrors } from "react-hook-form";
+import { IoStar, IoStarOutline } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EventFormData } from "@/lib/schemas/event";
 
 import { useEventHelpBar } from "../contexts/EventHelpBarContext";
@@ -22,6 +24,7 @@ interface EventPhotosSectionProps {
   pendingImages: File[];
   control: Control<EventFormData>;
   name: string;
+  handleSetCover: (imageId: string) => void;
 }
 
 export const EventPhotosSection = ({
@@ -34,6 +37,7 @@ export const EventPhotosSection = ({
   pendingImages,
   control,
   name,
+  handleSetCover,
 }: EventPhotosSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
@@ -49,7 +53,7 @@ export const EventPhotosSection = ({
       </Label>
       <Separator className="my-4 md:my-8" />
       <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {watchedImageIds.map((imageId) => (
+        {watchedImageIds.map((imageId, index) => (
           <div key={imageId} className="relative group aspect-[4/3]">
             <Image
               src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_200,h_150/v1/${imageId}`}
@@ -57,6 +61,24 @@ export const EventPhotosSection = ({
               fill
               className="rounded border object-cover"
             />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={index === 0}
+                  className={`absolute top-1 left-1 transition-opacity p-1 h-auto disabled:opacity-100 ${index === 0 ? "text-brand-green opacity-100" : "md:opacity-0 group-hover:opacity-100"}`}
+                  onClick={() => index !== 0 && handleSetCover(imageId)}
+                  aria-label={index === 0 ? "Okładka" : "Ustaw jako okładkę"}
+                >
+                  {index === 0 ? <IoStar size={14} /> : <IoStarOutline size={14} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={6}>
+                {index === 0 ? "Okładka" : "Ustaw jako okładkę"}
+              </TooltipContent>
+            </Tooltip>
             <Button
               type="button"
               variant="destructive"
