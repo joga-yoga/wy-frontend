@@ -233,7 +233,7 @@ const EventsPageContent: React.FC = () => {
           <div className="flex flex-col gap-3 md:gap-6">
             {events.map((event, index) => (
               <React.Fragment key={event.id}>
-                <Link href={`/${event.id}`} passHref>
+                <Link href={`/retreats/${event.id}`} passHref>
                   <EventCard event={event} />
                 </Link>
                 {index < events.length - 1 && (

@@ -13,7 +13,7 @@ interface EventCardProps {
 
 const EventCard = ({ event }: EventCardProps) => {
   return (
-    <Link href={`/${event.id}`}>
+    <Link href={`/retreats/${event.id}`}>
       <div className="w-full max-w-[402px] flex flex-col items-start">
         <div className="relative w-full max-w-[358px] aspect-[16/10] rounded-[11px] overflow-hidden mt-6 mb-5 shrink-0">
           <Image
