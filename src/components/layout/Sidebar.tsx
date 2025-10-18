@@ -62,9 +62,15 @@ export const Sidebar = ({ className }: React.HTMLAttributes<HTMLElement>) => {
         icon: User,
       },
       {
-        name: "Events",
-        href: "/dashboard/events",
-        isActive: isActive("/dashboard/events"),
+        name: "Retreats",
+        href: "/dashboard/retreats",
+        isActive: isActive("/dashboard/retreats"),
+        icon: Calendar,
+      },
+      {
+        name: "Workshops",
+        href: "/dashboard/workshops",
+        isActive: isActive("/dashboard/workshops"),
         icon: Calendar,
       },
       {

@@ -1,7 +1,7 @@
 import Image, { ImageProps } from "next/image";
 import { useEffect, useState } from "react";
 
-import { getImageBlurDataURL, getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
+import { getImageBlurDataURL, getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { cn } from "@/lib/utils";
 
 // https://image-component.nextjs.gallery/color

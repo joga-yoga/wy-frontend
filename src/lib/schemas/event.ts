@@ -98,6 +98,11 @@ export const eventFormSchema = yup
         then: (schema) => schema.min(1, "Wymagany jest co najmniej jeden instruktor."),
         otherwise: (schema) => schema.default([]),
       }),
+    // Workshop-only fields (optional in unified schema)
+    is_online: yup.boolean().optional().default(false),
+    is_onsite: yup.boolean().optional().default(false),
+    goals: yup.array().of(yup.string()).optional().default([]),
+    tags: yup.array().of(yup.string()).optional().default([]),
   })
   .test(
     "date-order",
@@ -124,6 +129,11 @@ export type EventFormData = yup.InferType<
     location_id: string | null | undefined;
   }
 >;
+
+// A lighter variant for workshops (relaxes retreat-only constraints)
+export const workshopFormSchema = eventFormSchema.shape({
+  main_attractions: yup.array().of(yup.string().optional()).optional().default([]),
+});
 
 // Define a type for the nested location information in initial event data
 interface LocationInitialInfo {

@@ -1,0 +1,16 @@
+---
+description: Data fetching and environment configuration guidelines for wy-frontend
+globs: wy-frontend/**
+---
+
+# HTTP and Environment Conventions
+
+- Use the shared axios client: [axiosInstance.ts](mdc:wy-frontend/src/lib/axiosInstance.ts).
+- Do not create ad-hoc fetch/axios instances in components.
+- Configure API base URL and secrets via `.env.local`; do not hardcode URLs.
+- Centralize error handling and interceptors in the shared axios instance.
+- Prefer typed responses aligned with backend Pydantic schemas.
+
+Examples and references:
+- Client: [axiosInstance.ts](mdc:wy-frontend/src/lib/axiosInstance.ts)
+- Types: colocate `types.ts` in the feature directory (e.g., `src/app/retreats/types.ts`).

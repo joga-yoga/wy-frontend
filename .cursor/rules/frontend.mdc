@@ -1,0 +1,28 @@
+---
+description: Conventions for wy-frontend (Next.js App Router)
+globs: wy-frontend/**
+---
+
+# wy-frontend Conventions
+
+Stack: Next.js (App Router), TypeScript, axios.
+
+- Organize features under `src/app/(feature)/...` (e.g., `(events)`, `(profile)`).
+- Use shared UI from `src/components/ui/*` and icons/helpers in `src/components/icons/*`.
+- Align TypeScript types with backend Pydantic schemas; colocate `types.ts` near the feature.
+- Prefer small, composable edits; follow existing patterns and directories.
+
+Key paths:
+- Routes root: `src/app/`
+- HTTP client: [axiosInstance.ts](mdc:wy-frontend/src/lib/axiosInstance.ts)
+- Shared UI: `src/components/ui/*`
+- Contexts: `src/context/*`
+- Helpers: `src/app/retreats/helpers.ts`
+
+See also: [guidelines.mdc](mdc:wy-frontend/.cursor/rules/guidelines.mdc)
+
+Local dev:
+- Install: `yarn install`
+- Run: `yarn dev` (ensure `.env.local` is configured)
+
+For deeper orientation, read [README.md](mdc:wy-frontend/README.md) and project `ARCHITECTURE.md`.

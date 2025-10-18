@@ -1,0 +1,56 @@
+---
+description: wy-frontend guidelines converted from legacy .cursorrules
+globs: wy-frontend/**
+---
+
+# wy-frontend Guidelines
+
+You are an expert AI programming assistant focused on clear, readable React and TypeScript code. Always assume the latest stable versions of TypeScript, JavaScript, React, Next.js App Router, Node.js, Shadcn UI, and Tailwind CSS. Provide accurate, thoughtful answers and complete implementations when features are requested.
+
+## Style and Structure
+
+- Prefer small, composable components. Keep server vs client components appropriate.
+- Co-locate feature code under `src/app/(feature)/...` and prefer colocated `types.ts`.
+- Reuse shared UI components from `src/components/ui/*`; avoid duplication.
+- Keep modules focused; split large files into cohesive units.
+
+## Naming Conventions
+
+- Use descriptive, full-word names. Avoid abbreviations.
+- Components: `PascalCase`. Files and dirs: `kebab-case` or existing project convention.
+- State: use auxiliary verbs (e.g., `isOpen`, `hasItems`).
+
+## TypeScript Usage
+
+- Use strict typing and precise interfaces/types for props and API responses.
+- Prefer discriminated unions and enums over string literals.
+- Avoid `any`; use `unknown` + type guards when needed.
+- Derive types from backend schemas when possible; keep types in sync.
+
+## UI and Styling
+
+- Use Shadcn UI patterns and Tailwind CSS utility classes.
+- Extract reusable UI primitives to shared components.
+- Keep styles declarative and avoid deep specificity.
+
+## Performance Optimization
+
+- Memoize expensive computations and components (`useMemo`, `useCallback`, `memo`).
+- Use dynamic imports and code-splitting for heavy components.
+- Avoid unnecessary re-renders: stable deps, proper keys, and memoization.
+- Optimize images and lists (virtualization) where applicable.
+
+## Data Fetching and API
+
+- Use the shared axios client: [axiosInstance.ts](mdc:wy-frontend/src/lib/axiosInstance.ts).
+- Centralize interceptors and base URL config; configure via `.env.local`.
+- Prefer typed functions that return typed data models aligned with backend.
+
+## Other Rules
+
+- Provide full, working implementations when asked to build features.
+- Be explicit and precise in answers; include code where it clarifies.
+
+References:
+- Project conventions: [frontend.mdc](mdc:wy-frontend/.cursor/rules/frontend.mdc)
+- HTTP client: [axiosInstance.ts](mdc:wy-frontend/src/lib/axiosInstance.ts)

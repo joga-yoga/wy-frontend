@@ -1,0 +1,16 @@
+---
+description: Route and component structure conventions for wy-frontend (Next.js App Router)
+globs: wy-frontend/**
+---
+
+# App Router Structure
+
+- Create routes under `src/app/(feature)/...` using Next.js App Router conventions.
+- Keep feature-specific components under the feature folder; reuse shared UI from `src/components/ui/*`.
+- Prefer server components unless client interactivity is required.
+- Place shared contexts under `src/context/*`.
+- Colocate a `types.ts` for feature-specific types and align with backend schemas.
+
+References:
+- Example helpers: [helpers.ts](mdc:wy-frontend/src/app/retreats/helpers.ts)
+- Shared UI library: `src/components/ui/*`

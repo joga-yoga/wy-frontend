@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { IoPersonOutline } from "react-icons/io5";
 
-import { getImageUrl } from "@/app/(events)/events/[eventId]/helpers";
-import { LinkWithBlocker } from "@/app/(profile)/dashboard/events/(event)/components/EventForm/block-navigation/link";
+import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
+import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -32,7 +32,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
       <div className="w-full px-3 md:px-4 md:pl-[22px] h-16 flex items-center justify-between">
         {/* Placeholder for logo space */}
         <LinkWithBlocker
-          href="/dashboard"
+          href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}
           className="flex items-center justify-center w-[40px] h-[40px]"
         >
           <svg
@@ -57,7 +57,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
         <div className="flex items-center gap-4">
           {/* Display user email if available */}
           {user && (
-            <LinkWithBlocker href="/dashboard/organizer">
+            <LinkWithBlocker href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/organizer`}>
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
@@ -140,7 +140,11 @@ export const EventsHeader: React.FC = () => {
               />
             )}
 
-            <Link href="/dashboard" passHref className="flex items-center justify-center">
+            <Link
+              href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}
+              passHref
+              className="flex items-center justify-center"
+            >
               <button aria-label="Account">
                 {user?.organizer?.image_id ? (
                   <Image

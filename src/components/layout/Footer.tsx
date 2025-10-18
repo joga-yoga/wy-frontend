@@ -126,7 +126,7 @@ export const LogoFooter = ({ className }: { className?: string }) => {
 export const Footer: React.FC = () => {
   const pathname = usePathname();
   const params = useParams();
-  const isEventPage = pathname.includes("/events/") && !!params.eventId;
+  const isEventPage = !!params.retreatId || !!params.workshopId;
 
   return (
     <>
