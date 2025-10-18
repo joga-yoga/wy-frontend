@@ -26,7 +26,7 @@ export const buildFilterUrl = (
   serverPriceMax: number | null = null,
 ): string => {
   if (isDefaultFilterState(filters, serverPriceMin, serverPriceMax)) {
-    return "/workshops";
+    return "/";
   }
 
   const params = new URLSearchParams();
@@ -51,5 +51,5 @@ export const buildFilterUrl = (
   if (filters.format === "online") params.append("is_online", "true");
   if (filters.format === "onsite") params.append("is_onsite", "true");
 
-  return params.toString() ? `/workshops?${params.toString()}` : "/workshops";
+  return params.toString() ? `/?${params.toString()}` : "/";
 };
