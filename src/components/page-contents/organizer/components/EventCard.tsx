@@ -3,17 +3,25 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { truncateText } from "@/app/retreats/organizer/[organizerId]/helpers";
-import { OrganizerEvent } from "@/app/retreats/organizer/[organizerId]/types";
 import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+
+import { truncateText } from "../helpers";
+import { OrganizerEvent } from "../types";
 
 interface EventCardProps {
   event: OrganizerEvent;
+  project: "retreats" | "workshops";
 }
 
-const EventCard = ({ event }: EventCardProps) => {
+const EventCard = ({ event, project }: EventCardProps) => {
   return (
-    <Link href={`/retreats/${event.id}`}>
+    <Link
+      href={
+        project === "retreats"
+          ? `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
+          : `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
+      }
+    >
       <div className="w-full max-w-[402px] flex flex-col items-start">
         <div className="relative w-full max-w-[358px] aspect-[16/10] rounded-[11px] overflow-hidden mt-6 mb-5 shrink-0">
           <Image

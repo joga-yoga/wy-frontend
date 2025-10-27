@@ -50,8 +50,8 @@ export const EventInstructorsSection = ({
 }: EventInstructorsSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="flex flex-col gap-6 md:gap-10" id="event-instructors-section">
-      <div className="space-y-2">
+    <>
+      <div className="space-y-2 event-form-section-padding" id="event-instructors-section">
         <div className="flex items-center gap-2">
           <Label htmlFor="instructors" size="event">
             Instruktorzy
@@ -186,6 +186,6 @@ export const EventInstructorsSection = ({
           <p className="text-sm text-destructive">{errors.instructor_ids.message}</p>
         )}
       </div>
-    </div>
+    </>
   );
 };

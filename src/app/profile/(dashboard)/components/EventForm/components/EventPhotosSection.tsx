@@ -41,7 +41,7 @@ export const EventPhotosSection = ({
 }: EventPhotosSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="space-y-4 md:space-y-6" id="event-photos-section">
+    <div className="space-y-2 event-form-section-padding" id="event-photos-section">
       <div className="flex items-center gap-2">
         <Label htmlFor="images" size="event">
           Zdjęcia

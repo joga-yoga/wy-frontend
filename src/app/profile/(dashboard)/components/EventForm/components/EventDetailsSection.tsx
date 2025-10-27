@@ -32,8 +32,8 @@ export const EventDetailsSection = ({
 }: EventDetailsSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="flex flex-col gap-6 md:gap-10" id="event-details-section">
-      <div className="space-y-2">
+    <>
+      <div className="space-y-2 event-form-section-padding" id="event-details-section">
         <div className="flex items-center gap-2">
           <Label htmlFor="title" size="event">
             Tytuł
@@ -56,7 +56,7 @@ export const EventDetailsSection = ({
         />
         {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <div className="flex items-center gap-2">
           <Label htmlFor="description" size="event">
             Opis
@@ -81,7 +81,7 @@ export const EventDetailsSection = ({
         )}
       </div>
       {includeMainAttractions && (
-        <div className="space-y-2" id="event-main-attractions">
+        <div className="space-y-2 event-form-section-padding" id="event-main-attractions">
           <div className="flex items-center gap-2">
             <Label htmlFor="main_attractions" size="event">
               Najważniejsze atrakcje
@@ -115,7 +115,7 @@ export const EventDetailsSection = ({
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <div className="flex items-center gap-2">
           <Label htmlFor="language" size="event">
             Język prowadzenia
@@ -144,6 +144,6 @@ export const EventDetailsSection = ({
         />
         {errors.language && <p className="text-sm text-destructive">{errors.language.message}</p>}
       </div>
-    </div>
+    </>
   );
 };

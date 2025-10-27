@@ -1,5 +1,6 @@
 import { Control, Controller, FieldErrors, UseFormRegister } from "react-hook-form";
 
+import { TagsSelect } from "@/components/custom/TagsSelect";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -15,8 +16,8 @@ interface WorkshopMetaSectionProps {
 
 export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
   return (
-    <div className="flex flex-col gap-6 md:gap-10">
-      <div className="space-y-2">
+    <>
+      <div className="space-y-2 event-form-section-padding">
         <Label htmlFor="is_online" size="event">
           Format
         </Label>
@@ -45,7 +46,7 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <Label htmlFor="goals" size="event">
           Cele
         </Label>
@@ -67,27 +68,13 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <Label htmlFor="tags" size="event">
           Tagi
         </Label>
         <Separator className="my-4 md:my-8" />
-        <Controller
-          name="tags"
-          control={control}
-          render={({ field, fieldState }) => (
-            <DynamicArrayInput
-              initialValues={field.value}
-              onChange={field.onChange}
-              placeholder="Dodaj tag (np. mindfulness)"
-              ariaLabel="Tagi"
-              error={fieldState.error}
-              control={control}
-              name="tags"
-            />
-          )}
-        />
+        <TagsSelect control={control} />
       </div>
-    </div>
+    </>
   );
 };

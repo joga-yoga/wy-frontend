@@ -164,3 +164,32 @@ export function formatTimeAgo(dateStr: string | Date): string {
     return "Uncorrect date";
   }
 }
+
+/**
+ * Formats a date as day of week, full month name, and day number in Polish.
+ * @param dateStr The date as an ISO 8601 string (e.g., "2025-05-15") or Date object.
+ * @returns A formatted date string (e.g., "Wtorek, Maj 15") or "Nieprawidłowa data" if invalid.
+ */
+export function formatDateStart(dateStr: string | Date | null | undefined): string {
+  if (!dateStr) {
+    return "";
+  }
+
+  try {
+    const date = typeof dateStr === "string" ? parseISO(dateStr) : dateStr;
+
+    if (isNaN(date.getTime())) {
+      return "Nieprawidłowa data";
+    }
+
+    // Format: "Wtorek, 15 Maj"
+    const formatted = format(date, "EEEE, d MMMM", { locale: pl });
+    const [dayOfWeek, monthAndDay] = formatted.split(", ");
+    const capitalizedDayOfWeek = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+    const capitalizedMonthAndDay = monthAndDay.charAt(0).toUpperCase() + monthAndDay.slice(1);
+    return `${capitalizedDayOfWeek}, ${capitalizedMonthAndDay}`;
+  } catch (error) {
+    console.error("Date format error:", error);
+    return "Nieprawidłowa data";
+  }
+}

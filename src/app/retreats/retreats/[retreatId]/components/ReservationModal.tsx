@@ -1,13 +1,23 @@
 "use client";
 
-import { Phone } from "lucide-react";
-import Image from "next/image";
-import React from "react";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatDateRange } from "@/lib/formatDateRange";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 import { EventDetail } from "../types";
 
@@ -17,65 +27,188 @@ interface ReservationModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface BookingFormData {
+  fullName: string;
+  email: string;
+  preferredContact: string;
+  customerNote?: string;
+}
+
+type SubmitState = "idle" | "loading" | "success" | "error";
+
 export const ReservationModal: React.FC<ReservationModalProps> = ({
   event,
   isOpen,
   onOpenChange,
 }) => {
-  if (!event.organizer) return null;
+  const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const form = useForm<BookingFormData>({
+    defaultValues: {
+      fullName: "",
+      email: "",
+      preferredContact: "",
+      customerNote: "",
+    },
+  });
+
+  const onSubmit = async (data: BookingFormData) => {
+    try {
+      setSubmitState("loading");
+      setErrorMessage("");
+
+      const response = await axiosInstance.post("/orders", {
+        event_id: event.id,
+        email: data.email,
+        preferred_contact: data.preferredContact,
+        customer_note: `Imię i nazwisko: ${data.fullName}\n\n${data.customerNote || "Brak uwag"}`,
+      });
+
+      setSubmitState("success");
+      form.reset();
+
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        onOpenChange(false);
+        setSubmitState("idle");
+      }, 2000);
+    } catch (error: any) {
+      setSubmitState("error");
+      const errorMsg = error?.response?.data?.detail || "Coś poszło nie tak. Spróbuj ponownie.";
+      setErrorMessage(errorMsg);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Potwierdź rezerwację</DialogTitle>
+          <DialogTitle className="text-center text-xl">Zgłoś się na wyjazd z jogą 🧘‍♀️</DialogTitle>
+          <p className="text-center text-sm text-gray-600 mt-2">
+            Wypełnij krótki formularz — odziewiemy się do Ciebie z potwierdzeniem
+          </p>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <div>
-            <h3 className="font-semibold">{event.title}</h3>
-            <p className="text-sm text-gray-500">
-              {formatDateRange(event.start_date, event.end_date)}
-            </p>
-          </div>
-          <div className="h-px bg-gray-200" />
-          <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 flex-shrink-0">
-              <Image
-                src={getImageUrl(event.organizer.image_id, 1)}
-                alt={event.organizer.name}
-                fill
-                className="rounded-full object-cover border"
-              />
-            </div>
-            <div>
-              <p className="font-semibold">{event.organizer.name}</p>
-              <p className="text-sm text-gray-500">Organizator</p>
-            </div>
-          </div>
-          <div className="h-px bg-gray-200" />
-          <div>
-            <p className="font-semibold">Cena</p>
-            <p className="text-sm text-gray-500">
-              {event.price
-                ? `${event.price.toFixed(2)} ${event.currency || "PLN"} za jedną osobę`
-                : "Cena nie podana"}
-            </p>
-          </div>
 
-          {event.organizer.phone_number && (
-            <>
-              <div>
-                <p className="font-semibold">Telefon</p>
-                <p className="text-sm text-gray-500">{event.organizer.phone_number}</p>
-              </div>
-              <a href={`tel:${event.organizer.phone_number}`}>
-                <Button className="w-full" size="cta" variant="cta">
-                  <Phone className="mr-2 h-4 w-4" /> Zadzwoń, aby zarezerwować
-                </Button>
-              </a>
-            </>
-          )}
-        </div>
+        {submitState === "success" && (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4">
+            <p className="text-green-800 font-medium text-center">
+              ✓ Dziękujemy! Twoja rezerwacja została przyjęta. Niedługo się do Ciebie odezwiemy!
+            </p>
+          </div>
+        )}
+
+        {submitState === "error" && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
+            <p className="text-red-800 font-medium text-center">{errorMessage}</p>
+          </div>
+        )}
+
+        {submitState !== "success" && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Full Name */}
+              <FormField
+                control={form.control}
+                name="fullName"
+                rules={{ required: "Imię i nazwisko są wymagane" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Imię i nazwisko</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Jan Kowalski" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                rules={{
+                  required: "Email jest wymagany",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Podaj prawidłowy email",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="jan@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Preferred Contact */}
+              <FormField
+                control={form.control}
+                name="preferredContact"
+                rules={{ required: "Preferowany kontakt jest wymagany" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferowany kontakt</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Numer telefonu lub inny sposób kontaktu" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Customer Note / Questions */}
+              <FormField
+                control={form.control}
+                name="customerNote"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pytania lub uwagi</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Masz jakieś pytania? Podziel się uwagami..."
+                        className="min-h-[120px] resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={submitState === "loading"}
+                className="w-full"
+                size="cta"
+                variant="cta"
+              >
+                {submitState === "loading" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wysyłanie...
+                  </>
+                ) : (
+                  "Rezerwacja"
+                )}
+              </Button>
+
+              {/* Privacy Policy Consent */}
+              <p className="text-center text-sm text-gray-600">
+                Klikając przycisk &quot;Rezerwacja&quot;, wyrażasz zgodę na przetwarzanie swoich
+                danych osobowych w celu realizacji rezerwacji, zgodnie z{" "}
+                <Link href="/policy" className="underline">
+                  Polityką prywatności
+                </Link>
+              </p>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );

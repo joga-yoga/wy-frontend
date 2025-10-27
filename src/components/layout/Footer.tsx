@@ -20,7 +20,9 @@ const FOOTER_SECTIONS: {
       { label: "FAQ dla organizatorów", href: "/faq/organizers" },
       { label: "FAQ dla podróżujących", href: "/faq/travelers" },
     ],
-    description: <p className="text-m-sunscript-font text-gray-500">© 2025 All Rights Reserved</p>,
+    description: (
+      <p className="text-m-sunscript-font text-gray-500">{`© ${new Date().getFullYear()} All Rights Reserved`}</p>
+    ),
   },
   {
     title: "News",
@@ -99,7 +101,13 @@ const FooterSection = ({
   );
 };
 
-export const LogoFooter = ({ className }: { className?: string }) => {
+export const LogoFooter = ({
+  className,
+  project,
+}: {
+  className?: string;
+  project: "retreats" | "workshops";
+}) => {
   return (
     <div className={cn("flex flex-col items-center gap-2 md:gap-3", className)}>
       <div
@@ -110,7 +118,7 @@ export const LogoFooter = ({ className }: { className?: string }) => {
         <LogoTransparentSmall className={`w-10 h-10 md:w-12 md:h-12 text-white`} />
       </div>
       <p className={`flex items-center text-xl font-semibold text-gray-600`}>
-        wyjazdy
+        {project === "retreats" ? "wyjazdy" : "wydarzenia"}
         <span
           className={cn(
             "inline-block rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] bg-gray-600 text-white",
@@ -123,7 +131,7 @@ export const LogoFooter = ({ className }: { className?: string }) => {
   );
 };
 
-export const Footer: React.FC = () => {
+export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
   const pathname = usePathname();
   const params = useParams();
   const isEventPage = !!params.retreatId || !!params.workshopId;
@@ -138,7 +146,7 @@ export const Footer: React.FC = () => {
           )}
         >
           <div className="flex justify-center w-full mb-8 md:mb-10">
-            <LogoFooter />
+            <LogoFooter project={project} />
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-10 md:gap-0">
             {FOOTER_SECTIONS.map((section, index) => (

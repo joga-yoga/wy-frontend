@@ -15,7 +15,6 @@ import { axiosInstance } from "@/lib/axiosInstance"; // Import axios instance
 
 import EventCard from "./components/EventCard";
 import Filters from "./components/Filters";
-import { mapApiItemToEvent } from "./helpers";
 import { Event } from "./types";
 
 const EVENTS_PER_PAGE = 10;
@@ -52,7 +51,7 @@ const EventsPageContent: React.FC = () => {
         const response = await getBookmarkedEvents();
 
         if (response && Array.isArray(response)) {
-          const processedEvents = response.map(mapApiItemToEvent);
+          const processedEvents = response as Event[];
           setEvents(processedEvents);
           setTotalEvents(processedEvents.length);
           setSkip(processedEvents.length);
@@ -120,12 +119,11 @@ const EventsPageContent: React.FC = () => {
         params.append("skip", "0");
 
         const apiUrl = `/retreats/public?${params.toString()}`;
-        console.log(`Fetching initial/filtered events from: ${apiUrl}`);
         const response = await axiosInstance.get(apiUrl);
         const responseData = response.data;
 
         if (responseData && typeof responseData === "object" && Array.isArray(responseData.items)) {
-          const processedEvents = responseData.items.map(mapApiItemToEvent);
+          const processedEvents = responseData.items as Event[];
           setEvents(processedEvents);
           setTotalEvents(responseData.total || 0);
           setSkip(processedEvents.length);
@@ -194,7 +192,7 @@ const EventsPageContent: React.FC = () => {
       const responseData = response.data;
 
       if (responseData && typeof responseData === "object" && Array.isArray(responseData.items)) {
-        const newEventsData: Event[] = responseData.items.map(mapApiItemToEvent);
+        const newEventsData: Event[] = responseData.items;
 
         setEvents((prevEvents) => [...prevEvents, ...newEventsData]);
         setSkip((prevSkip) => prevSkip + newEventsData.length);

@@ -60,8 +60,10 @@ export interface OrganizerLocation {
 
 export interface OrganizerDetails {
   organizer: OrganizerInfo;
-  upcoming_events: OrganizerEvent[];
-  past_events: OrganizerEvent[];
+  upcoming_retreats: OrganizerEvent[];
+  past_retreats: OrganizerEvent[];
+  upcoming_workshops: OrganizerEvent[];
+  past_workshops: OrganizerEvent[];
 }
 
 export interface OrganizerReview {

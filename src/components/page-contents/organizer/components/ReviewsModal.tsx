@@ -3,8 +3,6 @@
 import { XIcon } from "lucide-react";
 import React from "react";
 
-import ReviewCard from "@/app/retreats/organizer/[organizerId]/components/ReviewCard";
-import { OrganizerReview } from "@/app/retreats/organizer/[organizerId]/types";
 import {
   Dialog,
   DialogClose,
@@ -12,6 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+import { OrganizerReview } from "../types";
+import ReviewCard from "./ReviewCard";
 
 interface ReviewsModalProps {
   reviews: OrganizerReview[];

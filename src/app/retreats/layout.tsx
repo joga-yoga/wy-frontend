@@ -7,7 +7,7 @@ export default function RetreatsLayout({ children }: { children: React.ReactNode
     <EventsFilterProvider>
       <EventsHeader />
       {children}
-      <Footer />
+      <Footer project="retreats" />
     </EventsFilterProvider>
   );
 }

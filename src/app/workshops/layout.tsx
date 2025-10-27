@@ -7,7 +7,7 @@ export default function WorkshopsLayout({ children }: { children: React.ReactNod
     <EventsFilterProvider>
       <EventsHeader />
       {children}
-      <Footer />
+      <Footer project="workshops" />
     </EventsFilterProvider>
   );
 }

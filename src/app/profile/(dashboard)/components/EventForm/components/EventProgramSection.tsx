@@ -66,8 +66,8 @@ export const EventProgramSection = ({
   };
 
   return (
-    <div className="space-y-4 md:space-y-6" id="event-program-section">
-      <div className="space-y-2">
+    <>
+      <div className="space-y-2 event-form-section-padding" id="event-program-section">
         <div className="flex items-center gap-2">
           <Label htmlFor="start_date" size="event">
             Termin
@@ -159,75 +159,76 @@ export const EventProgramSection = ({
           </p>
         )}
       </div>
-
-      <div className="flex items-center gap-2">
-        <Label htmlFor="program" size="event">
-          Program
+      <div className="space-y-2 event-form-section-padding">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="program" size="event">
+            Program
+          </Label>
+          <EventHelpBarTipButton tipId="program" />
+        </div>
+        <Label htmlFor="program" size="event-description">
+          Opisz pełny program dla uczestników i podziel się z nimi, jak będą wyglądały ich dni
         </Label>
-        <EventHelpBarTipButton tipId="program" />
-      </div>
-      <Label htmlFor="program" size="event-description">
-        Opisz pełny program dla uczestników i podziel się z nimi, jak będą wyglądały ich dni
-      </Label>
-      <Separator className="my-4 md:my-8" />
-      {programFields.map((field, index) => (
-        <div key={field.id} className="border-b pb-6 last:border-b-0">
-          <Label className="text-lg font-semibold">Dzień {index + 1}</Label>
-          <div className="flex items-start flex-col md:flex-row gap-2 md:gap-6 mt-2">
-            <div className="flex-shrink-0 w-full md:w-auto">
-              <SingleImageUpload
-                name={`program.${index}.imageFile`}
-                control={control}
-                existingImageId={watchedProgram?.[index]?.imageId}
-                isUploading={!!uploadingProgramImages[index]}
-                onRemove={() => onRemoveProgramImage(index)}
-                onFileSelect={(file) => onProgramImageChange(file, index)}
-              />
-              {errors.program?.[index]?.imageId && (
-                <p className="mt-2 text-sm text-destructive">
-                  {errors.program[index]?.imageId?.message}
-                </p>
-              )}
-            </div>
+        <Separator className="my-4 md:my-8" />
+        {programFields.map((field, index) => (
+          <div key={field.id} className="border-b pb-6 last:border-b-0">
+            <Label className="text-lg font-semibold">Dzień {index + 1}</Label>
+            <div className="flex items-start flex-col md:flex-row gap-2 md:gap-6 mt-2">
+              <div className="flex-shrink-0 w-full md:w-auto">
+                <SingleImageUpload
+                  name={`program.${index}.imageFile`}
+                  control={control}
+                  existingImageId={watchedProgram?.[index]?.imageId}
+                  isUploading={!!uploadingProgramImages[index]}
+                  onRemove={() => onRemoveProgramImage(index)}
+                  onFileSelect={(file) => onProgramImageChange(file, index)}
+                />
+                {errors.program?.[index]?.imageId && (
+                  <p className="mt-2 text-sm text-destructive">
+                    {errors.program[index]?.imageId?.message}
+                  </p>
+                )}
+              </div>
 
-            <div className="flex-grow space-y-1 w-full md:w-auto">
-              <Textarea
-                id={`program.${index}.description`}
-                {...register(`program.${index}.description` as const)}
-                placeholder={`Opis programu na dzień ${index + 1}`}
-                rows={5}
-                className="bg-background min-h-[126px]"
-                onFocus={() => focusTip("program")}
-              />
-              {errors.program?.[index]?.description && (
-                <p className="text-sm text-destructive">
-                  {errors.program[index]?.description?.message}
-                </p>
-              )}
+              <div className="flex-grow space-y-1 w-full md:w-auto">
+                <Textarea
+                  id={`program.${index}.description`}
+                  {...register(`program.${index}.description` as const)}
+                  placeholder={`Opis programu na dzień ${index + 1}`}
+                  rows={5}
+                  className="bg-background min-h-[126px]"
+                  onFocus={() => focusTip("program")}
+                />
+                {errors.program?.[index]?.description && (
+                  <p className="text-sm text-destructive">
+                    {errors.program[index]?.description?.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-      {calculatedDuration > 0 && programFields.length < calculatedDuration && (
-        <Button type="button" variant="outline" size="sm" onClick={handleAddDay}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Dodaj dzień {programFields.length + 1}
-        </Button>
-      )}
-      {calculatedDuration > 0 && programFields.length > calculatedDuration && (
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          onClick={() => remove(programFields.length - 1)}
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> Usuń ostatni dzień
-        </Button>
-      )}
-      {calculatedDuration === 0 && (
-        <p className="text-sm text-gray-500 italic">
-          Wybierz datę rozpoczęcia i zakończenia, aby dodać program dnia.
-        </p>
-      )}
-    </div>
+        ))}
+        {calculatedDuration > 0 && programFields.length < calculatedDuration && (
+          <Button type="button" variant="outline" size="sm" onClick={handleAddDay}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Dodaj dzień {programFields.length + 1}
+          </Button>
+        )}
+        {calculatedDuration > 0 && programFields.length > calculatedDuration && (
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => remove(programFields.length - 1)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Usuń ostatni dzień
+          </Button>
+        )}
+        {calculatedDuration === 0 && (
+          <p className="text-sm text-gray-500 italic">
+            Wybierz datę rozpoczęcia i zakończenia, aby dodać program dnia.
+          </p>
+        )}
+      </div>
+    </>
   );
 };

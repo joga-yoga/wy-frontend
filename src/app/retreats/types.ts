@@ -42,6 +42,7 @@ export interface Event {
   cancellation_policy?: string | null;
   important_info?: string | null;
   program?: ProgramDay[] | null;
+  tags?: string[] | null;
 }
 
 export interface ProgramDay {

@@ -38,7 +38,7 @@ export const EventLocationSection = ({
   const { focusTip } = useEventHelpBar();
   const { toast } = useToast();
   return (
-    <div className="space-y-2" id="event-location-section">
+    <div className="space-y-2 event-form-section-padding" id="event-location-section">
       <div className="flex items-center gap-2">
         <Label htmlFor="location_id" size="event">
           Lokalizacja

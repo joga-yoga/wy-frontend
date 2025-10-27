@@ -1,15 +1,4 @@
-import {
-  Camera,
-  CheckCheck,
-  CheckCircle,
-  Clock,
-  FileText,
-  ImagePlus,
-  Megaphone,
-  Send,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { CheckCheck, Clock, ImagePlus, Megaphone, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,9 +12,10 @@ import { LogoPartners } from "./components/LogoPartners";
 export const revalidate = 300;
 
 type PublicStats = {
-  total_public_events: number;
-  total_countries_with_public_events: number;
-  total_public_events_in_poland: number;
+  total_public_retreats: number;
+  total_public_workshops: number;
+  total_countries_with_public_retreats: number;
+  total_public_retreats_in_poland: number;
   total_organizers: number;
 };
 
@@ -64,25 +54,35 @@ async function fetchPublicStats(): Promise<PublicStats | null> {
   }
 }
 
-const PartnersPage = async () => {
+export const PartnersPageContent = async ({ project }: { project: "retreats" | "workshops" }) => {
   const statsData = await fetchPublicStats();
   const stats = statsData
     ? [
         {
-          title: String(statsData.total_public_events),
-          description: `${polishPlural(statsData.total_public_events, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w kalendarzu`,
+          title: String(
+            project === "retreats"
+              ? statsData.total_public_retreats
+              : statsData.total_public_workshops,
+          ),
+          description: `${polishPlural(statsData.total_public_retreats, project === "retreats" ? ["wyjazd", "wyjazdy", "wyjazdów"] : ["wydarzenie", "wydarzenia", "wydarzeń"])} z jogą w kalendarzu`,
+          projects: ["retreats", "workshops"],
         },
         {
-          title: String(statsData.total_countries_with_public_events),
-          description: polishCountriesLocativePhrase(statsData.total_countries_with_public_events),
+          title: String(statsData.total_countries_with_public_retreats),
+          description: polishCountriesLocativePhrase(
+            statsData.total_countries_with_public_retreats,
+          ),
+          projects: ["retreats"],
         },
         {
-          title: String(statsData.total_public_events_in_poland),
-          description: `${polishPlural(statsData.total_public_events_in_poland, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w Polsce`,
+          title: String(statsData.total_public_retreats_in_poland),
+          description: `${polishPlural(statsData.total_public_retreats_in_poland, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w Polsce`,
+          projects: ["retreats"],
         },
         {
           title: String(statsData.total_organizers),
           description: `${polishPlural(statsData.total_organizers, ["organizator", "organizatorzy", "organizatorów"])}`,
+          projects: ["retreats", "workshops"],
         },
       ]
     : [];
@@ -99,7 +99,7 @@ const PartnersPage = async () => {
         <div className="container-wy flex flex-row md:justify-between md:items-end w-full z-10 mx-auto h-full py-8 md:py-[80px]">
           <div className="flex flex-col items-center md:items-start md:justify-between h-full px-4 md:px-8 text-left text-white w-full">
             <Link href="/" className="mb-4 text-2xl font-bold">
-              <LogoPartners />
+              <LogoPartners project={project} />
             </Link>
             <div className="flex flex-col gap-4">
               <h1 className="text-center md:text-left font-semibold text-4xl md:text-[92px] md:leading-[88px] tracking-tight">
@@ -122,17 +122,19 @@ const PartnersPage = async () => {
           </div>
 
           <div className="hidden md:flex flex-col gap-6 p-12 bg-white/95 rounded-xl shadow-lg ">
-            {stats.map((stat, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col items-center md:items-start flex-1 min-w-[300px]"
-              >
-                <div className="text-h-middle font-semibold text-gray-900">{stat.title}</div>
-                <div className="text-sub_description text-gray-600 mt-1 text-center md:text-left">
-                  {stat.description}
+            {stats
+              .filter((stat) => stat.projects.includes(project))
+              .map((stat, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col items-center md:items-start flex-1 min-w-[300px]"
+                >
+                  <div className="text-h-middle font-semibold text-gray-900">{stat.title}</div>
+                  <div className="text-sub_description text-gray-600 mt-1 text-center md:text-left">
+                    {stat.description}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
             <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}>
               <Button size="cta" variant="cta" className="w-full rounded-lg">
                 Dołącz do nas
@@ -154,7 +156,7 @@ const PartnersPage = async () => {
                 <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
                   <Sparkles className="h-8 w-8 text-primary mx-auto md:mx-0" />
                   <CardTitle className="text-subheader font-medium">
-                    Dodaj szczegóły wyjazdu
+                    Dodaj szczegóły {project === "retreats" ? "wyjazdu" : "wydarzenia"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-0 pb-4 md:pb-6">
@@ -176,8 +178,9 @@ const PartnersPage = async () => {
                 </CardHeader>
                 <CardContent className="px-0 pb-4 md:pb-6">
                   <p className="text-gray-500 text-sub-descript-18">
-                    Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy
-                    programu.
+                    {project === "retreats"
+                      ? "Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy programu."
+                      : "Dodaj zdjęcia, które zainspirują uczestników i oddadzą klimat wydarzenia"}
                   </p>
                 </CardContent>
               </div>
@@ -223,7 +226,7 @@ const PartnersPage = async () => {
       <section className="">
         <div className="container-wy mx-auto px-0 md:px-8">
           <h2 className="px-4 md:px-0 mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
-            Co dostaniesz w spówpracy z wyjazdy
+            Co dostaniesz w spówpracy z {project === "retreats" ? "wyjazdy" : "wydarzenia"}
             <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
               .yoga
             </span>
@@ -267,7 +270,8 @@ const PartnersPage = async () => {
                   <div>
                     <h3 className="text-subheader">Siła wspólnoty</h3>
                     <p className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
-                      Społeczność wyjazdy.yoga wspiera Twoje wyjazdy
+                      Społeczność {project === "retreats" ? "wyjazdy.yoga" : "wydarzenia.yoga"}{" "}
+                      wspiera Twoje {project === "retreats" ? "wyjazdy" : "wydarzenia"}
                     </p>
                   </div>
                 </div>
@@ -310,7 +314,7 @@ const PartnersPage = async () => {
           </h2>
           <div className="flex flex-col md:flex-row gap-6 md:gap-10">
             <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-4 w-full rounded-2xl bg-white p-8 border border-gray-100 shadow-[0px_8px_16px_8px_#F2F2F3]">
-              <LogoPartners variant="black" className="w-full" />
+              <LogoPartners variant="black" className="w-full" project={project} />
               <div className="space-y-6 w-full">
                 <div className="flex text-gray-800 text-m-descript md:text-listing-description">
                   <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
@@ -376,5 +380,3 @@ const PartnersPage = async () => {
     </div>
   );
 };
-
-export default PartnersPage;

@@ -78,7 +78,6 @@ export const FiltersModal = ({ isOpen, title, onOpenChange }: FiltersModalProps)
 
         <div className="overflow-y-auto flex-1 space-y-4">
           <TagsSection
-            initialData={initialData}
             selectedTags={filters.selectedTags}
             onToggle={(tag) => {
               const exists = filters.selectedTags.includes(tag);

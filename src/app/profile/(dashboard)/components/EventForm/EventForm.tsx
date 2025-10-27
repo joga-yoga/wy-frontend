@@ -794,7 +794,7 @@ export function EventForm({
         className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto"
         id="event-form-wrapper"
       >
-        <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto py-4 md:py-10 px-4 md:mx-10 ">
+        <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto px-4 md:mx-10 ">
           <EventDetailsSection
             control={control}
             register={register}
@@ -804,21 +804,19 @@ export function EventForm({
           {mode === "workshop" && (
             <WorkshopMetaSection control={control} register={register} errors={errors} />
           )}
-          <div className="flex flex-col gap-6 md:gap-10">
-            <EventInstructorsSection
-              control={control}
-              errors={errors}
-              setValue={setValue}
-              instructors={instructors}
-              setIsInstructorModalOpen={setIsInstructorModalOpen}
-              handleEditInstructor={handleEditInstructor}
-              instructorToDelete={instructorToDelete}
-              setInstructorToDelete={setInstructorToDelete}
-              isDeletingInstructor={isDeletingInstructor}
-              handleDeleteInstructor={handleDeleteInstructor}
-            />
-            {mode !== "workshop" && <EventSkillLevel control={control} errors={errors} />}
-          </div>
+          <EventInstructorsSection
+            control={control}
+            errors={errors}
+            setValue={setValue}
+            instructors={instructors}
+            setIsInstructorModalOpen={setIsInstructorModalOpen}
+            handleEditInstructor={handleEditInstructor}
+            instructorToDelete={instructorToDelete}
+            setInstructorToDelete={setInstructorToDelete}
+            isDeletingInstructor={isDeletingInstructor}
+            handleDeleteInstructor={handleDeleteInstructor}
+          />
+          {mode !== "workshop" && <EventSkillLevel control={control} errors={errors} />}
           <EventProgramSection
             control={control}
             register={register}
@@ -834,26 +832,22 @@ export function EventForm({
             onRemoveProgramImage={handleRemoveProgramImage}
             onProgramImageChange={handleProgramImageChange}
           />
-          <div className="flex flex-col gap-6 md:gap-10">
-            <EventLocationSection
-              control={control}
-              errors={errors}
-              locations={locations}
-              setIsLocationModalOpen={setIsLocationModalOpen}
-              setEditingLocation={setEditingLocation}
-              setLocationModalMode={setLocationModalMode}
-            />
-            {mode !== "workshop" && <EventHospitalitySection register={register} errors={errors} />}
-          </div>
-          <div className="flex flex-col gap-6 md:gap-10">
-            <EventPricingSection
-              control={control}
-              register={register}
-              errors={errors}
-              includeLists={mode !== "workshop"}
-            />
-            <EventImportantInfoSection register={register} errors={errors} />
-          </div>
+          <EventLocationSection
+            control={control}
+            errors={errors}
+            locations={locations}
+            setIsLocationModalOpen={setIsLocationModalOpen}
+            setEditingLocation={setEditingLocation}
+            setLocationModalMode={setLocationModalMode}
+          />
+          {mode !== "workshop" && <EventHospitalitySection register={register} errors={errors} />}
+          <EventPricingSection
+            control={control}
+            register={register}
+            errors={errors}
+            includeLists={mode !== "workshop"}
+          />
+          <EventImportantInfoSection register={register} errors={errors} />
           <EventPhotosSection
             errors={errors}
             watchedImageIds={watchedImageIds ?? []}

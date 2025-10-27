@@ -12,44 +12,14 @@ import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
 import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
+import { PREDEFINED_TAGS } from "@/components/custom/TagsSelect";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
-import { formatDateRange } from "@/lib/formatDateRange";
+import { formatDateStart } from "@/lib/formatDateRange";
 import { renderShortLocation } from "@/lib/renderLocation";
+import { cn } from "@/lib/utils";
 
 import { Event } from "../retreats/types";
-// Helper function to calculate price per day
-const calculatePricePerDay = (
-  price: number | null,
-  startDateStr: string,
-  endDateStr: string | null,
-): string | null => {
-  if (price === null || !startDateStr) {
-    return null;
-  }
-
-  try {
-    const startDate = new Date(startDateStr);
-    if (isNaN(startDate.getTime())) return null;
-
-    let durationDays = 1;
-    if (endDateStr) {
-      const endDate = new Date(endDateStr);
-      if (isNaN(endDate.getTime())) return null;
-      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      if (endDate.getTime() < startDate.getTime()) return null;
-      if (durationDays <= 0) durationDays = 1;
-    } else {
-      durationDays = 1;
-    }
-
-    const pricePerDay = price / durationDays;
-    return `${Math.round(pricePerDay)} zł./dobę`;
-  } catch (e) {
-    console.error("Error calculating price per day:", e);
-    return null;
-  }
-};
 
 interface WorkshopCardProps {
   event: Event;
@@ -91,7 +61,7 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
         <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-4 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
           <Calendar className="w-[28px] h-[28px] md:w-[28px] md:h-[28px]" />
           <span className="text-subheader md:text-h-middle text-black whitespace-nowrap leading-1 md:pt-[2px]">
-            {formatDateRange(event.start_date, event.end_date)}
+            {formatDateStart(event.start_date)}
           </span>
         </div>
         <div className="flex-grow"></div>
@@ -170,19 +140,46 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
             </p>
           </div>
           {/* <div className="flex-grow"></div> */}
-          <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
-            <div className="flex flex-row justify-end items-center w-full">
-              <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
-                {event.price !== null ? `od ${event.price} ${event.currency || "PLN"}` : "Cena N/A"}
-              </span>
-            </div>
-            {event.price !== null && event.start_date && (
+          <div className="flex flex-row justify-between items-center w-full">
+            {event.tags && event.tags.length > 0 && (
+              <div className="flex flex-row justify-start items-center w-full gap-2">
+                {event.tags.slice(0, 3).map((tag) => {
+                  const Icon = PREDEFINED_TAGS.find((t) => t.id === tag)?.icon || null;
+                  const label = PREDEFINED_TAGS.find((t) => t.id === tag)?.label || null;
+                  if (!Icon) return null;
+
+                  return (
+                    <Tooltip key={tag} delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Icon
+                          key={tag}
+                          className={cn("h-6 w-6 md:h-8 md:w-8 flex-shrink-0 text-gray-600")}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            )}
+            <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
+              <div className="flex flex-row justify-end items-center w-full">
+                <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
+                  {event.price !== null
+                    ? `od ${event.price} ${event.currency || "PLN"} / osobę`
+                    : "Cena N/A"}
+                </span>
+              </div>
+              {/* {event.price !== null && event.start_date && (
               <div className="flex flex-row justify-end items-center w-full h-[22px]">
                 <span className="text-m-sunscript-font md:text-sub-descript-18 text-gray-400 text-right flex-grow">
                   {calculatePricePerDay(event.price, event.start_date, event.end_date)}
                 </span>
               </div>
-            )}
+            )} */}
+            </div>
           </div>
         </div>
       </div>

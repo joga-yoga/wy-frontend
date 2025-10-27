@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-import { mapApiItemToEvent } from "../retreats/helpers";
 import { Event } from "../retreats/types";
 import Filters from "./components/Filters";
 import { WorkshopCard } from "./WorkshopCard";
@@ -52,7 +51,7 @@ const WorkshopsPageContent: React.FC = () => {
         const response = await getBookmarkedEvents();
 
         if (response && Array.isArray(response)) {
-          const processedEvents = response.map(mapApiItemToEvent);
+          const processedEvents = response as Event[];
           setEvents(processedEvents);
           setTotalEvents(processedEvents.length);
           setSkip(processedEvents.length);
@@ -130,7 +129,7 @@ const WorkshopsPageContent: React.FC = () => {
         const responseData = response.data;
 
         if (responseData && typeof responseData === "object" && Array.isArray(responseData.items)) {
-          const processedEvents = responseData.items.map(mapApiItemToEvent);
+          const processedEvents = responseData.items as Event[];
           setEvents(processedEvents);
           setTotalEvents(responseData.total || 0);
           setSkip(processedEvents.length);
@@ -204,7 +203,7 @@ const WorkshopsPageContent: React.FC = () => {
       const responseData = response.data;
 
       if (responseData && typeof responseData === "object" && Array.isArray(responseData.items)) {
-        const newEventsData: Event[] = responseData.items.map(mapApiItemToEvent);
+        const newEventsData: Event[] = responseData.items;
 
         setEvents((prevEvents) => [...prevEvents, ...newEventsData]);
         setSkip((prevSkip) => prevSkip + newEventsData.length);

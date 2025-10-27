@@ -15,8 +15,8 @@ interface EventHospitalitySectionProps {
 export const EventHospitalitySection = ({ register, errors }: EventHospitalitySectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
-    <div className="flex flex-col gap-6 md:gap-10" id="event-hospitality">
-      <div className="space-y-2">
+    <>
+      <div className="space-y-2 event-form-section-padding" id="event-hospitality">
         <div className="flex items-center gap-2">
           <Label htmlFor="accommodation_description" size="event">
             Nocleg
@@ -38,7 +38,7 @@ export const EventHospitalitySection = ({ register, errors }: EventHospitalitySe
           <p className="text-sm text-destructive">{errors.accommodation_description.message}</p>
         )}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <div className="flex items-center gap-2">
           <Label htmlFor="guest_welcome_description" size="event">
             Powitanie gości
@@ -61,7 +61,7 @@ export const EventHospitalitySection = ({ register, errors }: EventHospitalitySe
           <p className="text-sm text-destructive">{errors.guest_welcome_description.message}</p>
         )}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <div className="flex items-center gap-2">
           <Label htmlFor="food_description" size="event">
             Wyżywienie
@@ -84,6 +84,6 @@ export const EventHospitalitySection = ({ register, errors }: EventHospitalitySe
           <p className="text-sm text-destructive">{errors.food_description.message}</p>
         )}
       </div>
-    </div>
+    </>
   );
 };

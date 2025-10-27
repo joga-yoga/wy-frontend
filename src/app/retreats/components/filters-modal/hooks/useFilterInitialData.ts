@@ -22,7 +22,6 @@ export const useFilterInitialData = (isOpen: boolean) => {
 
     try {
       const response = await axiosInstance.get("/retreats/public/filters");
-      console.log("🚀 ~ useFilterInitialData ~ response:", response);
       const responseData = response.data;
 
       if (responseData && typeof responseData === "object") {

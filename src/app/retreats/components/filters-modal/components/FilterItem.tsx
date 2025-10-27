@@ -19,7 +19,7 @@ export const FilterItem = ({
 }: FilterItemProps) => {
   return (
     <div
-      className={`flex w-fit items-center justify-center h-[52px] min-w-[56px] gap-2 rounded-[26px] border px-3 cursor-pointer transition-colors ${
+      className={`flex w-fit items-center justify-center h-[52px] min-w-[56px] gap-2 rounded-[26px] border px-3 cursor-pointer transition-all duration-200 hover:scale-105 ${
         isSelected ? "border-[#11C932]" : "border-[#A1A1AA]"
       }`}
       onClick={onClick}

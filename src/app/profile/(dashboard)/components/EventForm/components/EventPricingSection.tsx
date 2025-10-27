@@ -32,8 +32,8 @@ export const EventPricingSection = ({
   const { focusTip } = useEventHelpBar();
 
   return (
-    <div className="flex flex-col gap-6 md:gap-10" id="event-pricing-section">
-      <div className="space-y-2">
+    <>
+      <div className="space-y-2 event-form-section-padding" id="event-pricing-section">
         <div className="flex items-center gap-2">
           <Label htmlFor="price" size="event">
             Cena
@@ -89,7 +89,7 @@ export const EventPricingSection = ({
         </div>
       </div>
       {includeLists && (
-        <div className="space-y-2">
+        <div className="space-y-2 event-form-section-padding">
           <div className="flex items-center gap-2">
             <Label htmlFor="price_includes" size="event">
               Co jest wliczone w cenę
@@ -121,7 +121,7 @@ export const EventPricingSection = ({
         </div>
       )}
       {includeLists && (
-        <div className="space-y-2">
+        <div className="space-y-2 event-form-section-padding">
           <div className="flex items-center gap-2">
             <Label htmlFor="price_excludes" size="event">
               Co nie jest wliczone w cenę
@@ -151,7 +151,7 @@ export const EventPricingSection = ({
         </div>
       )}
       {includeLists && (
-        <div className="space-y-2">
+        <div className="space-y-2 event-form-section-padding">
           <div className="flex items-center gap-2">
             <Label htmlFor="paid_attractions" size="event">
               Dodatkowe atrakcje za dopłatą
@@ -181,7 +181,7 @@ export const EventPricingSection = ({
           />
         </div>
       )}
-      <div className="space-y-2">
+      <div className="space-y-2 event-form-section-padding">
         <div className="flex items-center gap-2">
           <Label htmlFor="cancellation_policy" size="event">
             Zasady anulowania rezerwacji
@@ -203,6 +203,6 @@ export const EventPricingSection = ({
           <p className="text-sm text-destructive">{errors.cancellation_policy.message}</p>
         )}
       </div>
-    </div>
+    </>
   );
 };

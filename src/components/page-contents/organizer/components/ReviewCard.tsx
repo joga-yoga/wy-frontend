@@ -3,10 +3,11 @@
 import Image from "next/image";
 import React from "react";
 
-import { OrganizerReview } from "@/app/retreats/organizer/[organizerId]/types";
 import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { formatTimeAgo } from "@/lib/formatDateRange";
+
+import { OrganizerReview } from "../types";
 
 interface ReviewCardProps {
   review: OrganizerReview;

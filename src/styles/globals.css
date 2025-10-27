@@ -90,7 +90,10 @@
     }
 
     .event-form-section-gap {
-        @apply flex flex-col gap-12 md:gap-[80px];
+        @apply flex flex-col gap-4 md:gap-6
+    }
+    .event-form-section-padding {
+        @apply py-4 md:py-8
     }
 }
 

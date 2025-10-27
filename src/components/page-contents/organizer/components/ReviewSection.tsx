@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 
-import { Carousel } from "@/app/retreats/organizer/[organizerId]/components/Carousel";
-import ReviewCard from "@/app/retreats/organizer/[organizerId]/components/ReviewCard";
-import { ReviewsModal } from "@/app/retreats/organizer/[organizerId]/components/ReviewsModal";
-import { OrganizerReview } from "@/app/retreats/organizer/[organizerId]/types";
 import { Button } from "@/components/ui/button";
+
+import { OrganizerReview } from "../types";
+import { Carousel } from "./Carousel";
+import ReviewCard from "./ReviewCard";
+import { ReviewsModal } from "./ReviewsModal";
 
 interface ReviewSectionProps {
   title: string;
