@@ -26,9 +26,9 @@ export const BookmarkButton = ({
       className={cn(
         "relative flex items-center justify-center bg-gray-100 rounded-full",
         size === "xs" && "h-[22px] w-[22px] p-0 min-w-0 min-h-0",
-        size === "small" && "h-8 w-8 md:h-10 md:w-10",
-        size === "large" && "h-10 w-10 md:h-12 md:w-12",
-        size === "mobile-footer" && "h-12 w-12",
+        size === "small" && "h-8 w-8 md:h-10 md:w-10 min-w-8 md:min-w-10",
+        size === "large" && "h-10 w-10 md:h-12 md:w-12 min-w-10 md:min-w-12",
+        size === "mobile-footer" && "h-12 w-12 min-w-12",
         size === "desktop-filter" && "h-[80px] w-[80px]",
         "hover:bg-gray-200 duration-200",
         variant === "black" && "bg-gray-600 hover:bg-gray-600/90",

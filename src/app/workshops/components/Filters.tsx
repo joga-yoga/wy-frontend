@@ -108,7 +108,7 @@ const Filters = () => {
       params.set("is_online", "true");
     }
 
-    router.push(`/workshops?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
   };
 
   const handleCityClick = (cityName: string) => {
@@ -119,7 +119,7 @@ const Filters = () => {
     } else {
       params.set("city", cityName);
     }
-    router.push(`/workshops?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
   };
 
   const cities = filterDataLoading ? [] : filterInitialData?.cities || [];
