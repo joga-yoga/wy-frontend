@@ -1,6 +1,16 @@
+import { Metadata } from "next";
+
 import { Footer } from "@/components/layout/Footer";
 import { EventsHeader } from "@/components/layout/Header";
 import { EventsFilterProvider } from "@/context/EventsFilterContext";
+
+export const metadata: Metadata = {
+  title: "Wydarzenia.Yoga",
+  description: "Wydarzenia.Yoga",
+  openGraph: {
+    description: "Wydarzenia.Yoga",
+  },
+};
 
 export default function WorkshopsLayout({ children }: { children: React.ReactNode }) {
   return (
