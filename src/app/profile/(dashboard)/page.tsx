@@ -302,9 +302,6 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                           {event.title}
-                          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
-                            {event.kind === "workshop" ? "Workshop" : "Retreat"}
-                          </span>
                         </h3>
                         <span
                           className={`px-2 py-0.5 text-xs font-semibold rounded-md ${status.className}`}
@@ -316,69 +313,74 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2 items-center">
-                      <Link
-                        href={
-                          event.kind === "workshop"
-                            ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
-                            : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`
-                        }
-                        passHref
-                      >
-                        <Button variant="outline" size="sm" className="text-xs">
-                          Edytuj
-                        </Button>
-                      </Link>
-                      <AlertDialog onOpenChange={(open: boolean) => !open && setItemToDelete(null)}>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setItemToDelete(event)}
-                            disabled={isDeleting}
-                            className="text-xs"
-                          >
-                            Usuń
+                    <div className="mt-4 flex justify-between items-center">
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <Link
+                          href={
+                            event.kind === "workshop"
+                              ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
+                              : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`
+                          }
+                          passHref
+                        >
+                          <Button variant="outline" size="sm" className="text-xs">
+                            Edytuj
                           </Button>
-                        </AlertDialogTrigger>
-                        {itemToDelete?.id === event.id && (
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie{" "}
-                                {event.kind === "workshop" ? "warsztatu" : "wyjazdu"}
-                                &quot;
-                                <strong>{event.title}</strong>&quot;.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-                              <AlertDialogAction
-                                disabled={isDeleting}
-                                onClick={handleDelete}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                {isDeleting
-                                  ? "Usuwanie..."
-                                  : `Tak, usuń ${event.kind === "workshop" ? "warsztat" : "wyjazd"}`}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        )}
-                      </AlertDialog>
-                      <Link
-                        href={
-                          event.kind === "workshop"
-                            ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
-                            : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
-                        }
-                        passHref
-                      >
-                        <Button variant="ghost" size="sm" className="text-xs">
-                          Zobacz stronę publiczną
-                        </Button>
-                      </Link>
+                        </Link>
+                        <AlertDialog
+                          onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
+                        >
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setItemToDelete(event)}
+                              disabled={isDeleting}
+                              className="text-xs"
+                            >
+                              Usuń
+                            </Button>
+                          </AlertDialogTrigger>
+                          {itemToDelete?.id === event.id && (
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie{" "}
+                                  {event.kind === "workshop" ? "warsztatu" : "wyjazdu"}
+                                  &quot;
+                                  <strong>{event.title}</strong>&quot;.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                                <AlertDialogAction
+                                  disabled={isDeleting}
+                                  onClick={handleDelete}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {isDeleting
+                                    ? "Usuwanie..."
+                                    : `Tak, usuń ${event.kind === "workshop" ? "warsztat" : "wyjazd"}`}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          )}
+                        </AlertDialog>
+                        <Link
+                          href={
+                            event.kind === "workshop"
+                              ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
+                              : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
+                          }
+                          passHref
+                        >
+                          <Button variant="ghost" size="sm" className="text-xs">
+                            Zobacz stronę publiczną
+                          </Button>
+                        </Link>
+                      </div>
+                      <span className="text-xl">{event.kind === "workshop" ? "🏕️" : "🧘‍♀️"}</span>
                     </div>
                   </div>
                 </div>

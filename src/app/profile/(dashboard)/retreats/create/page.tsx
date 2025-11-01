@@ -28,8 +28,18 @@ export default function CreateEventPage() {
   const [prompt, setPrompt] = useState("");
   const { toast } = useToast();
 
-  const handleGenerate = async (text: string) => {
-    if (!text.trim()) {
+  // Validate URL format
+  const isValidUrl = (urlString: string): boolean => {
+    try {
+      new URL(urlString);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleGenerateFromPrompt = async (promptText: string) => {
+    if (!promptText.trim()) {
       toast({
         title: "Błąd",
         description: "Pole nie może być puste.",
@@ -40,8 +50,8 @@ export default function CreateEventPage() {
     setIsAutofilling(true);
     try {
       const formData = new FormData();
-      formData.append("prompt", text);
-      const response = await axiosInstance.post("/events/generate/url", formData);
+      formData.append("prompt", promptText);
+      const response = await axiosInstance.post("/events/generate/prompt", formData);
       const data = response.data;
       if (data.program) {
         data.program = data.program.map((day: any) => ({
@@ -55,6 +65,51 @@ export default function CreateEventPage() {
       toast({
         title: "Błąd",
         description: "Nie udało się wygenerować danych wyjazdu. Spróbuj ponownie.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAutofilling(false);
+    }
+  };
+
+  const handleGenerateFromUrl = async (urlString: string) => {
+    if (!urlString.trim()) {
+      toast({
+        title: "Błąd",
+        description: "Pole nie może być puste.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidUrl(urlString)) {
+      toast({
+        title: "Błąd",
+        description: "Wpisz prawidłowy adres URL (np. https://example.com)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAutofilling(true);
+    try {
+      const formData = new FormData();
+      formData.append("url", urlString);
+      const response = await axiosInstance.post("/events/generate/url", formData);
+      const data = response.data;
+      if (data.program) {
+        data.program = data.program.map((day: any) => ({
+          ...day,
+          imageId: getRandomDefaultImageId(),
+        }));
+      }
+      setGeneratedData(data);
+      setView("form");
+    } catch (error) {
+      toast({
+        title: "Błąd",
+        description:
+          "Nie udało się wygenerować danych wyjazdu z tego linku. Spróbuj z innym linkiem.",
         variant: "destructive",
       });
     } finally {
@@ -158,7 +213,11 @@ export default function CreateEventPage() {
               onChange={(e) => setUrl(e.target.value)}
               disabled={isAutofilling}
             />
-            <Button onClick={() => handleGenerate(url)} className="w-full" disabled={isAutofilling}>
+            <Button
+              onClick={() => handleGenerateFromUrl(url)}
+              className="w-full"
+              disabled={isAutofilling}
+            >
               {isAutofilling ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -193,7 +252,7 @@ export default function CreateEventPage() {
               disabled={isAutofilling}
             />
             <Button
-              onClick={() => handleGenerate(prompt)}
+              onClick={() => handleGenerateFromPrompt(prompt)}
               className="w-full"
               disabled={isAutofilling}
             >

@@ -45,6 +45,9 @@ export const EventLocationSection = ({
         </Label>
         <EventHelpBarTipButton tipId="location_id" />
       </div>
+      <Label htmlFor="location_id" size="event-description">
+        Wybierz lokalizację wydarzenia.
+      </Label>
       <Separator className="my-4 md:my-8" />
       <Controller
         name="location_id"

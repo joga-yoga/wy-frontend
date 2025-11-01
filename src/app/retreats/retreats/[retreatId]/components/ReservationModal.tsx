@@ -62,7 +62,8 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
         event_id: event.id,
         email: data.email,
         preferred_contact: data.preferredContact,
-        customer_note: `Imię i nazwisko: ${data.fullName}\n\n${data.customerNote || "Brak uwag"}`,
+        customer_name: data.fullName,
+        customer_note: `${data.customerNote || "Brak uwag"}`,
       });
 
       setSubmitState("success");

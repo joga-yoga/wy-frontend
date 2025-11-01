@@ -18,6 +18,7 @@ import { useEventHelpBar } from "../contexts/EventHelpBarContext";
 import { EventHelpBarTipButton } from "./EventHelpBar";
 
 interface EventDetailsSectionProps {
+  project: "retreats" | "workshops";
   control: Control<EventFormData>;
   register: UseFormRegister<EventFormData>;
   errors: FieldErrors<EventFormData>;
@@ -25,6 +26,7 @@ interface EventDetailsSectionProps {
 }
 
 export const EventDetailsSection = ({
+  project,
   control,
   register,
   errors,
@@ -122,6 +124,12 @@ export const EventDetailsSection = ({
           </Label>
           <EventHelpBarTipButton tipId="language" />
         </div>
+        <Label htmlFor="language" size="event-description">
+          {project === "retreats"
+            ? "W jakim języku będzie prowadzony wyjazd?"
+            : "W jakim języku będzie prowadzone wydarzenie?"}
+        </Label>
+
         <Separator className="my-4 md:my-8" />
         <Controller
           name="language"

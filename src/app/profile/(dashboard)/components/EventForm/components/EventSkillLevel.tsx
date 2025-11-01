@@ -29,6 +29,9 @@ export const EventSkillLevel = ({ control, errors }: EventSkillLevelProps) => {
         </Label>
         <EventHelpBarTipButton tipId="skill_level" />
       </div>
+      <Label htmlFor="skill_level" size="event-description">
+        Określ poziom uczestników. Możesz wybrać kilka opcji.
+      </Label>
       <Separator className="my-4 md:my-8" />
       <Controller
         name="skill_level"

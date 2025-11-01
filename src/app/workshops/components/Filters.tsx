@@ -305,7 +305,7 @@ const Filters = () => {
                 hasActiveFiltersFromUrl() && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              <CustomFilterTagsIcon className="w-[56px] h-[56px] stroke-1" />
+              <CustomFilterTagsIcon className="w-[56px] h-[56px] stroke-[0.8px]" />
             </button>
             <button
               onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
@@ -317,7 +317,7 @@ const Filters = () => {
                   "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              <Calendar className="w-[48px] h-[48px] stroke-1" />
+              <Calendar className="w-[48px] h-[48px] stroke-[0.8px]" />
               <div className="absolute bottom-[-6px] right-[-6px]">
                 {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
                   <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
@@ -337,7 +337,7 @@ const Filters = () => {
                   "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              <DollarSign className="w-[48px] h-[48px] stroke-1" />
+              <DollarSign className="w-[48px] h-[48px] stroke-[0.8px]" />
               <div className="absolute bottom-[-6px] right-[-6px]">
                 {sortConfig?.field === "price" && sortConfig.order === "asc" && (
                   <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
@@ -356,7 +356,7 @@ const Filters = () => {
                 isOnlineActive && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              <CustomFilterOnlineIcon className="w-[56px] h-[56px] stroke-1" />
+              <CustomFilterOnlineIcon className="w-[56px] h-[56px] stroke-[0.8px]" />
             </button>
 
             <button
@@ -367,7 +367,7 @@ const Filters = () => {
                 "hover:bg-gray-100 duration-200",
               )}
             >
-              <Search className="w-[48px] h-[48px] stroke-1" />
+              <Search className="w-[48px] h-[48px] stroke-[0.8px]" />
             </button>
           </div>
         </div>

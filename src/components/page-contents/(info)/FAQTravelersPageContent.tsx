@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const FAQTravelersPageContent = ({ project }: { project: "retreats" | "workshops" }) => {
-  const faqItems = [
+  const retreatsFaqItems = [
     {
       question: "1. Jak działa wyjazdy.yoga?",
       answer:
@@ -129,13 +129,110 @@ export const FAQTravelersPageContent = ({ project }: { project: "retreats" | "wo
     },
   ];
 
+  const workshopsFaqItems = [
+    {
+      question: "1. Co to właściwie jest joga?",
+      answer:
+        "Joga to starożytna praktyka łącząca ciało, oddech i umysł. Pomaga odzyskać spokój, elastyczność, równowagę i wewnętrzne poczucie harmonii. Nie jest religią, lecz ścieżką świadomego życia i kontaktu ze sobą.",
+    },
+    {
+      question: "2. Czy joga to tylko ćwiczenia fizyczne?",
+      answer:
+        "Nie. Asany (pozycje ciała) są tylko jednym z elementów jogi. Równie ważne są praca z oddechem, medytacja, relaksacja i rozwijanie uważności. Joga uczy, jak żyć w większym spokoju i obecności na co dzień.",
+    },
+    {
+      question: "3. Co to znaczy Kundalini?",
+      answer:
+        "Kundalini to określenie subtelnej energii życiowej, która spoczywa w każdym z nas. Praktyka Jogi Kundalini łączy ruch, oddech, mantry i medytację, by tę energię obudzić i zharmonizować. Nie ma w tym nic mistycznego ani groźnego — chodzi o zwiększenie świadomości i przepływu życiowej energii w ciele.",
+    },
+    {
+      question: "4. A czym jest Joga Nidra?",
+      answer:
+        "Joga Nidra to głęboka medytacja relaksacyjna, często nazywana „jogicznym snem”. Leżysz wygodnie na macie, a prowadzący głosem wprowadza Cię w stan pomiędzy jawą a snem. To metoda regeneracji i pracy z podświadomością — bardzo łagodna i dostępna dla każdego.",
+    },
+    {
+      question: "5. Czy muszę być wysportowana/y, żeby przyjść na zajęcia?",
+      answer:
+        "Nie 🌸 Joga nie wymaga elastyczności ani kondycji. Wystarczy otwartość i chęć spróbowania. Każde ciało jest inne — praktykujesz w zgodzie ze sobą, bez porównań i ocen.",
+    },
+    {
+      question: "6. Jak się przygotować do zajęć lub warsztatu?",
+      answer:
+        "Ubierz się wygodnie (najlepiej w strój sportowy lub dres), weź matę do jogi, butelkę z wodą i coś ciepłego na relaks. Nie jedz obfitego posiłku tuż przed zajęciami — lekki posiłek 1–2 godziny wcześniej w zupełności wystarczy.",
+    },
+    {
+      question: "7. Co będziemy robić podczas takich wydarzeń?",
+      answer:
+        "Zazwyczaj praktykujemy jogę (ruch i oddech), medytację, czasem śpiewamy mantry lub uczestniczymy w warsztatach rozwojowych. Zawsze jest też przestrzeń na odpoczynek, rozmowę i refleksję.",
+    },
+    {
+      question: "8. Czy muszę coś „umieć”, żeby dołączyć?",
+      answer:
+        "Nie. Wszystko, czego potrzebujesz, otrzymasz na miejscu — prowadzący tłumaczą każdy krok i wspierają w procesie. Nie ma złych ruchów ani błędnych pozycji — liczy się Twoje doświadczenie, nie perfekcja.",
+    },
+    {
+      question: "9. Co jeśli poczuję emocje podczas zajęć?",
+      answer:
+        "To zupełnie naturalne. Praktyka jogi i oddechu często porusza emocje, które były ukryte w ciele. Możesz płakać, śmiać się, czuć ciepło lub drżenie — wszystko jest w porządku. Ważne, by pozwolić sobie po prostu być.",
+    },
+    {
+      question: "10. Jak wygląda typowy dzień na warsztacie lub wyjeździe jogowym?",
+      answer:
+        "Dni są spokojnie ułożone: poranna joga lub medytacja, wspólne posiłki, czas wolny, popołudniowe zajęcia tematyczne, a wieczorem relaks lub krąg przy ognisku. Wszystko w rytmie natury i potrzeb grupy.",
+    },
+    {
+      question: "11. Czy joga ma związek z religią?",
+      answer:
+        "Nie. Joga jest praktyką uniwersalną, niezależną od wiary czy światopoglądu. Możesz ją traktować jako sposób dbania o ciało, narzędzie do relaksu lub duchową ścieżkę — tak, jak czujesz.",
+    },
+    {
+      question: "12. Co to są mantry i po co się je śpiewa?",
+      answer:
+        "Mantry to krótkie dźwięki lub słowa o wysokiej wibracji, które pomagają uspokoić umysł i otworzyć serce. Nie trzeba ich znać — wystarczy słuchać, oddychać i pozwolić dźwiękom działać.",
+    },
+    {
+      question: "13. Czym różni się joga od medytacji?",
+      answer:
+        "Joga to cała ścieżka — obejmuje ciało, oddech i umysł. Medytacja jest jednym z jej elementów — to praktyka skupienia i obecności. Obie drogi prowadzą do tego samego celu: do wewnętrznego spokoju.",
+    },
+    {
+      question: "14. Czy mogę przyjść sama/sam?",
+      answer:
+        "Oczywiście 💛 Większość osób przychodzi sama i właśnie tam poznaje bliskie, otwarte dusze. Wspólna praktyka naturalnie tworzy atmosferę wsparcia i bliskości.",
+    },
+    {
+      question: "15. Czy wydarzenia są tylko dla młodych i sprawnych osób?",
+      answer:
+        "Nie 🌿 W jodze wiek nie ma znaczenia. Praktykują osoby w każdym wieku i z różną kondycją fizyczną. Ważniejsze od elastyczności jest otwartość i ciekawość.",
+    },
+    {
+      question: "16. Czy mogę uczestniczyć, jeśli mam problemy zdrowotne?",
+      answer:
+        "Tak, ale warto wcześniej poinformować prowadzącego o swoich ograniczeniach. W jodze zawsze istnieją warianty pozycji, które można dopasować do potrzeb ciała. Jeśli masz poważne dolegliwości — skonsultuj się wcześniej z lekarzem.",
+    },
+    {
+      question: "17. Co najważniejsze, gdy zaczynam?",
+      answer:
+        "Nie porównuj się z innymi. Nie oceniaj swojego ciała. Oddychaj, czuj, słuchaj siebie. Joga to nie rywalizacja, ale podróż — do własnego środka. Z każdym oddechem wracasz do domu, którym jesteś Ty 💫",
+    },
+  ];
+
+  const faqItems = project === "workshops" ? workshopsFaqItems : retreatsFaqItems;
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 py-8 px-2 sm:py-12 sm:px-4">
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center mb-6 pt-4">
-            FAQ dla gości wyjazdy.yoga
+            {project === "retreats"
+              ? "FAQ dla Uczestników na wyjazdy.yoga"
+              : "🌿 Najczęściej zadawane pytania (FAQ)"}
           </CardTitle>
+          {project === "retreats" ? null : (
+            <CardDescription className="text-xl text-gray-500 font-semibold text-center mb-6 pt-4">
+              jeśli dopiero zaczynasz swoją przygodę z jogą i rozwojem
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent className="text-gray-700 dark:text-gray-300">
           <div className="space-y-8">

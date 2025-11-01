@@ -21,6 +21,10 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
         <Label htmlFor="is_online" size="event">
           Format
         </Label>
+        <Label htmlFor="is_online" size="event-description">
+          Czy wydarzenie będzie online czy stacjonarne?
+        </Label>
+
         <Separator className="my-4 md:my-8" />
         <div className="flex flex-col gap-4">
           <Controller
@@ -50,6 +54,9 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
         <Label htmlFor="goals" size="event">
           Cele
         </Label>
+        <Label htmlFor="goals" size="event-description">
+          Wymień cele wydarzenia, które mają być wyświetlane na stronie publicznej.
+        </Label>
         <Separator className="my-4 md:my-8" />
         <Controller
           name="goals"
@@ -71,6 +78,9 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
       <div className="space-y-2 event-form-section-padding">
         <Label htmlFor="tags" size="event">
           Tagi
+        </Label>
+        <Label htmlFor="tags" size="event-description">
+          Wymień tagi wydarzenia, które mają być wyświetlane na stronie publicznej.
         </Label>
         <Separator className="my-4 md:my-8" />
         <TagsSelect control={control} />

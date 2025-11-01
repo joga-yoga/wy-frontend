@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const FAQOrganizersPageContent = ({ project }: { project: "retreats" | "workshops" }) => {
-  const faqItems = [
+  const retreatsFaqItems = [
     {
       question: "1) Czy publikacja jest płatna?",
       answer:
@@ -184,12 +184,104 @@ export const FAQOrganizersPageContent = ({ project }: { project: "retreats" | "w
     },
   ];
 
+  const workshopsFaqItems = [
+    {
+      question: "1. Od czego zacząć organizację wydarzenia jogowego?",
+      answer:
+        "Zacznij od intencji – co chcesz, by uczestnicy poczuli, czego doświadczyli. Potem wybierz miejsce zgodne z tą energią (spokojne, naturalne, sprzyjające uważności) i ustal strukturę programu: praktyki, czas na posiłki, odpoczynek i integrację.",
+    },
+    {
+      question: "2. Jak dobrać miejsce na warsztat lub retreat?",
+      answer:
+        "Szukaj przestrzeni z dobrą energią i prostotą – nie musi być luksusowo, ważne, by było czysto, cicho i z dostępem do natury. Idealne są kameralne pensjonaty, agroturystyki lub ośrodki z salą do praktyki, roślinnym jedzeniem i możliwością wyłączności dla grupy.",
+    },
+    {
+      question: "3. Ile osób to dobra liczba uczestników?",
+      answer:
+        "Optymalnie 10–20 osób. Taka grupa pozwala zachować intymność, indywidualne podejście i dobrą atmosferę. Przy większej liczbie warto mieć asystenta lub drugą osobę prowadzącą.",
+    },
+    {
+      question: "4. Jak zaplanować program wydarzenia?",
+      answer:
+        "Zadbaj o równowagę: praktyka, posiłki, odpoczynek, integracja. Poranki przeznacz na intensywniejsze zajęcia (asana, pranajama), popołudnia – na warsztaty tematyczne lub relaks. Nie wypełniaj dnia po brzegi — zostaw przestrzeń na ciszę i naturę.",
+    },
+    {
+      question: "5. Jak ustalić cenę?",
+      answer:
+        "Policz wszystkie koszty (noclegi, sala, posiłki, transport, wynagrodzenie prowadzących, materiały) i dodaj uczciwe wynagrodzenie za swoją pracę. Cena powinna być równowagą między dostępnością a wartością. Dobrym standardem jest przedpłata (zaliczka) dla potwierdzenia rezerwacji.",
+    },
+    {
+      question: "6. Jak komunikować wydarzenie w sposób autentyczny?",
+      answer:
+        "Mów z serca 💚 Nie sprzedawaj — zapraszaj. Opisuj nie tylko plan, ale energię wydarzenia, jego intencję i to, jak może się poczuć uczestnik. Używaj zdjęć natury, przestrzeni, ludzi w autentycznych momentach.",
+    },
+    {
+      question: "7. Jak zadbać o bezpieczeństwo uczestników?",
+      answer:
+        "Upewnij się, że przestrzeń jest czysta i bezpieczna (np. maty, świece, sprzęt). Zbierz od uczestników informacje o zdrowiu (np. kontuzje, przeciwwskazania). Zawsze przypominaj, by słuchali swojego ciała i mogli odpuścić w każdej chwili.",
+    },
+    {
+      question: "8. Czy potrzebuję ubezpieczenia lub zgody prawnej?",
+      answer:
+        "Warto mieć regulamin uczestnictwa i krótką zgodę uczestnika, że bierze udział na własną odpowiedzialność. Przy większych wydarzeniach możesz wykupić ubezpieczenie grupowe lub OC organizatora.",
+    },
+    {
+      question: "9. Jak promować wydarzenie?",
+      answer:
+        "Najskuteczniejsze są: media społecznościowe, mailing, współpraca z lokalnymi studiami jogi, a przede wszystkim — rekomendacje uczestników. Zadbaj o spójną estetykę i prostą stronę zapisów (formularz, Calendly, e-mail).",
+    },
+    {
+      question: "10. Co to znaczy „prowadzić wydarzenie w uważności”?",
+      answer:
+        "To znaczy być obecnym, a nie tylko zarządzać. Zamiast kontrolować — towarzysz. Daj grupie strukturę, ale też przestrzeń na spontaniczność. Obserwuj energię i reaguj z delikatnością.",
+    },
+    {
+      question: "11. Jak współpracować z innymi prowadzącymi?",
+      answer:
+        "Ustalcie wcześniej wspólną intencję, zakres odpowiedzialności i komunikację. Dobrze, gdy każda osoba prowadząca ma swoją przestrzeń na praktykę, ale też wspólne momenty, które łączą całość wydarzenia.",
+    },
+    {
+      question: "12. Co zrobić, gdy ktoś zrezygnuje w ostatniej chwili?",
+      answer:
+        "W opisie wydarzenia jasno określ zasady rezygnacji i bezzwrotność zaliczki. Możesz zaproponować przekazanie miejsca innej osobie. To pomaga zachować płynność organizacyjną i dobrą energię w grupie.",
+    },
+    {
+      question: "13. Jak radzić sobie z trudnymi emocjami w grupie?",
+      answer:
+        "Zachowaj spokój i empatię. Nie próbuj „naprawiać” emocji — stwórz przestrzeń, w której uczestnik może je przeżyć bez oceny. Jeśli sytuacja tego wymaga, zaproponuj rozmowę indywidualną lub krótką przerwę.",
+    },
+    {
+      question: "14. Jak dbać o siebie jako prowadząca/organizator?",
+      answer:
+        "To kluczowe 🌸 Zadbaj o sen, jedzenie, czas w naturze i momenty ciszy także dla siebie. Nie możesz podtrzymywać innych, jeśli Twoja własna energia jest wyczerpana. Bądź dla siebie tak samo łagodna, jak dla uczestników.",
+    },
+    {
+      question: "15. Czy warto dokumentować wydarzenie?",
+      answer:
+        "Tak, ale z poszanowaniem prywatności. Zawsze zapytaj o zgodę na zdjęcia lub nagrania. Dobrze wykonane zdjęcia z naturalnymi emocjami pomagają budować autentyczny przekaz o Twojej pracy.",
+    },
+    {
+      question: "16. Co daje organizowanie takich wydarzeń?",
+      answer:
+        "To nie tylko praca — to służba i droga serca. Każde spotkanie jest procesem także dla prowadzącego. Daje radość, wdzięczność i poczucie sensu. Uczy zaufania do życia i ludzi.",
+    },
+    {
+      question: "17. Jak utrzymać kontakt z uczestnikami po zakończeniu wydarzenia?",
+      answer:
+        "Wyślij im wiadomość z podziękowaniem, zdjęciami i inspiracją do dalszej praktyki. Możesz zaprosić ich do newslettera lub grupy społecznościowej. Relacja nie kończy się po wyjeździe — często to początek wspólnej drogi 🌞",
+    },
+  ];
+
+  const faqItems = project === "workshops" ? workshopsFaqItems : retreatsFaqItems;
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 py-8 px-2 sm:py-12 sm:px-4">
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center mb-6 pt-4">
-            FAQ dla Organizatorów na wyjazdy.yoga
+            {project === "retreats"
+              ? "FAQ dla Organizatorów na wyjazdy.yoga"
+              : "🌸 Najczęściej zadawane pytania (FAQ) dla organizatorów wydarzeń jogowych i rozwojowych"}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-gray-700 dark:text-gray-300">

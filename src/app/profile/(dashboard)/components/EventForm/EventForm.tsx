@@ -796,6 +796,7 @@ export function EventForm({
       >
         <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto px-4 md:mx-10 ">
           <EventDetailsSection
+            project={mode === "workshop" ? "workshops" : "retreats"}
             control={control}
             register={register}
             errors={errors}

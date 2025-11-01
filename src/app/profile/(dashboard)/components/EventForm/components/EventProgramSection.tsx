@@ -74,6 +74,9 @@ export const EventProgramSection = ({
           </Label>
           <EventHelpBarTipButton tipId="date" />
         </div>
+        <Label htmlFor="start_date" size="event-description">
+          Podaj datę początkową i końcową wydarzenia. Upewnij się, że są zgodne z harmonogramem.
+        </Label>
         <Separator className="my-4 md:my-8" />
         <Popover>
           <PopoverTrigger asChild>

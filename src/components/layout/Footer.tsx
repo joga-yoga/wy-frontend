@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import LogoTransparentSmall from "../icons/LogoTransparentSmall";
 import { Separator } from "../ui/separator";
 
-const FOOTER_SECTIONS: {
+const RETREATS_FOOTER_SECTIONS: {
   title: string;
   links: { label: string; href: string }[];
   description: React.ReactNode;
@@ -29,6 +29,75 @@ const FOOTER_SECTIONS: {
     links: [
       { label: "Wyjazdy jogowe 2025", href: "#" },
       { label: "Najlepsze wyjazdy jogowe", href: "#" },
+    ],
+    description: (
+      <Link href="/policy" className="text-m-sunscript-font text-gray-500 hover:underline">
+        Polityka prywatności
+      </Link>
+    ),
+  },
+  {
+    title: "Opinia",
+    links: [
+      { label: "Doskonałe miejsce na odpoczynek", href: "#" },
+      { label: "Joga w Polsce 2025", href: "#" },
+    ],
+    description: (
+      <Link href="/terms" className="text-m-sunscript-font text-gray-500 hover:underline">
+        Regulamin
+      </Link>
+    ),
+  },
+
+  {
+    title: "O nas",
+    links: [
+      { label: "Blog", href: "#" },
+      { label: "Kontakt", href: "/contact" },
+    ],
+    description: (
+      <div className="flex gap-2">
+        <Link
+          href="https://www.facebook.com/groups/wyjazdyjogowe"
+          className="text-gray-800 hover:text-gray-600 duration-200"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <IoLogoFacebook className="w-6 h-6" />
+        </Link>
+        <Link
+          href="https://www.instagram.com/wyjazdy.yoga/"
+          className="text-gray-800 hover:text-gray-600 duration-200"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <IoLogoInstagram className="w-6 h-6" />
+        </Link>
+      </div>
+    ),
+  },
+];
+
+const WORKSHOPS_FOOTER_SECTIONS: {
+  title: string;
+  links: { label: string; href: string }[];
+  description: React.ReactNode;
+}[] = [
+  {
+    title: "Pomoc",
+    links: [
+      { label: "FAQ dla organizatorów", href: "/faq/organizers" },
+      { label: "FAQ dla uczestników", href: "/faq/travelers" },
+    ],
+    description: (
+      <p className="text-m-sunscript-font text-gray-500">{`© ${new Date().getFullYear()} All Rights Reserved`}</p>
+    ),
+  },
+  {
+    title: "News",
+    links: [
+      { label: "Wydarzenia jogowe 2025", href: "#" },
+      { label: "Najlepsze wydarzenia jogowe", href: "#" },
     ],
     description: (
       <Link href="/policy" className="text-m-sunscript-font text-gray-500 hover:underline">
@@ -135,7 +204,8 @@ export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ projec
   const pathname = usePathname();
   const params = useParams();
   const isEventPage = !!params.retreatId || !!params.workshopId;
-
+  const FOOTER_SECTIONS =
+    project === "retreats" ? RETREATS_FOOTER_SECTIONS : WORKSHOPS_FOOTER_SECTIONS;
   return (
     <>
       <footer className="w-full bg-gray-100">
