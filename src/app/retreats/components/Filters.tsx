@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Calendar, DollarSign, MapPin, Search, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Calendar,
+  DollarSign,
+  MapPin,
+  Search,
+  Settings2,
+  X,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -376,7 +385,7 @@ const Filters = () => {
                 hasActiveFiltersFromUrl() && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              <FilterIcon />
+              <Settings2 className="w-[48px] h-[48px] stroke-1" />
             </button>
             <button
               onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
