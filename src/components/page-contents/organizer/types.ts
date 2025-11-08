@@ -8,6 +8,7 @@ export interface OrganizerInfo {
   image_id: string | null;
   description: string | null;
   user_id: string;
+  google_place_id?: string | null;
 }
 
 export interface OrganizerEvent {
@@ -67,10 +68,16 @@ export interface OrganizerDetails {
 }
 
 export interface OrganizerReview {
-  author: string;
+  id: number;
+  place_id: string;
+  author_name: string | null;
+  rating: number | null;
+  text: string | null;
+  text_translated: string | null;
+  translation_language: string | null;
+  date: string | null;
+  date_iso: string;
+  author_photo: string | null;
+  review_url: string | null;
   created_at: string;
-  rating: number;
-  review_text: string;
-  id: string;
-  image_url: string;
 }

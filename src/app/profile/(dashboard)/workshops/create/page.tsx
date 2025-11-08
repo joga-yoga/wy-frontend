@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowLeft, Loader2, PencilIcon } from "lucide-react";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AiOutlineLink } from "react-icons/ai";
 import { IoSparkles } from "react-icons/io5";
 
@@ -21,13 +22,40 @@ import { WorkshopMetaSection } from "../../components/EventForm/components/Works
 type View = "options" | "url-input" | "prompt-input" | "form";
 
 export default function CreateWorkshopPage() {
+  const searchParams = useSearchParams();
+  const isDuplicate = searchParams.get("duplicate") === "true";
+
   const [view, setView] = useState<View>("options");
   const [isAutofilling, setIsAutofilling] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(true);
   const [generatedData, setGeneratedData] = useState<any>(null);
+  console.log("🚀 ~ CreateWorkshopPage ~ generatedData:", generatedData);
   const [url, setUrl] = useState("");
   const [prompt, setPrompt] = useState("");
   const { toast } = useToast();
+
+  // Load duplicated event data from sessionStorage
+  useEffect(() => {
+    if (isDuplicate) {
+      try {
+        const duplicateData = sessionStorage.getItem("duplicateEventData");
+        if (duplicateData) {
+          const parsedData = JSON.parse(duplicateData);
+          setGeneratedData(parsedData);
+          setView("form");
+          // Clear the data after loading
+          sessionStorage.removeItem("duplicateEventData");
+        }
+      } catch (error) {
+        console.error("Failed to load duplicated event data:", error);
+        toast({
+          title: "Błąd",
+          description: "Nie udało się załadować danych zduplikowanego warsztatu.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [isDuplicate, toast]);
 
   // Validate URL format
   const isValidUrl = (urlString: string): boolean => {

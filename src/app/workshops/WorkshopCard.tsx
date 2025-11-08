@@ -15,7 +15,7 @@ import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { PREDEFINED_TAGS } from "@/components/custom/TagsSelect";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
-import { formatDateStart } from "@/lib/formatDateRange";
+import { formatDateStart, formatDateStartWithTime } from "@/lib/formatDateRange";
 import { renderShortLocation } from "@/lib/renderLocation";
 import { cn } from "@/lib/utils";
 
@@ -60,8 +60,8 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
       <div className="flex flex-row items-center p-0 gap-2 md:gap-4 w-full h-[32px] md:h-[55px] self-stretch">
         <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-4 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
           <Calendar className="w-[28px] h-[28px] md:w-[28px] md:h-[28px]" />
-          <span className="text-subheader md:text-h-middle text-black whitespace-nowrap leading-1 md:pt-[2px]">
-            {formatDateStart(event.start_date)}
+          <span className="text-2xl font-medium text-black whitespace-nowrap leading-1 md:pt-[2px]">
+            {formatDateStartWithTime(event.start_date)}
           </span>
         </div>
         <div className="flex-grow"></div>

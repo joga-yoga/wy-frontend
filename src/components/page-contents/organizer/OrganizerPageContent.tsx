@@ -8,8 +8,7 @@ import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { EventSection, ReviewSection } from "./components";
-import { reviews } from "./data";
-import { OrganizerDetails } from "./types";
+import { OrganizerDetails, OrganizerReview } from "./types";
 
 interface OrganizerPageContentProps {
   organizerId?: string;
@@ -17,11 +16,13 @@ interface OrganizerPageContentProps {
 
 export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({ organizerId }) => {
   const [organizer, setOrganizer] = useState<OrganizerDetails | null>(null);
+  const [reviews, setReviews] = useState<OrganizerReview[]>([]);
+  const [hasMore, setHasMore] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEventDetails = async () => {
+    const fetchOrganizerAndReviews = async () => {
       if (!organizerId) {
         setError("Organizer ID not found in URL.");
         setLoading(false);
@@ -31,11 +32,36 @@ export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({ orga
       setLoading(true);
       setError(null);
       try {
-        // Endpoint remains the same, but the expected response type is updated
+        // Fetch organizer details
         const apiUrl = `/organizer/${organizerId}`;
         console.log(`Fetching organizer details from: ${apiUrl}`);
         const response = await axiosInstance.get<OrganizerDetails>(apiUrl);
+        console.log("🚀 ~ fetchOrganizerAndReviews ~ response:", response);
         setOrganizer(response.data);
+
+        // Fetch initial reviews if organizer has google_place_id
+        if (response.data.organizer.google_place_id) {
+          try {
+            console.log(
+              `Fetching reviews for place_id: ${response.data.organizer.google_place_id}`,
+            );
+            const reviewsResponse = await axiosInstance.get(
+              `/organizer/reviews/${response.data.organizer.google_place_id}`,
+              {
+                params: {
+                  offset: 0,
+                  limit: 10,
+                },
+              },
+            );
+            setReviews(reviewsResponse.data.reviews);
+            setHasMore(reviewsResponse.data.has_more);
+          } catch (reviewErr) {
+            console.error("Failed to fetch reviews:", reviewErr);
+            // Don't fail the whole page if reviews fail to load
+            setReviews([]);
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch organizer details:", err);
         if (axios.isAxiosError(err)) {
@@ -56,7 +82,7 @@ export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({ orga
         setLoading(false);
       }
     };
-    fetchEventDetails();
+    fetchOrganizerAndReviews();
   }, [organizerId]);
 
   if (!organizer) {
@@ -110,11 +136,13 @@ export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({ orga
           <hr className="border-gray-200" />
 
           <div className="flex flex-col gap-[44px]">
-            {reviews.length > 0 && (
+            {reviews.length > 0 && organizer.organizer.google_place_id && (
               <ReviewSection
                 title={`Co mówią o ${organizer.organizer.name}`}
                 reviews={reviews}
+                initialHasMore={hasMore}
                 image={getImageUrl(organizer.organizer.image_id, 0)}
+                placeId={organizer.organizer.google_place_id}
               />
             )}
             {organizer.upcoming_retreats.length > 0 && (

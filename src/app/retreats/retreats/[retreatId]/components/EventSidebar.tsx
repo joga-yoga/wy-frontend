@@ -14,6 +14,7 @@ import { EventReservation } from "./EventReservation";
 interface EventSidebarProps {
   event: EventDetail;
   className?: string;
+  project: "retreats" | "workshops";
 }
 
 const skillLevelTranslations: { [key: string]: string } = {
@@ -33,11 +34,11 @@ const languageTranslations: { [key: string]: string } = {
   ko: "Koreański",
 };
 
-export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className }) => {
+export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className, project }) => {
   return (
     <div className={`flex flex-col gap-5 md:gap-[44px] ${className}`}>
       <div className="flex flex-col gap-2 border border-gray-100 rounded-[22px] shadow-[0px_8px_16px_8px_#FAFAFA] p-5">
-        <EventReservation event={event} />
+        <EventReservation event={event} project={project} />
         <div className="border border-gray-100 rounded-t-[20px] md:rounded-t-[4px] rounded-b-[20px]">
           <div className="p-5">
             <div className="space-y-4">

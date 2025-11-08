@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { MoreVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -85,6 +92,7 @@ export default function DashboardPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "retreat" | "workshop">("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -177,6 +185,87 @@ export default function DashboardPage() {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleDuplicate = async (event: DashboardItem) => {
+    try {
+      // Fetch full event data
+      const endpoint = event.kind === "workshop" ? "/workshops" : "/retreats";
+      const response = await axiosInstance.get(`${endpoint}/${event.id}`);
+      const fullEventData = response.data;
+
+      // Transform data to match EventCreate schema format
+      // Convert full instructor/location objects to IDs
+      let duplicateData: any = {
+        title: fullEventData.title,
+        description: fullEventData.description,
+        start_date: fullEventData.start_date,
+        end_date: fullEventData.end_date,
+        image_ids: fullEventData.image_ids,
+        price: fullEventData.price,
+        currency: fullEventData.currency,
+        language: fullEventData.language,
+        cancellation_policy: fullEventData.cancellation_policy,
+        important_info: fullEventData.important_info,
+        program: fullEventData.program,
+        // Convert full instructor objects to just IDs
+        instructor_ids: fullEventData.instructors?.map((instr: any) => instr.id) || [],
+        // Convert full location object to just ID
+        location_id: fullEventData.location?.id || null,
+        is_public: false, // Reset to unpublished
+      };
+
+      // Add event-type specific fields
+      if (event.kind === "retreat") {
+        duplicateData = {
+          ...duplicateData,
+          main_attractions: fullEventData.main_attractions,
+          skill_level: fullEventData.skill_level,
+          food_description: fullEventData.food_description,
+          price_includes: fullEventData.price_includes,
+          price_excludes: fullEventData.price_excludes,
+          accommodation_description: fullEventData.accommodation_description,
+          guest_welcome_description: fullEventData.guest_welcome_description,
+          paid_attractions: fullEventData.paid_attractions,
+        };
+      } else if (event.kind === "workshop") {
+        duplicateData = {
+          ...duplicateData,
+          is_online: fullEventData.is_online,
+          is_onsite: fullEventData.is_onsite,
+          goals: fullEventData.goals,
+          tags: fullEventData.tags,
+        };
+      }
+
+      // Convert undefined values to null for proper validation
+      Object.keys(duplicateData).forEach((key) => {
+        if (duplicateData[key] === undefined) {
+          duplicateData[key] = null;
+        }
+      });
+
+      // Store in sessionStorage temporarily
+      sessionStorage.setItem("duplicateEventData", JSON.stringify(duplicateData));
+
+      // Redirect to create page
+      const createLink =
+        event.kind === "workshop"
+          ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/create?duplicate=true`
+          : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/create?duplicate=true`;
+
+      router.push(createLink);
+
+      toast({
+        description: "Duplikowanie wyjazdu...",
+      });
+    } catch (error: any) {
+      console.error("Failed to duplicate event:", error);
+      toast({
+        description: `Nie udało się zduplikować wyjazdu: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -285,10 +374,16 @@ export default function DashboardPage() {
               : items.filter((it) => it.kind === (activeTab === "retreat" ? "retreat" : "workshop"))
             ).map((event) => {
               const status = getEventStatus(event);
+              const editLink =
+                event.kind === "workshop"
+                  ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
+                  : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`;
+
               return (
-                <div
+                <Link
                   key={event.id}
-                  className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px]"
+                  href={editLink}
+                  className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px] cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <Image
                     src={getImageUrl(event.image_ids?.[0] || event.image_id)}
@@ -299,91 +394,119 @@ export default function DashboardPage() {
                   />
                   <div className="p-4 flex flex-col justify-between w-full">
                     <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                          {event.title}
-                        </h3>
+                      {/* Status above title */}
+                      <div className="flex items-center justify-between mb-2">
                         <span
-                          className={`px-2 py-0.5 text-xs font-semibold rounded-md ${status.className}`}
+                          className={`px-2 py-0.5 text-xs font-semibold rounded-md w-fit ${status.className}`}
                         >
                           {status.text}
                         </span>
+                        {/* Dropdown menu in top-right */}
+                        <DropdownMenu
+                          open={openDropdownId === event.id}
+                          onOpenChange={(isOpen) => setOpenDropdownId(isOpen ? event.id : null)}
+                        >
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 bg-gray-100 hover:bg-gray-300"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem asChild className="cursor-pointer">
+                              <Link
+                                href={
+                                  event.kind === "workshop"
+                                    ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
+                                    : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`
+                                }
+                              >
+                                Edytuj
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                handleDuplicate(event);
+                                setOpenDropdownId(null);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              Duplikuj
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="cursor-pointer">
+                              <Link
+                                href={
+                                  event.kind === "workshop"
+                                    ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
+                                    : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Zobacz stronę publiczną
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setItemToDelete(event);
+                                setOpenDropdownId(null);
+                              }}
+                              className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
+                              Usuń
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
 
+                      {/* Title */}
+                      <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
+
+                      {/* Description */}
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
                     </div>
 
-                    <div className="mt-4 flex justify-between items-center">
-                      <div className="flex flex-wrap gap-2 items-center">
-                        <Link
-                          href={
-                            event.kind === "workshop"
-                              ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
-                              : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`
-                          }
-                          passHref
-                        >
-                          <Button variant="outline" size="sm" className="text-xs">
-                            Edytuj
-                          </Button>
-                        </Link>
-                        <AlertDialog
-                          onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
-                        >
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => setItemToDelete(event)}
-                              disabled={isDeleting}
-                              className="text-xs"
-                            >
-                              Usuń
-                            </Button>
-                          </AlertDialogTrigger>
-                          {itemToDelete?.id === event.id && (
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie{" "}
-                                  {event.kind === "workshop" ? "warsztatu" : "wyjazdu"}
-                                  &quot;
-                                  <strong>{event.title}</strong>&quot;.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-                                <AlertDialogAction
-                                  disabled={isDeleting}
-                                  onClick={handleDelete}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  {isDeleting
-                                    ? "Usuwanie..."
-                                    : `Tak, usuń ${event.kind === "workshop" ? "warsztat" : "wyjazd"}`}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          )}
-                        </AlertDialog>
-                        <Link
-                          href={
-                            event.kind === "workshop"
-                              ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
-                              : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
-                          }
-                          passHref
-                        >
-                          <Button variant="ghost" size="sm" className="text-xs">
-                            Zobacz stronę publiczną
-                          </Button>
-                        </Link>
-                      </div>
+                    {/* Footer with emoji - removed action buttons */}
+                    <div className="mt-4 flex justify-end items-center">
                       <span className="text-xl">{event.kind === "workshop" ? "🏕️" : "🧘‍♀️"}</span>
                     </div>
                   </div>
-                </div>
+
+                  {/* Delete confirmation dialog */}
+                  {itemToDelete?.id === event.id && (
+                    <AlertDialog
+                      open={itemToDelete?.id === event.id}
+                      onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
+                    >
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie{" "}
+                            {event.kind === "workshop" ? "warsztatu" : "wyjazdu"}
+                            &quot;
+                            <strong>{event.title}</strong>&quot;.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                          <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isDeleting
+                              ? "Usuwanie..."
+                              : `Tak, usuń ${event.kind === "workshop" ? "warsztat" : "wyjazd"}`}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </Link>
               );
             })}
           </div>

@@ -108,6 +108,7 @@ export function EventForm({
   onLoadingChange,
   mode = "retreat",
 }: EventFormProps) {
+  console.log("🚀 ~ EventForm ~ initialData:", initialData);
   const { toast } = useToast();
   const router = useRouter();
   const isEditMode = !!eventId;
@@ -181,6 +182,8 @@ export function EventForm({
       ...initialData,
     },
   });
+  console.log("🚀 ~ EventForm ~ errors:", errors);
+  console.log("🚀 ~ EventForm ~ mode:", mode);
 
   const handleProgramImageChange = useCallback(
     async (file: File, index: number) => {
@@ -233,8 +236,9 @@ export function EventForm({
   );
 
   const startDateString = watch("start_date");
+  console.log("🚀 ~ EventForm ~ startDateString:", startDateString);
   const endDateString = watch("end_date");
-  const programValue = watch("program");
+  console.log("🚀 ~ EventForm ~ endDateString:", endDateString);
 
   useEffect(() => {
     const start = startDateString ? parseISO(startDateString) : undefined;
@@ -326,10 +330,7 @@ export function EventForm({
             continue;
           }
 
-          if (fieldKey === "start_date" || fieldKey === "end_date") {
-            dataForReset[fieldKey] =
-              typeof initialValue === "string" ? initialValue.split("T")[0] : undefined;
-          } else if (fieldKey === "program") {
+          if (fieldKey === "program") {
             const programVal = fetchedData.program;
             if (Array.isArray(programVal)) {
               dataForReset.program = programVal.map((item) => {
@@ -819,6 +820,7 @@ export function EventForm({
           />
           {mode !== "workshop" && <EventSkillLevel control={control} errors={errors} />}
           <EventProgramSection
+            project={mode === "workshop" ? "workshops" : "retreats"}
             control={control}
             register={register}
             errors={errors}

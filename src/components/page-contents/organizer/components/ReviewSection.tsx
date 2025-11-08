@@ -13,9 +13,17 @@ interface ReviewSectionProps {
   title: string;
   reviews: OrganizerReview[];
   image?: string;
+  placeId: string;
+  initialHasMore: boolean;
 }
 
-export const ReviewSection = ({ title, reviews, image }: ReviewSectionProps) => {
+export const ReviewSection = ({
+  title,
+  reviews,
+  image,
+  placeId,
+  initialHasMore,
+}: ReviewSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -41,7 +49,9 @@ export const ReviewSection = ({ title, reviews, image }: ReviewSectionProps) => 
       </Button>
 
       <ReviewsModal
-        reviews={reviews}
+        placeId={placeId}
+        initialReviews={reviews}
+        initialHasMore={initialHasMore}
         image={image}
         title={title}
         isOpen={isModalOpen}

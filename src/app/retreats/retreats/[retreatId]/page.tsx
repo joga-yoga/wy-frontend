@@ -87,7 +87,11 @@ const EventDetailPage: React.FC = () => {
         <ImageGallery title={event.title} image_ids={event.image_ids || []} />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_400px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">
-          <EventSidebar event={event} className="lg:col-span-1 order-1 lg:order-2" />
+          <EventSidebar
+            event={event}
+            className="lg:col-span-1 order-1 lg:order-2"
+            project="retreats"
+          />
           <EventMainContent event={event} className="lg:col-span-2 order-2 lg:order-1" />
         </div>
 

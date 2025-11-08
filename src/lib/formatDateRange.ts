@@ -166,6 +166,90 @@ export function formatTimeAgo(dateStr: string | Date): string {
 }
 
 /**
+ * Formats a date range for workshops with times in UTC.
+ * Displays start date/time and end date/time for workshops.
+ *
+ * @param startDateStr The start date as an ISO 8601 string (e.g., "2025-07-06T12:00:00Z"). Can be undefined or null.
+ * @param endDateStr The end date as an ISO 8601 string (e.g., "2025-07-07T13:00:00Z"). Can be undefined or null.
+ * @returns A formatted date/time range string (e.g., "6 lip 12:00 – 7 lip 13:00"),
+ * an empty string if both inputs are missing, or "Nieprawidłowa data" for unparseable strings.
+ */
+export function formatDateTimeRange(
+  startDateStr?: string | null,
+  endDateStr?: string | null,
+): string {
+  // Handle undefined or null inputs for both dates
+  if (!startDateStr && !endDateStr) {
+    return "";
+  }
+
+  let startDate: Date | null = null;
+  let endDate: Date | null = null;
+
+  try {
+    if (startDateStr) {
+      startDate = parseISO(startDateStr);
+      // Check if parseISO resulted in an invalid date
+      if (isNaN(startDate.getTime())) {
+        throw new Error("Invalid start date string");
+      }
+    }
+    if (endDateStr) {
+      endDate = parseISO(endDateStr);
+      // Check if parseISO resulted in an invalid date
+      if (isNaN(endDate.getTime())) {
+        throw new Error("Invalid end date string");
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing date strings:", error);
+    return "Nieprawidłowa data"; // Localized error message
+  }
+
+  // Helper to format UTC datetime in Polish
+  const formatUTCDateTime = (date: Date): string => {
+    const utcYear = date.getUTCFullYear();
+    const utcMonth = date.getUTCMonth() + 1;
+    const utcDay = date.getUTCDate();
+    const utcHours = String(date.getUTCHours()).padStart(2, "0");
+    const utcMinutes = String(date.getUTCMinutes()).padStart(2, "0");
+
+    // Create a temporary date string to use format with Polish locale
+    // This is a bit of a workaround to use date-fns polish locale
+    const tempDate = new Date(Date.UTC(utcYear, utcMonth - 1, utcDay, 0, 0, 0));
+    const currentYear = new Date().getFullYear();
+    const dateStr =
+      currentYear === utcYear ? format(tempDate, "d MMM") : format(tempDate, "d MMM yyyy");
+
+    return `${dateStr} ${utcHours}:${utcMinutes}`;
+  };
+
+  // If only one date is provided, format that single datetime
+  if (startDate && !endDate) {
+    return formatUTCDateTime(startDate);
+  }
+  if (!startDate && endDate) {
+    return formatUTCDateTime(endDate);
+  }
+
+  // If after parsing, both are still null
+  if (!startDate && !endDate) {
+    return "";
+  }
+
+  // Both dates are valid
+  const actualStartDate = startDate as Date;
+  const actualEndDate = endDate as Date;
+
+  // Ensure chronological order
+  if (actualStartDate.getTime() > actualEndDate.getTime()) {
+    return `${formatUTCDateTime(actualEndDate)} – ${formatUTCDateTime(actualStartDate)}`;
+  }
+
+  return `${formatUTCDateTime(actualStartDate)} – ${formatUTCDateTime(actualEndDate)}`;
+}
+
+/**
  * Formats a date as day of week, full month name, and day number in Polish.
  * @param dateStr The date as an ISO 8601 string (e.g., "2025-05-15") or Date object.
  * @returns A formatted date string (e.g., "Wtorek, Maj 15") or "Nieprawidłowa data" if invalid.
@@ -188,6 +272,48 @@ export function formatDateStart(dateStr: string | Date | null | undefined): stri
     const capitalizedDayOfWeek = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
     const capitalizedMonthAndDay = monthAndDay.charAt(0).toUpperCase() + monthAndDay.slice(1);
     return `${capitalizedDayOfWeek}, ${capitalizedMonthAndDay}`;
+  } catch (error) {
+    console.error("Date format error:", error);
+    return "Nieprawidłowa data";
+  }
+}
+
+/**
+ * Formats a date with time as day of week, full month name, day number, and time in UTC Polish.
+ * @param dateStr The date as an ISO 8601 string (e.g., "2025-05-15T14:30:00Z") or Date object.
+ * @returns A formatted date/time string (e.g., "Wtorek, Maj 15, 14:30") or "Nieprawidłowa data" if invalid.
+ */
+export function formatDateStartWithTime(dateStr: string | Date | null | undefined): string {
+  if (!dateStr) {
+    return "";
+  }
+
+  try {
+    const date = typeof dateStr === "string" ? parseISO(dateStr) : dateStr;
+
+    if (isNaN(date.getTime())) {
+      return "Nieprawidłowa data";
+    }
+
+    // Extract UTC time components
+    const utcHours = String(date.getUTCHours()).padStart(2, "0");
+    const utcMinutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const timeStr = `${utcHours}:${utcMinutes}`;
+
+    // Format the date part in UTC
+    const utcYear = date.getUTCFullYear();
+    const utcMonth = date.getUTCMonth() + 1;
+    const utcDay = date.getUTCDate();
+
+    // Create a temporary date to format day of week and month in Polish
+    const tempDate = new Date(Date.UTC(utcYear, utcMonth - 1, utcDay, 0, 0, 0));
+    const formatted = format(tempDate, "EEEE, d MMMM", { locale: pl });
+    const [dayOfWeek, monthAndDay] = formatted.split(", ");
+    const capitalizedDayOfWeek = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+    const capitalizedMonthAndDay = monthAndDay.charAt(0).toUpperCase() + monthAndDay.slice(1);
+
+    // Format: "Wtorek, 15 Maj, 14:30"
+    return `${capitalizedDayOfWeek}, ${capitalizedMonthAndDay} ${timeStr}`;
   } catch (error) {
     console.error("Date format error:", error);
     return "Nieprawidłowa data";

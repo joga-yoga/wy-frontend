@@ -11,9 +11,10 @@ import { ReservationModal } from "./ReservationModal";
 
 interface EventReservationProps {
   event: EventDetail;
+  project: "retreats" | "workshops";
 }
 
-export const EventReservation: React.FC<EventReservationProps> = ({ event }) => {
+export const EventReservation: React.FC<EventReservationProps> = ({ event, project }) => {
   const isMobile = useIsMobile();
   const [showFixed, setShowFixed] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
@@ -68,6 +69,7 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event }) => 
           endDate={event.end_date}
           className="border border-gray-100 rounded-t-[20px] rounded-b-[4px]"
           onReserveClick={handleReserveClick}
+          project={project}
         />
       </div>
 
@@ -92,6 +94,7 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event }) => 
               startDate={event.start_date}
               endDate={event.end_date}
               onReserveClick={handleReserveClick}
+              project={project}
             />
           </div>
         </div>
