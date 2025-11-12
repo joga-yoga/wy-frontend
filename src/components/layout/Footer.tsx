@@ -218,7 +218,7 @@ export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ projec
         <div
           className={cn(
             "container-wy mx-auto px-5 md:px-8 pt-10 pb-[100px] md:pb-10",
-            isEventPage && "pb-[140px] md:pb-[140px]",
+            isEventPage && "pb-[160px] md:pb-[160px]",
           )}
         >
           <div className="flex justify-center w-full mb-8 md:mb-10">
