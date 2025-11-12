@@ -319,3 +319,48 @@ export function formatDateStartWithTime(dateStr: string | Date | null | undefine
     return "Nieprawidłowa data";
   }
 }
+
+/**
+ * Calculates the duration in hours between two dates.
+ * @param startDateStr The start date as an ISO 8601 string (e.g., "2025-07-06T12:00:00Z"). Can be undefined or null.
+ * @param endDateStr The end date as an ISO 8601 string (e.g., "2025-07-07T13:00:00Z"). Can be undefined or null.
+ * @returns A formatted duration string (e.g., "25 godzin", "1.5 godziny") or an empty string if dates are missing.
+ */
+export function formatDurationInHours(
+  startDateStr?: string | null,
+  endDateStr?: string | null,
+): string {
+  if (!startDateStr || !endDateStr) {
+    return "";
+  }
+
+  try {
+    const startDate = parseISO(startDateStr);
+    const endDate = parseISO(endDateStr);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return "";
+    }
+
+    const durationMs = Math.abs(endDate.getTime() - startDate.getTime());
+    const durationHours = durationMs / (1000 * 60 * 60);
+
+    // Format the duration
+    if (durationHours === 1) {
+      return "1 godzina";
+    }
+
+    // Remove .0 from whole numbers
+    const formattedHours =
+      durationHours % 1 === 0 ? Math.floor(durationHours) : durationHours.toFixed(1);
+
+    if (durationHours < 5) {
+      return `${formattedHours} godziny`;
+    } else {
+      return `${Math.round(durationHours)} godzin`;
+    }
+  } catch (error) {
+    console.error("Error calculating duration:", error);
+    return "";
+  }
+}

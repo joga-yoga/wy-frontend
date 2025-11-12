@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { MoreVertical } from "lucide-react";
+import { Calendar, MoreVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { formatDateRange } from "@/lib/formatDateRange";
 
 interface Organizer {
   id: string;
@@ -200,8 +201,8 @@ export default function DashboardPage() {
       let duplicateData: any = {
         title: fullEventData.title,
         description: fullEventData.description,
-        start_date: fullEventData.start_date,
-        end_date: fullEventData.end_date,
+        // start_date: fullEventData.start_date,
+        // end_date: fullEventData.end_date,
         image_ids: fullEventData.image_ids,
         price: fullEventData.price,
         currency: fullEventData.currency,
@@ -465,8 +466,14 @@ export default function DashboardPage() {
                       {/* Title */}
                       <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
 
-                      {/* Description */}
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
+                      {event.start_date ? (
+                        <div className="flex flex-row justify-center items-center w-min py-1 gap-2">
+                          <Calendar className="w-[20px] h-[20px] md:w-[20px] md:h-[20px] text-gray-600" />
+                          <span className="text-md font-medium text-gray-600 whitespace-nowrap leading-1 md:pt-[2px]">
+                            {formatDateRange(event.start_date, event.end_date)}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Footer with emoji - removed action buttons */}

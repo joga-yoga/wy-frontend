@@ -11,7 +11,7 @@ import { Separator } from "../ui/separator";
 
 const RETREATS_FOOTER_SECTIONS: {
   title: string;
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; isExternal?: boolean }[];
   description: React.ReactNode;
 }[] = [
   {
@@ -52,7 +52,7 @@ const RETREATS_FOOTER_SECTIONS: {
   {
     title: "O nas",
     links: [
-      { label: "Blog", href: "#" },
+      { label: "Blog", href: "https://wiedza.joga.yoga", isExternal: true },
       { label: "Kontakt", href: "/contact" },
     ],
     description: (
@@ -80,7 +80,7 @@ const RETREATS_FOOTER_SECTIONS: {
 
 const WORKSHOPS_FOOTER_SECTIONS: {
   title: string;
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; isExternal?: boolean }[];
   description: React.ReactNode;
 }[] = [
   {
@@ -121,7 +121,7 @@ const WORKSHOPS_FOOTER_SECTIONS: {
   {
     title: "O nas",
     links: [
-      { label: "Blog", href: "#" },
+      { label: "Blog", href: "https://wiedza.joga.yoga", isExternal: true },
       { label: "Kontakt", href: "/contact" },
     ],
     description: (
@@ -153,7 +153,7 @@ const FooterSection = ({
   className,
 }: {
   title: string;
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; isExternal?: boolean }[];
   className?: string;
 }) => {
   return (
@@ -162,7 +162,13 @@ const FooterSection = ({
       <ul className="flex flex-col gap-2">
         {links.map((link) => (
           <li className="text-footer-links text-gray-600 hover:underline" key={link.label}>
-            <Link href={link.href}>{link.label}</Link>
+            <Link
+              href={link.href}
+              target={link.isExternal ? "_blank" : undefined}
+              rel={link.isExternal ? "noopener noreferrer" : undefined}
+            >
+              {link.label}
+            </Link>
           </li>
         ))}
       </ul>
