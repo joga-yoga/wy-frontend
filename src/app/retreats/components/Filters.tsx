@@ -248,7 +248,8 @@ const Filters = () => {
                 hasActiveFiltersFromUrl() && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
-              <FilterIcon />
+              {/* <FilterIcon /> */}
+              <Settings2 className="w-10 h-10 stroke-1" />
             </button>
             {isCountryDropdownOpen && (
               <div className="absolute bottom-[50px] left-[calc(-225px/2+44px/2)] mb-2 w-[calc(60dvw)] bg-white rounded-md shadow-lg border border-gray-200 z-10">
