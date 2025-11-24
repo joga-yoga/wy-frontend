@@ -271,12 +271,12 @@ const Filters = () => {
       <div
         className={cn(
           "sticky top-[calc(64px+1px)] md:top-[calc(80px+1px)] z-50 w-full border-b bg-background",
+          isSearchActive ? "block" : "hidden md:block",
         )}
       >
         <div
           className={cn(
             "flex container mx-auto justify-between gap-10 py-5 md:px-8",
-            "hidden md:flex",
             isSearchActive && "md:hidden",
           )}
         >
