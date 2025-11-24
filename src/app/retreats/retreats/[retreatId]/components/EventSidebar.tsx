@@ -1,9 +1,11 @@
+import { Clock } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
 import CustomLangIcon from "@/components/icons/CustomLangIcon";
 import CustomOnlineIcon from "@/components/icons/CustomOnlineIcon";
 import CustomSkillLevelIcon from "@/components/icons/CustomSkillLevelIcon";
+import { formatDurationInHours } from "@/lib/formatDateRange";
 import { renderLocation } from "@/lib/renderLocation";
 import { scrollTo } from "@/lib/scrollTo";
 
@@ -53,6 +55,19 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className, pr
                   {renderLocation(event.location as any)}
                 </p>
               </span>
+              {project === "workshops" && (
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 flex items-center justify-center">
+                    <Clock className="h-8 w-8 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-m-header md:text-subheader">Czas trwania</p>
+                    <p className="text-m-descript md:text-sub-descript-18 text-gray-500">
+                      {formatDurationInHours(event.start_date, event.end_date)}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 flex items-center justify-center border-2 border-yellow-500 rounded-full text-gray-500 text-subheader">
                   zł

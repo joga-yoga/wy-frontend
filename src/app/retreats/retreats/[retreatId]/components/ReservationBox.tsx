@@ -48,12 +48,6 @@ export const ReservationBox: React.FC<ReservationBoxProps> = ({
             ) : (
               <>
                 <p className="font-medium text-xl">{formatDateTimeRange(startDate)}</p>
-                <div className="flex items-center gap-2 pb-1">
-                  <Clock className="w-4 h-4 text-gray-500" />
-                  <p className="text-md text-gray-500 font-medium">
-                    {formatDurationInHours(startDate, endDate)}
-                  </p>
-                </div>
                 <span
                   onClick={() =>
                     scrollTo(
