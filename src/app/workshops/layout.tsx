@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 import { Footer } from "@/components/layout/Footer";
-import { EventsHeader } from "@/components/layout/Header";
+import { PublicHeader } from "@/components/layout/Header";
 import { EventsFilterProvider } from "@/context/EventsFilterContext";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function WorkshopsLayout({ children }: { children: React.ReactNode }) {
   return (
     <EventsFilterProvider>
-      <EventsHeader />
+      <PublicHeader project="workshops" />
       {children}
       <Footer project="workshops" />
     </EventsFilterProvider>

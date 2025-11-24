@@ -79,7 +79,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
   );
 };
 
-export const EventsHeader: React.FC = () => {
+export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
   const { user } = useAuth();
   const { isBookmarksActive, toggleBookmarksView, setIsSearchActiveAndReset, isSearchActive } =
     useEventsFilter();
@@ -117,7 +117,7 @@ export const EventsHeader: React.FC = () => {
             >
               <button className="text-sm py-2.5 hover:underline">
                 <p className="text-gray-700 text-m-header md:text-xl font-medium">
-                  Dodaj wyjazd za 5 min
+                  {project === "retreats" ? "Dodaj wyjazd za 5 min" : "Dodaj wydarzenie za 5 min"}
                 </p>
               </button>
             </Link>
