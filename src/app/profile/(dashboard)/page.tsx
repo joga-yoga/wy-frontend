@@ -111,10 +111,10 @@ export default function DashboardPage() {
           isRedirecting = true;
           router.replace("/become-organizer");
         } else {
-          toast({
-            description: "Nie udało się załadować profilu organizatora.",
-            variant: "destructive",
-          });
+          // toast({
+          //   description: "Nie udało się załadować profilu organizatora.",
+          //   variant: "destructive",
+          // });
           setOrganizer(null);
         }
       })
@@ -478,7 +478,7 @@ export default function DashboardPage() {
 
                     {/* Footer with emoji - removed action buttons */}
                     <div className="mt-4 flex justify-end items-center">
-                      <span className="text-xl">{event.kind === "workshop" ? "🏕️" : "🧘‍♀️"}</span>
+                      <span className="text-xl">{event.kind === "workshop" ? "🧘‍♀️" : "🏕️"}</span>
                     </div>
                   </div>
 

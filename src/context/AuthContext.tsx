@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
       } catch (error) {
         console.error("Error refreshing user", error);
-        setUser(null);
+        clearToken();
       }
     }
   }
@@ -110,6 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     delete axios.defaults.headers.common["Authorization"];
     setUser(null);
     router.push("/");
+  }
+
+  function clearToken() {
+    localStorage.removeItem("access_token");
+    delete axios.defaults.headers.common["Authorization"];
+    setUser(null);
   }
 
   return (
