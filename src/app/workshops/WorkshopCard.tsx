@@ -13,6 +13,7 @@ import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { PREDEFINED_TAGS } from "@/components/custom/TagsSelect";
+import CustomOnlineIcon from "@/components/icons/CustomOnlineIcon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { formatDateStart, formatDateStartWithTime } from "@/lib/formatDateRange";
@@ -124,11 +125,19 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
               </>
             )}
           </div>
-          {displayLocationTitle && (
-            <p className="text-sub-descript-18 md:text-descr-under-big-head text-gray-500">
-              {displayLocationTitle}
-            </p>
-          )}
+          <p className="text-sub-descript-18 md:text-descr-under-big-head text-gray-500">
+            {event.is_online ? (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <CustomOnlineIcon className="h-6 w-6 md:h-8 md:w-8   text-gray-500 inline-block mr-2" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Transmisja wydarzenia na żywo</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+            {displayLocationTitle ? `${displayLocationTitle}` : null}
+          </p>
         </div>
         <div className="flex flex-col gap-[20px] w-full">
           <div className="flex flex-col items-start gap-2 md:gap-3 w-full">

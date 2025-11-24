@@ -25,6 +25,8 @@ export interface Event {
   price: number | null;
   image_ids?: string[];
   is_public: boolean;
+  is_online: boolean;
+  is_onsite: boolean;
   currency: string | null;
   main_attractions?: string | null;
   language?: string | null;
