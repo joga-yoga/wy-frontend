@@ -189,24 +189,45 @@ const Filters = () => {
       <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
-            onClick={() => setIsFiltersModalOpen(true)}
+            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
               "hover:bg-gray-100 duration-200",
+              sortConfig?.field === "start_date" &&
+                "border-2 border-brand-green hover:border-brand-green",
             )}
           >
             <Calendar className="w-6 h-6" />
+            <div className="absolute bottom-[-6px] right-[-6px]">
+              {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+                <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+              {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+                <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+            </div>
           </button>
+
           <button
             onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
               "hover:bg-gray-100 duration-200",
+              sortConfig?.field === "price" &&
+                "border-2 border-brand-green hover:border-brand-green",
             )}
           >
             <DollarSign className="w-6 h-6" />
+            <div className="absolute bottom-[-6px] right-[-6px]">
+              {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+                <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+              {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+                <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
+              )}
+            </div>
           </button>
           <div className="relative" ref={cityDropdownRef}>
             <button

@@ -199,7 +199,7 @@ const Filters = () => {
       <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
-            onClick={() => setIsFiltersModalOpen(true)}
+            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
