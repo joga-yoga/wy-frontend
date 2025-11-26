@@ -40,11 +40,26 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
           <Controller
             name="is_onsite"
             control={control}
-            render={({ field }) => (
-              <div className="flex items-center gap-3">
-                <Switch checked={!!field.value} onCheckedChange={field.onChange} id="is_onsite" />
-                <Label htmlFor="is_onsite">Stacjonarne</Label>
-              </div>
+            render={({ field, fieldState }) => (
+              <>
+                <div className="flex items-center gap-3">
+                  <Switch checked={!!field.value} onCheckedChange={field.onChange} id="is_onsite" />
+                  <Label htmlFor="is_onsite">Stacjonarne</Label>
+                </div>
+                <div
+                  ref={field.ref}
+                  tabIndex={-1}
+                  className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                />
+                {fieldState.error &&
+                  !Array.isArray(fieldState.error) &&
+                  typeof fieldState.error === "object" &&
+                  fieldState.error.message && (
+                    <div className="mt-1">
+                      <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                    </div>
+                  )}
+              </>
             )}
           />
         </div>

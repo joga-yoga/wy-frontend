@@ -1,7 +1,7 @@
 import * as yup from "yup";
 
 // Base schema for event data validation
-export const eventFormSchema = yup
+export const retreatFormSchema = yup
   .object()
   .shape({
     title: yup
@@ -98,16 +98,16 @@ export const eventFormSchema = yup
         then: (schema) => schema.min(1, "Wymagany jest co najmniej jeden instruktor."),
         otherwise: (schema) => schema.default([]),
       }),
-    // Workshop-only fields (optional in unified schema)
-    is_online: yup.boolean().optional().default(false),
-    is_onsite: yup.boolean().optional().default(false),
+
+    // Workshop-only fields
     goals: yup.array().of(yup.string()).optional().default([]),
     tags: yup.array().of(yup.string()).optional().default([]),
+    is_online: yup.boolean().optional().default(false),
+    is_onsite: yup.boolean().optional().default(false),
   })
-  .test(
-    "date-order",
-    "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia",
-    function (value) {
+  .test({
+    name: "date-order",
+    test(value, context) {
       const { start_date, end_date, is_public } = value;
       if (!is_public || !start_date || !end_date) {
         return true;
@@ -116,24 +116,61 @@ export const eventFormSchema = yup
         const startDate = new Date(start_date);
         const endDate = new Date(end_date);
         if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          return endDate >= startDate;
+          if (endDate >= startDate) {
+            return true;
+          } else {
+            return context.createError({
+              path: "end_date",
+              message: "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.",
+            });
+          }
         }
       }
       return true;
     },
-  );
+  });
 
 // Type inferred from the schema for form data
 export type EventFormData = yup.InferType<
-  typeof eventFormSchema & {
+  typeof retreatFormSchema & {
     location_id: string | null | undefined;
   }
 >;
 
 // A lighter variant for workshops (relaxes retreat-only constraints)
-export const workshopFormSchema = eventFormSchema.shape({
-  main_attractions: yup.array().of(yup.string().optional()).optional().default([]),
-});
+export const workshopFormSchema = retreatFormSchema
+  .shape({
+    main_attractions: yup.array().of(yup.string().optional()).optional().default([]),
+
+    price: yup.number().when("is_public", {
+      is: true,
+      then: (schema) => schema.required("Cena jest wymagana, ale może być 0."),
+      otherwise: (schema) => schema.optional().nullable(),
+    }),
+    location_id: yup
+      .string()
+      .nullable()
+      .optional()
+      .uuid("Nieprawidłowy format ID lokalizacji")
+      .when(["is_public", "is_onsite"], {
+        is: (is_public: boolean, is_onsite: boolean) => is_public && is_onsite,
+        then: (schema) => schema.required("Lokalizacja jest wymagana dla wydarzeń stacjonarnych."),
+        otherwise: (schema) => schema.nullable().optional(),
+      }),
+  })
+  .test({
+    name: "require-online-or-onsite",
+    test(value, context) {
+      const { is_online, is_onsite, is_public } = value;
+      if (is_public && is_online === false && is_onsite === false) {
+        return context.createError({
+          path: "is_onsite",
+          message: "Wybierz format wydarzenia.",
+        });
+      }
+      return true;
+    },
+  });
 
 // Define a type for the nested location information in initial event data
 interface LocationInitialInfo {

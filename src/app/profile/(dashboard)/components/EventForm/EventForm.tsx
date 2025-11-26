@@ -28,8 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import {
   EventFormData,
-  eventFormSchema,
   EventInitialData,
+  retreatFormSchema,
   workshopFormSchema,
 } from "@/lib/schemas/event";
 
@@ -152,7 +152,7 @@ export function EventForm({
     resolver: yupResolver(
       mode === "workshop"
         ? (workshopFormSchema as yup.ObjectSchema<EventFormData>)
-        : (eventFormSchema as yup.ObjectSchema<EventFormData>),
+        : (retreatFormSchema as yup.ObjectSchema<EventFormData>),
     ),
     defaultValues: {
       title: "",
@@ -321,7 +321,7 @@ export function EventForm({
 
         const dataForReset: Partial<EventFormData> = {};
 
-        const yupSchemaFields = eventFormSchema.fields;
+        const yupSchemaFields = retreatFormSchema.fields;
         for (const key in yupSchemaFields) {
           const fieldKey = key as keyof EventFormData;
           const initialValue = fetchedData[fieldKey as keyof EventInitialData];

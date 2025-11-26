@@ -3,8 +3,6 @@
 import { ArrowLeft, Loader2, PencilIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AiOutlineLink } from "react-icons/ai";
-import { IoSparkles } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +15,6 @@ import { getRandomDefaultImageId } from "@/lib/getRandomDefaultImageId";
 
 import { EventForm } from "../../components/EventForm";
 import { EventDashboardSidebar } from "../../components/EventForm/components/EventDashboardSidebar";
-import { WorkshopMetaSection } from "../../components/EventForm/components/WorkshopMetaSection";
 
 type View = "options" | "url-input" | "prompt-input" | "form";
 

@@ -260,6 +260,11 @@ export const EventProgramSection = ({
                                   className="bg-background disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                               </div>
+                              <div
+                                ref={endField.ref}
+                                tabIndex={-1}
+                                className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                              />
                             </div>
                           );
                         }}
