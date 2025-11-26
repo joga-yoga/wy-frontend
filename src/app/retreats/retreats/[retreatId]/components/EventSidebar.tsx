@@ -44,17 +44,19 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className, pr
         <div className="border border-gray-100 rounded-t-[20px] md:rounded-t-[4px] rounded-b-[20px]">
           <div className="p-5">
             <div className="space-y-4">
-              <span
-                className="flex items-center gap-3 cursor-pointer"
-                onClick={() => scrollTo("map")}
-              >
-                <div className="w-[32px] h-[32px] min-w-[32px] md:h-12 md:w-12 md:min-w-12 border-2 border-gray-500 rounded-[6px] md:rounded-md flex items-center justify-center overflow-hidden">
-                  <Image src="/images/map.png" alt="Map icon" width={48} height={48} />
-                </div>
-                <p className="text-m-header md:text-sub-descript-18">
-                  {renderLocation(event.location as any)}
-                </p>
-              </span>
+              {event.location ? (
+                <span
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => scrollTo("map")}
+                >
+                  <div className="w-[32px] h-[32px] min-w-[32px] md:h-12 md:w-12 md:min-w-12 border-2 border-gray-500 rounded-[6px] md:rounded-md flex items-center justify-center overflow-hidden">
+                    <Image src="/images/map.png" alt="Map icon" width={48} height={48} />
+                  </div>
+                  <p className="text-m-header md:text-sub-descript-18">
+                    {renderLocation(event.location as any)}
+                  </p>
+                </span>
+              ) : null}
               {project === "workshops" && (
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 flex items-center justify-center">

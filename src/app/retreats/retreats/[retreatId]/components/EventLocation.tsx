@@ -13,6 +13,7 @@ interface EventLocationProps {
 }
 
 export const EventLocation: React.FC<EventLocationProps> = ({ location, title, id }) => {
+  if (!location) return null;
   return (
     <section aria-labelledby="location-heading" id={id}>
       <div className="mb-5 md:mb-[52px]">

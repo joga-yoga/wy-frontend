@@ -125,19 +125,21 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
               </>
             )}
           </div>
-          <p className="text-sub-descript-18 md:text-descr-under-big-head text-gray-500">
+          <div className="flex flex-row justify-between items-center w-full">
+            <p className="text-sub-descript-18 md:text-descr-under-big-head text-gray-500">
+              {displayLocationTitle ? `${displayLocationTitle}` : null}
+            </p>
             {event.is_online ? (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <CustomOnlineIcon className="h-6 w-6 md:h-8 md:w-8   text-gray-500 inline-block mr-2" />
+                  <CustomOnlineIcon className="h-6 w-6 md:h-8 md:w-8 text-gray-500" />
                 </TooltipTrigger>
-                <TooltipContent side="bottom">
+                <TooltipContent side="left">
                   <p>Transmisja wydarzenia na żywo</p>
                 </TooltipContent>
               </Tooltip>
             ) : null}
-            {displayLocationTitle ? `${displayLocationTitle}` : null}
-          </p>
+          </div>
         </div>
         <div className="flex flex-col gap-[20px] w-full">
           <div className="flex flex-col items-start gap-2 md:gap-3 w-full">
