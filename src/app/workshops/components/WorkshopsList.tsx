@@ -89,7 +89,7 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
     setError(null);
     try {
       const params = new URLSearchParams(searchParams.toString());
-      
+
       // Override/ensure these params are correct for pagination
       params.set("limit", EVENTS_PER_PAGE.toString());
       params.set("skip", skip.toString());
@@ -117,7 +117,7 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
   };
 
   if (loading && events.length === 0) {
-     return <p className="text-center py-10">Ładowanie warsztatów...</p>;
+    return <p className="text-center py-10">Ładowanie warsztatów...</p>;
   }
 
   if (error) {
@@ -154,7 +154,12 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
       </div>
       {events.length > 0 && skip < totalEvents && !isBookmarksActive && (
         <div className="text-center mt-8">
-          <Button variant="default" size="lg" onClick={handleLoadMore} disabled={loading || isLoadingMore}>
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleLoadMore}
+            disabled={loading || isLoadingMore}
+          >
             {isLoadingMore ? "Ładowanie..." : "Pokaż więcej"}
           </Button>
         </div>
@@ -164,4 +169,3 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
 };
 
 export default WorkshopsList;
-
