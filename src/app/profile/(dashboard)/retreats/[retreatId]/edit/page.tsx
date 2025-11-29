@@ -8,13 +8,13 @@ import { EventDashboardSidebar } from "../../../components/EventForm/components/
 
 export default function EditEventPage() {
   const params = useParams();
-  const eventId = params.retreatId as string;
+  const retreatId = params.retreatId as string;
   const [isLoading, setIsLoading] = useState(true);
 
   return (
     <div className="flex flex-col md:flex-row">
       <EventDashboardSidebar isLoading={isLoading} />
-      <EventForm eventId={eventId} onLoadingChange={setIsLoading} />
+      <EventForm eventId={retreatId} onLoadingChange={setIsLoading} />
     </div>
   );
 }

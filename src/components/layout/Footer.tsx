@@ -159,7 +159,7 @@ const FooterSection = ({
   return (
     <div className={cn("flex flex-col gap-4 w-full", className)}>
       <h3 className="text-footer-links font-bold text-gray-600">{title}</h3>
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-4">
         {links.map((link) => (
           <li className="text-footer-links text-gray-600 hover:underline" key={link.label}>
             <Link

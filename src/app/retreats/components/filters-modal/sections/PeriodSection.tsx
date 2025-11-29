@@ -38,6 +38,16 @@ export const PeriodSection = ({
     <div className="mx-7 my-11">
       <p className="text-sub-descript-18 md:text-descr-under-big-head">Termin</p>
       <div className="flex flex-wrap gap-x-[12px] gap-y-4 mt-5">
+        {/* 'Any time' default option */}
+        <FilterItem
+          key="any-time"
+          title="Dowolny termin"
+          isSelected={!startDateFrom && !startDateTo && !selectedPeriodSet}
+          onClick={() => {
+            onDateSelect?.(null, null);
+            onPeriodSelect?.(undefined as any);
+          }}
+        />
         {PeriodSets.map((periodSet) => (
           <FilterItem
             key={periodSet.name}

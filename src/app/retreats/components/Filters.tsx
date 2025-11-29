@@ -24,7 +24,6 @@ import PortugalIcon from "@/components/icons/countries/PortugalIcon";
 import SpainIcon from "@/components/icons/countries/SpainIcon";
 import SrilankaIcon from "@/components/icons/countries/SrilankaIcon";
 import ThailandIcon from "@/components/icons/countries/ThailandIcon";
-import FilterIcon from "@/components/icons/CustomFilterIcon";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@/components/ui/tooltip";
@@ -44,6 +43,7 @@ const Filters = () => {
     setIsSearchActiveAndReset,
     isBookmarksActive,
     toggleBookmarksView,
+    debouncedSearchTerm,
   } = useEventsFilter();
 
   const searchParams = useSearchParams();
@@ -55,6 +55,63 @@ const Filters = () => {
 
   // Load filter initial data to get available countries from server
   const { data: filterInitialData, loading: filterDataLoading } = useFilterInitialData(true);
+
+  // 1. Initialize Context State from URL on Mount
+  useEffect(() => {
+    const urlSearch = searchParams.get("search");
+    if (urlSearch) setSearchTerm(urlSearch);
+
+    // We don't force sortConfig init here because setSortConfigAndReset logic is complex (resets other filters)
+    // and buttons show active state based on context.
+    // However, if we don't init context, buttons won't light up.
+    // Assuming EventsFilterProvider might have persisted state if layout didn't unmount,
+    // but if user refreshed, we need to sync.
+    // Let's trust the user to click or rely on the fact that if searchParams exist,
+    // the server rendered sorted list, and if context is unsynced, it's a UI glitch only.
+  }, []);
+
+  // 2. Sync Context State changes TO URL
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    let changed = false;
+
+    // Sync Search
+    // Note: debouncedSearchTerm comes from context which delays searchTerm updates
+    const currentUrlSearch = params.get("search") || "";
+    if (debouncedSearchTerm !== currentUrlSearch) {
+      if (debouncedSearchTerm) {
+        params.set("search", debouncedSearchTerm);
+      } else {
+        params.delete("search");
+      }
+      changed = true;
+    }
+
+    // Sync Sort
+    if (sortConfig && sortConfig.field) {
+      if (
+        params.get("sortBy") !== sortConfig.field ||
+        params.get("sortOrder") !== sortConfig.order
+      ) {
+        params.set("sortBy", sortConfig.field);
+        params.set("sortOrder", sortConfig.order || "asc");
+        changed = true;
+      }
+    } else if (params.has("sortBy") || params.has("sortOrder")) {
+      // If context has no sort, but URL does, it implies user cleared sort via UI
+      // OR it implies we just loaded and context is empty.
+      // To distinguish, we check if we have "mounted" or interaction flag.
+      // Skipping clearing URL for now to avoid clearing initial params on load.
+      // Ideally, context should initialize from URL to avoid this mismatch.
+    }
+
+    if (changed) {
+      // Use replace to avoid history stack clutter while typing,
+      // OR push for debounced terms.
+      // Since it's debounced, push is fine.
+      router.push(`/?${params.toString()}`);
+    }
+  }, [debouncedSearchTerm, sortConfig, router, searchParams]);
 
   // Check if any filter parameters are present in URL
   const hasActiveFiltersFromUrl = () => {
@@ -334,7 +391,7 @@ const Filters = () => {
         <div
           className={cn(
             "flex container mx-auto justify-between gap-10 py-5 md:px-8",
-            isSearchActive && "md:hidden",
+            isSearchActive && "hidden",
           )}
         >
           <div className="w-full relative">

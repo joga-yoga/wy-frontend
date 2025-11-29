@@ -16,7 +16,6 @@ function AuthCallback() {
   useEffect(() => {
     if (token) {
       storeToken(token);
-      toast({ description: "Login successful." });
       router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
     } else {
       toast({

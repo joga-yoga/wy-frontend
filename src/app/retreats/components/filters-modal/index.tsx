@@ -87,10 +87,10 @@ export const FiltersModal = ({ isOpen, title, onOpenChange }: FiltersModalProps)
     setters.setSelectedLanguageCode(newValue);
   };
 
-  const handlePeriodSelect = (periodSet: PeriodSet) => {
+  const handlePeriodSelect = (periodSet?: PeriodSet) => {
     validation.resetPricesIfInvalid(setters.setPriceMin, setters.setPriceMax);
 
-    if (filters.selectedPeriodSet?.name === periodSet.name) {
+    if (!periodSet || filters.selectedPeriodSet?.name === periodSet.name) {
       actions.resetPeriodToDefault();
     } else {
       setters.setSelectedPeriodSet(periodSet);

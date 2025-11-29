@@ -22,7 +22,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
 
   const isMobile = useIsMobile();
-  const isEventPage = pathname.includes("events") || pathname.includes("workshops");
+  const isEventPage = pathname.includes("retreats") || pathname.includes("workshops");
   const isSticky = !isMobile || !isEventPage;
 
   if (loading || !user) {

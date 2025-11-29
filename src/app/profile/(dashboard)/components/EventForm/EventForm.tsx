@@ -108,7 +108,6 @@ export function EventForm({
   onLoadingChange,
   mode = "retreat",
 }: EventFormProps) {
-  console.log("🚀 ~ EventForm ~ initialData:", initialData);
   const { toast } = useToast();
   const router = useRouter();
   const isEditMode = !!eventId;
@@ -183,7 +182,6 @@ export function EventForm({
     },
   });
   console.log("🚀 ~ EventForm ~ errors:", errors);
-  console.log("🚀 ~ EventForm ~ mode:", mode);
 
   const handleProgramImageChange = useCallback(
     async (file: File, index: number) => {
@@ -236,9 +234,7 @@ export function EventForm({
   );
 
   const startDateString = watch("start_date");
-  console.log("🚀 ~ EventForm ~ startDateString:", startDateString);
   const endDateString = watch("end_date");
-  console.log("🚀 ~ EventForm ~ endDateString:", endDateString);
 
   useEffect(() => {
     const start = startDateString ? parseISO(startDateString) : undefined;
@@ -505,6 +501,12 @@ export function EventForm({
           description: `${mode === "workshop" ? "Warsztat" : "Wyjazd"} opublikowany i zmiany zapisane pomyślnie.`,
         });
         router.refresh();
+
+        const publicUrl =
+          mode === "workshop"
+            ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${eventId}`
+            : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${eventId}`;
+        router.push(publicUrl);
       } catch (error: any) {
         setValue("is_public", originalFormIsPublicValue, {
           shouldDirty: false,
