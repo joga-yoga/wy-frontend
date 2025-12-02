@@ -162,94 +162,100 @@ const tipsWorkshops: Tip[] = [
   {
     id: "title",
     title: "Tytuł",
-    content: "Wprowadź krótki, wyrazisty tytuł, który przyciągnie uwagę uczestników.",
-    example: "Weekend z jogą w górach lub Letni retreat z medytacją i pranajamą",
-    details: ['Unikaj ogólników typu "Warsztat jogi". Dodaj czas, miejsce lub formę wyjazdu.'],
+    content: "Krótkie, konkretne określenie wydarzenia — jasne i łatwe do rozpoznania.",
+    example: "Warsztat pranajamy dla początkujących • Joga kręgosłupa • Medytacja na żywo",
+    details: [
+      "Unikaj ogólników typu „Warsztat jogi”. Dodaj formę lub temat spotkania."
+    ],
   },
   {
     id: "description",
     title: "Opis",
-    content:
-      "Wprowadzenie do wyjazdu w formie krótkiego streszczenia. Ma przyciągnąć uwagę, zaciekawić.",
-    details: ["Zalecana długość: 4-5 linijek."],
+    content: "Zwięzłe wprowadzenie, które wyjaśnia cel i charakter wydarzenia.",
+    details: ["Zalecana długość: 3–5 linijek."],
     example:
-      "Zapraszamy na weekendowy wyjazd z jogą i medytacją w sercu Beskidów. Czekają na Ciebie codzienne sesje jogi, wyciszenie i głęboki oddech w otoczeniu natury.",
+      "Spotkanie dla osób chcących pogłębić pracę z oddechem. W programie praktyka pranajamy, krótkie omówienie technik i sesja relaksacyjna.",
   },
   {
     id: "language",
     title: "Język",
-    content: "W jakim języku będzie prowadzony wyjazd?",
+    content: "W jakim języku będzie prowadzone wydarzenie?",
+    example: "polski, angielski, polski z tłumaczeniem.",
   },
   {
     id: "goals",
     title: "Cele",
-    content: "Wymień cele wydarzenia. Możesz napisać to jako listę.",
-    example: "Nauka podstaw jogi, relaks, oddech, wellness.",
+    content: "Co uczestnicy wyniosą z wydarzenia? Zapisz w formie listy.",
+    example: "Relaks, poprawa mobilności, nauka technik oddechowych, wprowadzenie do medytacji.",
   },
   {
     id: "tags",
     title: "Tagi",
-    content: "Wymień tagi wydarzenia. Możesz napisać to jako listę.",
-    example: "joga, relaks, oddech, wellness.",
+    content: "Hasła, które pomogą odnaleźć wydarzenie w wyszukiwarce.",
+    example: "joga, pranajama, medytacja, relaks, warsztat tematyczny.",
   },
   {
     id: "instructors",
     title: "Instruktorzy",
     content:
-      "Wybierz instruktorów, którzy będą prowadzić wydarzenie. Możesz dodać nowych lub wybrać z listy.",
+      "Wybierz prowadzących wydarzenie. Możesz dodać nowych lub wybrać z listy.",
   },
   {
     id: "date",
     title: "Termin",
     content:
-      "Podaj datę początkową i końcową wydarzenia. Upewnij się, że są zgodne z harmonogramem.",
+      "Podaj datę i godzinę rozpoczęcia oraz zakończenia wydarzenia. Sprawdź zgodność z harmonogramem sali lub platformy online.",
   },
   {
     id: "program",
     title: "Plan i harmonogram",
-    content: "Wymień, co dzieje się każdego dnia. Możesz napisać to jako listę.",
+    content: "Wymień, co dokładnie wydarzy się podczas spotkania.",
     example:
-      "Dzień 1: Przyjazd uczestników od godziny 15:00, zakwaterowanie w pokojach, powitalne spotkanie o 17:30, następnie relaksacyjna sesja jogi i wspólna kolacja o 19:00.",
+      "17:00 – rozpoczęcie i krótkie wprowadzenie\n17:15 – praktyka asan\n18:00 – pranajama\n18:20 – relaksacja i podsumowanie.",
   },
   {
     id: "location_id",
     title: "Lokalizacja",
-    content: "Podaj dokładną nazwę miejsca oraz lokalizację geograficzną.",
-    details: ["Dobrze, by było to miejsce rozpoznawalne lub z linkiem do mapy."],
+    content: "Podaj nazwę miejsca wydarzenia lub wskaż, że odbywa się online.",
+    details: [
+      "W przypadku wydarzeń stacjonarnych dobrze dodać link do mapy lub nazwę studia."
+    ],
+    example: "Studio Jogi XYZ, ul. Lipowa 12, Warszawa • Online (Zoom)",
   },
   {
     id: "price",
     title: "Cena",
-    content: "Podaj cenę za jedną osobę. Bez dodatkowych znaków, tylko liczba.",
+    content: "Podaj cenę udziału. Tylko liczba — bez dodatkowych znaków.",
+    example: "80 • 120 • 150",
   },
   {
     id: "cancellation_policy",
     title: "Zasady anulowania",
-    content: "Jakie są warunki rezygnacji? Czy zadatek jest zwrotny?",
-    example: "Zadatek bezzwrotny. Zwrot 50% przy rezygnacji do 14 dni przed wyjazdem.",
+    content: "Jak wygląda procedura rezygnacji z uczestnictwa?",
+    example: "Zwrot 100% do 48 godzin przed wydarzeniem. Po tym terminie opłata bezzwrotna.",
   },
   {
     id: "important_info",
     title: "Ważne informacje",
-    content: "Co warto wiedzieć przed przyjazdem?",
-    example: "Zabierz własną matę do jogi i wygodny strój. Na miejscu dostępne herbata i woda.",
+    content: "Krótka lista informacji technicznych lub organizacyjnych.",
+    example: "Weź wygodny strój. Zalecana własna mata. Przy wydarzeniach online – stabilne łącze internetowe.",
   },
   {
     id: "images",
     title: "Zdjęcia",
-    content: "Dodaj jasne, wysokiej jakości zdjęcia, które pokazują atmosferę wyjazdu.",
+    content: "Dodaj zdjęcia, które oddają charakter wydarzenia i styl praktyki.",
     details: [
-      "✔ Przynajmniej jedno zdjęcie główne (1280x960 lub większe, bez znaków wodnych)",
-      "✔ Dobrze, jeśli zdjęcia przedstawiają:",
-      "- miejsce praktyki,",
-      "- zakwaterowanie,",
-      "- jedzenie,",
-      "- ludzi w ruchu (np. joga w plenerze),",
-      "- okolicę / naturę.",
-      "Unikaj kolaży i białego tła. Dodawaj tylko zdjęcia, do których masz prawa.",
+      "✔ Minimum jedno zdjęcie główne (1280x960 lub większe)",
+      "✔ Dobrze sprawdzają się zdjęcia:",
+      "- sali lub przestrzeni praktyki,",
+      "- prowadzącego podczas zajęć,",
+      "- grupy w ruchu (jeśli masz zgodę),",
+      "- elementów programu (np. instrumenty, rekwizyty).",
+      "Unikaj kolaży i zdjęć stockowych niskiej jakości."
     ],
   },
 ];
+
 
 const TipContent = ({ tip }: { tip: Tip }) => (
   <>
