@@ -31,9 +31,15 @@ export const PriceSection = ({
   // Validation: check if max is less than min
   const hasValidationError = priceMin !== null && priceMax !== null && priceMax < priceMin;
 
+  const isAnyPrice = priceMin === serverPriceMin && priceMax === serverPriceMax;
+
   // Show custom filter when both values are set, don't match existing ranges, and no validation error
   const showCustomFilter =
-    priceMin !== null && priceMax !== null && !isExistingPriceRange && !hasValidationError;
+    !isAnyPrice &&
+    priceMin !== null &&
+    priceMax !== null &&
+    !isExistingPriceRange &&
+    !hasValidationError;
 
   // Format custom filter title
   const customFilterTitle = showCustomFilter ? `${priceMin} - ${priceMax} PLN` : "";
@@ -42,6 +48,18 @@ export const PriceSection = ({
     <div className="mx-7 mt-11 mb-5">
       <p className="text-sub-descript-18 md:text-descr-under-big-head">Cena za jedną osobę</p>
       <div className="flex flex-wrap gap-x-[12px] gap-y-4 mt-5">
+        <FilterItem
+          key="any-price"
+          title="Dowolna cena"
+          isSelected={isAnyPrice}
+          onClick={() => {
+            onPriceInputChange?.(
+              typeof serverPriceMin === "number" ? serverPriceMin : 0,
+              typeof serverPriceMax === "number" ? serverPriceMax : 10000,
+            );
+          }}
+        />
+
         {prices.map((price) => {
           const isSelected = priceMin === price.min_price && priceMax === price.max_price;
           return (

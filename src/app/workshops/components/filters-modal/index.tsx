@@ -115,9 +115,15 @@ export const FiltersModal = ({ isOpen, title, onOpenChange }: FiltersModalProps)
             }}
             selectedPeriodSet={filters.selectedPeriodSet}
             onPeriodSelect={(p) => {
-              setters.setSelectedPeriodSet(p);
-              setters.setStartDateFrom(p.start_date);
-              setters.setStartDateTo(p.end_date);
+              if (!p) {
+                setters.setSelectedPeriodSet(null);
+                setters.setStartDateFrom(null);
+                setters.setStartDateTo(null);
+              } else {
+                setters.setSelectedPeriodSet(p);
+                setters.setStartDateFrom(p.start_date);
+                setters.setStartDateTo(p.end_date);
+              }
             }}
           />
           <hr />

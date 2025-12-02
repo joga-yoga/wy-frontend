@@ -50,6 +50,7 @@ const Filters = () => {
     setIsSearchActiveAndReset,
     isBookmarksActive,
     toggleBookmarksView,
+    debouncedSearchTerm,
   } = useEventsFilter();
 
   const searchParams = useSearchParams();
@@ -61,6 +62,48 @@ const Filters = () => {
 
   // Load filter initial data to get available cities from server
   const { data: filterInitialData, loading: filterDataLoading } = useFilterInitialData(true);
+
+  // 1. Initialize Context State from URL on Mount
+  useEffect(() => {
+    const urlSearch = searchParams.get("search");
+    if (urlSearch) setSearchTerm(urlSearch);
+  }, []);
+
+  // 2. Sync Context State changes TO URL
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    let changed = false;
+
+    // Sync Search
+    // Note: debouncedSearchTerm comes from context which delays searchTerm updates
+    // But we need to check if it actually CHANGED from URL to avoid loop or premature push
+    const currentUrlSearch = params.get("search") || "";
+    // We use debounced term for the push
+    if (debouncedSearchTerm !== currentUrlSearch) {
+      if (debouncedSearchTerm) {
+        params.set("search", debouncedSearchTerm);
+      } else {
+        params.delete("search");
+      }
+      changed = true;
+    }
+
+    // Sync Sort
+    if (sortConfig && sortConfig.field) {
+      if (
+        params.get("sortBy") !== sortConfig.field ||
+        params.get("sortOrder") !== sortConfig.order
+      ) {
+        params.set("sortBy", sortConfig.field);
+        params.set("sortOrder", sortConfig.order || "asc");
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      router.push(`/?${params.toString()}`);
+    }
+  }, [debouncedSearchTerm, sortConfig, router, searchParams]);
 
   const hasActiveFiltersFromUrl = () => {
     const city = searchParams.get("city");
@@ -277,7 +320,7 @@ const Filters = () => {
         <div
           className={cn(
             "flex container mx-auto justify-between gap-10 py-5 md:px-8",
-            isSearchActive && "md:hidden",
+            isSearchActive && "hidden",
           )}
         >
           <div className="w-full relative">

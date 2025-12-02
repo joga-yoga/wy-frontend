@@ -78,7 +78,6 @@ export function LoginPage() {
       });
       const token = response.data.access_token;
       storeToken(token);
-      toast({ description: "Login successful." });
       router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
     } catch (error) {
       toast({

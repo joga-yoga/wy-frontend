@@ -2,7 +2,7 @@
 "use client";
 
 import { Command as CommandPrimitive, useCommandState } from "cmdk";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import * as React from "react";
 import { forwardRef, useEffect } from "react";
 
@@ -542,6 +542,14 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
             >
               <X className="h-5 w-5 md:h-6 md:w-6" />
             </button>
+            <div
+              className={cn(
+                "absolute right-1 top-[8px] h-5 w-4 md:h-8 md:w-6 p-0 pointer-events-none",
+                (selected.length > 0 || open) && "hidden",
+              )}
+            >
+              <ChevronDown className="h-5 w-5 md:h-6 md:w-6 text-gray-400 pointer-events-none" />
+            </div>
           </div>
         </div>
         <div className="relative">

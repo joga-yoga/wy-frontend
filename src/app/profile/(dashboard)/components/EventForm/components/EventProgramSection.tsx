@@ -125,7 +125,6 @@ export const EventProgramSection = ({
                   control={control}
                   render={({ field: startField }) => {
                     const { date: startDate, time: startTime } = parseDateTime(startField.value);
-                    console.log("🚀 ~ EventProgramSection ~ startField.value:", startField.value);
                     return (
                       <Controller
                         name="end_date"
@@ -382,7 +381,18 @@ export const EventProgramSection = ({
         <Separator className="my-4 md:my-8" />
         {programFields.map((field, index) => (
           <div key={field.id} className="border-b pb-6 last:border-b-0">
-            <Label className="text-lg font-semibold">Dzień {index + 1}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-lg font-semibold">Dzień {index + 1}</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => remove(index)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 flex items-center justify-center"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="flex items-start flex-col md:flex-row gap-2 md:gap-6 mt-2">
               <div className="flex-shrink-0 w-full md:w-auto">
                 <SingleImageUpload
