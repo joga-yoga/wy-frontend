@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,11 +18,11 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const emailSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
+  email: z.string().email({ message: "Proszę podać poprawny adres email." }),
 });
 
 const passwordSchema = z.object({
-  password: z.string().min(2, { message: "Password must be at least 2 characters." }),
+  password: z.string().min(2, { message: "Hasło musi mieć co najmniej 2 znaki." }),
 });
 
 export function LoginPage() {
@@ -30,8 +30,10 @@ export function LoginPage() {
   const { toast } = useToast();
   const { storeToken } = useAuth();
 
-  // Extend step type to include "forgot"
-  const [step, setStep] = useState<"email" | "login" | "signup" | "forgot">("email");
+  // Extend step type to include "forgot", "verify-signup", "verify-forgot"
+  const [step, setStep] = useState<
+    "email" | "login" | "signup" | "forgot" | "verify-signup" | "verify-forgot"
+  >("email");
   const [emailValue, setEmailValue] = useState("");
 
   // Form for email only (used in email step)
@@ -61,7 +63,7 @@ export function LoginPage() {
       }
     } catch (error) {
       toast({
-        description: "Error checking email. Please try again.",
+        description: "Błąd podczas sprawdzania emaila. Proszę spróbować ponownie.",
         variant: "destructive",
       });
     }
@@ -79,9 +81,17 @@ export function LoginPage() {
       const token = response.data.access_token;
       storeToken(token);
       router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        error.response &&
+        error.response.status === 403 &&
+        error.response.data?.detail?.includes("Email not verified")
+      ) {
+        setStep("verify-signup");
+        return;
+      }
       toast({
-        description: "Login failed. Please check your credentials and try again.",
+        description: "Logowanie nieudane. Sprawdź dane i spróbuj ponownie.",
         variant: "destructive",
       });
     }
@@ -93,12 +103,12 @@ export function LoginPage() {
         email: emailValue,
         password: data.password,
       });
-      toast({ description: "Registration successful. Check your email for verification." });
+      // toast({ description: "Registration successful. Check your email for verification." });
       console.log("Registration successful:", response.data);
-      setStep("login");
+      setStep("verify-signup");
     } catch (error) {
       toast({
-        description: "Registration failed. Please try again.",
+        description: "Rejestracja nieudana. Proszę spróbować ponownie.",
         variant: "destructive",
       });
     }
@@ -107,10 +117,10 @@ export function LoginPage() {
   async function onSubmitForgot(data: { email: string }) {
     try {
       await axiosInstance.post("/forgot-password", { email: data.email });
-      toast({
-        description: "If this email is registered and verified, a reset link has been sent.",
-      });
-      setStep("login");
+      // toast({
+      //   description: "If this email is registered and verified, a reset link has been sent.",
+      // });
+      setStep("verify-forgot");
     } catch (error) {
       toast({
         description: "Failed to send reset link. Please try again.",
@@ -211,18 +221,15 @@ export function LoginPage() {
             {...registerEmail("email")}
             autoComplete="username"
           />
-          <Input type="password" placeholder="Twoje hasło" {...registerPassword("password")} />
+          <Input type="password" placeholder="Stwórz hasło" {...registerPassword("password")} />
           <Button type="submit" className="w-full">
             Zarejestruj się
           </Button>
-          <p className="text-center text-sm mt-4">
-            Użyj innego konta{" "}
-            <span
-              className="text-gray-700 hover:underline cursor-pointer"
-              onClick={() => setStep("email")}
-            >
-              tutaj
-            </span>
+          <p
+            className="text-center text-sm mt-4 text-gray-700 hover:underline cursor-pointer"
+            onClick={() => setStep("email")}
+          >
+            Użyj innego konta
           </p>
         </form>
       )}
@@ -248,6 +255,47 @@ export function LoginPage() {
             </span>
           </p>
         </form>
+      )}
+
+      {step === "verify-signup" && (
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="bg-green-100 p-4 rounded-full">
+              <Mail className="w-12 h-12 text-green-600" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Sprawdź swoją skrzynkę</h1>
+            <p className="text-gray-600">
+              Wysłaliśmy link weryfikacyjny na adres{" "}
+              <span className="font-semibold">{emailValue}</span>. Kliknij w niego, aby aktywować
+              konto.
+            </p>
+          </div>
+          <Button variant="outline" className="w-full" onClick={() => setStep("login")}>
+            Powrót do logowania
+          </Button>
+        </div>
+      )}
+
+      {step === "verify-forgot" && (
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="bg-blue-100 p-4 rounded-full">
+              <Mail className="w-12 h-12 text-blue-600" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Link wysłany</h1>
+            <p className="text-gray-600">
+              Jeśli adres <span className="font-semibold">{emailValue}</span> znajduje się w naszej
+              bazie, wysłaliśmy na niego instrukcję resetowania hasła.
+            </p>
+          </div>
+          <Button variant="outline" className="w-full" onClick={() => setStep("login")}>
+            Powrót do logowania
+          </Button>
+        </div>
       )}
       <div className="w-full h-[120px] md:h-[144px]" />
     </div>

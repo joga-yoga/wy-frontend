@@ -78,6 +78,12 @@ export const EventPricingSection = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="PLN">PLN</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CHF">CHF</SelectItem>
+                    <SelectItem value="CZK">CZK</SelectItem>
+                    <SelectItem value="HUF">HUF</SelectItem>
                   </SelectContent>
                 </Select>
               )}

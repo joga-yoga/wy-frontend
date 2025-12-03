@@ -140,7 +140,7 @@ export function EventForm({
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
     control,
     watch,
     getValues,
@@ -497,6 +497,7 @@ export function EventForm({
           payloadForPublish,
         );
         setCurrentIsPublic(true); // Successfully published and saved
+        reset(getValues());
         toast({
           description: `${mode === "workshop" ? "Warsztat" : "Wyjazd"} opublikowany i zmiany zapisane pomyślnie.`,
         });
@@ -797,7 +798,7 @@ export function EventForm({
         className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto"
         id="event-form-wrapper"
       >
-        <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto px-4 md:mx-10 ">
+        <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto px-4 pb-12 md:mx-10 ">
           <EventDetailsSection
             project={mode === "workshop" ? "workshops" : "retreats"}
             control={control}
@@ -865,6 +866,39 @@ export function EventForm({
             name="image_ids"
             handleSetCover={handleSetCover}
           />
+
+          {currentIsPublic && (
+            <div className="flex flex-col gap-4 p-6 border rounded-lg bg-gray-50 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900">Widoczność</h3>
+                  <p className="text-sm text-gray-500">
+                    {mode === "workshop" ? "To wydarzenie" : "Ten wyjazd"} jest obecnie publicznie
+                    widoczny.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 w-full sm:w-auto"
+                  onClick={handleToggleVisibility}
+                  disabled={isTogglingVisibility}
+                  type="button"
+                >
+                  {isTogglingVisibility ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Ukrywanie...
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      {mode === "workshop" ? "Ukryj wydarzenie" : "Ukryj wyjazd"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         <EventHelpBar mode={mode} />
       </div>
@@ -920,6 +954,7 @@ export function EventForm({
         publishIcon={<Send className="h-4 w-4" />}
         unpublishIcon={<EyeOff className="h-4 w-4" />}
         publishingIcon={<Loader2 className="h-4 w-4 animate-spin" />}
+        isSaveDisabled={!isDirty}
       />
 
       <InstructorModal

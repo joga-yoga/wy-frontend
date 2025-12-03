@@ -31,7 +31,7 @@ import { useEventsFilter } from "@/context/EventsFilterContext";
 import useIsMobile from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
-const Filters = () => {
+export const RetreatsPageFilters = () => {
   const {
     searchTerm,
     setSearchTerm,
@@ -306,7 +306,7 @@ const Filters = () => {
               )}
             >
               {/* <FilterIcon /> */}
-              <Settings2 className="w-10 h-10 stroke-1" />
+              <Settings2 className="w-7 h-7" />
             </button>
             {isCountryDropdownOpen && (
               <div className="absolute bottom-[50px] left-[calc(-225px/2+44px/2)] mb-2 w-[calc(60dvw)] bg-white rounded-md shadow-lg border border-gray-200 z-10">
@@ -533,5 +533,3 @@ const Filters = () => {
     </>
   );
 };
-
-export default Filters;

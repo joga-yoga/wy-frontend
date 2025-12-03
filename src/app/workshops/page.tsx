@@ -6,6 +6,7 @@ import { getWorkshops } from "@/lib/api/workshops";
 import Filters from "./components/Filters";
 import WorkshopsList from "./components/WorkshopsList";
 
+export const revalidate = 300;
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }

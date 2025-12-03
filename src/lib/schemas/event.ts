@@ -14,7 +14,7 @@ export const retreatFormSchema = yup
       then: (schema) =>
         schema
           .required("Opis jest wymagany dla wydarzeń publicznych.")
-          .max(500, "Opis może mieć maksymalnie 500 znaków."),
+          .max(1000, "Opis może mieć maksymalnie 1000 znaków."),
       otherwise: (schema) => schema.optional(),
     }),
     start_date: yup.string().when("is_public", {

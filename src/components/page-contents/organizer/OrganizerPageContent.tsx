@@ -1,110 +1,24 @@
 "use client";
 
-import axios from "axios";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
-import { axiosInstance } from "@/lib/axiosInstance";
 
 import { EventSection, ReviewSection } from "./components";
 import { OrganizerDetails, OrganizerReview } from "./types";
 
 interface OrganizerPageContentProps {
-  organizerId?: string;
+  organizer: OrganizerDetails;
+  reviews: OrganizerReview[];
+  hasMoreReviews: boolean;
 }
 
-export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({ organizerId }) => {
-  const [organizer, setOrganizer] = useState<OrganizerDetails | null>(null);
-  const [reviews, setReviews] = useState<OrganizerReview[]>([]);
-  const [hasMore, setHasMore] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchOrganizerAndReviews = async () => {
-      if (!organizerId) {
-        setError("Organizer ID not found in URL.");
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch organizer details
-        const apiUrl = `/organizer/${organizerId}`;
-        console.log(`Fetching organizer details from: ${apiUrl}`);
-        const response = await axiosInstance.get<OrganizerDetails>(apiUrl);
-        console.log("🚀 ~ fetchOrganizerAndReviews ~ response:", response);
-        setOrganizer(response.data);
-
-        // Fetch initial reviews if organizer has google_place_id
-        if (response.data.organizer.google_place_id) {
-          try {
-            console.log(
-              `Fetching reviews for place_id: ${response.data.organizer.google_place_id}`,
-            );
-            const reviewsResponse = await axiosInstance.get(
-              `/organizer/reviews/${response.data.organizer.google_place_id}`,
-              {
-                params: {
-                  offset: 0,
-                  limit: 10,
-                },
-              },
-            );
-            setReviews(reviewsResponse.data.reviews);
-            setHasMore(reviewsResponse.data.has_more);
-          } catch (reviewErr) {
-            console.error("Failed to fetch reviews:", reviewErr);
-            // Don't fail the whole page if reviews fail to load
-            setReviews([]);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch organizer details:", err);
-        if (axios.isAxiosError(err)) {
-          if (err.response?.status === 404) {
-            setError("Organizer not found.");
-          } else {
-            setError(
-              `Failed to load organizer: ${err.response?.data?.detail || err.message}. Please try again.`,
-            );
-          }
-          console.error("Error Response Data:", err.response?.data);
-          console.error("Error Response Status:", err.response?.status);
-        } else {
-          setError("An unknown error occurred while fetching organizer details.");
-        }
-        setOrganizer(null); // Clear event data on error
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrganizerAndReviews();
-  }, [organizerId]);
-
-  if (!organizer) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-gray-500">
-        Organizer details could not be loaded.
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center">Loading organizer details...</div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-red-600">Error: {error}</div>
-    );
-  }
-
+export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({
+  organizer,
+  reviews,
+  hasMoreReviews,
+}) => {
   return (
     <div className="bg-white text-gray-800">
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
@@ -140,7 +54,7 @@ export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({ orga
               <ReviewSection
                 title={`Co mówią o ${organizer.organizer.name}`}
                 reviews={reviews}
-                initialHasMore={hasMore}
+                initialHasMore={hasMoreReviews}
                 image={getImageUrl(organizer.organizer.image_id, 0)}
                 placeId={organizer.organizer.google_place_id}
               />

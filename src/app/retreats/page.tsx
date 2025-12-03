@@ -2,15 +2,16 @@ import React, { Suspense } from "react";
 
 import { getRetreats } from "@/lib/api/retreats";
 
-import Filters from "./components/Filters";
 import RetreatsList from "./components/RetreatsList";
+import { RetreatsPageFilters } from "./components/RetreatsPageFilters";
 import { Event } from "./types";
 
+export const revalidate = 300;
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const EventsPage = async (props: PageProps) => {
+const RetreatsPage = async (props: PageProps) => {
   const searchParams = await props.searchParams;
 
   // Construct URLSearchParams from the prop
@@ -51,7 +52,7 @@ const EventsPage = async (props: PageProps) => {
   return (
     <div className="">
       <Suspense>
-        <Filters />
+        <RetreatsPageFilters />
       </Suspense>
       <main className="container-wy mx-auto px-0 md:px-8 pt-0 md:pt-5 pb-[calc(72px+1px+20px)] md:pb-8">
         {error ? (
@@ -66,4 +67,4 @@ const EventsPage = async (props: PageProps) => {
   );
 };
 
-export default EventsPage;
+export default RetreatsPage;

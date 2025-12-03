@@ -189,6 +189,26 @@ export default function DashboardPage() {
     }
   };
 
+  const handleHide = async (event: DashboardItem) => {
+    try {
+      const endpoint = event.kind === "workshop" ? "/workshops" : "/retreats";
+      await axiosInstance.patch(`${endpoint}/${event.id}`, { is_public: false });
+      toast({
+        description:
+          event.kind === "workshop" ? "Warsztat ukryty pomyślnie!" : "Wyjazd ukryty pomyślnie!",
+      });
+      setItems((prev) =>
+        prev.map((item) => (item.id === event.id ? { ...item, is_public: false } : item)),
+      );
+    } catch (error: any) {
+      console.error("Failed to hide event:", error);
+      toast({
+        description: `Nie udało się ukryć pozycji: ${error.response?.data?.detail || error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDuplicate = async (event: DashboardItem) => {
     try {
       // Fetch full event data
@@ -450,6 +470,18 @@ export default function DashboardPage() {
                                 Zobacz stronę publiczną
                               </Link>
                             </DropdownMenuItem>
+                            {event.is_public && (
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleHide(event);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                Ukryj
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => {
                                 setItemToDelete(event);

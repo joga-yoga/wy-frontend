@@ -10,11 +10,12 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const resetPasswordSchema = z.object({
-  newPassword: z.string().min(8, "Password must be at least 8 characters long."),
+  newPassword: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków."),
 });
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
@@ -23,6 +24,7 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { storeToken } = useAuth();
   const [email, setEmail] = useState("");
   const token = searchParams.get("token");
 
@@ -43,19 +45,19 @@ function ResetPasswordForm() {
         }
       } catch (err) {
         toast({
-          title: "Invalid Token",
-          description: "The reset token is invalid or has expired.",
+          title: "Nieprawidłowy token",
+          description: "Token resetowania hasła jest nieprawidłowy lub wygasł.",
           variant: "destructive",
         });
-        router.push("/login");
+        router.push("/profile/login");
       }
     } else {
       toast({
-        title: "Missing Token",
-        description: "The reset token is missing from the URL.",
+        title: "Brak tokena",
+        description: "Brak tokena resetowania hasła w adresie URL.",
         variant: "destructive",
       });
-      router.push("/login");
+      router.push("/profile/login");
     }
   }, [token, router, toast]);
 
@@ -63,17 +65,30 @@ function ResetPasswordForm() {
     if (!token) return;
 
     try {
-      await axiosInstance.post("/reset-password", {
+      const response = await axiosInstance.post("/reset-password", {
         token: token,
         new_password: data.newPassword,
       });
-      toast({
-        description: "Password reset successful.",
-      });
-      router.push("/login");
+
+      const { access_token } = response.data;
+
+      if (access_token) {
+        storeToken(access_token);
+        toast({
+          description: "Hasło zostało zmienione pomyślnie. Logowanie...",
+        });
+        router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+      } else {
+        // Fallback if no token returned (should not happen with updated backend)
+        toast({
+          description: "Hasło zostało zmienione pomyślnie.",
+        });
+        router.push("/profile/login");
+      }
     } catch (error: any) {
       toast({
-        description: error?.response?.data?.detail || "Password reset failed. Please try again.",
+        description:
+          error?.response?.data?.detail || "Zmiana hasła nie powiodła się. Spróbuj ponownie.",
         variant: "destructive",
       });
     }
@@ -84,22 +99,32 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100svh]">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md w-full">
-        <h1 className="text-2xl font-bold text-center">Reset Password</h1>
-        {email && (
-          <p className="text-sm text-muted-foreground text-center">
-            Resetting password for <span className="font-medium">{email}</span>
-          </p>
-        )}
-        <div>
-          <Input type="password" placeholder="New Password" {...register("newPassword")} required />
-          {errors.newPassword && (
-            <p className="text-sm text-destructive mt-1">{errors.newPassword.message}</p>
+    <div className="flex flex-col items-center justify-center h-[100svh] px-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md w-full">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-bold">Zresetuj hasło</h1>
+          {email && (
+            <p className="text-sm text-muted-foreground">
+              Resetowanie hasła dla konta{" "}
+              <span className="font-medium text-foreground">{email}</span>
+            </p>
           )}
         </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Reset Password"}
+
+        <div className="space-y-2">
+          <Input
+            type="password"
+            placeholder="Nowe hasło"
+            {...register("newPassword")}
+            required
+            className="h-10"
+          />
+          {errors.newPassword && (
+            <p className="text-sm text-destructive">{errors.newPassword.message}</p>
+          )}
+        </div>
+        <Button type="submit" className="w-full h-10" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="animate-spin" /> : "Zmień hasło"}
         </Button>
       </form>
     </div>

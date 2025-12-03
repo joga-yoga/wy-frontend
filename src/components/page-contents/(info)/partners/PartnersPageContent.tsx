@@ -226,9 +226,12 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
       <section className="">
         <div className="container-wy mx-auto px-0 md:px-8">
           <h2 className="px-4 md:px-0 mb-6 md:mb-12 text-center md:text-left text-h-small md:text-h-big text-gray-800">
-            Co dostaniesz w spówpracy z {project === "retreats" ? "wyjazdy" : "wydarzenia"}
-            <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
-              .yoga
+            Co dostaniesz w spówpracy z{" "}
+            <span className="text-nowrap">
+              {project === "retreats" ? "wyjazdy" : "wydarzenia"}
+              <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
+                .yoga
+              </span>
             </span>
           </h2>
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 rounded-xl bg-gray-100 p-8 border border-gray-50 ">

@@ -32,6 +32,7 @@ interface DashboardFooterProps {
   publishIcon?: React.ReactNode;
   unpublishIcon?: React.ReactNode;
   publishingIcon?: React.ReactNode;
+  isSaveDisabled?: boolean;
 }
 
 export const DashboardFooter: React.FC<DashboardFooterProps> = ({
@@ -62,6 +63,7 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
   publishIcon,
   unpublishIcon,
   publishingIcon,
+  isSaveDisabled,
 }) => {
   return (
     <div>
@@ -77,15 +79,15 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           {/* Render Create button if handler exists */}
           {onCreate && (
             <Button variant="default" onClick={onCreate} className="w-full md:w-auto md:flex-none">
-              <span className="hidden md:inline-flex items-center">
+              <span className="inline-flex items-center">
                 {createIcon}
-                <span className="ml-2">{createLabel}</span>
+                <span className="ml-2 hidden md:block">{createLabel}</span>
+                <span className="ml-2 block md:hidden">{createLabelShort}</span>
               </span>
-              <span className="md:hidden text-sm">{createLabelShort ?? createLabel}</span>
             </Button>
           )}
           {/* Render View Public button if href exists */}
-          {viewPublicHref && (
+          {isPublished && viewPublicHref && (
             <Link
               href={viewPublicHref}
               target="_blank"
@@ -93,38 +95,30 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
               className="w-full md:w-auto md:flex-none"
             >
               <Button variant="outline" className="w-full">
-                <span className="hidden md:inline-flex items-center">
+                <span className="inline-flex items-center">
                   {viewPublicIcon}
-                  <span className="ml-2">{viewPublicLabel}</span>
+                  <span className="ml-2 hidden md:block">{viewPublicLabel}</span>
+                  <span className="ml-2 block md:hidden">{viewPublicLabelShort}</span>
                 </span>
-                <span className="md:hidden text-sm">{viewPublicLabelShort ?? viewPublicLabel}</span>
               </Button>
             </Link>
           )}
-          {/* Render Publish/Unpublish button */}
-          {showPublishButton && onPublishToggle && (
+          {/* Render Publish button only if not published */}
+          {showPublishButton && onPublishToggle && !isPublished && (
             <Button
-              variant={isPublished ? "destructive" : "default"}
+              variant="outline"
               onClick={onPublishToggle}
               disabled={isPublishing}
-              className="w-full md:w-auto md:flex-none"
+              className="w-full md:w-auto md:flex-none border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
             >
-              <span className="hidden md:inline-flex items-center">
-                {isPublishing ? publishingIcon : isPublished ? unpublishIcon : publishIcon}
-                <span className="ml-2">
-                  {isPublishing
-                    ? publishingButtonLabel
-                    : isPublished
-                      ? unpublishButtonLabel
-                      : publishButtonLabel}
+              <span className="inline-flex items-center">
+                {isPublishing ? publishingIcon : publishIcon}
+                <span className="ml-2 hidden md:block">
+                  {isPublishing ? publishingButtonLabel : publishButtonLabel}
                 </span>
-              </span>
-              <span className="md:hidden text-sm">
-                {isPublishing
-                  ? (publishingButtonLabelShort ?? publishingButtonLabel)
-                  : isPublished
-                    ? (unpublishButtonLabelShort ?? unpublishButtonLabel)
-                    : (publishButtonLabelShort ?? publishButtonLabel)}
+                <span className="ml-2 block md:hidden">
+                  {isPublishing ? publishingButtonLabelShort : publishButtonLabelShort}
+                </span>
               </span>
             </Button>
           )}
@@ -135,14 +129,16 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
               onClick={() => {
                 onUpdate();
               }}
-              disabled={isPublishing} // Assuming isPublishing also means other actions might be blocked or it's a general loading state
-              className="w-full md:w-auto md:flex-none"
+              disabled={isSaveDisabled || isPublishing}
+              className={`w-full md:w-auto md:flex-none transition-all duration-300 ${
+                !isSaveDisabled ? "shadow-lg shadow-indigo-500/20" : ""
+              }`}
             >
-              <span className="hidden md:inline-flex items-center">
+              <span className="inline-flex items-center">
                 {updateIcon}
-                <span className="ml-2">{updateLabel}</span>
+                <span className="ml-2 hidden md:block">{updateLabel}</span>
+                <span className="ml-2 block md:hidden">{updateLabelShort}</span>
               </span>
-              <span className="md:hidden text-sm">{updateLabelShort ?? updateLabel}</span>
             </Button>
           )}
         </div>

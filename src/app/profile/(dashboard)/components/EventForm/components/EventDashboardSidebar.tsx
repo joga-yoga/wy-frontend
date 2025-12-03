@@ -102,7 +102,6 @@ export function EventDashboardSidebar({ className, isLoading }: SidebarProps) {
                     activeId === item.id && "border-brand-green",
                   )}
                   onClick={() => {
-                    setActiveId(item.id);
                     scrollTo(item.id, 65 + (isMobile ? 16 : 20));
                   }}
                 >

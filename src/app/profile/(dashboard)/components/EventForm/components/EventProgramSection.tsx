@@ -376,13 +376,17 @@ export const EventProgramSection = ({
           <EventHelpBarTipButton tipId="program" />
         </div>
         <Label htmlFor="program" size="event-description">
-          Opisz pełny program dla uczestników i podziel się z nimi, jak będą wyglądały ich dni
+          {project === "workshops"
+            ? "Przedstaw szczegółowy plan warsztatu."
+            : "Opisz pełny program dla uczestników i podziel się z nimi, jak będą wyglądały ich dni"}
         </Label>
         <Separator className="my-4 md:my-8" />
         {programFields.map((field, index) => (
           <div key={field.id} className="border-b pb-6 last:border-b-0">
             <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">Dzień {index + 1}</Label>
+              <Label className="text-lg font-semibold">
+                {project === "workshops" ? `Punkt ${index + 1}` : `Dzień ${index + 1}`}
+              </Label>
               <Button
                 type="button"
                 variant="ghost"
@@ -414,7 +418,11 @@ export const EventProgramSection = ({
                 <Textarea
                   id={`program.${index}.description`}
                   {...register(`program.${index}.description` as const)}
-                  placeholder={`Opis programu na dzień ${index + 1}`}
+                  placeholder={
+                    project === "workshops"
+                      ? `Opis punktu ${index + 1}`
+                      : `Opis programu na dzień ${index + 1}`
+                  }
                   rows={5}
                   className="bg-background min-h-[126px]"
                   onFocus={() => focusTip("program")}
@@ -428,22 +436,26 @@ export const EventProgramSection = ({
             </div>
           </div>
         ))}
-        {calculatedDuration > 0 && programFields.length < calculatedDuration && (
+        {(project === "workshops" ||
+          (calculatedDuration > 0 && programFields.length < calculatedDuration)) && (
           <Button type="button" variant="outline" size="sm" onClick={handleAddDay}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Dodaj dzień {programFields.length + 1}
+            <PlusCircle className="mr-2 h-4 w-4" />{" "}
+            {project === "workshops" ? "Dodaj punkt" : `Dodaj dzień ${programFields.length + 1}`}
           </Button>
         )}
-        {calculatedDuration > 0 && programFields.length > calculatedDuration && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => remove(programFields.length - 1)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Usuń ostatni dzień
-          </Button>
-        )}
-        {calculatedDuration === 0 && (
+        {project !== "workshops" &&
+          calculatedDuration > 0 &&
+          programFields.length > calculatedDuration && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => remove(programFields.length - 1)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Usuń ostatni dzień
+            </Button>
+          )}
+        {project !== "workshops" && calculatedDuration === 0 && (
           <p className="text-sm text-gray-500 italic">
             Wybierz datę rozpoczęcia i zakończenia, aby dodać program dnia.
           </p>

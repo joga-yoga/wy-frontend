@@ -7,10 +7,15 @@ import { CancellationPolicySection, InstructorSection, OrganizerSection } from "
 
 interface EventMainContentProps {
   event: EventDetail;
+  project: "retreats" | "workshops";
   className?: string;
 }
 
-export const EventMainContent: React.FC<EventMainContentProps> = ({ event, className }) => {
+export const EventMainContent: React.FC<EventMainContentProps> = ({
+  event,
+  project,
+  className,
+}) => {
   return (
     <div className={`space-y-5 md:space-y-[44px] ${className}`}>
       {event.description && (
@@ -57,9 +62,11 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({ event, class
                       </div>
 
                       <div className="flex-grow">
-                        <h3 className="text-m-header md:text-subheader text-gray-800">
-                          {displayDayTitle}
-                        </h3>
+                        {project === "retreats" ? (
+                          <h3 className="text-m-header md:text-subheader text-gray-800">
+                            {displayDayTitle}
+                          </h3>
+                        ) : null}
                         <div className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
                           {formatMultiLineText(day.description)}
                         </div>
