@@ -164,9 +164,7 @@ const tipsWorkshops: Tip[] = [
     title: "Tytuł",
     content: "Krótkie, konkretne określenie wydarzenia — jasne i łatwe do rozpoznania.",
     example: "Warsztat pranajamy dla początkujących • Joga kręgosłupa • Medytacja na żywo",
-    details: [
-      "Unikaj ogólników typu „Warsztat jogi”. Dodaj formę lub temat spotkania."
-    ],
+    details: ["Unikaj ogólników typu „Warsztat jogi”. Dodaj formę lub temat spotkania."],
   },
   {
     id: "description",
@@ -197,8 +195,7 @@ const tipsWorkshops: Tip[] = [
   {
     id: "instructors",
     title: "Instruktorzy",
-    content:
-      "Wybierz prowadzących wydarzenie. Możesz dodać nowych lub wybrać z listy.",
+    content: "Wybierz prowadzących wydarzenie. Możesz dodać nowych lub wybrać z listy.",
   },
   {
     id: "date",
@@ -217,9 +214,7 @@ const tipsWorkshops: Tip[] = [
     id: "location_id",
     title: "Lokalizacja",
     content: "Podaj nazwę miejsca wydarzenia lub wskaż, że odbywa się online.",
-    details: [
-      "W przypadku wydarzeń stacjonarnych dobrze dodać link do mapy lub nazwę studia."
-    ],
+    details: ["W przypadku wydarzeń stacjonarnych dobrze dodać link do mapy lub nazwę studia."],
     example: "Studio Jogi XYZ, ul. Lipowa 12, Warszawa • Online (Zoom)",
   },
   {
@@ -238,7 +233,8 @@ const tipsWorkshops: Tip[] = [
     id: "important_info",
     title: "Ważne informacje",
     content: "Krótka lista informacji technicznych lub organizacyjnych.",
-    example: "Weź wygodny strój. Zalecana własna mata. Przy wydarzeniach online – stabilne łącze internetowe.",
+    example:
+      "Weź wygodny strój. Zalecana własna mata. Przy wydarzeniach online – stabilne łącze internetowe.",
   },
   {
     id: "images",
@@ -251,11 +247,10 @@ const tipsWorkshops: Tip[] = [
       "- prowadzącego podczas zajęć,",
       "- grupy w ruchu (jeśli masz zgodę),",
       "- elementów programu (np. instrumenty, rekwizyty).",
-      "Unikaj kolaży i zdjęć stockowych niskiej jakości."
+      "Unikaj kolaży i zdjęć stockowych niskiej jakości.",
     ],
   },
 ];
-
 
 const TipContent = ({ tip }: { tip: Tip }) => (
   <>
