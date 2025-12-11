@@ -209,7 +209,7 @@ export const LogoFooter = ({
 export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
   const pathname = usePathname();
   const params = useParams();
-  const isEventPage = !!params.retreatId || !!params.workshopId;
+  const isEventPage = !!params.slug;
   const FOOTER_SECTIONS =
     project === "retreats" ? RETREATS_FOOTER_SECTIONS : WORKSHOPS_FOOTER_SECTIONS;
   return (

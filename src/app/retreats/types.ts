@@ -17,6 +17,7 @@ export interface Location {
 // Define the structure of an event based on the API response
 export interface Event {
   id: string;
+  slug: string;
   title: string;
   description: string | null;
   start_date: string;

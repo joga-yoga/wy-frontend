@@ -12,6 +12,7 @@ export interface OrganizerInfo {
 }
 
 export interface OrganizerEvent {
+  slug: string;
   accommodation_description: string;
   cancellation_policy: string;
   created_at: string;

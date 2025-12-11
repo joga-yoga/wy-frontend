@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 
 import { EventDetail } from "../types";
 

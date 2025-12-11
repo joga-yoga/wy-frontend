@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="pl"
       suppressHydrationWarning={true}
       className={`${fonts.hindSiliguri.className} ${fonts.hindSiliguri.variable}`}
     >

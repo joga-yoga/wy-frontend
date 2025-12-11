@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";

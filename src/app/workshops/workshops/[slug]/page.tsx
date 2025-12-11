@@ -1,3 +1,4 @@
+import { Metadata, ResolvingMetadata } from "next";
 import React from "react";
 
 import {
@@ -6,27 +7,63 @@ import {
   EventMainContent,
   EventSidebar,
   ImageGallery,
-} from "@/app/retreats/retreats/[retreatId]/components";
+} from "@/app/retreats/retreats/[slug]/components";
 import { getWorkshop } from "@/lib/api/getWorkshop";
+import { getOgImageUrl } from "@/lib/imageHelpers";
 
 export const revalidate = 300;
 
 interface WorkshopDetailPageProps {
-  params: Promise<{ workshopId: string }>;
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata(
+  { params }: WorkshopDetailPageProps,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { slug } = await params;
+  const event = await getWorkshop(slug);
+
+  if (!event) {
+    return {
+      title: "Event Not Found",
+    };
+  }
+
+  const title = `${event.title} | wydarzenia.yoga`;
+  const description = event.description || "Zobacz szczegóły wydarzenia na wydarzenia.yoga";
+  const imageId = event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : null;
+  const imageUrl = getOgImageUrl(imageId);
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : [],
+    },
+    alternates: {
+      canonical: `/workshops/${slug}`,
+      languages: {
+        pl: `/workshops/${slug}`,
+      },
+    },
+  };
 }
 
 const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
-  const { workshopId } = await params;
+  const { slug } = await params;
 
-  if (!workshopId) {
+  if (!slug) {
     return (
       <div className="container mx-auto px-4 py-10 text-center text-red-600">
-        Error: Event ID not found.
+        Error: Event Slug not found.
       </div>
     );
   }
 
-  const event = await getWorkshop(workshopId);
+  const event = await getWorkshop(slug);
 
   if (!event) {
     return (
@@ -39,7 +76,7 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
   return (
     <div className="bg-white">
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
-        <EventHeader title={event.title} eventId={workshopId} />
+        <EventHeader title={event.title} eventId={slug} />
         <ImageGallery title={event.title} image_ids={event.image_ids || []} />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_428px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">

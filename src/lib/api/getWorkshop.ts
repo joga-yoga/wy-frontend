@@ -1,4 +1,4 @@
-import { EventDetail as RetreatEventDetail } from "@/app/retreats/retreats/[retreatId]/types";
+import { EventDetail as RetreatEventDetail } from "@/app/retreats/retreats/[slug]/types";
 
 // Extend retreat EventDetail with workshop-specific fields
 export interface WorkshopEventDetail extends RetreatEventDetail {

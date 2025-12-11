@@ -1,6 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Sitemaps
-# Sitemap: https://test.com/sitemap.xml

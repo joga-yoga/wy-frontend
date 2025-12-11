@@ -7,7 +7,7 @@ import React from "react";
 import { IoPersonOutline } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";

@@ -1,4 +1,4 @@
-import { EventDetail } from "@/app/retreats/retreats/[retreatId]/types";
+import { EventDetail } from "@/app/retreats/retreats/[slug]/types";
 
 export async function getRetreat(id: string): Promise<EventDetail | null> {
   try {

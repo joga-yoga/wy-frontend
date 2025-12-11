@@ -111,7 +111,6 @@ export function EventForm({
   const { toast } = useToast();
   const router = useRouter();
   const isEditMode = !!eventId;
-
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
@@ -235,6 +234,7 @@ export function EventForm({
 
   const startDateString = watch("start_date");
   const endDateString = watch("end_date");
+  const slug = watch("slug");
 
   useEffect(() => {
     const start = startDateString ? parseISO(startDateString) : undefined;
@@ -401,7 +401,8 @@ export function EventForm({
         if (typeof fetchedData.is_public === "boolean") {
           dataForReset.is_public = fetchedData.is_public;
         }
-
+        dataForReset.slug = fetchedData.slug;
+        console.log("fetchedData", fetchedData);
         reset(dataForReset);
       })
       .catch((err) => {
@@ -505,8 +506,8 @@ export function EventForm({
 
         const publicUrl =
           mode === "workshop"
-            ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${eventId}`
-            : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${eventId}`;
+            ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${slug || eventId}`
+            : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${slug || eventId}`;
         router.push(publicUrl);
       } catch (error: any) {
         setValue("is_public", originalFormIsPublicValue, {
@@ -934,8 +935,8 @@ export function EventForm({
         viewPublicHref={
           isEditMode && eventId
             ? mode === "workshop"
-              ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${eventId}`
-              : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${eventId}`
+              ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${slug || eventId}`
+              : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${slug || eventId}`
             : undefined
         }
         viewPublicLabel="Zobacz stronę publiczną"

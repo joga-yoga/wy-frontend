@@ -3,7 +3,7 @@
 import Image from "next/image";
 import React from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 
 import { EventSection, ReviewSection } from "./components";
 import { OrganizerDetails, OrganizerReview } from "./types";

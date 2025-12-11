@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 
 import { truncateText } from "../helpers";
 import { OrganizerEvent } from "../types";
@@ -18,8 +18,8 @@ const EventCard = ({ event, project }: EventCardProps) => {
     <Link
       href={
         project === "retreats"
-          ? `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
-          : `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
+          ? `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.slug}`
+          : `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.slug}`
       }
     >
       <div className="w-full max-w-[402px] flex flex-col items-start">

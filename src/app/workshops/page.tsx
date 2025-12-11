@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import React, { Suspense } from "react";
 
 import { Event } from "@/app/retreats/types";
@@ -7,6 +8,16 @@ import Filters from "./components/Filters";
 import WorkshopsList from "./components/WorkshopsList";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "wydarzenia.yoga – kalendarz wydarzeń jogowych",
+  description:
+    "Aktualne warsztaty, kursy i wydarzenia jogowe zebrane w jednym miejscu. Jasna struktura, uporządkowane dane i dostęp dla organizatorów bez opłat",
+  openGraph: {
+    images: ["/images/social_wydarzenia.png"],
+  },
+};
+
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }

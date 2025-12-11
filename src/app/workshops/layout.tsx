@@ -5,6 +5,7 @@ import { PublicHeader } from "@/components/layout/Header";
 import { EventsFilterProvider } from "@/context/EventsFilterContext";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://wydarzenia.yoga"),
   title: "Wydarzenia.Yoga",
   description: "Wydarzenia.Yoga",
   openGraph: {

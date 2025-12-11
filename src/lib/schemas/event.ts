@@ -4,6 +4,7 @@ import * as yup from "yup";
 export const retreatFormSchema = yup
   .object()
   .shape({
+    slug: yup.string().optional(),
     title: yup
       .string()
       .min(3, "Tytuł musi mieć co najmniej 3 znaki")
@@ -195,5 +196,6 @@ export type EventInitialData = Partial<
     skill_level?: string[];
     paid_attractions?: string[];
     main_attractions?: string[];
+    slug?: string;
   }
 >;

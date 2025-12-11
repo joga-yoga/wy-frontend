@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[retreatId]/helpers";
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import CustomPlusIconMobile from "@/components/icons/CustomPlusIconMobile";
 import {
   AlertDialog,
@@ -45,6 +45,7 @@ interface Organizer {
 
 interface BaseEvent {
   id: string;
+  slug: string;
   title: string;
   description: string;
   location: string;
@@ -461,8 +462,8 @@ export default function DashboardPage() {
                               <Link
                                 href={
                                   event.kind === "workshop"
-                                    ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.id}`
-                                    : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.id}`
+                                    ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.slug}`
+                                    : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.slug}`
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"

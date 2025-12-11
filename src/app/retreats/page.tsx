@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import React, { Suspense } from "react";
 
 import { getRetreats } from "@/lib/api/retreats";
@@ -7,6 +8,16 @@ import { RetreatsPageFilters } from "./components/RetreatsPageFilters";
 import { Event } from "./types";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "Wyjazdy jogowe w Polsce i na świecie – sprawdź aktualne terminy | wyjazdy.yoga",
+  description:
+    "Odkrywaj najlepsze wyjazdy jogowe, retrity i weekendowe praktyki. Pełne opisy, aktualne terminy i przejrzyste zasady",
+  openGraph: {
+    images: ["/images/social_wyjazdy.png"],
+  },
+};
+
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
