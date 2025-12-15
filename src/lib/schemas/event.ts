@@ -4,7 +4,7 @@ import * as yup from "yup";
 export const retreatFormSchema = yup
   .object()
   .shape({
-    slug: yup.string().optional(),
+    slug: yup.string().nullable().optional(),
     title: yup
       .string()
       .min(3, "Tytuł musi mieć co najmniej 3 znaki")
