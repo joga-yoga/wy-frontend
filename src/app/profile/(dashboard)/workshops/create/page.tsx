@@ -3,6 +3,8 @@
 import { ArrowLeft, Loader2, PencilIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AiOutlineLink } from "react-icons/ai";
+import { IoSparkles } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,7 +79,7 @@ export default function CreateWorkshopPage() {
     try {
       const formData = new FormData();
       formData.append("prompt", promptText);
-      const response = await axiosInstance.post("/events/generate/prompt", formData);
+      const response = await axiosInstance.post("/workshops/generate/prompt", formData);
       const data = response.data;
       if (data.program) {
         data.program = data.program.map((day: any) => ({
@@ -121,7 +123,7 @@ export default function CreateWorkshopPage() {
     try {
       const formData = new FormData();
       formData.append("url", urlString);
-      const response = await axiosInstance.post("/events/generate/url", formData);
+      const response = await axiosInstance.post("/workshops/generate/url", formData);
       const data = response.data;
       if (data.program) {
         data.program = data.program.map((day: any) => ({
@@ -168,7 +170,7 @@ export default function CreateWorkshopPage() {
         <>
           <h1 className="text-3xl font-bold mb-8 text-center">Utwórz nowe wydarzenie</h1>
           <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
                   <IoSparkles className="h-5 w-5" />
@@ -200,7 +202,7 @@ export default function CreateWorkshopPage() {
                   Wybierz
                 </Button>
               </CardContent>
-            </Card> */}
+            </Card>
 
             <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
               <CardHeader>

@@ -78,7 +78,7 @@ export default function CreateEventPage() {
     try {
       const formData = new FormData();
       formData.append("prompt", promptText);
-      const response = await axiosInstance.post("/events/generate/prompt", formData);
+      const response = await axiosInstance.post("/retreats/generate/prompt", formData);
       const data = response.data;
       if (data.program) {
         data.program = data.program.map((day: any) => ({
@@ -122,7 +122,7 @@ export default function CreateEventPage() {
     try {
       const formData = new FormData();
       formData.append("url", urlString);
-      const response = await axiosInstance.post("/events/generate/url", formData);
+      const response = await axiosInstance.post("/retreats/generate/url", formData);
       const data = response.data;
       if (data.program) {
         data.program = data.program.map((day: any) => ({
