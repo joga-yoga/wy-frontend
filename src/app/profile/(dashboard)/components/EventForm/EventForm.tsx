@@ -131,7 +131,6 @@ export function EventForm({
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ id: string; file: File }[]>([]);
   const [uploadingProgramImages, setUploadingProgramImages] = useState<Record<number, boolean>>({});
-
   useEffect(() => {
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
@@ -402,7 +401,6 @@ export function EventForm({
           dataForReset.is_public = fetchedData.is_public;
         }
         dataForReset.slug = fetchedData.slug;
-        console.log("fetchedData", fetchedData);
         reset(dataForReset);
       })
       .catch((err) => {
@@ -429,7 +427,7 @@ export function EventForm({
 
     try {
       if (isEditMode && eventId) {
-        await axiosInstance.put(
+        const updatedEvent = await axiosInstance.put(
           `${mode === "workshop" ? "/workshops" : "/retreats"}/${eventId}`,
           payload,
         );
@@ -440,7 +438,7 @@ export function EventForm({
               : "Wyjazd zaktualizowany pomyślnie!",
         });
         setCurrentIsPublic(submissionIsPublic);
-        reset(getValues());
+        reset({ ...getValues(), slug: updatedEvent.data.slug });
         router.refresh();
       } else {
         const response = await axiosInstance.post<{ id: string }>(
