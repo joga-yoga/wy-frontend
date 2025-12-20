@@ -852,7 +852,11 @@ export function EventForm({
             errors={errors}
             includeLists={mode !== "workshop"}
           />
-          <EventImportantInfoSection register={register} errors={errors} />
+          <EventImportantInfoSection
+            register={register}
+            errors={errors}
+            project={mode === "workshop" ? "workshops" : "retreats"}
+          />
           <EventPhotosSection
             errors={errors}
             watchedImageIds={watchedImageIds ?? []}

@@ -99,7 +99,12 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event, proje
           </div>
         </div>
       )}
-      <ReservationModal event={event} isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
+      <ReservationModal
+        event={event}
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        project={project}
+      />
     </>
   );
 };

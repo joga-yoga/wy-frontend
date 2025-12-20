@@ -25,6 +25,7 @@ interface ReservationModalProps {
   event: EventDetail;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  project: "retreats" | "workshops";
 }
 
 interface BookingFormData {
@@ -40,6 +41,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   event,
   isOpen,
   onOpenChange,
+  project,
 }) => {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -85,7 +87,11 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl">Zgłoś się na wyjazd z jogą 🧘‍♀️</DialogTitle>
+          <DialogTitle className="text-center text-xl">
+            {project === "retreats"
+              ? "Zgłoś się na wyjazd z jogą 🏕️"
+              : "Zgłoś się na wydarzenie z jogą 🧘‍♀️"}
+          </DialogTitle>
           <p className="text-center text-sm text-gray-600 mt-2">
             Wypełnij krótki formularz — odziewiemy się do Ciebie z potwierdzeniem
           </p>
