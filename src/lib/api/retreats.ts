@@ -1,9 +1,12 @@
 import { Event } from "@/app/retreats/types";
 
+import { prepareSearchParams } from "../prepareSearchParams";
+
 export async function getRetreats(
   searchParams: URLSearchParams,
 ): Promise<{ items: Event[]; total: number }> {
-  const queryString = searchParams.toString();
+  const preparedSearchParams = prepareSearchParams(searchParams);
+  const queryString = preparedSearchParams.toString();
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_ENDPOINT}/retreats/public?${queryString}`,
     {

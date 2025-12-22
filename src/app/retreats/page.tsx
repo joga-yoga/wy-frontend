@@ -35,18 +35,6 @@ const RetreatsPage = async (props: PageProps) => {
     }
   });
 
-  // Ensure defaults if not present (mirroring client-side defaults)
-  if (!params.has("limit")) {
-    params.append("limit", "10");
-  }
-  if (!params.has("skip")) {
-    params.append("skip", "0");
-  }
-  if (!params.has("sortBy")) {
-    params.append("sortBy", "published_at");
-    params.append("sortOrder", "desc");
-  }
-
   let events: Event[] = [];
   let totalEvents = 0;
   let error = null;

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { prepareSearchParams } from "@/lib/prepareSearchParams";
 
 import { WorkshopCard } from "../WorkshopCard";
 
@@ -94,7 +95,8 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
       params.set("limit", EVENTS_PER_PAGE.toString());
       params.set("skip", skip.toString());
 
-      const apiUrl = `/workshops/public?${params.toString()}`;
+      const preparedSearchParams = prepareSearchParams(params);
+      const apiUrl = `/workshops/public?${preparedSearchParams.toString()}`;
       console.log(`Loading more workshops from: ${apiUrl}`);
       const response = await axiosInstance.get(apiUrl);
       const responseData = response.data;

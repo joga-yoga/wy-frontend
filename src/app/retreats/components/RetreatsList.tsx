@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { prepareSearchParams } from "@/lib/prepareSearchParams";
 
 import { Event } from "../types";
 import EventCard from "./EventCard";
@@ -93,9 +94,8 @@ const RetreatsList: React.FC<RetreatsListProps> = ({ initialEvents, initialTotal
       // Override/ensure these params are correct for pagination
       params.set("limit", EVENTS_PER_PAGE.toString());
       params.set("skip", skip.toString());
-
-      const apiUrl = `/retreats/public?${params.toString()}`;
-      console.log(`Loading more events from: ${apiUrl}`);
+      const preparedParams = prepareSearchParams(params);
+      const apiUrl = `/retreats/public?${preparedParams.toString()}`;
       const response = await axiosInstance.get(apiUrl);
       const responseData = response.data;
 
