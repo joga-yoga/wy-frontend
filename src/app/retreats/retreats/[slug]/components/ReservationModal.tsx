@@ -89,8 +89,8 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
         <DialogHeader>
           <DialogTitle className="text-center text-xl">
             {project === "retreats"
-              ? "Zgłoś się na wyjazd z jogą 🏕️"
-              : "Zgłoś się na wydarzenie z jogą 🧘‍♀️"}
+              ? "Kontakt w sprawie wyjazdu 🏕️"
+              : "Kontakt w sprawie wydarzenia 🧘‍♀️"}
           </DialogTitle>
           <p className="text-center text-sm text-gray-600 mt-2">
             Wypełnij krótki formularz - zgłoszenie trafi bezpośrednio do organizatora
