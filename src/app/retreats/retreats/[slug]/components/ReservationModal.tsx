@@ -85,9 +85,9 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl">Zgłoś się na wyjazd z jogą 🧘‍♀️</DialogTitle>
+          <DialogTitle className="text-center text-xl">Kontakt w sprawie wyjazdu 🧘‍♀️</DialogTitle>
           <p className="text-center text-sm text-gray-600 mt-2">
-            Wypełnij krótki formularz — odziewiemy się do Ciebie z potwierdzeniem
+            Wypełnij krótki formularz - zgłoszenie trafi bezpośrednio do organizatora
           </p>
         </DialogHeader>
 
