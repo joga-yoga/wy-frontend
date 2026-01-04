@@ -24,7 +24,7 @@ export const formatMultiLineText = (text: string | undefined | null): React.Reac
     // Treat lines with times as schedule items? (basic example)
     if (/^\d{2}:\d{2}/.test(line.trim())) {
       return (
-        <p key={index} className="text-sm text-muted-foreground">
+        <p key={index} className="">
           {line.trim()}
         </p>
       );

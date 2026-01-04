@@ -63,11 +63,9 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
 
                       <div className="flex-grow">
                         {project === "retreats" ? (
-                          <h3 className="text-m-header md:text-subheader text-gray-800">
-                            {displayDayTitle}
-                          </h3>
+                          <h3 className="text-subheader text-gray-800">{displayDayTitle}</h3>
                         ) : null}
-                        <div className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
+                        <div className="text-md text-gray-500">
                           {formatMultiLineText(day.description)}
                         </div>
                       </div>
@@ -190,10 +188,8 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
           <h2 className="text-listing-description md:text-h-middle text-gray-800">
             Warto wiedzieć
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
-              {formatMultiLineText(event.important_info)}
-            </div>
+          <div className="text-m-sunscript-font md:text-sub-descript-18 text-gray-500">
+            {formatMultiLineText(event.important_info)}
           </div>
         </div>
       ) : null}

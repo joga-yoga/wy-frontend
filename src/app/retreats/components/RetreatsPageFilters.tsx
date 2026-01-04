@@ -137,21 +137,34 @@ export const RetreatsPageFilters = () => {
   };
 
   // Handle country click with URL navigation
-  const handleCountryClick = (countryName: string) => {
+  const handleLocationClick = (locationFilter: { country?: string; state_province?: string }) => {
     const currentCountry = searchParams.get("country");
+    const currentStateProvince = searchParams.get("state_province");
 
-    // If the same country is clicked again, clear the filter (navigate to clean URL)
-    if (currentCountry === countryName) {
+    // If the same country and state_province is clicked again, clear the filter (navigate to clean URL)
+    if (
+      (!!currentCountry && currentCountry === locationFilter.country) ||
+      (!!currentStateProvince && currentStateProvince === locationFilter.state_province)
+    ) {
       router.push("/");
     } else {
       // Navigate to URL with country parameter
       const params = new URLSearchParams(searchParams.toString());
-      params.set("country", countryName);
+      if (locationFilter.country) {
+        params.set("country", locationFilter.country);
+      } else {
+        params.delete("country");
+      }
+      if (locationFilter.state_province) {
+        params.set("state_province", locationFilter.state_province);
+      } else {
+        params.delete("state_province");
+      }
       router.push(`/?${params.toString()}`);
     }
 
     // Also update context state for visual feedback
-    const filter = countryName === currentCountry ? null : { country: countryName };
+    const filter = locationFilter.country === currentCountry ? null : locationFilter;
     setLocationFilterAndReset(filter);
   };
 
@@ -160,7 +173,7 @@ export const RetreatsPageFilters = () => {
     { Icon: IndiaIcon, label: "India", filter: { country: "India" }, name: "IND" },
     { Icon: ItalyIcon, label: "Italy", filter: { country: "Italy" }, name: "ITA" },
     { Icon: SpainIcon, label: "Spain", filter: { country: "Spain" }, name: "ESP" },
-    // { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
+    { Icon: BaliIcon, label: "Bali", filter: { state_province: "Bali" }, name: "BAL" },
     { Icon: PortugalIcon, label: "Portugal", filter: { country: "Portugal" }, name: "POR" },
     { Icon: ThailandIcon, label: "Thailand", filter: { country: "Thailand" }, name: "THA" },
     { Icon: SrilankaIcon, label: "Shrilanka", filter: { country: "Sri Lanka" }, name: "SRI" },
@@ -177,21 +190,18 @@ export const RetreatsPageFilters = () => {
             const isCountryInFilterItems = filterInitialData.countries
               .map((country) => country.name)
               .includes(item.filter.country);
-            // const isStateProvinceInFilterItems = filterInitialData.state_provinces
-            //   .map((state_province) => state_province.name)
-            //   .includes(item.filter.state_province || "");
-            // return isCountryInFilterItems || isStateProvinceInFilterItems;
             return isCountryInFilterItems;
           }
-          return true;
+          if (item.filter.state_province) {
+            const isStateProvinceInFilterItems = filterInitialData.state_provinces
+              .map((state_province) => state_province.name)
+              .includes(item.filter.state_province || "");
+            return isStateProvinceInFilterItems;
+          }
+          return false;
         })
       : []; // Show empty array if no server data yet
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const selectedFilterItem = locationFilter
-    ? filterItems.find((item) => JSON.stringify(item.filter) === JSON.stringify(locationFilter))
-    : null;
-  const SelectedCountryIcon = selectedFilterItem?.Icon;
 
   useEffect(() => {
     if (isSearchActive && searchInputRef.current) {
@@ -330,11 +340,7 @@ export const RetreatsPageFilters = () => {
                     <li key={item.label}>
                       <button
                         onClick={() => {
-                          if (item.filter.country) {
-                            handleCountryClick(item.filter.country);
-                          } else {
-                            setLocationFilterAndReset(item.filter);
-                          }
+                          handleLocationClick(item.filter);
                           setIsCountryDropdownOpen(false);
                         }}
                         className={cn(
@@ -390,11 +396,11 @@ export const RetreatsPageFilters = () => {
       >
         <div
           className={cn(
-            "flex container mx-auto justify-between gap-10 py-5 md:px-8",
+            "flex container mx-auto justify-between gap-2 py-5 md:px-8",
             isSearchActive && "hidden",
           )}
         >
-          <div className="w-full relative">
+          <div className="w-full relative overflow-x-auto">
             <div className="flex items-center gap-4">
               <TooltipProvider>
                 {filterItems.map((item, index) => (
@@ -414,11 +420,7 @@ export const RetreatsPageFilters = () => {
                             : "",
                         )}
                         onClick={() => {
-                          if (item.filter.country) {
-                            handleCountryClick(item.filter.country);
-                          } else {
-                            setLocationFilterAndReset(item.filter);
-                          }
+                          handleLocationClick(item.filter);
                         }}
                       >
                         <item.Icon className="h-[calc(80px-4px)] w-[calc(80px-4px)] stroke-[1.75px]" />
