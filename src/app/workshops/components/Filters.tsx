@@ -106,7 +106,7 @@ const Filters = () => {
   }, [debouncedSearchTerm, sortConfig, router, searchParams]);
 
   const hasActiveFiltersFromUrl = () => {
-    const city = searchParams.get("city");
+    const cities = searchParams.get("cities");
     const startDateFrom = searchParams.get("start_date_from");
     const startDateTo = searchParams.get("start_date_to");
     const priceMin = searchParams.get("price_min");
@@ -117,7 +117,7 @@ const Filters = () => {
     const isOnsite = searchParams.get("is_onsite");
 
     return !!(
-      city ||
+      cities ||
       startDateFrom ||
       startDateTo ||
       priceMin ||
@@ -155,19 +155,19 @@ const Filters = () => {
   };
 
   const handleCityClick = (cityName: string) => {
-    const currentCity = searchParams.get("city");
+    const currentCity = searchParams.get("cities");
     const params = new URLSearchParams(searchParams.toString());
     if (currentCity === cityName) {
-      params.delete("city");
+      params.delete("cities");
     } else {
-      params.set("city", cityName);
+      params.set("cities", cityName);
     }
     router.push(`/?${params.toString()}`);
   };
 
   const cities = filterDataLoading ? [] : filterInitialData?.cities || [];
 
-  const selectedCityFromUrl = searchParams.get("city");
+  const selectedCityFromUrl = searchParams.get("cities");
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 

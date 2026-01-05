@@ -38,7 +38,7 @@ export const FiltersModal = ({ isOpen, title, onOpenChange }: FiltersModalProps)
     if (!isOpen) return null;
 
     return {
-      selectedCityName: searchParams.get("city"),
+      selectedCityName: searchParams.get("cities"),
       startDateFrom: searchParams.get("start_date_from"),
       startDateTo: searchParams.get("start_date_to"),
       priceMin: searchParams.get("price_min") ? Number(searchParams.get("price_min")) : null,

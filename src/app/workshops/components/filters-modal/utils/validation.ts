@@ -31,7 +31,7 @@ export const buildFilterUrl = (
 
   const params = new URLSearchParams();
 
-  if (filters.selectedCityName) params.append("city", filters.selectedCityName);
+  if (filters.selectedCityName) params.append("cities", filters.selectedCityName);
   if (filters.startDateFrom) params.append("start_date_from", filters.startDateFrom);
   if (filters.startDateTo) params.append("start_date_to", filters.startDateTo);
 
