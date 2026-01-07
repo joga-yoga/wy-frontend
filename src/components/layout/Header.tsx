@@ -117,7 +117,7 @@ export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ 
             >
               <button className="text-sm py-2.5 hover:underline">
                 <p className="text-gray-700 text-m-header md:text-xl font-medium">
-                  {project === "retreats" ? "Dodaj wyjazd za 5 min" : "Dodaj wydarzenie bezpłatnie za 5 min"}
+                  {project === "retreats" ? "Dodaj wyjazd bezpłatnie za 5 min" : "Dodaj wydarzenie bezpłatnie za 5 min"}
                 </p>
               </button>
             </Link>
