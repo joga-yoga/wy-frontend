@@ -8,6 +8,7 @@ import {
   EventSidebar,
   ImageGallery,
 } from "@/app/retreats/retreats/[slug]/components";
+import { isMultiDayEvent } from "@/app/retreats/retreats/[slug]/helpers";
 import { getWorkshop } from "@/lib/api/getWorkshop";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 
@@ -73,6 +74,7 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
     );
   }
 
+  const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
   return (
     <div className="bg-white">
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
@@ -84,11 +86,13 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
             event={event}
             className="lg:col-span-1 order-1 lg:order-2"
             project="workshops"
+            isMultiDay={isMultiDay}
           />
           <EventMainContent
             event={event}
             className="lg:col-span-2 order-2 lg:order-1"
             project="workshops"
+            isMultiDay={isMultiDay}
           />
         </div>
 

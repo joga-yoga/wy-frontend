@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 import { Clock } from "lucide-react";
 import React from "react";
 
@@ -6,6 +7,7 @@ import CustomOnlineIcon from "@/components/icons/CustomOnlineIcon";
 import CustomSkillLevelIcon from "@/components/icons/CustomSkillLevelIcon";
 import { formatDurationInHours } from "@/lib/formatDateRange";
 
+import { isMultiDayEvent } from "../helpers";
 import { EventDetail } from "../types";
 import { CancellationPolicySection, InstructorSection, OrganizerSection } from ".";
 import { EventReservation } from "./EventReservation";
@@ -15,6 +17,7 @@ interface EventSidebarProps {
   event: EventDetail;
   className?: string;
   project: "retreats" | "workshops";
+  isMultiDay: boolean;
 }
 
 const skillLevelTranslations: { [key: string]: string } = {
@@ -34,7 +37,12 @@ const languageTranslations: { [key: string]: string } = {
   ko: "Koreański",
 };
 
-export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className, project }) => {
+export const EventSidebar: React.FC<EventSidebarProps> = ({
+  event,
+  className,
+  project,
+  isMultiDay,
+}) => {
   return (
     <div className={`flex flex-col gap-5 md:gap-[44px] ${className}`}>
       <div className="flex flex-col gap-2 border border-gray-100 rounded-[22px] shadow-[0px_8px_16px_8px_#FAFAFA] p-5">
@@ -43,7 +51,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({ event, className, pr
           <div className="p-5">
             <div className="space-y-4">
               {event.location ? <EventSidebarLocation location={event.location} /> : null}
-              {project === "workshops" && (
+              {project === "workshops" && !isMultiDay && (
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 flex items-center justify-center">
                     <Clock className="h-8 w-8 text-slate-600" />
