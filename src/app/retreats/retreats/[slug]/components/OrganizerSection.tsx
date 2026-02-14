@@ -34,6 +34,15 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event }) => 
           <p className="text-sub-descript-18 text-gray-500">{event.organizer.name}</p>
         </div>
       </Link>
+      <p className="mt-4 text-md md:text-lg font-medium text-gray-500 pt-4 md:pt-7">
+        Jesteś organizatorem tego wyjazdy? <br />
+        <Link
+          href={`/contact?eventId=${event.id}`}
+          className="text-black underline hover:opacity-50 transition"
+        >
+          Przejmij i edytuj
+        </Link>
+      </p>
     </div>
   );
 };
