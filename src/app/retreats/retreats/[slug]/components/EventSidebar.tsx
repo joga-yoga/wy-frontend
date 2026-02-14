@@ -152,7 +152,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
         </>
       ) : null}
       <div className="hidden lg:block">
-        <OrganizerSection event={event} />
+        <OrganizerSection event={event} project={project} />
       </div>
     </div>
   );

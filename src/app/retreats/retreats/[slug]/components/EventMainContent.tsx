@@ -201,7 +201,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
         <hr />
         <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
         <hr />
-        <OrganizerSection event={event} />
+        <OrganizerSection event={event} project={project} />
       </div>
     </div>
   );
