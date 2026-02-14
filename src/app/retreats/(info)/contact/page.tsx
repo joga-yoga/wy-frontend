@@ -9,9 +9,9 @@ interface ContactPageProps {
 const defaultTitle = "Kontakt | wyjazdy.yoga";
 const defaultDescription =
   "Skontaktuj się z zespołem wyjazdy.yoga. Masz pytania dotyczące platformy lub wyjazdów? Napisz do nas.";
-const takeoverTitle = "Przejęcie wydarzenia | wyjazdy.yoga";
+const takeoverTitle = "Przejęcie wyjazdu | wyjazdy.yoga";
 const takeoverDescription =
-  "Zgłoś przejęcie wydarzenia opublikowanego na wyjazdy.yoga. Po weryfikacji pomożemy przypisać Ci kontrolę nad ofertą.";
+  "Zgłoś przejęcie wyjazdu opublikowanego na wyjazdy.yoga. Po weryfikacji pomożemy przypisać Ci kontrolę nad ofertą.";
 
 export const generateMetadata = async (props: ContactPageProps): Promise<Metadata> => {
   const searchParams = await props.searchParams;
@@ -38,7 +38,7 @@ const ContactPage = async (props: ContactPageProps) => {
   const rawEventId = searchParams.eventId;
   const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
-  return <ContactPageContent eventId={eventId} />;
+  return <ContactPageContent eventId={eventId} context="retreats" />;
 };
 
 export default ContactPage;

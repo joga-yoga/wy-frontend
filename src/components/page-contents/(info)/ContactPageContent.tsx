@@ -10,14 +10,22 @@ import { axiosInstance } from "@/lib/axiosInstance";
 
 interface ContactPageContentProps {
   eventId?: string;
+  context?: "retreats" | "workshops";
 }
 
-export const ContactPageContent: React.FC<ContactPageContentProps> = ({ eventId }) => {
+export const ContactPageContent: React.FC<ContactPageContentProps> = ({
+  eventId,
+  context = "retreats",
+}) => {
   const isTakeoverFlow = Boolean(eventId);
-  const pageTitle = isTakeoverFlow ? "Przejęcie i edycja wyjazdu" : "Kontakt";
+  const isRetreatsContext = context === "retreats";
+  const takeoverEntity = isRetreatsContext ? "wyjazdu" : "wydarzenia";
+  const takeoverEntityNominative = isRetreatsContext ? "Wyjazd" : "Wydarzenie";
+
+  const pageTitle = isTakeoverFlow ? `Przejęcie i edycja ${takeoverEntity}` : "Kontakt";
   const pageDescription = isTakeoverFlow
-    ? "Wyjazd został opublikowany na naszej platformie i chcesz przejąć nad nim kontrolę? Wypełnij formularz. Po weryfikacji skontaktujemy się z Tobą i pomożemy przypisać wyjazd do Twojego konta."
-    : "Twoja wiadomość zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu wyjazdy.yoga. Zostaw w wiadomości preferowany sposób kontaktu - e-mail, telefon (WhatsApp) lub social media itd.";
+    ? `${takeoverEntityNominative} został opublikowany na naszej platformie i chcesz przejąć nad nim kontrolę? Wypełnij formularz. Po weryfikacji skontaktujemy się z Tobą i pomożemy przypisać ${takeoverEntity} do Twojego konta.`
+    : `Twoja wiadomość zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu ${isRetreatsContext ? "wyjazdy.yoga" : "wydarzenia.yoga"}. Zostaw w wiadomości preferowany sposób kontaktu - e-mail, telefon (WhatsApp) lub social media itd.`;
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -31,8 +39,10 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({ eventId 
     setSubmitResult(null);
     try {
       const formattedMessage = [
-        isTakeoverFlow ? "Typ zgłoszenia: Przejęcie i edycja wyjazdu" : "Typ zgłoszenia: Kontakt",
-        eventId ? `ID wyjazdu: ${eventId}` : null,
+        isTakeoverFlow
+          ? `Typ zgłoszenia: Przejęcie i edycja ${takeoverEntity}`
+          : "Typ zgłoszenia: Kontakt",
+        eventId ? `ID ${takeoverEntity}: ${eventId}` : null,
         `Email: ${email.trim()}`,
         phone.trim() ? `Telefon: ${phone.trim()}` : null,
         "",
