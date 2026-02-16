@@ -49,7 +49,7 @@ export const EventPhotosSection = ({
         <EventHelpBarTipButton tipId="images" />
       </div>
       <Label htmlFor="images" size="event-description">
-        Dodaj zdjęcia, które pomogą uczestnikom zrozumieć, co ich czeka
+        Dodaj zdjęcia, które będą promować tę podróż
       </Label>
       <Separator className="my-4 md:my-8" />
       <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

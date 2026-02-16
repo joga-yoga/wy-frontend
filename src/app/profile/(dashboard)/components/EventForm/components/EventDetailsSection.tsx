@@ -91,7 +91,7 @@ export const EventDetailsSection = ({
             <EventHelpBarTipButton tipId="main_attractions" />
           </div>
           <Label htmlFor="main_attractions" size="event-description">
-            Wyróżnij to, co jest wyjątkowe w tej podróży, w 6–8 punktach
+            Wypisz to, co wyjątkowe w tej podróży, w min. 4 punktach
           </Label>
           <Separator className="my-4 md:my-8" />
           <Controller

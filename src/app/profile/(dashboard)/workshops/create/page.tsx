@@ -177,7 +177,7 @@ export default function CreateWorkshopPage() {
                   PROMPT
                 </CardTitle>
                 <CardDescription>
-                  Napisz parę słów o swoim wyjeździe – AI przygotuje całą resztę
+                  Napisz parę słów o swoim wydarzenu – AI przygotuje całą resztę
                 </CardDescription>
               </CardHeader>
               <CardContent>

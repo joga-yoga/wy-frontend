@@ -140,7 +140,7 @@ export function LoginPage() {
       </div>
       {step === "email" && (
         <form onSubmit={handleEmailSubmit(onSubmitEmail)} className="space-y-4 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-center pb-2">Zaloguj się lub zarejestruj</h1>
+          <h1 className="text-2xl font-bold text-center pb-2">Utwórz konto lub zaloguj się</h1>
           <Input
             placeholder="Wprowadź e-mail"
             {...registerEmail("email")}

@@ -235,7 +235,7 @@ export default function BecomeOrganizerPage() {
 
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Opis (opcjonalnie)
+            Opis
           </label>
           <Textarea
             id="description"
@@ -300,7 +300,7 @@ export default function BecomeOrganizerPage() {
 
         <div>
           <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-            Logo / Obraz (opcjonalnie)
+            Logo / Obraz
           </label>
           <Input
             id="image"

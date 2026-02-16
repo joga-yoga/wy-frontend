@@ -107,8 +107,8 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                 Partnerska
               </h1>
               <p className="max-w-xl text-sm font-medium md:text-descrip-under-header text-center md:text-left md:mb-[60px]">
-                Publikacja gratis. <br />
-                Podlinkuj nas w podziękowaniu.
+                Publikacja bez opłaty <br />
+                Podlinkuj nas w podziękowaniu
               </p>
               <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`} className="md:hidden">
                 <Button
@@ -209,7 +209,7 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
               <div>
                 <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
                   <Megaphone className="h-8 w-8 text-primary mx-auto md:mx-0" />
-                  <CardTitle className="text-subheader font-medium">Publikacja</CardTitle>
+                  <CardTitle className="text-subheader font-medium">Publikacja bezpłatna</CardTitle>
                 </CardHeader>
                 <CardContent className="px-0 pb-4 md:pb-6">
                   <p className="text-gray-500 text-sub-descript-18">
