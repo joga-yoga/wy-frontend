@@ -92,9 +92,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               ? "Kontakt w sprawie wyjazdu 🏕️"
               : "Kontakt w sprawie wydarzenia 🧘‍♀️"}
           </DialogTitle>
-          <p className="text-center text-sm text-gray-600 mt-2">
-            Wypełnij krótki formularz
-          </p>
+          <p className="text-center text-sm text-gray-600 mt-2">Wypełnij krótki formularz</p>
         </DialogHeader>
 
         {submitState === "success" && (
@@ -208,7 +206,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               {/* Privacy Policy Consent */}
 
               <p className="text-center text-sm text-gray-600">
-                Twoja wiadomość trafi do organizatora, który potwierdzi rezerwację. 
+                Twoja wiadomość trafi do organizatora, który potwierdzi rezerwację.
               </p>
               <p className="text-center text-sm text-gray-600">
                 Klikając przycisk &quot;Rezerwacja&quot;, wyrażasz zgodę na przetwarzanie swoich

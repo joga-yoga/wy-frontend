@@ -28,5 +28,6 @@ export default defineConfig([{
         "simple-import-sort/imports": "error",
         "simple-import-sort/exports": "error",
         "prettier/prettier": "error",
+        "endOfLine": "off"
     },
 }]);
