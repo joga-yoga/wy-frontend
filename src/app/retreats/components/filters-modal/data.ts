@@ -19,11 +19,6 @@ export const prices: Price[] = [
 
 export const PeriodSets: PeriodSet[] = [
   {
-    start_date: "2025-12-24",
-    end_date: "2026-01-03",
-    name: "Wigilia 2025",
-  },
-  {
     start_date: "2026-01-19",
     end_date: "2026-02-01",
     name: "Ferie 2026",
@@ -42,5 +37,10 @@ export const PeriodSets: PeriodSet[] = [
     start_date: "2026-05-23",
     end_date: "2026-06-07",
     name: "Zielone Święta 2026",
+  },
+  {
+    start_date: "2026-12-24",
+    end_date: "2027-01-03",
+    name: "Wigilia 2026",
   },
 ];

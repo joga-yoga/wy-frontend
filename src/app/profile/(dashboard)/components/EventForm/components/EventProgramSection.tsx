@@ -385,7 +385,7 @@ export const EventProgramSection = ({
           <div key={field.id} className="border-b pb-6 last:border-b-0">
             <div className="flex items-center justify-between">
               <Label className="text-lg font-semibold">
-                {project === "workshops" ? `Punkt ${index + 1}` : `Dzień ${index + 1}`}
+                {project === "workshops" ? `Dzień ${index + 1}` : `Dzień ${index + 1}`}
               </Label>
               <Button
                 type="button"
@@ -420,7 +420,7 @@ export const EventProgramSection = ({
                   {...register(`program.${index}.description` as const)}
                   placeholder={
                     project === "workshops"
-                      ? `Opis punktu ${index + 1}`
+                      ? `Opis programu na dzień ${index + 1}`
                       : `Opis programu na dzień ${index + 1}`
                   }
                   rows={5}
@@ -440,7 +440,7 @@ export const EventProgramSection = ({
           (calculatedDuration > 0 && programFields.length < calculatedDuration)) && (
           <Button type="button" variant="outline" size="sm" onClick={handleAddDay}>
             <PlusCircle className="mr-2 h-4 w-4" />{" "}
-            {project === "workshops" ? "Dodaj punkt" : `Dodaj dzień ${programFields.length + 1}`}
+            {project === "workshops" ? "Dodaj dzień" : `Dodaj dzień ${programFields.length + 1}`}
           </Button>
         )}
         {project !== "workshops" &&

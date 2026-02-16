@@ -9,12 +9,14 @@ interface EventMainContentProps {
   event: EventDetail;
   project: "retreats" | "workshops";
   className?: string;
+  isMultiDay: boolean;
 }
 
 export const EventMainContent: React.FC<EventMainContentProps> = ({
   event,
   project,
   className,
+  isMultiDay,
 }) => {
   return (
     <div className={`space-y-5 md:space-y-[44px] ${className}`}>
@@ -62,7 +64,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
                       </div>
 
                       <div className="flex-grow">
-                        {project === "retreats" ? (
+                        {project === "retreats" || isMultiDay ? (
                           <h3 className="text-subheader text-gray-800">{displayDayTitle}</h3>
                         ) : null}
                         <div className="text-md text-gray-500">
@@ -199,7 +201,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
         <hr />
         <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
         <hr />
-        <OrganizerSection event={event} />
+        <OrganizerSection event={event} project={project} />
       </div>
     </div>
   );

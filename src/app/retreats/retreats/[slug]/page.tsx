@@ -11,6 +11,7 @@ import {
   EventSidebar,
   ImageGallery,
 } from "./components";
+import { isMultiDayEvent } from "./helpers";
 
 export const revalidate = 300;
 
@@ -73,6 +74,7 @@ const EventDetailPage = async ({ params }: EventDetailPageProps) => {
       </div>
     );
   }
+  const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
 
   return (
     <div className="bg-white">
@@ -85,11 +87,13 @@ const EventDetailPage = async ({ params }: EventDetailPageProps) => {
             event={event}
             className="lg:col-span-1 order-1 lg:order-2"
             project="retreats"
+            isMultiDay={isMultiDay}
           />
           <EventMainContent
             event={event}
             className="lg:col-span-2 order-2 lg:order-1"
             project="retreats"
+            isMultiDay={isMultiDay}
           />
         </div>
 

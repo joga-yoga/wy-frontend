@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 import { getCldImageUrl } from "next-cloudinary";
 import React from "react";
 
@@ -86,3 +87,24 @@ export const getImageBlurDataURL = async (imageId: string) => {
 
   return blurDataURL;
 };
+
+const MS_IN_24_HOURS = 24 * 60 * 60 * 1000;
+
+export function isMultiDayEvent(startDate?: string | null, endDate?: string | null): boolean {
+  if (!startDate || !endDate) {
+    return false;
+  }
+
+  try {
+    const start = parseISO(startDate);
+    const end = parseISO(endDate);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return false;
+    }
+
+    return end.getTime() - start.getTime() > MS_IN_24_HOURS;
+  } catch {
+    return false;
+  }
+}
