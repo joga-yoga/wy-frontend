@@ -275,7 +275,8 @@ export default function CreateWorkshopPage() {
           </Button>
           <h1 className="text-3xl font-bold mb-2">Generuj z opisu</h1>
           <p className="text-muted-foreground mb-8">
-            Opisz swój wyjazd, a my pomożemy go uzupełnić.
+            Podaj kluczowe szczegóły wydarzenia – na ich podstawie stworzymy resztę opisu i
+            automatycznie wypełnimy formularz
           </p>
           <div className="space-y-4">
             <Label htmlFor="event-prompt">Opis wyjazdu</Label>
