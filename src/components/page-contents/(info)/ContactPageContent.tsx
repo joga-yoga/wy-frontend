@@ -43,8 +43,6 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({
           ? `Typ zgłoszenia: Przejęcie i edycja ${takeoverEntity}`
           : "Typ zgłoszenia: Kontakt",
         eventId ? `ID ${takeoverEntity}: ${eventId}` : null,
-        `Email: ${email.trim()}`,
-        phone.trim() ? `Telefon: ${phone.trim()}` : null,
         "",
         "Wiadomość:",
         message.trim(),
@@ -52,7 +50,11 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({
         .filter(Boolean)
         .join("\n");
 
-      await axiosInstance.post("/utils/contact", { message: formattedMessage });
+      await axiosInstance.post("/utils/contact", {
+        email: email.trim(),
+        contact_info: phone.trim() || undefined,
+        message: formattedMessage,
+      });
       setEmail("");
       setPhone("");
       setMessage("");
