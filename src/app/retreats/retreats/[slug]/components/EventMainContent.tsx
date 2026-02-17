@@ -198,8 +198,13 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
 
       {/* Organizer and Cancellation Policy (Mobile Only) */}
       <div className="block lg:hidden space-y-5">
-        <hr />
-        <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
+        {event.cancellation_policy ? (
+          <>
+            <hr />
+            <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
+          </>
+        ) : null}
+
         <hr />
         <OrganizerSection event={event} project={project} />
       </div>
