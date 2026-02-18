@@ -25,6 +25,13 @@ export function middleware(req: NextRequest) {
   const mappedPath = domainMappings[currentHost as keyof typeof domainMappings];
 
   if (mappedPath) {
+    if (
+      url.pathname === `/${mappedPath}/${mappedPath}` ||
+      url.pathname.startsWith(`/${mappedPath}/${mappedPath}/`)
+    ) {
+      return NextResponse.next();
+    }
+
     url.pathname = `/${mappedPath}${url.pathname}`;
     return NextResponse.rewrite(url);
   }

@@ -84,8 +84,9 @@ export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ 
   const { isBookmarksActive, toggleBookmarksView, setIsSearchActiveAndReset, isSearchActive } =
     useEventsFilter();
   const pathname = usePathname();
-  const isMainPage = pathname === "/";
-  const isPartnersPage = pathname === "/partners";
+  const normalizedPathname = pathname.replace(/^\/(retreats|workshops|profile)(?=\/|$)/, "") || "/";
+  const isMainPage = normalizedPathname === "/";
+  const isPartnersPage = normalizedPathname === "/partners";
   if (isPartnersPage) {
     return null;
   }
