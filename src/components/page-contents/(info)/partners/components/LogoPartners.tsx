@@ -7,7 +7,7 @@ export const LogoPartners = ({
   project,
 }: {
   className?: string;
-  variant?: "white" | "black";
+  variant?: "white" | "black" | "white-with-black-text";
   project: "retreats" | "workshops";
 }) => {
   return (
@@ -16,6 +16,7 @@ export const LogoPartners = ({
         className={cn(
           "w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] text-xl md:text-h-middle",
           variant === "white" && "bg-white",
+          variant === "white-with-black-text" && "bg-white",
           variant === "black" && "bg-gray-600",
         )}
       >
@@ -31,6 +32,7 @@ export const LogoPartners = ({
           className={cn(
             "inline-block rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px]",
             variant === "white" && "bg-gray-800 text-white",
+            variant === "white-with-black-text" && "bg-gray-800 text-white",
             variant === "black" && "bg-gray-600 text-white",
           )}
         >
