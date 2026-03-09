@@ -4,8 +4,8 @@ import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
 
-import { axiosInstance } from "@/lib/axiosInstance";
 import { clearAuthStorage, isAllowedLogoutTarget } from "@/lib/auth/logoutChain";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 function LogoutContent() {
   const params = useSearchParams();

@@ -8,7 +8,8 @@ function resolveBaseUrl() {
 
   if (typeof window !== "undefined") {
     const { protocol, hostname } = window.location;
-    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost");
+    const isLocalHost =
+      hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost");
 
     if (isLocalHost) {
       const apiPort = process.env.NEXT_PUBLIC_API_DEV_PORT || "8000";
