@@ -70,20 +70,16 @@ function ResetPasswordForm() {
         new_password: data.newPassword,
       });
 
-      const { access_token } = response.data;
+      const accessToken = response.data?.access_token;
+      if (accessToken) {
+        storeToken(accessToken);
+      }
 
-      if (access_token) {
-        storeToken(access_token);
+      if (response.status >= 200 && response.status < 300) {
         toast({
           description: "Hasło zostało zmienione pomyślnie. Logowanie...",
         });
         router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
-      } else {
-        // Fallback if no token returned (should not happen with updated backend)
-        toast({
-          description: "Hasło zostało zmienione pomyślnie.",
-        });
-        router.push("/profile/login");
       }
     } catch (error: any) {
       toast({

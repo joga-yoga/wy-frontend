@@ -30,23 +30,20 @@ function VerifyEmailContent() {
     const verify = async () => {
       try {
         const response = await axiosInstance.post("/verify-email", { token });
-        const { access_token } = response.data;
-
-        if (access_token) {
-          storeToken(access_token);
-          setStatus("success");
-          toast({
-            description: "Email zweryfikowany pomyślnie! Logowanie...",
-            duration: 3000,
-          });
-
-          // Redirect after a short delay
-          setTimeout(() => {
-            router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
-          }, 1500);
-        } else {
-          throw new Error("No access token received");
+        const accessToken = response.data?.access_token;
+        if (accessToken) {
+          storeToken(accessToken);
         }
+        setStatus("success");
+        toast({
+          description: "Email zweryfikowany pomyślnie! Logowanie...",
+          duration: 3000,
+        });
+
+        // Redirect after a short delay
+        setTimeout(() => {
+          router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+        }, 1500);
       } catch (error: any) {
         console.error("Verification failed:", error);
         setStatus("error");

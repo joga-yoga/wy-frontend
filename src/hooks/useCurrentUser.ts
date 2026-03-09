@@ -8,25 +8,24 @@ export function useCurrentUser() {
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    if (token) {
-      // Alternatively, decode the token if it has user info,
-      // but ideally call your backend /me endpoint.
-      axiosInstance
-        .get("/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          setUser(response.data);
-        })
-        .catch((error) => {
-          console.error("Error fetching user info", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
+    if (!token) {
       setLoading(false);
+      return;
     }
+
+    axiosInstance
+      .get("/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setUser(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching user info", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return { user, loading };

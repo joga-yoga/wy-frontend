@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
+import { buildGlobalLogoutStartUrl, clearAuthStorage } from "@/lib/auth/logoutChain";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 type Organizer = {
@@ -20,7 +21,6 @@ type User = {
   email: string;
   name?: string;
   organizer?: Organizer | null;
-  // add other properties as necessary
 };
 
 type AuthContextType = {
@@ -30,7 +30,7 @@ type AuthContextType = {
   refreshUser: () => Promise<void>;
   updateUserFromToken: () => void;
   storeToken: (token: string) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,15 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const decoded: any = jwtDecode(token);
         setUser({
-          id: decoded.sub, // adjust based on your JWT payload
+          id: decoded.sub,
           email: decoded.email,
           name: decoded.name,
-          organizer: null, // Initially we don't know about the organizer
+          organizer: null,
         });
-        // After setting user from token, refresh from backend to get full user object
         refreshUser();
       } catch (error) {
-        console.error("Failed to decode token", error);
         setUser(null);
       }
     }
@@ -63,17 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function refreshUser() {
     const token = localStorage.getItem("access_token");
-    if (token) {
-      try {
-        const response = await axiosInstance.get("/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        // Keep the name from the token, as the backend doesn't provide it
-        setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
-      } catch (error) {
-        console.error("Error refreshing user", error);
-        clearToken();
-      }
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.get("/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
+    } catch (error) {
+      clearToken();
     }
   }
 
@@ -83,15 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const decoded: any = jwtDecode(token);
         setUser({
-          id: decoded.sub, // adjust based on your JWT payload
+          id: decoded.sub,
           email: decoded.email,
           name: decoded.name,
-          organizer: null, // Initially we don't know about the organizer
+          organizer: null,
         });
-        // After setting user from token, refresh from backend to get full user object
         refreshUser();
       } catch (error) {
-        console.error("Failed to decode token", error);
         setUser(null);
       }
     } else {
@@ -105,15 +102,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUserFromToken();
   }
 
-  function signOut() {
-    localStorage.removeItem("access_token");
-    delete axios.defaults.headers.common["Authorization"];
-    setUser(null);
-    router.push("/");
+  async function signOut() {
+    try {
+      await axiosInstance.post("/logout");
+    } catch (error) {
+      // Ignore network/logout errors and clear local auth state anyway.
+    } finally {
+      clearToken();
+
+      const currentOrigin = window.location.origin;
+      const finalRedirect = process.env.NEXT_PUBLIC_PROFILE_HOST || currentOrigin;
+      const startUrl = buildGlobalLogoutStartUrl({
+        currentOrigin,
+        finalRedirect,
+      });
+
+      window.location.href = startUrl;
+    }
   }
 
   function clearToken() {
-    localStorage.removeItem("access_token");
+    clearAuthStorage();
     delete axios.defaults.headers.common["Authorization"];
     setUser(null);
   }

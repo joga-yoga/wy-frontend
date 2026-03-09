@@ -87,6 +87,28 @@ export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ 
   const normalizedPathname = pathname.replace(/^\/(retreats|workshops|profile)(?=\/|$)/, "") || "/";
   const isMainPage = normalizedPathname === "/";
   const isPartnersPage = normalizedPathname === "/partners";
+
+  const [accountHref, setAccountHref] = React.useState(
+    user
+      ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}`
+      : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/login`,
+  );
+
+  React.useEffect(() => {
+    if (user) {
+      setAccountHref(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+      return;
+    }
+
+    const params = new URLSearchParams({
+      return_to: window.location.origin,
+      stay_on_spoke: "0",
+      spoke_next: `${window.location.pathname}${window.location.search}`,
+    });
+
+    setAccountHref(`${process.env.NEXT_PUBLIC_PROFILE_HOST}/login?${params.toString()}`);
+  }, [user]);
+
   if (isPartnersPage) {
     return null;
   }
@@ -141,11 +163,7 @@ export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ 
               />
             )}
 
-            <Link
-              href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}
-              passHref
-              className="flex items-center justify-center"
-            >
+            <Link href={accountHref} passHref className="flex items-center justify-center">
               <button aria-label="Account">
                 {user?.organizer?.image_id ? (
                   <Image
