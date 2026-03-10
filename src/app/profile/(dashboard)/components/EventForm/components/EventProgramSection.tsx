@@ -336,16 +336,18 @@ export const EventProgramSection = ({
                   if (selectedRange?.from) {
                     setValue("start_date", format(selectedRange.from, "yyyy-MM-dd"), {
                       shouldValidate: true,
+                      shouldDirty: true,
                     });
                   } else {
-                    setValue("start_date", "", { shouldValidate: true });
+                    setValue("start_date", "", { shouldValidate: true, shouldDirty: true });
                   }
                   if (selectedRange?.to) {
                     setValue("end_date", format(selectedRange.to, "yyyy-MM-dd"), {
                       shouldValidate: true,
+                      shouldDirty: true,
                     });
                   } else {
-                    setValue("end_date", "", { shouldValidate: true });
+                    setValue("end_date", "", { shouldValidate: true, shouldDirty: true });
                   }
                 }}
                 numberOfMonths={2}
