@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { getLoginLogoHref, saveReturnContext } from "@/lib/auth/returnContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const emailSchema = z.object({
@@ -37,6 +38,7 @@ export function LoginPage() {
   const [emailValue, setEmailValue] = useState("");
   const [debugRedirectTo, setDebugRedirectTo] = useState<string | null>(null);
   const [isAutoRedirecting, setIsAutoRedirecting] = useState(false);
+  const [logoHref, setLogoHref] = useState("/");
   const hasAutoRedirected = useRef(false);
   const returnTo = searchParams.get("return_to");
   const stayOnSpoke = searchParams.get("stay_on_spoke");
@@ -55,6 +57,11 @@ export function LoginPage() {
   const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login${
     ssoQuery ? `?${ssoQuery}` : ""
   }`;
+
+  useEffect(() => {
+    saveReturnContext(returnTo, spokeNext);
+    setLogoHref(getLoginLogoHref());
+  }, [returnTo, spokeNext]);
 
   useEffect(() => {
     if (loading || !user || hasAutoRedirected.current) {
@@ -206,7 +213,7 @@ export function LoginPage() {
         </div>
       )}
       <div className="py-10">
-        <Link href="/">
+        <Link href={logoHref}>
           <div className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] text-xl md:text-h-middle bg-gray-600">
             <LogoTransparentSmall className={`w-10 h-10 md:w-16 md:h-16 text-white`} />
           </div>

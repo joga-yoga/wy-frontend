@@ -12,6 +12,7 @@ import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext";
+import { getLoginLogoHref } from "@/lib/auth/returnContext";
 import { cn } from "@/lib/utils";
 
 import CustomBurgerIcon from "../icons/CustomBurgerIcon";
@@ -24,6 +25,17 @@ interface ProfileHeaderProps {
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true }) => {
   const { user, signOut } = useAuth();
+  const pathname = usePathname();
+  const [logoHref, setLogoHref] = React.useState("/");
+
+  React.useEffect(() => {
+    if (pathname === "/") {
+      setLogoHref(getLoginLogoHref());
+      return;
+    }
+
+    setLogoHref("/");
+  }, [pathname]);
 
   return (
     <header
@@ -32,7 +44,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
       <div className="w-full px-3 md:px-4 md:pl-[22px] h-16 flex items-center justify-between">
         {/* Placeholder for logo space */}
         <LinkWithBlocker
-          href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}
+          href={logoHref}
           className="flex items-center justify-center w-[40px] h-[40px]"
         >
           <svg
