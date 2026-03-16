@@ -183,20 +183,24 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </p>
           </div>
           <div className="flex-grow"></div>
-          <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
-            <div className="flex flex-row justify-end items-center w-full">
-              <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
-                {event.price !== null ? `od ${event.price} ${event.currency || "PLN"}` : "Cena N/A"}
-              </span>
-            </div>
-            {event.price !== null && event.start_date && (
-              <div className="flex flex-row justify-end items-center w-full h-[22px]">
-                <span className="text-m-sunscript-font md:text-sub-descript-18 text-gray-400 text-right flex-grow">
-                  {calculatePricePerDay(event.price, event.start_date, event.end_date)}
+          {!!event.price && event.price > 0 ? (
+            <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
+              <div className="flex flex-row justify-end items-center w-full">
+                <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
+                  {event.price !== null
+                    ? `od ${event.price} ${event.currency || "PLN"}`
+                    : "Cena N/A"}
                 </span>
               </div>
-            )}
-          </div>
+              {event.start_date && (
+                <div className="flex flex-row justify-end items-center w-full h-[22px]">
+                  <span className="text-m-sunscript-font md:text-sub-descript-18 text-gray-400 text-right flex-grow">
+                    {calculatePricePerDay(event.price, event.start_date, event.end_date)}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

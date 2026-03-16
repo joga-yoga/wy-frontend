@@ -30,7 +30,7 @@ export const retreatFormSchema = yup
     }),
     price: yup
       .number()
-      .positive("Cena musi być dodatnia")
+      // .positive("Cena musi być dodatnia")
       .when("is_public", {
         is: true,
         then: (schema) => schema.required("Cena jest wymagana dla wydarzeń publicznych."),

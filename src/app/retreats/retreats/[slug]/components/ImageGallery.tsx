@@ -1,14 +1,17 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { DynamicCloudinaryImage } from "@/components/custom/DynamicCloudinaryImage";
 import CustomGalleryIcon from "@/components/icons/CustomGalleryIcon";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import useWindowWidth from "@/hooks/useWindowWidth";
 import { cn } from "@/lib/utils";
+
+const SINGLE_VIEW_PRELOAD_AHEAD = 3;
 
 interface ImageGalleryProps {
   image_ids: string[];
@@ -21,27 +24,47 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "single">("grid");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isSingleImageLoading, setIsSingleImageLoading] = useState(false);
+  const preloadedImageIdsRef = useRef(new Set<string>());
+
+  const markImageAsLoaded = useCallback((imageId?: string) => {
+    if (!imageId) return;
+    preloadedImageIdsRef.current.add(imageId);
+  }, []);
+
+  const setSingleImageIndex = useCallback(
+    (index: number) => {
+      const nextImageId = image_ids[index];
+
+      setActiveIndex(index);
+      setIsSingleImageLoading(
+        Boolean(nextImageId) && !preloadedImageIdsRef.current.has(nextImageId),
+      );
+    },
+    [image_ids],
+  );
 
   const openGrid = () => {
     setViewMode("grid");
     setIsFullScreen(true);
+    setIsSingleImageLoading(false);
   };
 
   const openSingleAt = (index: number) => {
-    setActiveIndex(index);
+    setSingleImageIndex(index);
     setViewMode("single");
     setIsFullScreen(true);
   };
 
   const showPrev = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + image_ids.length) % image_ids.length);
-  }, [image_ids.length]);
+    setSingleImageIndex((activeIndex - 1 + image_ids.length) % image_ids.length);
+  }, [activeIndex, image_ids.length, setSingleImageIndex]);
 
   const showNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % image_ids.length);
-  }, [image_ids.length]);
+    setSingleImageIndex((activeIndex + 1) % image_ids.length);
+  }, [activeIndex, image_ids.length, setSingleImageIndex]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (image_ids.length === 0) {
       setColumns(0);
       return;
@@ -63,7 +86,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
     setColumns(Math.min(responsiveColumns, image_ids.length));
   }, [windowWidth, image_ids.length]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isFullScreen || viewMode !== "single") return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") showPrev();
@@ -73,6 +96,33 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [isFullScreen, viewMode, showPrev, showNext]);
+
+  useEffect(() => {
+    if (!isFullScreen || viewMode !== "single") return;
+
+    const preloadCount = Math.min(SINGLE_VIEW_PRELOAD_AHEAD, Math.max(image_ids.length - 1, 0));
+
+    for (let offset = 1; offset <= preloadCount; offset += 1) {
+      const nextImageId = image_ids[(activeIndex + offset) % image_ids.length];
+
+      if (!nextImageId || preloadedImageIdsRef.current.has(nextImageId)) continue;
+
+      const preloadImage = new window.Image();
+      preloadImage.decoding = "async";
+      preloadImage.src = getImageUrl(nextImageId);
+      preloadImage.onload = () => {
+        preloadedImageIdsRef.current.add(nextImageId);
+      };
+      preloadImage.onerror = () => {
+        preloadedImageIdsRef.current.delete(nextImageId);
+      };
+    }
+  }, [activeIndex, image_ids, isFullScreen, viewMode]);
+
+  useEffect(() => {
+    if (viewMode === "single" && isFullScreen) return;
+    setIsSingleImageLoading(false);
+  }, [isFullScreen, viewMode]);
 
   const columnClasses: { [key: number]: string } = {
     1: "w-1/1",
@@ -213,12 +263,28 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
         {viewMode === "single" && (
           <div className="relative w-full flex-1 flex items-center justify-center">
             <div className="relative w-full h-[75dvh] md:h-[80dvh]">
+              {isSingleImageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-[16px] bg-gray-100">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-gray-500" />
+                </div>
+              )}
+
               <DynamicCloudinaryImage
+                key={image_ids[activeIndex]}
                 imageId={image_ids[activeIndex]}
                 alt={`Gallery image ${activeIndex + 1}`}
-                // fill
-                className="rounded-[16px] object-contain max-w-full max-h-full h-auto w-full relative"
+                className={cn(
+                  "rounded-[16px] object-contain max-w-full max-h-full h-auto w-full relative transition-opacity duration-150",
+                  isSingleImageLoading && "opacity-0",
+                )}
                 containerClass="h-full flex justify-center items-center"
+                onLoad={() => {
+                  markImageAsLoaded(image_ids[activeIndex]);
+                  setIsSingleImageLoading(false);
+                }}
+                onError={() => {
+                  setIsSingleImageLoading(false);
+                }}
               />
             </div>
 
