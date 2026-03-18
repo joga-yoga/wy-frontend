@@ -2,16 +2,20 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { jwtDecode } from "jwt-decode";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import LogoTransparentSmall from "@/components/icons/LogoTransparentSmall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { getLoginLogoHref, saveReturnContext } from "@/lib/auth/returnContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const resetPasswordSchema = z.object({
@@ -26,7 +30,11 @@ function ResetPasswordForm() {
   const { toast } = useToast();
   const { storeToken } = useAuth();
   const [email, setEmail] = useState("");
+  const [logoHref, setLogoHref] = useState("/");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const token = searchParams.get("token");
+  const returnTo = searchParams.get("return_to");
+  const spokeNext = searchParams.get("spoke_next");
 
   const {
     register,
@@ -35,6 +43,11 @@ function ResetPasswordForm() {
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
   });
+
+  useEffect(() => {
+    saveReturnContext(returnTo, spokeNext);
+    setLogoHref(getLoginLogoHref());
+  }, [returnTo, spokeNext]);
 
   useEffect(() => {
     if (token) {
@@ -95,32 +108,57 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100svh] px-4">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md w-full">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Zresetuj hasło</h1>
-          {email && (
-            <p className="text-sm text-muted-foreground">
-              Resetowanie hasła dla konta{" "}
-              <span className="font-medium text-foreground">{email}</span>
-            </p>
-          )}
-        </div>
-
+    <div className="flex flex-col items-center justify-start min-h-[100svh] px-4">
+      <div className="py-10 pb-[100px]">
+        <Link href={logoHref}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-600 text-xl shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] md:h-16 md:w-16 md:text-h-middle">
+            <LogoTransparentSmall className="h-10 w-10 text-white md:h-16 md:w-16" />
+          </div>
+        </Link>
+      </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md w-full">
+        <h1 className="text-2xl font-bold text-center">Zaktualizuj hasło</h1>
+        {email && (
+          <p className="text-sm text-muted-foreground">
+            Resetowanie hasła dla konta <span className="font-medium text-foreground">{email}</span>
+          </p>
+        )}
         <div className="space-y-2">
-          <Input
-            type="password"
-            placeholder="Nowe hasło"
-            {...register("newPassword")}
-            required
-            className="h-10"
-          />
+          <Label htmlFor="reset-password">Nowe hasło</Label>
+          <div className="relative">
+            <Input
+              id="reset-password"
+              type={isPasswordVisible ? "text" : "password"}
+              placeholder="Nowe hasło"
+              {...register("newPassword")}
+              required
+              className="h-10 pr-20"
+            />
+            <button
+              type="button"
+              onClick={() => setIsPasswordVisible((value) => !value)}
+              className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground hover:text-foreground"
+              aria-label={isPasswordVisible ? "Ukryj hasło" : "Pokaż hasło"}
+            >
+              {isPasswordVisible ? (
+                <>
+                  <EyeOff className="mr-1 h-4 w-4" />
+                  Ukryj
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-1 h-4 w-4" />
+                  Pokaż
+                </>
+              )}
+            </button>
+          </div>
           {errors.newPassword && (
             <p className="text-sm text-destructive">{errors.newPassword.message}</p>
           )}
         </div>
-        <Button type="submit" className="w-full h-10" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Zmień hasło"}
+        <Button type="submit" className="w-full h-10 hover:bg-gray-800" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="animate-spin" /> : "Zaktualizuj"}
         </Button>
       </form>
     </div>

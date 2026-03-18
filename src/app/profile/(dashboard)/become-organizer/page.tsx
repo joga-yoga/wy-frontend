@@ -1,73 +1,119 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-const schema = z.object({
-  name: z.string().min(1, "Nazwa jest wymagana"),
+const detailsSchema = z.object({
+  name: z.string().trim().min(1, "Nazwa jest wymagana"),
   description: z.string().optional(),
-  phoneNumber: z.string().min(10, "Wymagany jest prawidłowy numer telefonu"),
-  verificationCode: z
-    .string()
-    .min(6, "Kod weryfikacyjny jest wymagany")
-    .max(6, "Kod weryfikacyjny musi mieć 6 cyfr"),
+  phoneNumber: z.string().trim().min(1, "Numer telefonu jest wymagany"),
   image: z.any().optional(),
+  verificationCode: z.string().optional(),
 });
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<typeof detailsSchema>;
+type Step = "details" | "verification";
+
+function normalizePhoneNumber(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return { normalized: null, error: "Numer telefonu jest wymagany." };
+  }
+
+  let sanitized = trimmed.replace(/[\s\-()]/g, "");
+  if (sanitized.startsWith("00")) {
+    sanitized = `+${sanitized.slice(2)}`;
+  }
+
+  if (sanitized.startsWith("+")) {
+    if (!/^\+\d{8,15}$/.test(sanitized)) {
+      return {
+        normalized: null,
+        error: "Podaj prawidłowy numer telefonu, np. +48 501 234 567.",
+      };
+    }
+
+    return { normalized: sanitized, error: null };
+  }
+
+  const digitsOnly = sanitized.replace(/\D/g, "");
+
+  if (/^\d{9}$/.test(digitsOnly)) {
+    return { normalized: `+48${digitsOnly}`, error: null };
+  }
+
+  if (/^48\d{9}$/.test(digitsOnly)) {
+    return { normalized: `+${digitsOnly}`, error: null };
+  }
+
+  return {
+    normalized: null,
+    error: "Podaj prawidłowy numer telefonu, np. 501 234 567 lub +48 501 234 567.",
+  };
+}
+
+function validateVerificationCode(value?: string) {
+  const code = (value ?? "").trim();
+
+  if (!code) {
+    return "Kod weryfikacyjny jest wymagany.";
+  }
+
+  if (!/^\d{6}$/.test(code)) {
+    return "Kod weryfikacyjny musi mieć 6 cyfr.";
+  }
+
+  return null;
+}
 
 export default function BecomeOrganizerPage() {
   const router = useRouter();
   const { toast } = useToast();
+
+  const [step, setStep] = useState<Step>("details");
   const [isSendingCode, setIsSendingCode] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
+  const [verificationPhoneNumber, setVerificationPhoneNumber] = useState<string | null>(null);
   const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const [highlightSendCodeButton, setHighlightSendCodeButton] = useState(false);
 
   const {
+    control,
     register,
+    trigger,
     handleSubmit,
     watch,
-    trigger,
     setError,
+    clearErrors,
     setValue,
     getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(detailsSchema),
     mode: "onBlur",
+    defaultValues: {
+      name: "",
+      description: "",
+      phoneNumber: "",
+      verificationCode: "",
+      image: undefined,
+    },
   });
 
-  const phoneNumberValue = watch("phoneNumber");
   const imageFile = watch("image");
-
-  useEffect(() => {
-    setCodeSent(false);
-    setHighlightSendCodeButton(false);
-  }, [phoneNumberValue]);
-
-  useEffect(() => {
-    const file = imageFile?.[0];
-    if (file instanceof File) {
-      const newPreviewUrl = URL.createObjectURL(file);
-      setImagePreviewUrl(newPreviewUrl);
-      return () => URL.revokeObjectURL(newPreviewUrl);
-    } else {
-      setImagePreviewUrl(null);
-    }
-  }, [imageFile]);
+  const phoneNumberValue = watch("phoneNumber");
 
   useEffect(() => {
     axiosInstance
@@ -88,15 +134,17 @@ export default function BecomeOrganizerPage() {
       });
   }, [router, toast]);
 
-  const handleImageSelected = useCallback(
+  const handleImageUpload = useCallback(
     async (file: File) => {
       setIsUploadingImage(true);
       const imageFormData = new FormData();
       imageFormData.append("image", file);
+
       try {
         const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
         setUploadedImageId(response.data.image_id);
-        toast({ description: "Obraz został pomyślnie przesłany." });
+        clearErrors("image");
+        toast({ description: "Zdjęcie zostało przesłane pomyślnie." });
       } catch (err: any) {
         setUploadedImageId(null);
         setValue("image", null);
@@ -110,230 +158,388 @@ export default function BecomeOrganizerPage() {
         setIsUploadingImage(false);
       }
     },
-    [toast, setValue],
+    [clearErrors, setValue, toast],
   );
 
   useEffect(() => {
     const file = imageFile?.[0];
+
     if (file instanceof File) {
-      handleImageSelected(file);
+      const newPreview = URL.createObjectURL(file);
+      setUploadedImageId(null);
+      setImagePreviewUrl((currentPreview) => {
+        if (currentPreview) {
+          URL.revokeObjectURL(currentPreview);
+        }
+
+        return newPreview;
+      });
+      handleImageUpload(file);
     } else {
+      setImagePreviewUrl((currentPreview) => {
+        if (currentPreview) {
+          URL.revokeObjectURL(currentPreview);
+        }
+
+        return null;
+      });
       setUploadedImageId(null);
     }
-  }, [imageFile, handleImageSelected]);
+  }, [handleImageUpload, imageFile]);
 
-  async function handleSendCode() {
-    const isValid = await trigger("phoneNumber");
-    if (!isValid) {
-      toast({ description: "Wprowadź prawidłowy numer telefonu.", variant: "destructive" });
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
+  useEffect(() => {
+    if (step === "verification") {
+      const { normalized } = normalizePhoneNumber(phoneNumberValue ?? "");
+      setVerificationPhoneNumber(normalized);
       return;
     }
 
+    setValue("verificationCode", "");
+    clearErrors("verificationCode");
+  }, [clearErrors, phoneNumberValue, setValue, step]);
+
+  function handleRemoveImage() {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+
+    setImagePreviewUrl(null);
+    setUploadedImageId(null);
+    setValue("image", null, { shouldDirty: true });
+    setError("image", {
+      type: "manual",
+      message: "Dodaj zdjęcie organizatora, aby przejść do weryfikacji.",
+    });
+  }
+
+  async function sendVerificationCode(normalizedPhoneNumber: string) {
     setIsSendingCode(true);
+
     try {
       await axiosInstance.post("/organizer/send-verification-code", {
-        phone_number: phoneNumberValue,
+        phone_number: normalizedPhoneNumber,
       });
-      setCodeSent(true);
-      setHighlightSendCodeButton(false);
+
+      setVerificationPhoneNumber(normalizedPhoneNumber);
       toast({ description: "Kod weryfikacyjny został wysłany na Twój telefon." });
+      return true;
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||
         "Nie udało się wysłać kodu weryfikacyjnego. Sprawdź numer i spróbuj ponownie.";
+
       setError("phoneNumber", { type: "manual", message: errorMsg });
       toast({ description: errorMsg, variant: "destructive" });
+      return false;
     } finally {
       setIsSendingCode(false);
     }
   }
 
-  async function onSubmit(data: FormData) {
-    const payload: {
-      name: string;
-      description?: string;
-      phone_number: string;
-      verification_code: string;
-      image_id?: string;
-    } = {
-      name: data.name,
-      phone_number: data.phoneNumber,
-      verification_code: data.verificationCode,
-    };
+  async function handleContinueToVerification(data: FormData) {
+    clearErrors("phoneNumber");
+    clearErrors("image");
 
-    if (data.description) {
-      payload.description = data.description;
+    const isValid = await trigger(["name", "phoneNumber"]);
+    if (!isValid) {
+      return;
     }
-    if (uploadedImageId) {
-      payload.image_id = uploadedImageId;
-    } else if (data.image?.[0] && !uploadedImageId && !isUploadingImage) {
+
+    const phoneResult = normalizePhoneNumber(data.phoneNumber);
+    if (!phoneResult.normalized) {
+      setError("phoneNumber", { type: "manual", message: phoneResult.error ?? "Błędny numer." });
+      return;
+    }
+
+    if (!imageFile?.[0] && !uploadedImageId) {
+      setError("image", {
+        type: "manual",
+        message: "Dodaj zdjęcie organizatora, aby przejść do weryfikacji.",
+      });
+      return;
+    }
+
+    if (isUploadingImage || !uploadedImageId) {
       toast({
-        title: "Obraz nie został przesłany",
-        description: "Poczekaj na przesłanie obrazu lub wyczyść zaznaczenie.",
+        title: "Poczekaj na zdjęcie",
+        description: "Przesyłanie zdjęcia wciąż trwa. Spróbuj ponownie za chwilę.",
         variant: "destructive",
       });
       return;
     }
 
+    const wasSent = await sendVerificationCode(phoneResult.normalized);
+    if (!wasSent) {
+      return;
+    }
+
+    setStep("verification");
+  }
+
+  async function handleResendCode() {
+    const currentPhone = getValues("phoneNumber");
+    const phoneResult = normalizePhoneNumber(currentPhone);
+
+    if (!phoneResult.normalized) {
+      setStep("details");
+      setError("phoneNumber", {
+        type: "manual",
+        message: phoneResult.error ?? "Podaj prawidłowy numer telefonu.",
+      });
+      return;
+    }
+
+    await sendVerificationCode(phoneResult.normalized);
+  }
+
+  async function handleCreateOrganizer(data: FormData) {
+    clearErrors("verificationCode");
+
+    const verificationError = validateVerificationCode(data.verificationCode);
+    if (verificationError) {
+      setError("verificationCode", { type: "manual", message: verificationError });
+      return;
+    }
+
+    const phoneResult = normalizePhoneNumber(data.phoneNumber);
+    if (!phoneResult.normalized) {
+      setStep("details");
+      setError("phoneNumber", {
+        type: "manual",
+        message: phoneResult.error ?? "Podaj prawidłowy numer telefonu.",
+      });
+      return;
+    }
+
+    if (!uploadedImageId) {
+      setStep("details");
+      setError("image", {
+        type: "manual",
+        message: "Dodaj zdjęcie organizatora, aby zakończyć rejestrację.",
+      });
+      return;
+    }
+
     try {
-      await axiosInstance.post("/organizer", payload);
+      await axiosInstance.post("/organizer", {
+        name: data.name,
+        description: data.description || undefined,
+        phone_number: phoneResult.normalized,
+        verification_code: data.verificationCode?.trim(),
+        image_id: uploadedImageId,
+      });
+
       toast({ description: "Jesteś teraz organizatorem! Przekierowywanie..." });
       router.replace(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||
         "Nie udało się zostać organizatorem. Sprawdź wprowadzone dane i spróbuj ponownie.";
+
       toast({ description: errorMsg, variant: "destructive" });
+
       if (errorMsg.toLowerCase().includes("verification code")) {
-        setError("verificationCode", { type: "manual", message: "Nieprawidłowy lub wygasły kod." });
+        setError("verificationCode", {
+          type: "manual",
+          message: "Nieprawidłowy lub wygasły kod.",
+        });
       }
+
       if (errorMsg.toLowerCase().includes("phone number is already associated")) {
+        setStep("details");
         setError("phoneNumber", {
           type: "manual",
           message: "Ten numer telefonu jest już używany.",
         });
-        setCodeSent(false);
       }
     }
   }
 
-  const handleInvalidSubmit = (formErrors: typeof errors) => {
-    const currentValues = getValues();
-    if (
-      currentValues.name &&
-      currentValues.phoneNumber &&
-      !codeSent &&
-      formErrors.verificationCode &&
-      !formErrors.name &&
-      !formErrors.phoneNumber
-    ) {
-      toast({
-        title: "Nie wysłano kodu weryfikacyjnego",
-        description: "Najpierw wyślij kod weryfikacyjny na swój telefon.",
-        variant: "destructive",
-      });
-      setHighlightSendCodeButton(true);
-    }
-  };
-
   return (
-    <div className="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold mb-6 text-center">Zostań Organizatorem</h1>
-      <form onSubmit={handleSubmit(onSubmit, handleInvalidSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Nazwa Organizatora *
-          </label>
-          <Input
-            id="name"
-            placeholder="Nazwa Twojego organizatora lub firmy"
-            {...register("name")}
-            aria-invalid={errors.name ? "true" : "false"}
-          />
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+    <div className="mx-auto max-w-xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
+        <div className="mb-8 space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">
+            {step === "details" ? "Krok 1 z 2" : "Krok 2 z 2"}
+          </p>
+          <h1 className="text-2xl font-bold text-center sm:text-left">Zostań organizatorem</h1>
+          <p className="text-sm text-muted-foreground">
+            {step === "details"
+              ? "Uzupełnij dane organizatora i dodaj zdjęcie. Po tym wyślemy SMS z kodem weryfikacyjnym."
+              : "Potwierdź numer telefonu kodem z SMS-a, aby dokończyć tworzenie profilu organizatora."}
+          </p>
         </div>
 
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Opis
-          </label>
-          <Textarea
-            id="description"
-            placeholder="Opowiedz nam trochę o swojej organizacji"
-            {...register("description")}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-            Numer Telefonu *
-          </label>
-          <div className="flex items-center space-x-2">
-            <Input
-              id="phoneNumber"
-              type="tel"
-              placeholder="np. +48123456789 (z kodem kraju)"
-              {...register("phoneNumber")}
-              aria-invalid={errors.phoneNumber ? "true" : "false"}
-              className="flex-grow"
-            />
-            <Button
-              type="button"
-              onClick={handleSendCode}
-              disabled={
-                isSendingCode || !phoneNumberValue || !!errors.phoneNumber || isUploadingImage
-              }
-              variant="outline"
-              size="sm"
-              className={
-                highlightSendCodeButton ? "border-2 border-brand-green animate-pulse-border" : ""
-              }
-            >
-              {isSendingCode ? "Wysyłanie..." : codeSent ? "Wyślij kod ponownie" : "Wyślij Kod"}
-            </Button>
-          </div>
-          {errors.phoneNumber && (
-            <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
-          )}
-        </div>
-
-        {codeSent && (
-          <div>
-            <label
-              htmlFor="verificationCode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Kod Weryfikacyjny *
-            </label>
-            <Input
-              id="verificationCode"
-              placeholder="6-cyfrowy kod"
-              {...register("verificationCode")}
-              maxLength={6}
-              aria-invalid={errors.verificationCode ? "true" : "false"}
-            />
-            {errors.verificationCode && (
-              <p className="text-red-500 text-sm mt-1">{errors.verificationCode.message}</p>
-            )}
-          </div>
-        )}
-
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-            Logo / Obraz
-          </label>
-          <Input
-            id="image"
-            type="file"
-            {...register("image")}
-            accept="image/*"
-            disabled={isUploadingImage}
-          />
-          {isUploadingImage && <p className="text-sm text-blue-500 mt-1">Przesyłanie obrazu...</p>}
-          {!isUploadingImage && uploadedImageId && (
-            <p className="text-sm text-green-500 mt-1">Obraz został pomyślnie przesłany.</p>
-          )}
-          {imagePreviewUrl && (
-            <div className="mt-2">
-              <Image
-                src={imagePreviewUrl}
-                alt="Podgląd obrazu"
-                width={100}
-                height={100}
-                className="rounded object-cover"
-              />
-            </div>
-          )}
-        </div>
-
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting || isSendingCode || isUploadingImage}
+        <form
+          onSubmit={
+            step === "details"
+              ? handleSubmit(handleContinueToVerification)
+              : handleSubmit(handleCreateOrganizer)
+          }
+          className="space-y-6"
         >
-          {isSubmitting ? "Przesyłanie..." : "Złóż Wniosek"}
-        </Button>
-      </form>
+          {step === "details" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nazwa organizatora *</Label>
+                <Input
+                  id="name"
+                  placeholder="Nazwa Twojego organizatora lub firmy"
+                  {...register("name")}
+                  aria-invalid={errors.name ? "true" : "false"}
+                />
+                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Opis</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Opowiedz nam trochę o swojej organizacji"
+                  {...register("description")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Numer telefonu *</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="501 234 567 lub +48 501 234 567"
+                  {...register("phoneNumber")}
+                  aria-invalid={errors.phoneNumber ? "true" : "false"}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Domyślnie obsługujemy numery polskie. Możesz też wpisać numer międzynarodowy z
+                  kodem kraju.
+                </p>
+                {errors.phoneNumber && (
+                  <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label>Zdjęcie organizatora *</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Dodaj logo lub zdjęcie profilowe. Jest wymagane przed przejściem do weryfikacji.
+                  </p>
+                </div>
+                <SingleImageUpload
+                  name="image"
+                  control={control}
+                  imagePreviewUrl={imagePreviewUrl}
+                  existingImageId={uploadedImageId}
+                  isUploading={isUploadingImage}
+                  onRemove={handleRemoveImage}
+                  disabled={isSendingCode || isSubmitting}
+                />
+                {isUploadingImage && (
+                  <p className="text-sm text-blue-500">Przesyłanie zdjęcia...</p>
+                )}
+                {!isUploadingImage && uploadedImageId && (
+                  <p className="text-sm text-green-600">Zdjęcie zostało przesłane.</p>
+                )}
+                {errors.image && (
+                  <p className="text-sm text-destructive">{String(errors.image.message ?? "")}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting || isSendingCode || isUploadingImage}
+              >
+                {isSendingCode ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wysyłanie kodu...
+                  </>
+                ) : (
+                  "Przejdź do weryfikacji"
+                )}
+              </Button>
+            </>
+          )}
+
+          {step === "verification" && (
+            <>
+              <div className="rounded-xl border bg-muted/40 p-4">
+                <p className="text-sm text-muted-foreground">Kod wysłaliśmy na numer</p>
+                <p className="font-medium">{verificationPhoneNumber}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="verificationCode">Kod weryfikacyjny *</Label>
+                <Input
+                  id="verificationCode"
+                  placeholder="Wpisz 6-cyfrowy kod"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  {...register("verificationCode")}
+                  aria-invalid={errors.verificationCode ? "true" : "false"}
+                />
+                {errors.verificationCode && (
+                  <p className="text-sm text-destructive">{errors.verificationCode.message}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setStep("details")}
+                  disabled={isSubmitting || isSendingCode}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zmień numer telefonu
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full sm:w-auto"
+                  onClick={handleResendCode}
+                  disabled={isSubmitting || isSendingCode}
+                >
+                  {isSendingCode ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wysyłanie...
+                    </>
+                  ) : (
+                    "Wyślij kod ponownie"
+                  )}
+                </Button>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting || isSendingCode || isUploadingImage}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Zapisywanie...
+                  </>
+                ) : (
+                  "Zostań organizatorem"
+                )}
+              </Button>
+            </>
+          )}
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { IoArrowBack, IoEye, IoEyeOff, IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { z } from "zod";
 
 import LogoFacebook from "@/components/icons/logos/LogoFacebook";
@@ -13,6 +14,8 @@ import LogoGoogle from "@/components/icons/logos/LogoGoogle";
 import LogoTransparentSmall from "@/components/icons/LogoTransparentSmall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getLoginLogoHref, saveReturnContext } from "@/lib/auth/returnContext";
@@ -39,6 +42,8 @@ export function LoginPage() {
   const [debugRedirectTo, setDebugRedirectTo] = useState<string | null>(null);
   const [isAutoRedirecting, setIsAutoRedirecting] = useState(false);
   const [logoHref, setLogoHref] = useState("/");
+  const [isLoginPasswordVisible, setIsLoginPasswordVisible] = useState(false);
+  const [isSignupPasswordVisible, setIsSignupPasswordVisible] = useState(false);
   const hasAutoRedirected = useRef(false);
   const returnTo = searchParams.get("return_to");
   const stayOnSpoke = searchParams.get("stay_on_spoke");
@@ -110,9 +115,19 @@ export function LoginPage() {
   });
 
   // New form for forgot password (using emailSchema)
-  const { register: registerForgot, handleSubmit: handleForgotSubmit } = useForm({
+  const {
+    register: registerForgot,
+    handleSubmit: handleForgotSubmit,
+    reset: resetForgotForm,
+  } = useForm({
     resolver: zodResolver(emailSchema),
   });
+
+  useEffect(() => {
+    if (step === "forgot") {
+      resetForgotForm({ email: "" });
+    }
+  }, [resetForgotForm, step]);
 
   async function onSubmitEmail(data: { email: string }) {
     setEmailValue(data.email);
@@ -192,6 +207,7 @@ export function LoginPage() {
 
   async function onSubmitForgot(data: { email: string }) {
     try {
+      setEmailValue(data.email);
       await axiosInstance.post("/forgot-password", { email: data.email });
       // toast({
       //   description: "If this email is registered and verified, a reset link has been sent.",
@@ -206,13 +222,13 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-[100svh] px-4">
+    <div className="flex flex-col items-center justify-start min-h-[100svh] px-4">
       {isAutoRedirecting && (
         <div className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-center justify-center">
           <div className="text-sm md:text-base">Przekierowanie...</div>
         </div>
       )}
-      <div className="py-10">
+      <div className="py-10 pb-[100px]">
         <Link href={logoHref}>
           <div className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] text-xl md:text-h-middle bg-gray-600">
             <LogoTransparentSmall className={`w-10 h-10 md:w-16 md:h-16 text-white`} />
@@ -221,26 +237,35 @@ export function LoginPage() {
       </div>
       {step === "email" && (
         <form onSubmit={handleEmailSubmit(onSubmitEmail)} className="space-y-4 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-center pb-2">Utwórz konto lub zaloguj się</h1>
-          <Input
-            placeholder="Wprowadź e-mail"
-            {...registerEmail("email")}
-            className="h-10"
-            type="email"
-          />
+          <h1 className="text-2xl font-bold text-center pb-2">Zaloguj się lub zarejestruj</h1>
+          <div className="space-y-2">
+            <Label htmlFor="auth-email">Adres e-mail</Label>
+            <Input
+              id="auth-email"
+              placeholder="Adres e-mail"
+              {...registerEmail("email")}
+              className="h-10"
+              type="email"
+            />
+          </div>
           <Button type="submit" className="w-full h-10 hover:bg-gray-800">
             Dalej
           </Button>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <Separator className="flex-1" />
+            <span>lub</span>
+            <Separator className="flex-1" />
+          </div>
           <Link href={googleAuthHref} className="block">
             <Button className="w-full relative h-10" variant="outline" type="button">
               <LogoGoogle className="h-6 w-6 size-6 absolute left-4" />
-              <span>Kontynuuj z Google</span>
+              <span>Kontynuuj, używając Google</span>
             </Button>
           </Link>
           <Link href={facebookAuthHref} className="block">
             <Button className="w-full relative h-10" variant="outline" type="button">
               <LogoFacebook className="h-6 w-6 size-6 absolute left-4" />
-              <span>Kontynuuj z Facebook</span>
+              <span>Kontynuuj, używając Facebooka</span>
             </Button>
           </Link>
         </form>
@@ -251,45 +276,68 @@ export function LoginPage() {
           onSubmit={handlePasswordSubmit(onSubmitPasswordLogin)}
           className="space-y-4 max-w-md w-full"
         >
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setStep("email")}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {/* Wstecz */}
-          </Button>
-          <h1 className="text-2xl font-bold text-center">Witamy ponownie</h1>
-          <Input
-            placeholder="Twój e-mail"
-            defaultValue={emailValue}
-            readOnly
-            autoComplete="username"
-          />
-          <Input type="password" placeholder="Twoje hasło" {...registerPassword("password")} />
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              type="button"
+              onClick={() => setStep("email")}
+              className="flex items-center gap-2"
+            >
+              <IoArrowBack className="w-4 h-4" />
+              {/* Wstecz */}
+            </Button>
+            <h1 className="text-2xl font-bold text-center">Witamy ponownie</h1>
+            <div aria-hidden="true" className="h-10 w-10" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="login-password">Hasło</Label>
+            <div className="relative">
+              <Input
+                id="login-password"
+                type={isLoginPasswordVisible ? "text" : "password"}
+                placeholder="Twoje hasło"
+                className="pr-20"
+                {...registerPassword("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setIsLoginPasswordVisible((value) => !value)}
+                className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-700 hover:text-foreground"
+                aria-label={isLoginPasswordVisible ? "Ukryj hasło" : "Pokaż hasło"}
+              >
+                {isLoginPasswordVisible ? (
+                  <>
+                    <IoEyeOffOutline className="mr-1 h-4 w-4" />
+                    Ukryj
+                  </>
+                ) : (
+                  <>
+                    <IoEyeOutline className="mr-1 h-4 w-4" />
+                    Pokaż
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
           <Button type="submit" className="w-full">
             Zaloguj się
           </Button>
-          {debugRedirectTo && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                window.location.href = debugRedirectTo;
-              }}
-            >
-              Continue Redirect (debug)
-            </Button>
-          )}
-          <div className="flex flex-col items-center mt-4">
-            <p className="text-center text-sm mt-2">
+          <div className="flex flex-col items-start">
+            <p className="text-center text-md font-medium underline mt-2">
               <span
-                className="text-gray-700 hover:underline cursor-pointer"
+                className="text-gray-800 hover:underline cursor-pointer"
                 onClick={() => setStep("forgot")}
               >
-                Zapomniałeś hasła?
+                Nie pamiętasz hasła?
+              </span>
+            </p>
+            <p className="text-center text-md font-medium underline mt-4">
+              <span
+                className="text-gray-800 hover:underline cursor-pointer"
+                onClick={() => setStep("email")}
+              >
+                Inne możliwości logowania
               </span>
             </p>
           </div>
@@ -302,45 +350,103 @@ export function LoginPage() {
           className="space-y-4 max-w-md w-full"
         >
           <h1 className="text-2xl font-bold text-center">Zarejestruj się</h1>
-          <Input
-            placeholder="Twój e-mail"
-            defaultValue={emailValue}
-            {...registerEmail("email")}
-            autoComplete="username"
-          />
-          <Input type="password" placeholder="Stwórz hasło" {...registerPassword("password")} />
+          <div className="space-y-2">
+            <Label htmlFor="signup-email">Adres e-mail</Label>
+            <Input
+              id="signup-email"
+              placeholder="Twój e-mail"
+              defaultValue={emailValue}
+              {...registerEmail("email")}
+              autoComplete="username"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-password">Hasło</Label>
+            <div className="relative">
+              <Input
+                id="signup-password"
+                type={isSignupPasswordVisible ? "text" : "password"}
+                placeholder="Stwórz hasło"
+                className="pr-20"
+                {...registerPassword("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setIsSignupPasswordVisible((value) => !value)}
+                className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground hover:text-foreground"
+                aria-label={isSignupPasswordVisible ? "Ukryj hasło" : "Pokaż hasło"}
+              >
+                {isSignupPasswordVisible ? (
+                  <>
+                    <EyeOff className="mr-1 h-4 w-4" />
+                    Ukryj
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-1 h-4 w-4" />
+                    Pokaż
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
           <Button type="submit" className="w-full">
             Zarejestruj się
           </Button>
-          <p
-            className="text-center text-sm mt-4 text-gray-700 hover:underline cursor-pointer"
-            onClick={() => setStep("email")}
-          >
-            Użyj innego konta
-          </p>
+          <div className="flex flex-col items-start">
+            <p className="text-center text-md font-medium underline mt-2">
+              <span
+                className="text-gray-800 hover:underline cursor-pointer"
+                onClick={() => setStep("email")}
+              >
+                Użyj innego konta
+              </span>
+            </p>
+          </div>
         </form>
       )}
 
       {step === "forgot" && (
         <form onSubmit={handleForgotSubmit(onSubmitForgot)} className="space-y-4 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-center">Zresetuj hasło</h1>
-          <Input
-            placeholder="Twój e-mail"
-            defaultValue={emailValue}
-            {...registerForgot("email")}
-            autoComplete="username"
-          />
-          <Button type="submit" className="w-full">
-            Wyślij link resetowania
-          </Button>
-          <p className="text-center text-sm mt-4">
-            <span
-              className="text-gray-700 hover:underline cursor-pointer"
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              type="button"
               onClick={() => setStep("login")}
+              className="flex items-center gap-2"
             >
-              Powrót do logowania
-            </span>
+              <IoArrowBack className="w-4 h-4" />
+              {/* Wstecz */}
+            </Button>
+            <h1 className="text-2xl font-bold text-center">Zresetuj hasło</h1>
+            <div aria-hidden="true" className="h-10 w-10" />
+          </div>
+          <p className="text-md">
+            Podaj adres e-mail powiązany z Twoim kontem, a prześlemy tam link do zmiany hasła.
           </p>
+          <div className="space-y-2">
+            <Label htmlFor="forgot-email">Adres e-mail</Label>
+            <Input
+              id="forgot-email"
+              placeholder="Twój e-mail"
+              {...registerForgot("email")}
+              autoComplete="username"
+            />
+          </div>
+          <Button type="submit" className="w-full">
+            Wyślij link resetujący
+          </Button>
+          <div className="flex flex-col items-start">
+            <p className="text-center text-md font-medium underline mt-2">
+              <span
+                className="text-gray-800 hover:underline cursor-pointer"
+                onClick={() => setStep("email")}
+              >
+                Powrót do logowania
+              </span>
+            </p>
+          </div>
         </form>
       )}
 
@@ -379,12 +485,11 @@ export function LoginPage() {
               bazie, wysłaliśmy na niego instrukcję resetowania hasła.
             </p>
           </div>
-          <Button variant="outline" className="w-full" onClick={() => setStep("login")}>
+          <Button variant="outline" className="w-full" onClick={() => setStep("email")}>
             Powrót do logowania
           </Button>
         </div>
       )}
-      <div className="w-full h-[120px] md:h-[144px]" />
     </div>
   );
 }
