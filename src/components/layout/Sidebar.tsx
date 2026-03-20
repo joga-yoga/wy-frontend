@@ -83,9 +83,8 @@ export const Sidebar = ({ className }: React.HTMLAttributes<HTMLElement>) => {
     ];
   }, [pathname]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    // Redirect is handled within signOut context function now
+  const handleSignOut = () => {
+    signOut();
   };
 
   return (

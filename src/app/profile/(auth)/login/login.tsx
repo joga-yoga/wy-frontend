@@ -48,7 +48,6 @@ export function LoginPage() {
   const returnTo = searchParams.get("return_to");
   const stayOnSpoke = searchParams.get("stay_on_spoke");
   const spokeNext = searchParams.get("spoke_next");
-  const debugAuth = searchParams.get("debug_auth") === "1";
 
   const ssoParams = new URLSearchParams();
   if (returnTo) ssoParams.set("return_to", returnTo);
@@ -148,6 +147,8 @@ export function LoginPage() {
   }
 
   async function onSubmitPasswordLogin(data: { password: string }) {
+    console.log("🚀 ~ onSubmitPasswordLogin ~ data:", data);
+
     try {
       const formData = new URLSearchParams();
       formData.append("username", emailValue);
@@ -157,21 +158,15 @@ export function LoginPage() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       const accessToken = response.data?.access_token;
+      console.log("🚀 ~ onSubmitPasswordLogin ~ accessToken:", accessToken);
       const redirectTo = response.data?.redirect_to || process.env.NEXT_PUBLIC_PROFILE_HOST;
+      console.log("🚀 ~ onSubmitPasswordLogin ~ redirectTo:", redirectTo);
 
       if (accessToken) {
         storeToken(accessToken);
       }
 
-      if (debugAuth) {
-        debugger;
-        setDebugRedirectTo(redirectTo);
-        toast({
-          description: "Debug mode: redirect paused. Inspect /login response and token.",
-        });
-        return;
-      }
-      window.location.href = redirectTo;
+      // window.location.href = redirectTo;
     } catch (error: any) {
       if (
         error.response &&

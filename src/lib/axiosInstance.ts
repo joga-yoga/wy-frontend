@@ -22,7 +22,6 @@ function resolveBaseUrl() {
 
 export const axiosInstance = axios.create({
   baseURL: resolveBaseUrl(),
-  withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use((config) => {

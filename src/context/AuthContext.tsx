@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
@@ -30,10 +31,37 @@ type AuthContextType = {
   refreshUser: () => Promise<void>;
   updateUserFromToken: () => void;
   storeToken: (token: string) => void;
-  signOut: () => Promise<void>;
+  signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function isUnauthorizedError(error: unknown) {
+  return error instanceof AxiosError && error.response?.status === 401;
+}
+
+function isIgnorableAuthRefreshError(error: unknown) {
+  if (error instanceof AxiosError) {
+    if (error.code === "ERR_CANCELED") {
+      return true;
+    }
+
+    if (!error.response) {
+      return true;
+    }
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("object may no longer exist") ||
+      message.includes("load failed") ||
+      message.includes("the network connection was lost")
+    );
+  }
+
+  return false;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -47,11 +75,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
     try {
       const response = await axiosInstance.get("/me");
       setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
     } catch (error) {
-      clearToken();
+      if (isUnauthorizedError(error)) {
+        clearToken();
+        return;
+      }
+
+      if (!isIgnorableAuthRefreshError(error)) {
+        console.error("Failed to refresh current user", error);
+      }
     }
   }, [clearToken]);
 
@@ -72,16 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               organizer: null,
             });
           }
+          await refreshUser();
         } catch (error) {
-          clearAuthStorage();
-          delete axios.defaults.headers.common["Authorization"];
-          if (isMounted) {
-            setUser(null);
-          }
+          clearToken();
         }
+      } else if (isMounted) {
+        setUser(null);
       }
-
-      await refreshUser();
 
       if (isMounted) {
         setLoading(false);
@@ -93,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [refreshUser]);
+  }, [clearToken, refreshUser]);
 
   function updateUserFromToken() {
     const token = localStorage.getItem("access_token");
@@ -121,23 +159,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUserFromToken();
   }
 
-  async function signOut() {
-    try {
-      await axiosInstance.post("/logout");
-    } catch (error) {
-      // Ignore network/logout errors and clear local auth state anyway.
-    } finally {
-      clearToken();
+  function signOut() {
+    clearToken();
 
-      const currentOrigin = window.location.origin;
-      const finalRedirect = process.env.NEXT_PUBLIC_PROFILE_HOST || currentOrigin;
-      const startUrl = buildGlobalLogoutStartUrl({
-        currentOrigin,
-        finalRedirect,
-      });
+    const currentOrigin = window.location.origin;
+    const finalRedirect = process.env.NEXT_PUBLIC_PROFILE_HOST || currentOrigin;
+    const startUrl = buildGlobalLogoutStartUrl({
+      currentOrigin,
+      finalRedirect,
+    });
 
-      window.location.href = startUrl;
-    }
+    console.log("[logout] signOut:start", {
+      currentOrigin,
+      finalRedirect,
+      startUrl,
+    });
+
+    window.location.assign(startUrl);
   }
 
   return (

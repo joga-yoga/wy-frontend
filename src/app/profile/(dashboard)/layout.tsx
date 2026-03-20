@@ -11,6 +11,7 @@ import { NavigationBlockerProvider } from "./components/EventForm/block-navigati
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  console.log("🚀 ~ ProfileLayout ~ LOGOUT user:", user);
   const router = useRouter();
 
   useEffect(() => {
