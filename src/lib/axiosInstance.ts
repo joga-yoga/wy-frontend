@@ -22,9 +22,14 @@ function resolveBaseUrl() {
 
 export const axiosInstance = axios.create({
   baseURL: resolveBaseUrl(),
+  withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use((config) => {
+  if (typeof window === "undefined") {
+    return config;
+  }
+
   const token = localStorage.getItem("access_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 import { buildGlobalLogoutStartUrl, clearAuthStorage } from "@/lib/auth/logoutChain";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -40,41 +40,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        setUser({
-          id: decoded.sub,
-          email: decoded.email,
-          name: decoded.name,
-          organizer: null,
-        });
-        refreshUser();
-      } catch (error) {
-        setUser(null);
-      }
-    }
-    setLoading(false);
+  const clearToken = useCallback(() => {
+    clearAuthStorage();
+    delete axios.defaults.headers.common["Authorization"];
+    setUser(null);
   }, []);
 
-  async function refreshUser() {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      setUser(null);
-      return;
-    }
-
+  const refreshUser = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get("/me");
       setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
     } catch (error) {
       clearToken();
     }
-  }
+  }, [clearToken]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (token) {
+        try {
+          const decoded: any = jwtDecode(token);
+          if (isMounted) {
+            setUser({
+              id: decoded.sub,
+              email: decoded.email,
+              name: decoded.name,
+              organizer: null,
+            });
+          }
+        } catch (error) {
+          clearAuthStorage();
+          delete axios.defaults.headers.common["Authorization"];
+          if (isMounted) {
+            setUser(null);
+          }
+        }
+      }
+
+      await refreshUser();
+
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshUser]);
 
   function updateUserFromToken() {
     const token = localStorage.getItem("access_token");
@@ -119,12 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       window.location.href = startUrl;
     }
-  }
-
-  function clearToken() {
-    clearAuthStorage();
-    delete axios.defaults.headers.common["Authorization"];
-    setUser(null);
   }
 
   return (
