@@ -122,7 +122,6 @@ export default function Calendar({ startDateFrom, startDateTo, onDateSelect }: C
     </svg>
   );
 
-  console.log("🚀 ~ defaultClassNames:", defaultClassNames);
   const calendarClassNames = {
     month:
       "bg-white rounded-2xl shadow-[0px_3px_8px_rgba(0,0,0,0.12),0px_6px_16px_rgba(0,0,0,0.08)]  p-2",

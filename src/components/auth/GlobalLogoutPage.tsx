@@ -27,14 +27,7 @@ function LogoutContent() {
     const visitedKey = `logout-visited:${cid}:${currentOrigin}`;
     let resolvedTarget = final;
 
-    if (sessionStorage.getItem(visitedKey)) {
-      console.log("[logout] already-visited", {
-        currentOrigin,
-        cid,
-        visitedKey,
-        final,
-      });
-    } else {
+    if (!sessionStorage.getItem(visitedKey)) {
       sessionStorage.setItem(visitedKey, "1");
 
       if (next) {
@@ -42,20 +35,11 @@ function LogoutContent() {
           const decoded = decodeURIComponent(next);
           const allowed = isAllowedLogoutTarget(decoded);
 
-          console.log("[logout] evaluating-next", {
-            currentOrigin,
-            cid,
-            rawNext: next,
-            decodedNext: decoded,
-            allowed,
-            final,
-          });
-
           if (allowed) {
             resolvedTarget = decoded;
           }
         } catch (error) {
-          console.log("[logout] malformed-next", {
+          console.error("[logout] malformed-next", {
             currentOrigin,
             cid,
             rawNext: next,
@@ -66,39 +50,11 @@ function LogoutContent() {
       }
     }
 
-    if (resolvedTarget === final && (!next || !isAllowedLogoutTarget(resolvedTarget))) {
-      console.log("[logout] fallback-final", {
-        currentOrigin,
-        cid,
-        rawNext: next,
-        final,
-      });
-    }
-
-    console.log("[logout] page-enter", {
-      currentOrigin,
-      cid,
-      rawNext: next,
-      final,
-      target: resolvedTarget,
-    });
-
     clearAuthStorage();
     delete axios.defaults.headers.common["Authorization"];
     setTarget(resolvedTarget);
 
-    console.log("[logout] storage-cleared", {
-      currentOrigin,
-      cid,
-      target: resolvedTarget,
-    });
-
     const timeoutId = window.setTimeout(() => {
-      console.log("[logout] redirecting", {
-        currentOrigin,
-        cid,
-        target: resolvedTarget,
-      });
       window.location.replace(resolvedTarget);
     }, REDIRECT_DELAY_MS);
 

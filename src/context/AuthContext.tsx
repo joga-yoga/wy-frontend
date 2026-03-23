@@ -1,7 +1,6 @@
 import axios from "axios";
 import { AxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
-import { useRouter } from "next/navigation";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 import { buildGlobalLogoutStartUrl, clearAuthStorage } from "@/lib/auth/logoutChain";
@@ -66,7 +65,6 @@ function isIgnorableAuthRefreshError(error: unknown) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter();
 
   const clearToken = useCallback(() => {
     clearAuthStorage();
@@ -160,19 +158,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function signOut() {
-    clearToken();
-
     const currentOrigin = window.location.origin;
     const finalRedirect = process.env.NEXT_PUBLIC_PROFILE_HOST || currentOrigin;
     const startUrl = buildGlobalLogoutStartUrl({
       currentOrigin,
       finalRedirect,
-    });
-
-    console.log("[logout] signOut:start", {
-      currentOrigin,
-      finalRedirect,
-      startUrl,
     });
 
     window.location.assign(startUrl);

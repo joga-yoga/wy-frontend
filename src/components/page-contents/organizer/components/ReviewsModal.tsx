@@ -66,7 +66,6 @@ export const ReviewsModal = ({
             },
           },
         );
-        console.log("🚀 ~ ReviewsModal ~ response.data:", response.data);
 
         if (newOffset === 0) {
           // Initial load or refresh
@@ -77,7 +76,6 @@ export const ReviewsModal = ({
         }
 
         setOffset(newOffset + LIMIT);
-        console.log("🚀 ~ ReviewsModal ~ response.data.has_more:", response.data.has_more);
         setHasMore(response.data.has_more);
       } catch (err) {
         console.error("Failed to load reviews:", err);

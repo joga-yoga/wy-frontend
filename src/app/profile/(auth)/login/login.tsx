@@ -147,8 +147,6 @@ export function LoginPage() {
   }
 
   async function onSubmitPasswordLogin(data: { password: string }) {
-    console.log("🚀 ~ onSubmitPasswordLogin ~ data:", data);
-
     try {
       const formData = new URLSearchParams();
       formData.append("username", emailValue);
@@ -158,9 +156,7 @@ export function LoginPage() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       const accessToken = response.data?.access_token;
-      console.log("🚀 ~ onSubmitPasswordLogin ~ accessToken:", accessToken);
       const redirectTo = response.data?.redirect_to || process.env.NEXT_PUBLIC_PROFILE_HOST;
-      console.log("🚀 ~ onSubmitPasswordLogin ~ redirectTo:", redirectTo);
 
       if (accessToken) {
         storeToken(accessToken);
@@ -190,7 +186,6 @@ export function LoginPage() {
         password: data.password,
       });
       // toast({ description: "Registration successful. Check your email for verification." });
-      console.log("Registration successful:", response.data);
       setStep("verify-signup");
     } catch (error) {
       toast({

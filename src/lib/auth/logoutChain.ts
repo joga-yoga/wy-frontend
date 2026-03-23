@@ -40,13 +40,9 @@ export function buildGlobalLogoutStartUrl(params: {
 }): string {
   const currentOrigin = normalizeOrigin(params.currentOrigin);
   const finalRedirect = normalizeOrigin(params.finalRedirect);
-
+  const normalizedOrigins = getLogoutOrigins().map(normalizeOrigin).filter(Boolean);
   const sequence = Array.from(
-    new Set(
-      getLogoutOrigins()
-        .map(normalizeOrigin)
-        .filter((origin) => origin && origin !== currentOrigin),
-    ),
+    new Set([currentOrigin, ...normalizedOrigins.filter((origin) => origin !== currentOrigin)]),
   );
 
   if (sequence.length === 0) {
@@ -62,15 +58,6 @@ export function buildGlobalLogoutStartUrl(params: {
       `${finalRedirect}/`,
     )}`;
     next = `${url}&next=${encodeNext(next)}`;
-  }
-
-  if (typeof window !== "undefined") {
-    console.log("[logout] build-chain", {
-      currentOrigin,
-      finalRedirect,
-      sequence,
-      startUrl: next,
-    });
   }
 
   return next;
