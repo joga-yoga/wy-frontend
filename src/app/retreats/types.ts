@@ -15,6 +15,13 @@ export interface Location {
 }
 
 // Define the structure of an event based on the API response
+export interface EventOccurrence {
+  id: string;
+  start_time: string;
+  end_time: string;
+  label?: string | null;
+}
+
 export interface Event {
   id: string;
   slug: string;
@@ -22,6 +29,7 @@ export interface Event {
   description: string | null;
   start_date: string;
   end_date: string | null;
+  occurrences?: EventOccurrence[] | null;
   location: Location | null;
   price: number | null;
   image_ids?: string[];

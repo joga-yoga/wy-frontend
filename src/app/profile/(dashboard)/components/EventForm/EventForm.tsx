@@ -61,7 +61,10 @@ interface EventFormProps {
 }
 
 // 1. Helper function to prepare event payload
-const prepareEventPayload = (data: EventFormData): Partial<EventFormData> => {
+const prepareEventPayload = (
+  data: EventFormData,
+  mode: "retreat" | "workshop",
+): Partial<EventFormData> => {
   const payload: Omit<EventFormData, "start_date" | "end_date"> & {
     start_date: string | null | undefined;
     end_date: string | null | undefined;
@@ -98,6 +101,18 @@ const prepareEventPayload = (data: EventFormData): Partial<EventFormData> => {
   // or 'image'/'image_id' shouldn't be on EventFormData.
   delete (payload as any).image;
   delete (payload as any).image_id;
+  if (mode === "workshop") {
+    (payload as any).occurrences = (data.occurrences ?? [])
+      .map((item) => ({
+        start_time: item.start_time,
+        end_time: item.end_time,
+        label: item.label?.trim() || null,
+      }))
+      .filter((item) => item.start_time && item.end_time);
+  }
+  if (!(payload as any).occurrences || (payload as any).occurrences.length === 0) {
+    delete (payload as any).occurrences;
+  }
   payload.instructor_ids = data.instructor_ids ?? [];
   return payload as Partial<EventFormData>; // Adjust cast if a more specific return type is defined
 };
@@ -170,6 +185,7 @@ export function EventForm({
       cancellation_policy: undefined,
       important_info: undefined,
       program: [],
+      occurrences: [],
       instructor_ids: [],
       is_public: false,
       location_id: null,
@@ -234,6 +250,7 @@ export function EventForm({
   const startDateString = watch("start_date");
   const endDateString = watch("end_date");
   const slug = watch("slug");
+  const watchedOccurrences = watch("occurrences");
 
   useEffect(() => {
     const start = startDateString ? parseISO(startDateString) : undefined;
@@ -263,13 +280,53 @@ export function EventForm({
     }
   }, [startDateString, endDateString]);
 
+  useEffect(() => {
+    if (mode !== "workshop") return;
+
+    const normalizedOccurrences = (watchedOccurrences ?? []).filter(
+      (item) => item?.start_time && item?.end_time,
+    );
+
+    if (normalizedOccurrences.length === 0) {
+      if (startDateString || endDateString) {
+        setValue("start_date", "", { shouldValidate: false, shouldDirty: false });
+        setValue("end_date", "", { shouldValidate: false, shouldDirty: false });
+      }
+      return;
+    }
+
+    const sorted = [...normalizedOccurrences].sort((a, b) =>
+      a.start_time.localeCompare(b.start_time),
+    );
+    const nextStart = sorted[0]?.start_time ?? "";
+    const nextEnd = sorted.reduce(
+      (latest, occurrence) => (occurrence.end_time > latest ? occurrence.end_time : latest),
+      sorted[0]?.end_time ?? "",
+    );
+
+    if (startDateString !== nextStart) {
+      setValue("start_date", nextStart, { shouldValidate: false, shouldDirty: false });
+    }
+    if (endDateString !== nextEnd) {
+      setValue("end_date", nextEnd, { shouldValidate: false, shouldDirty: false });
+    }
+  }, [watchedOccurrences, mode, setValue, startDateString, endDateString]);
+
   const {
     fields: programFields,
     append,
     remove,
-  } = useFieldArray({
+  } = useFieldArray<EventFormData, "program">({
     control,
-    name: "program" as FieldArrayPath<EventFormData>,
+    name: "program",
+  });
+  const {
+    fields: occurrenceFields,
+    append: appendOccurrence,
+    remove: removeOccurrence,
+  } = useFieldArray<EventFormData, "occurrences">({
+    control,
+    name: "occurrences",
   });
 
   const fetchInstructors = useCallback(async () => {
@@ -325,7 +382,26 @@ export function EventForm({
             continue;
           }
 
-          if (fieldKey === "program") {
+          if (fieldKey === "occurrences") {
+            const occurrencesVal = fetchedData.occurrences;
+            if (mode === "workshop" && Array.isArray(occurrencesVal) && occurrencesVal.length > 0) {
+              dataForReset.occurrences = occurrencesVal.map((item) => ({
+                start_time: item.start_time ?? "",
+                end_time: item.end_time ?? "",
+                label: item.label ?? null,
+              }));
+            } else if (mode === "workshop" && fetchedData.start_date) {
+              dataForReset.occurrences = [
+                {
+                  start_time: fetchedData.start_date,
+                  end_time: fetchedData.end_date ?? fetchedData.start_date,
+                  label: null,
+                },
+              ];
+            } else {
+              dataForReset.occurrences = [];
+            }
+          } else if (fieldKey === "program") {
             const programVal = fetchedData.program;
             if (Array.isArray(programVal)) {
               dataForReset.program = programVal.map((item) => {
@@ -422,7 +498,7 @@ export function EventForm({
   // 2. Update onSubmit
   const onSubmit: SubmitHandler<EventFormData> = async (data) => {
     console.log("Internal onSubmit triggered with data:", data);
-    const payload = prepareEventPayload(data);
+    const payload = prepareEventPayload(data, mode);
     const submissionIsPublic = payload.is_public ?? false;
 
     try {
@@ -488,7 +564,7 @@ export function EventForm({
       // Validation is now done in handlePublishButtonClick before opening the modal
       setValue("is_public", true, { shouldDirty: false, shouldValidate: false });
       const formDataForPublish = getValues(); // This now has is_public: true
-      const payloadForPublish = prepareEventPayload(formDataForPublish);
+      const payloadForPublish = prepareEventPayload(formDataForPublish, mode);
 
       try {
         await axiosInstance.put(
@@ -836,6 +912,20 @@ export function EventForm({
             uploadingProgramImages={uploadingProgramImages}
             onRemoveProgramImage={handleRemoveProgramImage}
             onProgramImageChange={handleProgramImageChange}
+            occurrenceFields={occurrenceFields.map((field) => ({
+              id: field.id,
+              start_time: field.start_time,
+              end_time: field.end_time,
+              label: field.label,
+            }))}
+            appendOccurrence={
+              appendOccurrence as (value: {
+                start_time: string;
+                end_time: string;
+                label?: string | null;
+              }) => void
+            }
+            removeOccurrence={removeOccurrence}
           />
           <EventLocationSection
             control={control}

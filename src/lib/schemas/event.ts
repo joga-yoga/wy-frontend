@@ -1,5 +1,11 @@
 import * as yup from "yup";
 
+export interface EventOccurrenceFormValue {
+  start_time: string;
+  end_time: string;
+  label?: string | null;
+}
+
 // Base schema for event data validation
 export const retreatFormSchema = yup
   .object()
@@ -91,6 +97,17 @@ export const retreatFormSchema = yup
       )
       .optional()
       .default([]),
+    occurrences: yup
+      .array()
+      .of(
+        yup.object().shape({
+          start_time: yup.string().required("Data rozpoczęcia jest wymagana."),
+          end_time: yup.string().required("Data zakończenia jest wymagana."),
+          label: yup.string().nullable().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
     instructor_ids: yup
       .array()
       .of(yup.string().required())
@@ -158,6 +175,20 @@ export const workshopFormSchema = retreatFormSchema
         then: (schema) => schema.required("Lokalizacja jest wymagana dla wydarzeń stacjonarnych."),
         otherwise: (schema) => schema.nullable().optional(),
       }),
+    occurrences: yup
+      .array()
+      .of(
+        yup.object().shape({
+          start_time: yup.string().required("Termin rozpoczęcia jest wymagany."),
+          end_time: yup.string().required("Termin zakończenia jest wymagany."),
+          label: yup.string().nullable().optional(),
+        }),
+      )
+      .when("is_public", {
+        is: true,
+        then: (schema) => schema.min(1, "Dodaj co najmniej jeden termin wydarzenia."),
+        otherwise: (schema) => schema.default([]),
+      }),
   })
   .test({
     name: "require-online-or-onsite",
@@ -191,6 +222,7 @@ export type EventInitialData = Partial<
     location_id?: string | null;
     location?: LocationInitialInfo | null;
     program?: { description: string; imageId?: string | null }[];
+    occurrences?: EventOccurrenceFormValue[];
     instructor_ids?: string[];
     price_excludes?: string[];
     skill_level?: string[];

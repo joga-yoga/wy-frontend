@@ -34,6 +34,13 @@ export interface ProgramDay {
   imageId?: string | null;
 }
 
+export interface EventOccurrence {
+  id: string;
+  start_time: string;
+  end_time: string;
+  label?: string | null;
+}
+
 // Define the event structure based on API response (schema.Event)
 export interface EventDetail {
   id: string;
@@ -44,6 +51,7 @@ export interface EventDetail {
   location: LocationDetail | null;
   start_date: string;
   end_date: string | null;
+  occurrences?: EventOccurrence[] | null;
   image_ids?: string[] | null;
   is_public: boolean;
   price: number | null;

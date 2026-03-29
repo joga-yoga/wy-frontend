@@ -42,6 +42,18 @@ interface EventProgramSectionProps {
   uploadingProgramImages: Record<number, boolean>;
   onRemoveProgramImage: (index: number) => void;
   onProgramImageChange: (file: File, index: number) => void;
+  occurrenceFields: {
+    id: string;
+    start_time?: string;
+    end_time?: string;
+    label?: string | null;
+  }[];
+  appendOccurrence: (value: {
+    start_time: string;
+    end_time: string;
+    label?: string | null;
+  }) => void;
+  removeOccurrence: UseFieldArrayRemove;
 }
 
 export const EventProgramSection = ({
@@ -59,6 +71,9 @@ export const EventProgramSection = ({
   uploadingProgramImages,
   onRemoveProgramImage,
   onProgramImageChange,
+  occurrenceFields,
+  appendOccurrence,
+  removeOccurrence,
 }: EventProgramSectionProps) => {
   const { focusTip } = useEventHelpBar();
   const watchedProgram = useWatch({ control, name: "program" });
@@ -66,6 +81,10 @@ export const EventProgramSection = ({
   const handleAddDay = () => {
     const randomImageId = getRandomDefaultImageId();
     append({ description: "", imageId: randomImageId });
+  };
+
+  const handleAddOccurrence = () => {
+    appendOccurrence({ start_time: "", end_time: "", label: "" });
   };
 
   // Helper functions to parse/format datetime in UTC
@@ -114,167 +133,179 @@ export const EventProgramSection = ({
         <Separator className="my-4 md:my-8" />
 
         {project === "workshops" ? (
-          // Workshop: Separate date + time pickers
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Start Date & Time */}
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Data i godzina początkowa</Label>
-                <Controller
-                  name="start_date"
-                  control={control}
-                  render={({ field: startField }) => {
-                    const { date: startDate, time: startTime } = parseDateTime(startField.value);
-                    return (
+            <div className="space-y-4">
+              {occurrenceFields.map((field, index) => (
+                <div key={field.id} className="rounded-lg border p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className="text-base font-semibold">Termin {index + 1}</Label>
+                    {occurrenceFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeOccurrence(index)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <Controller
+                    name={`occurrences.${index}.start_time`}
+                    control={control}
+                    render={({ field: startField }) => (
                       <Controller
-                        name="end_date"
+                        name={`occurrences.${index}.end_time`}
                         control={control}
                         render={({ field: endField }) => {
-                          const { date: endDate } = parseDateTime(endField.value);
-                          return (
-                            <div className="space-y-2">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className={cn("w-full justify-start text-left font-normal")}
-                                    onClick={() => focusTip("date")}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate
-                                      ? format(new Date(startDate), "PPP", { locale: pl })
-                                      : "Wybierz datę"}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    initialFocus
-                                    mode="single"
-                                    selected={startDate ? new Date(startDate) : undefined}
-                                    onSelect={(selectedDate) => {
-                                      if (selectedDate) {
-                                        const newDate = format(selectedDate, "yyyy-MM-dd");
-                                        // If start_date is being set for the first time, default to 12:00
-                                        const timeToUse = startTime || "12:00";
-                                        startField.onChange(buildDateTime(newDate, timeToUse));
-                                        // Auto-fill end date if both are empty
-                                        if (!startDate && !endDate) {
-                                          endField.onChange(buildDateTime(newDate, "13:00"));
-                                        }
-                                      }
-                                    }}
-                                    showOutsideDays={false}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <div className="flex flex-col gap-1">
-                                <Label htmlFor="start_time" className="text-sm">
-                                  Godzina
-                                </Label>
-                                <Input
-                                  id="start_time"
-                                  type="time"
-                                  disabled={!startDate}
-                                  value={startTime}
-                                  onChange={(e) => {
-                                    startField.onChange(buildDateTime(startDate, e.target.value));
-                                  }}
-                                  className="bg-background disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                              </div>
-                            </div>
+                          const { date: startDate, time: startTime } = parseDateTime(
+                            startField.value,
                           );
-                        }}
-                      />
-                    );
-                  }}
-                />
-                {errors.start_date && (
-                  <p className="text-sm text-destructive">{errors.start_date.message}</p>
-                )}
-              </div>
+                          const { date: endDate, time: endTime } = parseDateTime(endField.value);
+                          const occurrenceDate = startDate || endDate;
 
-              {/* End Date & Time */}
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Data i godzina końcowa</Label>
-                <Controller
-                  name="end_date"
-                  control={control}
-                  render={({ field: endField }) => {
-                    const { date: endDate, time: endTime } = parseDateTime(endField.value);
-                    return (
-                      <Controller
-                        name="start_date"
-                        control={control}
-                        render={({ field: startField }) => {
-                          const { date: startDate } = parseDateTime(startField.value);
                           return (
-                            <div className="space-y-2">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className={cn("w-full justify-start text-left font-normal")}
-                                    onClick={() => focusTip("date")}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate
-                                      ? format(new Date(endDate), "PPP", { locale: pl })
-                                      : "Wybierz datę"}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    initialFocus
-                                    mode="single"
-                                    selected={endDate ? new Date(endDate) : undefined}
-                                    onSelect={(selectedDate) => {
-                                      if (selectedDate) {
-                                        const newDate = format(selectedDate, "yyyy-MM-dd");
-                                        // If end_date is being set for the first time, default to 13:00
-                                        const timeToUse = endTime || "13:00";
-                                        endField.onChange(buildDateTime(newDate, timeToUse));
-                                        // Auto-fill start date if both are empty
-                                        if (!startDate && !endDate) {
-                                          startField.onChange(buildDateTime(newDate, "12:00"));
-                                        }
+                            <>
+                              <div className="space-y-2">
+                                <Label className="text-sm">Data</Label>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className={cn("w-full justify-start text-left font-normal")}
+                                      onClick={() => focusTip("date")}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {occurrenceDate
+                                        ? format(new Date(`${occurrenceDate}T00:00:00`), "PPP", {
+                                            locale: pl,
+                                          })
+                                        : "Wybierz datę"}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      initialFocus
+                                      mode="single"
+                                      selected={
+                                        occurrenceDate
+                                          ? new Date(`${occurrenceDate}T00:00:00`)
+                                          : undefined
                                       }
-                                    }}
-                                    showOutsideDays={false}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <div className="flex flex-col gap-1">
-                                <Label htmlFor="end_time" className="text-sm">
-                                  Godzina
-                                </Label>
-                                <Input
-                                  id="end_time"
-                                  type="time"
-                                  disabled={!endDate}
-                                  value={endTime}
-                                  onChange={(e) => {
-                                    endField.onChange(buildDateTime(endDate, e.target.value));
-                                  }}
-                                  className="bg-background disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
+                                      onSelect={(selectedDate) => {
+                                        if (!selectedDate) return;
+                                        const selectedDay = format(selectedDate, "yyyy-MM-dd");
+                                        startField.onChange(
+                                          buildDateTime(selectedDay, startTime || "12:00"),
+                                        );
+                                        endField.onChange(
+                                          buildDateTime(selectedDay, endTime || "13:00"),
+                                        );
+                                      }}
+                                      showOutsideDays={false}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
                               </div>
-                              <div
-                                ref={endField.ref}
-                                tabIndex={-1}
-                                className="absolute w-0 h-0 opacity-0 pointer-events-none"
-                              />
-                            </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Godzina początkowa</Label>
+                                  <Input
+                                    type="time"
+                                    disabled={!occurrenceDate}
+                                    value={startTime}
+                                    onChange={(e) => {
+                                      startField.onChange(
+                                        buildDateTime(occurrenceDate, e.target.value),
+                                      );
+                                    }}
+                                    className="bg-background disabled:opacity-50 disabled:cursor-not-allowed"
+                                  />
+                                  {errors.occurrences?.[index]?.start_time && (
+                                    <p className="text-sm text-destructive">
+                                      {errors.occurrences[index]?.start_time?.message}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Godzina końcowa</Label>
+                                  <Input
+                                    type="time"
+                                    disabled={!occurrenceDate}
+                                    value={endTime}
+                                    onChange={(e) => {
+                                      endField.onChange(
+                                        buildDateTime(occurrenceDate, e.target.value),
+                                      );
+                                    }}
+                                    className="bg-background disabled:opacity-50 disabled:cursor-not-allowed"
+                                  />
+                                  {errors.occurrences?.[index]?.end_time && (
+                                    <p className="text-sm text-destructive">
+                                      {errors.occurrences[index]?.end_time?.message}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </>
                           );
                         }}
                       />
-                    );
-                  }}
-                />
-                {errors.end_date && (
-                  <p className="text-sm text-destructive">{errors.end_date.message}</p>
+                    )}
+                  />
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`occurrences.${index}.label`} className="text-sm">
+                      Etykieta sesji
+                    </Label>
+                    <Input
+                      id={`occurrences.${index}.label`}
+                      {...register(`occurrences.${index}.label` as const)}
+                      placeholder="Np. Morning Session"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <Button type="button" variant="outline" size="sm" onClick={handleAddOccurrence}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Dodaj termin
+              </Button>
+
+              {typeof errors.occurrences?.message === "string" && (
+                <p className="text-sm text-destructive">{errors.occurrences.message}</p>
+              )}
+              {errors.start_date && (
+                <p className="text-sm text-destructive">{errors.start_date.message}</p>
+              )}
+              {errors.end_date && (
+                <p className="text-sm text-destructive">{errors.end_date.message}</p>
+              )}
+              <Controller
+                name="start_date"
+                control={control}
+                render={({ field }) => (
+                  <div
+                    ref={field.ref}
+                    tabIndex={-1}
+                    className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                  />
                 )}
-              </div>
+              />
+              <Controller
+                name="end_date"
+                control={control}
+                render={({ field }) => (
+                  <div
+                    ref={field.ref}
+                    tabIndex={-1}
+                    className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                  />
+                )}
+              />
             </div>
           </>
         ) : (
