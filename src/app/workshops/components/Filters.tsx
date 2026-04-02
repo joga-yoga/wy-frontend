@@ -29,6 +29,7 @@ import { useFilterInitialData } from "./filters-modal/hooks/useFilterInitialData
 
 const CitiesIcons = {
   Krakow: KrakowIcon,
+  Kraków: KrakowIcon,
   Gdańsk: GdanskIcon,
   Łódź: LodzIcon,
   Białystok: BialystokIcon,
