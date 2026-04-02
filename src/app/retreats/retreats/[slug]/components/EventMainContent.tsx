@@ -94,9 +94,11 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
               Cele i intencje
             </h2>
             <ul className="list-disc pl-5 text-m-sunscript-font md:text-sub-descript-18 text-gray-500 space-y-1">
-              {(event as any).goals.map((item: string, index: number) => (
-                <li key={index}>{item}</li>
-              ))}
+              {(event as any).goals
+                .filter((item: string) => !!item)
+                .map((item: string, index: number) => (
+                  <li key={index}>{item}</li>
+                ))}
             </ul>
           </div>
         </>
