@@ -15,6 +15,7 @@ import LublinIcon from "@/components/icons/cities/LublinIcon";
 import PoznanIcon from "@/components/icons/cities/PoznanIcon";
 import SzczecinIcon from "@/components/icons/cities/SzczecinIcon";
 import WarszawaIcon from "@/components/icons/cities/WarszawaIcon";
+import WroclawIcon from "@/components/icons/cities/WroclawIcon";
 import CustomFilterOnlineIcon from "@/components/icons/CustomFilterOnlineIcon";
 import CustomFilterTagsIcon from "@/components/icons/CustomFilterTagsIcon";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,8 @@ const CitiesIcons = {
   Szczecin: SzczecinIcon,
   Katowice: KatowiceIcon,
   Poznań: PoznanIcon,
+  Wroclaw: WroclawIcon,
+  Wrocław: WroclawIcon,
 };
 
 const Filters = () => {
