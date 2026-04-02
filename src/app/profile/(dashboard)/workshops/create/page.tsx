@@ -92,7 +92,7 @@ export default function CreateWorkshopPage() {
     } catch (error) {
       toast({
         title: "Błąd",
-        description: "Nie udało się wygenerować danych wyjazdu. Spróbuj ponownie.",
+        description: "Nie udało się wygenerować danych wydarzenia. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -137,7 +137,7 @@ export default function CreateWorkshopPage() {
       toast({
         title: "Błąd",
         description:
-          "Nie udało się wygenerować danych wyjazdu z tego linku. Spróbuj z innym linkiem.",
+          "Nie udało się wygenerować danych wydarzenia z tego linku. Spróbuj z innym linkiem.",
         variant: "destructive",
       });
     } finally {
@@ -177,7 +177,7 @@ export default function CreateWorkshopPage() {
                   PROMPT
                 </CardTitle>
                 <CardDescription>
-                  Napisz parę słów o swoim wydarzenu – AI przygotuje całą resztę
+                  Napisz parę słów o swoim wydarzeniu – AI przygotuje całą resztę
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -238,13 +238,13 @@ export default function CreateWorkshopPage() {
           </Button>
           <h1 className="text-3xl font-bold mb-2">Generuj z linku</h1>
           <p className="text-muted-foreground mb-8">
-            Wklej adres URL strony z Twoim wyjazdem, a my zajmiemy się resztą.
+            Wklej adres URL strony z Twoim wydarzeniem, a my zajmiemy się resztą.
           </p>
           <div className="space-y-4">
             <Label htmlFor="event-url">URL wydarzenia</Label>
             <Input
               id="event-url"
-              placeholder="https://przykladowa-strona.com/wyjazd"
+              placeholder="https://przykladowa-strona.com/wydarzenie"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={isAutofilling}
@@ -260,7 +260,7 @@ export default function CreateWorkshopPage() {
                   Generowanie...
                 </>
               ) : (
-                "Generuj dane wyjazdu"
+                "Generuj dane wydarzenia"
               )}
             </Button>
           </div>
@@ -279,10 +279,10 @@ export default function CreateWorkshopPage() {
             automatycznie wypełnimy formularz
           </p>
           <div className="space-y-4">
-            <Label htmlFor="event-prompt">Opis wyjazdu</Label>
+            <Label htmlFor="event-prompt">Opis wydarzenia</Label>
             <Textarea
               id="event-prompt"
-              placeholder="Np. 'Wyjazd narciarski w Alpy dla zaawansowanych, 7 dni w hotelu z pełnym wyżywieniem...'"
+              placeholder="Np. 'Warsztaty ceramiczne dla początkujących, 3 godziny zajęć z materiałami w cenie...'"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={6}
@@ -299,7 +299,7 @@ export default function CreateWorkshopPage() {
                   Generowanie...
                 </>
               ) : (
-                "Generuj dane wyjazdu"
+                "Generuj dane wydarzenia"
               )}
             </Button>
           </div>
