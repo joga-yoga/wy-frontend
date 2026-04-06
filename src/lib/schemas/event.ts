@@ -122,6 +122,10 @@ export const retreatFormSchema = yup
     tags: yup.array().of(yup.string()).optional().default([]),
     is_online: yup.boolean().optional().default(false),
     is_onsite: yup.boolean().optional().default(false),
+    duration_minutes: yup.number().integer().positive().optional().nullable(),
+    level: yup.string().optional().nullable(),
+    intensity: yup.number().integer().min(1).max(10).optional().nullable(),
+    style: yup.string().optional().nullable(),
   })
   .test({
     name: "date-order",
@@ -204,6 +208,48 @@ export const workshopFormSchema = retreatFormSchema
     },
   });
 
+export const classFormSchema = retreatFormSchema.shape({
+  main_attractions: yup.array().of(yup.string().optional()).optional().default([]),
+  start_date: yup.string().nullable().optional(),
+  end_date: yup.string().nullable().optional(),
+  location_id: yup.string().nullable().optional(),
+  program: yup.array().optional().default([]),
+  instructor_ids: yup.array().of(yup.string().required()).optional().default([]),
+  price: yup.number().when("is_public", {
+    is: true,
+    then: (schema) => schema.required("Cena jest wymagana, ale może być 0."),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
+  occurrences: yup
+    .array()
+    .of(
+      yup.object().shape({
+        start_time: yup.string().required("Termin rozpoczęcia jest wymagany."),
+        end_time: yup.string().required("Termin zakończenia jest wymagane."),
+        label: yup.string().nullable().optional(),
+      }),
+    )
+    .default([]),
+  duration_minutes: yup
+    .number()
+    .integer("Czas trwania musi być liczbą całkowitą.")
+    .positive("Czas trwania musi być dodatni.")
+    .when("is_public", {
+      is: true,
+      then: (schema) => schema.required("Czas trwania jest wymagany."),
+      otherwise: (schema) => schema.optional().nullable(),
+    }),
+  level: yup.string().optional().nullable(),
+  intensity: yup
+    .number()
+    .integer("Intensywność musi być liczbą całkowitą.")
+    .min(1, "Intensywność musi być w zakresie 1-10.")
+    .max(10, "Intensywność musi być w zakresie 1-10.")
+    .optional()
+    .nullable(),
+  style: yup.string().optional().nullable(),
+});
+
 // Define a type for the nested location information in initial event data
 interface LocationInitialInfo {
   id: string;
@@ -229,5 +275,9 @@ export type EventInitialData = Partial<
     paid_attractions?: string[];
     main_attractions?: string[];
     slug?: string;
+    duration_minutes?: number | null;
+    level?: string | null;
+    intensity?: number | null;
+    style?: string | null;
   }
 >;

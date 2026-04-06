@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 import { formatDateRange } from "@/lib/formatDateRange";
 
 interface Organizer {
@@ -95,6 +96,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"all" | "retreat" | "workshop">("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const classesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -322,7 +324,11 @@ export default function DashboardPage() {
             <DialogTitle className="text-2xl">Co chcesz dodać?</DialogTitle>
             <DialogDescription>Wybierz typ ogłoszenia.</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div
+            className={`grid gap-4 pt-2 ${
+              classesEnabled ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"
+            }`}
+          >
             <Link
               href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/create`}
               onClick={() => setIsCreateOpen(false)}
@@ -339,6 +345,16 @@ export default function DashboardPage() {
               <div className="text-6xl select-none">🧘‍♀️</div>
               <div className="mt-3 text-base font-semibold">Wydarzenie</div>
             </Link>
+            {classesEnabled ? (
+              <Link
+                href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes/create`}
+                onClick={() => setIsCreateOpen(false)}
+                className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
+              >
+                <div className="text-6xl select-none">🧘</div>
+                <div className="mt-3 text-base font-semibold">Zajęcia</div>
+              </Link>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>

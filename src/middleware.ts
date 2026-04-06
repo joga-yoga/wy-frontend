@@ -10,15 +10,30 @@ export function middleware(req: NextRequest) {
 
   // Remove port number for local development
   const currentHost = hostname.replace(`:${url.port}`, "");
+  const workshopHosts = new Set(["wydarzenia.yoga", "wydarzenia.localhost"]);
+
+  if (workshopHosts.has(currentHost)) {
+    if (url.pathname === "/classes" || url.pathname === "/classes/") {
+      return NextResponse.next();
+    }
+
+    if (url.pathname.startsWith("/classes/") && !url.pathname.startsWith("/classes/classes/")) {
+      const classSlug = url.pathname.replace(/^\/classes\//, "");
+      url.pathname = `/classes/classes/${classSlug}`;
+      return NextResponse.rewrite(url);
+    }
+  }
 
   // Define your domain mappings
   const domainMappings = {
     "wyjazdy.yoga": "retreats",
     "wydarzenia.yoga": "workshops",
+    "joga.yoga": "classes",
     "app.joga.yoga": "profile",
     // Local development domains
     localhost: "retreats",
     "wydarzenia.localhost": "workshops",
+    "classes.localhost": "classes",
     "app.localhost": "profile",
   };
 

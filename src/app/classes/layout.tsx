@@ -1,0 +1,24 @@
+import { Metadata } from "next";
+
+import { Footer } from "@/components/layout/Footer";
+import { PublicHeader } from "@/components/layout/Header";
+import { EventsFilterProvider } from "@/context/EventsFilterContext";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://wyjazdy.yoga"),
+  title: "Wyjazdy.Yoga",
+  description: "Wyjazdy.Yoga",
+  openGraph: {
+    description: "Wyjazdy.Yoga",
+  },
+};
+
+export default function ClassesLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <EventsFilterProvider>
+      <PublicHeader project="workshops" />
+      {children}
+      <Footer project="workshops" />
+    </EventsFilterProvider>
+  );
+}
