@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import React from "react";
 
 import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { WyImage } from "@/components/custom/WyImage";
 
 import { EventSection, ReviewSection } from "./components";
 import { OrganizerDetails, OrganizerReview } from "./types";
@@ -25,14 +25,16 @@ export const OrganizerPageContent: React.FC<OrganizerPageContentProps> = ({
         <div className="flex flex-col gap-[44px]">
           <div className="flex flex-col md:flex-row gap-[29px]">
             <div className="w-full md:w-[402px] md:h-[245px] px-5 py-[28px] border border-gray-100 rounded-[22px] shadow-[0px_8px_16px_8px_#FAFAFA] flex flex-col items-center justify-center text-center gap-3">
-              <div className="relative h-[88px] w-[88px]">
-                <Image
-                  src={getImageUrl(organizer.organizer.image_id, 0)}
-                  alt={organizer.organizer.name}
-                  fill
-                  className="rounded-full object-cover"
-                />
-              </div>
+              {organizer.organizer.image_id && (
+                <div className="relative h-[88px] w-[88px]">
+                  <WyImage
+                    src={organizer.organizer.image_id}
+                    alt={organizer.organizer.name}
+                    fill
+                    className="rounded-full object-cover"
+                  />
+                </div>
+              )}
               <p className="text-h-small text-gray-800">{organizer.organizer.name}</p>
               <p className="text-gray-400 text-sm">{organizer.organizer.name}</p>
             </div>

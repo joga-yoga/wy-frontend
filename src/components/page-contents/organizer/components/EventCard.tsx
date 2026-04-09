@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { WyImage } from "@/components/custom/WyImage";
 
 import { truncateText } from "../helpers";
 import { OrganizerEvent } from "../types";
@@ -24,12 +23,7 @@ const EventCard = ({ event, project }: EventCardProps) => {
     >
       <div className="w-full max-w-[402px] flex flex-col items-start">
         <div className="relative w-full max-w-[358px] aspect-[16/10] rounded-[11px] overflow-hidden mt-6 mb-5 shrink-0">
-          <Image
-            src={getImageUrl(event.image_ids[0])}
-            alt={event.title}
-            fill
-            className="object-cover"
-          />
+          <WyImage src={event.image_ids[0]} alt={event.title} fill className="object-cover" />
         </div>
         <p className="w-full max-w-[358px] text-left text-m-header md:text-sub-descript-18 mb-2 line-clamp-2">
           {event.title}

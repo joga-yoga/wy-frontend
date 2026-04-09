@@ -4,6 +4,7 @@ import React from "react";
 import { Control, Controller, FieldErrors } from "react-hook-form";
 import { IoStar, IoStarOutline } from "react-icons/io5";
 
+import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,7 +56,7 @@ export const EventPhotosSection = ({
       <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {watchedImageIds.map((imageId, index) => (
           <div key={imageId} className="relative group aspect-[4/3]">
-            <Image
+            <WyImage
               src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_200,h_150/v1/${imageId}`}
               alt="Zdjęcie"
               fill

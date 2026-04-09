@@ -1,10 +1,11 @@
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import Image from "next/image";
 import React from "react";
 import { Control, useController } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+import { WyImage } from "../custom/WyImage";
 
 interface SingleImageUploadProps {
   name: string;
@@ -33,7 +34,7 @@ export const SingleImageUpload = ({
 
   const existingImageUrl =
     !isRemoved && existingImageId
-      ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_128,h_128,c_fill/${existingImageId}`
+      ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/v1/${existingImageId}`
       : null;
 
   const currentPreviewUrl = imagePreviewUrl || existingImageUrl;
@@ -45,7 +46,14 @@ export const SingleImageUpload = ({
         <>
           <label htmlFor={inputId} className="cursor-pointer">
             <div className="relative w-24 h-24 md:w-32 md:h-32 border rounded-md overflow-hidden">
-              <Image src={currentPreviewUrl} alt="Preview" fill className="object-cover" />
+              <WyImage
+                src={currentPreviewUrl}
+                alt="Preview"
+                className="object-cover"
+                height="128"
+                width="128"
+                crop="fill"
+              />
               {isUploading && (
                 <div className="absolute inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-10">
                   <Loader2 className="h-8 w-8 animate-spin text-white" />

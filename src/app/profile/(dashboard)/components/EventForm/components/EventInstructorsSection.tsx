@@ -1,7 +1,7 @@
 import { Edit2, HelpCircle, PlusCircle, Trash2 } from "lucide-react";
-import Image from "next/image";
 import { Control, Controller, FieldErrors, UseFormSetValue } from "react-hook-form";
 
+import { WyImage } from "@/components/custom/WyImage";
 import { Instructor } from "@/components/instructors/InstructorModal";
 import {
   AlertDialog,
@@ -86,16 +86,15 @@ export const EventInstructorsSection = ({
                         className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow duration-200"
                       >
                         <div className="flex items-center gap-3 flex-grow">
-                          <Image
+                          <WyImage
                             src={
-                              instructor.image_id
-                                ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_40,h_40,g_face,r_max/v1/${instructor.image_id}`
-                                : `https://avatar.vercel.sh/${instructor.name.replace(/\s+/g, "_")}.png?size=40`
+                              instructor.image_id ||
+                              `https://avatar.vercel.sh/${instructor.name.replace(/\s+/g, "_")}.png?size=40`
                             }
                             alt={instructor.name}
                             width={40}
                             height={40}
-                            className="rounded-full object-cover border"
+                            className="rounded-full object-cover border min-h-[40px]"
                           />
                           <Label
                             htmlFor={`instructor-switch-${instructor.id}`}

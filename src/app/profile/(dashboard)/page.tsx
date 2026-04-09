@@ -2,12 +2,11 @@
 
 import { format } from "date-fns";
 import { Calendar, MoreVertical } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { WyImage } from "@/components/custom/WyImage";
 import CustomPlusIconMobile from "@/components/icons/CustomPlusIconMobile";
 import {
   AlertDialog,
@@ -413,19 +412,22 @@ export default function DashboardPage() {
                   ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
                   : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`;
 
+              const eventImageId = event.image_ids?.[0] || event.image_id;
               return (
                 <Link
                   key={event.id}
                   href={editLink}
                   className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px] cursor-pointer hover:shadow-md transition-shadow"
                 >
-                  <Image
-                    src={getImageUrl(event.image_ids?.[0] || event.image_id)}
-                    alt={event.title}
-                    width={200}
-                    height={200}
-                    className="object-cover min-w-[200px] w-full md:w-[200px] h-[200px]"
-                  />
+                  {eventImageId && (
+                    <WyImage
+                      src={eventImageId}
+                      alt={event.title}
+                      width={200}
+                      height={200}
+                      className="object-cover min-w-[200px] w-full md:w-[200px] h-[200px]"
+                    />
+                  )}
                   <div className="p-4 flex flex-col justify-between w-full">
                     <div>
                       {/* Status above title */}

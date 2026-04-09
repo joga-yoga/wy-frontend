@@ -5,7 +5,6 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { ArrowLeft, ArrowRight, Calendar, ImageOff } from "lucide-react";
-import Image from "next/image";
 import React, { useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";

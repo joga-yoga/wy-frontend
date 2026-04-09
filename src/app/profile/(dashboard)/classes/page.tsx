@@ -1,11 +1,10 @@
 "use client";
 
 import { Calendar } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -87,19 +86,22 @@ export default function DashboardClassesPage() {
           {items.map((item) => {
             const status = getClassStatus(item);
 
+            const eventImageId = item.image_ids?.[0] || item.image_id;
             return (
               <Link
                 key={item.id}
                 href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes/${item.id}/edit`}
                 className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px] cursor-pointer hover:shadow-md transition-shadow"
               >
-                <Image
-                  src={getImageUrl(item.image_ids?.[0] || item.image_id)}
-                  alt={item.title}
-                  width={200}
-                  height={200}
-                  className="object-cover min-w-[200px] w-full md:w-[200px] h-[200px]"
-                />
+                {eventImageId && (
+                  <WyImage
+                    src={eventImageId}
+                    alt={item.title}
+                    width={200}
+                    height={200}
+                    className="object-cover min-w-[200px] w-full md:w-[200px] h-[200px]"
+                  />
+                )}
                 <div className="p-4 flex flex-col justify-between w-full">
                   <div>
                     <span
