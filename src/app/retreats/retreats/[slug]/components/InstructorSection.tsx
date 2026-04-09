@@ -1,7 +1,6 @@
-import Image from "next/image";
 import React from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { WyImage } from "@/components/custom/WyImage";
 
 import { EventDetail } from "../types";
 
@@ -22,14 +21,16 @@ export const InstructorSection: React.FC<InstructorSectionProps> = ({ event }) =
           key={instructor.id}
           className="px-5 py-[28px] border border-gray-100 rounded-[22px] shadow-[0px_8px_16px_8px_#FAFAFA] flex flex-col items-center text-center"
         >
-          <div className="relative h-[88px] w-[88px] mb-3">
-            <Image
-              src={getImageUrl(instructor.image_id, 0)}
-              alt={instructor.name}
-              fill
-              className="rounded-full object-cover"
-            />
-          </div>
+          {instructor.image_id && (
+            <div className="relative h-[88px] w-[88px] mb-3">
+              <WyImage
+                src={instructor.image_id}
+                alt={instructor.name}
+                fill
+                className="rounded-full object-cover"
+              />
+            </div>
+          )}
           <h3 className="text-middle-header-22 text-gray-800">{instructor.name}</h3>
           {instructor.bio && (
             <p className="text-m-descript md:text-sub-descript-18 text-gray-500 text-left whitespace-pre-line">

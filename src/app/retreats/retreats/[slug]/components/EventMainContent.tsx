@@ -1,5 +1,6 @@
-import Image from "next/image";
 import React from "react";
+
+import { WyImage } from "@/components/custom/WyImage";
 
 import { formatMultiLineText, getImageUrl } from "../helpers";
 import { EventDetail } from "../types";
@@ -54,14 +55,16 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
                 return (
                   <div key={index}>
                     <div className="flex items-start gap-5 md:gap-[44px]">
-                      <div className="relative w-20 h-20 md:w-40 md:h-40 flex-shrink-0">
-                        <Image
-                          src={getImageUrl(day.imageId ?? undefined, index + 5)} // Use program imageId or fallback
-                          alt={`Program day ${index + 1}`}
-                          fill
-                          className="object-cover rounded-2xl"
-                        />
-                      </div>
+                      {day.imageId && (
+                        <div className="relative w-20 h-20 md:w-40 md:h-40 flex-shrink-0">
+                          <WyImage
+                            src={day.imageId} // Use program imageId or fallback
+                            alt={`Program day ${index + 1}`}
+                            fill
+                            className="object-cover rounded-2xl"
+                          />
+                        </div>
+                      )}
 
                       <div className="flex-grow">
                         {project === "retreats" || isMultiDay ? (

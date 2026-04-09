@@ -1,8 +1,8 @@
-import Image, { ImageProps } from "next/image";
-import { useEffect, useState } from "react";
+import { ImageProps } from "next/image";
 
-import { getImageBlurDataURL, getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { cn } from "@/lib/utils";
+
+import { WyImage } from "./WyImage";
 
 // https://image-component.nextjs.gallery/color
 // https://github.com/vercel/next.js/blob/canary/examples/image-component/app/color/page.tsx
@@ -31,21 +31,13 @@ export const DynamicCloudinaryImage = ({
   alt?: string;
   containerClass?: string;
 }) => {
-  // const [base64, setBase64] = useState<string | null>(null);
-  // useEffect(() => {
-  //   (async () => {
-  //     const blurDataURL = await getImageBlurDataURL(imageId);
-  //     setBase64(blurDataURL);
-  //   })();
-  // }, [imageId]);
-
-  // if (!imageId || !base64) return null;
   if (!imageId) return null;
+
   return (
     <div className={cn("relative", containerClass)}>
-      <Image
+      <WyImage
         alt={alt || ""}
-        src={getImageUrl(imageId)}
+        src={imageId}
         placeholder="blur"
         blurDataURL={rgbDataURL(235, 235, 235)}
         width={0}

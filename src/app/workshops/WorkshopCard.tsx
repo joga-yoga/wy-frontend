@@ -10,9 +10,9 @@ import React, { useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { PREDEFINED_TAGS } from "@/components/custom/TagsSelect";
+import { WyImage } from "@/components/custom/WyImage";
 import CustomOnlineIcon from "@/components/icons/CustomOnlineIcon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
@@ -94,8 +94,8 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
                 {event.image_ids.map((imageId) => (
                   <SwiperSlide key={imageId} className="h-full w-full">
                     <div className="relative h-full w-full">
-                      <Image
-                        src={getImageUrl(imageId)}
+                      <WyImage
+                        src={imageId}
                         alt={event.title || "Event image"}
                         fill
                         sizes="(max-width: 768px) 100vw, 420px"
