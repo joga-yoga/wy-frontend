@@ -45,6 +45,7 @@ export interface EventOccurrence {
 export interface EventDetail {
   id: string;
   organizer: OrganizerDetail | null;
+  partner?: OrganizerDetail | null;
   instructors: InstructorDetail[] | null;
   title: string;
   description: string | null;

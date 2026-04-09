@@ -6,7 +6,7 @@ export async function getOrganizer(id: string): Promise<OrganizerDetails | null>
   return unstable_cache(
     async (organizerId: string): Promise<OrganizerDetails | null> => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/organizer/${organizerId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/partner/${organizerId}`);
 
         if (res.status === 404) {
           return null;
@@ -16,7 +16,14 @@ export async function getOrganizer(id: string): Promise<OrganizerDetails | null>
           throw new Error(`Failed to fetch organizer: ${res.statusText}`);
         }
 
-        return res.json();
+        const data = await res.json();
+        return {
+          organizer: data.partner,
+          upcoming_retreats: data.upcoming_retreats,
+          past_retreats: data.past_retreats,
+          upcoming_workshops: data.upcoming_workshops,
+          past_workshops: data.past_workshops,
+        };
       } catch (error) {
         console.error("Error fetching organizer:", error);
         return null;
@@ -45,7 +52,7 @@ export async function getOrganizerReviews(
     ): Promise<{ reviews: OrganizerReview[]; has_more: boolean } | null> => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_ENDPOINT}/organizer/reviews/${organizerPlaceId}?limit=${reviewsLimit}&offset=${reviewsOffset}`,
+          `${process.env.NEXT_PUBLIC_API_ENDPOINT}/partner/reviews/${organizerPlaceId}?limit=${reviewsLimit}&offset=${reviewsOffset}`,
         );
 
         if (!res.ok) {

@@ -20,13 +20,13 @@ export async function generateMetadata(
 
   if (!organizerData) {
     return {
-      title: "Organizer Not Found",
+      title: "Partner Not Found",
     };
   }
 
   const { organizer } = organizerData;
-  const title = `${organizer.name || "Organizator"} | wydarzenia.yoga`;
-  const description = organizer.description || "Zobacz profil organizatora na wydarzenia.yoga";
+  const title = `${organizer.name || "Partner"} | wydarzenia.yoga`;
+  const description = organizer.description || "Zobacz profil partnera na wydarzenia.yoga";
   const imageUrl = getOgImageUrl(organizer.image_id);
 
   return {
@@ -38,9 +38,9 @@ export async function generateMetadata(
       images: imageUrl ? [imageUrl] : [],
     },
     alternates: {
-      canonical: `/organizer/${organizerId}`,
+      canonical: `/partner/${organizerId}`,
       languages: {
-        pl: `/organizer/${organizerId}`,
+        pl: `/partner/${organizerId}`,
       },
     },
   };
@@ -52,7 +52,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
   if (!organizerId) {
     return (
       <div className="container mx-auto px-4 py-10 text-center text-red-600">
-        Error: Organizer ID not found.
+        Error: Partner ID not found.
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
   if (!organizer) {
     return (
       <div className="container mx-auto px-4 py-10 text-center text-gray-500">
-        Organizer details could not be loaded or organizer not found.
+        Partner details could not be loaded or partner not found.
       </div>
     );
   }

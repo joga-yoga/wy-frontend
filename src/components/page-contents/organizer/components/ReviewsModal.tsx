@@ -58,7 +58,7 @@ export const ReviewsModal = ({
       setError(null);
       try {
         const response = await axiosInstance.get<PaginatedReviewsResponse>(
-          `/organizer/reviews/${placeId}`,
+          `/partner/reviews/${placeId}`,
           {
             params: {
               offset: newOffset,

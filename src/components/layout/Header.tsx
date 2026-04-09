@@ -1,13 +1,11 @@
 "use client";
 import { ChevronLeft, LogOut } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { IoPersonOutline } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +13,7 @@ import { useEventsFilter } from "@/context/EventsFilterContext";
 import { getLoginLogoHref } from "@/lib/auth/returnContext";
 import { cn } from "@/lib/utils";
 
-import CustomBurgerIcon from "../icons/CustomBurgerIcon";
+import { WyImage } from "../custom/WyImage";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
 import LogoBlackIcon from "../icons/LogoBlackIcon";
 
@@ -69,7 +67,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
         <div className="flex items-center gap-4">
           {/* Display user email if available */}
           {user && (
-            <LinkWithBlocker href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/organizer`}>
+            <LinkWithBlocker href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/partner`}>
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
@@ -177,10 +175,10 @@ export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ 
 
             <Link href={accountHref} passHref className="flex items-center justify-center">
               <button aria-label="Account">
-                {user?.organizer?.image_id ? (
-                  <Image
-                    src={getImageUrl(user.organizer.image_id)}
-                    alt="Organizer Avatar"
+                {user?.partner?.image_id ? (
+                  <WyImage
+                    src={user.partner.image_id}
+                    alt="Partner Avatar"
                     className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover"
                     width={128}
                     height={128}

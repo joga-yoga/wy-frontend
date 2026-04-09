@@ -40,11 +40,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch organizer IDs
   let organizerRoutes: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch(`${API_URL}/organizer/ids`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/partner/ids`, { next: { revalidate: 3600 } });
     if (res.ok) {
       const ids: string[] = await res.json();
       organizerRoutes = ids.map((id) => ({
-        url: `${BASE_URL}/organizer/${id}`,
+        url: `${BASE_URL}/partner/${id}`,
         lastModified: new Date(),
         changeFrequency: "weekly" as const,
         priority: 0.7,

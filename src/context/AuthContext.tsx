@@ -6,7 +6,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 import { buildGlobalLogoutStartUrl, clearAuthStorage } from "@/lib/auth/logoutChain";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-type Organizer = {
+type Partner = {
   id: string;
   user_id: string;
   name?: string;
@@ -20,7 +20,7 @@ type User = {
   id: string;
   email: string;
   name?: string;
-  organizer?: Organizer | null;
+  partner?: Partner | null;
 };
 
 type AuthContextType = {
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               id: decoded.sub,
               email: decoded.email,
               name: decoded.name,
-              organizer: null,
+              partner: null,
             });
           }
           await refreshUser();
@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: decoded.sub,
           email: decoded.email,
           name: decoded.name,
-          organizer: null,
+          partner: null,
         });
         refreshUser();
       } catch (error) {

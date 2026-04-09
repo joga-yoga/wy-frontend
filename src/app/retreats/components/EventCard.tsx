@@ -12,6 +12,7 @@ import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
 import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
+import { WyImage } from "@/components/custom/WyImage";
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { formatDateRange } from "@/lib/formatDateRange";
@@ -136,8 +137,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
                 {event.image_ids.map((imageId) => (
                   <SwiperSlide key={imageId} className="h-full w-full">
                     <div className="relative h-full w-full">
-                      <Image
-                        src={getImageUrl(imageId)}
+                      <WyImage
+                        src={imageId}
                         alt={event.title || "Event image"}
                         fill
                         sizes="(max-width: 768px) 100vw, 485px"

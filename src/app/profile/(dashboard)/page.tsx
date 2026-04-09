@@ -39,7 +39,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 import { formatDateRange } from "@/lib/formatDateRange";
 
-interface Organizer {
+interface Partner {
   id: string;
   name: string;
 }
@@ -87,8 +87,8 @@ const getEventStatus = (event: BaseEvent): { text: string; className: string } =
 };
 
 export default function DashboardPage() {
-  const [organizer, setOrganizer] = useState<Organizer | null>(null);
-  const [loadingOrganizer, setLoadingOrganizer] = useState(true);
+  const [partner, setPartner] = useState<Partner | null>(null);
+  const [loadingPartner, setLoadingPartner] = useState(true);
   const [items, setItems] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
@@ -103,33 +103,29 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let isRedirecting = false;
-    setLoadingOrganizer(true);
+    setLoadingPartner(true);
     axiosInstance
-      .get("/organizer/me")
+      .get("/partner/me")
       .then((res) => {
-        setOrganizer(res.data);
+        setPartner(res.data);
       })
       .catch((err) => {
         if (err.response?.status === 404) {
           isRedirecting = true;
-          router.replace("/become-organizer");
+          router.replace("/become-partner");
         } else {
-          // toast({
-          //   description: "Nie udało się załadować profilu organizatora.",
-          //   variant: "destructive",
-          // });
-          setOrganizer(null);
+          setPartner(null);
         }
       })
       .finally(() => {
         if (!isRedirecting) {
-          setLoadingOrganizer(false);
+          setLoadingPartner(false);
         }
       });
   }, [toast, router]);
 
   useEffect(() => {
-    if (organizer && !loadingOrganizer) {
+    if (partner && !loadingPartner) {
       setLoadingItems(true);
       Promise.all([
         axiosInstance
@@ -153,7 +149,7 @@ export default function DashboardPage() {
         })
         .finally(() => setLoadingItems(false));
     }
-  }, [organizer, loadingOrganizer, toast]);
+  }, [partner, loadingPartner, toast]);
 
   const formatDate = (dateString: string | null | undefined) => {
     try {
@@ -293,11 +289,11 @@ export default function DashboardPage() {
     }
   };
 
-  if (loadingOrganizer) {
+  if (loadingPartner) {
     return <p className="text-center mt-20">Ładowanie...</p>;
   }
 
-  if (!organizer) {
+  if (!partner) {
     return (
       <p className="text-center mt-20">
         Nie udało się załadować Twojego profilu. Spróbuj ponownie później.

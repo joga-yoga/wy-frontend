@@ -78,7 +78,7 @@ function validateVerificationCode(value?: string) {
   return null;
 }
 
-export default function BecomeOrganizerPage() {
+export default function BecomePartnerPage() {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -117,17 +117,16 @@ export default function BecomeOrganizerPage() {
 
   useEffect(() => {
     axiosInstance
-      .get("/organizer/me")
+      .get("/partner/me")
       .then(() => {
-        toast({ description: "Jesteś już organizatorem.", variant: "default" });
+        toast({ description: "Masz już profil partnera.", variant: "default" });
         router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
       })
       .catch((err) => {
         if (err.response?.status !== 404) {
           toast({
             title: "Błąd",
-            description:
-              "Nie udało się zweryfikować statusu organizatora. Spróbuj ponownie później.",
+            description: "Nie udało się zweryfikować statusu partnera. Spróbuj ponownie później.",
             variant: "destructive",
           });
         }
@@ -141,7 +140,7 @@ export default function BecomeOrganizerPage() {
       imageFormData.append("image", file);
 
       try {
-        const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
+        const response = await axiosInstance.post("/partner/image-upload", imageFormData);
         setUploadedImageId(response.data.image_id);
         clearErrors("image");
         toast({ description: "Zdjęcie zostało przesłane pomyślnie." });
@@ -224,7 +223,7 @@ export default function BecomeOrganizerPage() {
     setIsSendingCode(true);
 
     try {
-      await axiosInstance.post("/organizer/send-verification-code", {
+      await axiosInstance.post("/partner/send-verification-code", {
         phone_number: normalizedPhoneNumber,
       });
 
@@ -262,7 +261,7 @@ export default function BecomeOrganizerPage() {
     if (!imageFile?.[0] && !uploadedImageId) {
       setError("image", {
         type: "manual",
-        message: "Dodaj zdjęcie organizatora, aby przejść do weryfikacji.",
+        message: "Dodaj zdjęcie partnera, aby przejść do weryfikacji.",
       });
       return;
     }
@@ -300,7 +299,7 @@ export default function BecomeOrganizerPage() {
     await sendVerificationCode(phoneResult.normalized);
   }
 
-  async function handleCreateOrganizer(data: FormData) {
+  async function handleCreatePartner(data: FormData) {
     clearErrors("verificationCode");
 
     const verificationError = validateVerificationCode(data.verificationCode);
@@ -323,13 +322,13 @@ export default function BecomeOrganizerPage() {
       setStep("details");
       setError("image", {
         type: "manual",
-        message: "Dodaj zdjęcie organizatora, aby zakończyć rejestrację.",
+        message: "Dodaj zdjęcie partnera, aby zakończyć rejestrację.",
       });
       return;
     }
 
     try {
-      await axiosInstance.post("/organizer", {
+      await axiosInstance.post("/partner", {
         name: data.name,
         description: data.description || undefined,
         phone_number: phoneResult.normalized,
@@ -337,12 +336,12 @@ export default function BecomeOrganizerPage() {
         image_id: uploadedImageId,
       });
 
-      toast({ description: "Jesteś teraz organizatorem! Przekierowywanie..." });
+      toast({ description: "Twój profil partnera został utworzony. Przekierowywanie..." });
       router.replace(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||
-        "Nie udało się zostać organizatorem. Sprawdź wprowadzone dane i spróbuj ponownie.";
+        "Nie udało się utworzyć profilu partnera. Sprawdź dane i spróbuj ponownie.";
 
       toast({ description: errorMsg, variant: "destructive" });
 
@@ -370,11 +369,11 @@ export default function BecomeOrganizerPage() {
           <p className="text-sm font-medium text-muted-foreground">
             {step === "details" ? "Krok 1 z 2" : "Krok 2 z 2"}
           </p>
-          <h1 className="text-2xl font-bold text-center sm:text-left">Zostań organizatorem</h1>
+          <h1 className="text-2xl font-bold text-center sm:text-left">Zostań partnerem</h1>
           <p className="text-sm text-muted-foreground">
             {step === "details"
-              ? "Uzupełnij dane organizatora i dodaj zdjęcie. Po tym wyślemy SMS z kodem weryfikacyjnym."
-              : "Potwierdź numer telefonu kodem z SMS-a, aby dokończyć tworzenie profilu organizatora."}
+              ? "Uzupełnij dane partnera i dodaj zdjęcie. Po tym wyślemy SMS z kodem weryfikacyjnym."
+              : "Potwierdź numer telefonu kodem z SMS-a, aby dokończyć tworzenie profilu partnera."}
           </p>
         </div>
 
@@ -382,17 +381,17 @@ export default function BecomeOrganizerPage() {
           onSubmit={
             step === "details"
               ? handleSubmit(handleContinueToVerification)
-              : handleSubmit(handleCreateOrganizer)
+              : handleSubmit(handleCreatePartner)
           }
           className="space-y-6"
         >
           {step === "details" && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="name">Nazwa organizatora *</Label>
+                <Label htmlFor="name">Nazwa partnera *</Label>
                 <Input
                   id="name"
-                  placeholder="Nazwa Twojego organizatora lub firmy"
+                  placeholder="Nazwa Twojego partnera lub firmy"
                   {...register("name")}
                   aria-invalid={errors.name ? "true" : "false"}
                 />
@@ -403,7 +402,7 @@ export default function BecomeOrganizerPage() {
                 <Label htmlFor="description">Opis</Label>
                 <Textarea
                   id="description"
-                  placeholder="Opowiedz nam trochę o swojej organizacji"
+                  placeholder="Opowiedz nam trochę o swojej działalności"
                   {...register("description")}
                 />
               </div>

@@ -23,7 +23,11 @@ export async function getWorkshop(id: string): Promise<WorkshopEventDetail | nul
           throw new Error(`Failed to fetch workshop: ${res.statusText}`);
         }
 
-        return res.json();
+        const data = await res.json();
+        return {
+          ...data,
+          organizer: data.partner ?? data.organizer ?? null,
+        };
       } catch (error) {
         console.error("Error fetching workshop:", error);
         return null;

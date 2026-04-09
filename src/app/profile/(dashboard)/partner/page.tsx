@@ -32,7 +32,7 @@ interface GooglePlaceLocation {
   google_place_id?: string | null;
 }
 
-interface OrganizerData {
+interface PartnerData {
   name?: string;
   description?: string;
   image_id?: string | null;
@@ -48,7 +48,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function OrganizerProfilePage() {
+export default function PartnerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [currentImageId, setCurrentImageId] = useState<string | null>(null);
   const [newlyUploadedImageId, setNewlyUploadedImageId] = useState<string | null>(null);
@@ -94,7 +94,7 @@ export default function OrganizerProfilePage() {
     try {
       setIsLoadingReviewsCount(true);
       setCollectReviewsError(null);
-      const response = await axiosInstance.get(`/organizer/reviews/${placeId}`, {
+      const response = await axiosInstance.get(`/partner/reviews/${placeId}`, {
         params: {
           offset: 0,
           limit: 1,
@@ -127,7 +127,7 @@ export default function OrganizerProfilePage() {
     setCollectReviewsError(null);
 
     try {
-      const response = await axiosInstance.post("/organizer/collect-reviews");
+      const response = await axiosInstance.post("/partner/collect-reviews");
 
       toast({
         description: `Pomyślnie pobrano recenzje! Zapisano ${response.data.saved_count} nowych recenzji (znaleziono ${response.data.total_found} razem).`,
@@ -171,11 +171,11 @@ export default function OrganizerProfilePage() {
       });
   }, [toast]);
 
-  // Fetch organizer data
+  // Fetch partner data
   useEffect(() => {
     setLoading(true);
     axiosInstance
-      .get<OrganizerData>("/organizer/me")
+      .get<PartnerData>("/partner/me")
       .then((res) => {
         setValue("name", res.data.name || "");
         setValue("description", res.data.description || "");
@@ -215,7 +215,7 @@ export default function OrganizerProfilePage() {
             description: "Najpierw utwórz profil organizatora.",
             variant: "destructive",
           });
-          router.push("/become-organizer");
+          router.push("/become-partner");
         } else {
           toast({
             description: "Nie udało się wczytać profilu organizatora.",
@@ -259,7 +259,7 @@ export default function OrganizerProfilePage() {
     const imageFormData = new FormData();
     imageFormData.append("image", file);
     try {
-      const response = await axiosInstance.post("/organizer/image-upload", imageFormData);
+      const response = await axiosInstance.post("/partner/image-upload", imageFormData);
       setNewlyUploadedImageId(response.data.image_id);
       toast({ description: "Nowe zdjęcie przesłano pomyślnie. Zapisz zmiany, aby zastosować." });
     } catch (err: any) {
@@ -313,7 +313,7 @@ export default function OrganizerProfilePage() {
     }
 
     try {
-      const response = await axiosInstance.put("/organizer", payload);
+      const response = await axiosInstance.put("/partner", payload);
       toast({ description: "Profil zaktualizowany pomyślnie!" });
       setCurrentImageId(response.data.image_id || null);
       // setValue("google_place_id", response.data.google_place_id || null);

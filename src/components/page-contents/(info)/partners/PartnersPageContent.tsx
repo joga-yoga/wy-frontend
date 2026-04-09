@@ -16,7 +16,7 @@ type PublicStats = {
   total_public_workshops: number;
   total_countries_with_public_retreats: number;
   total_public_retreats_in_poland: number;
-  total_organizers: number;
+  total_partners: number;
 };
 
 function polishPlural(count: number, forms: [string, string, string]) {
@@ -80,8 +80,8 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
           projects: ["retreats"],
         },
         {
-          title: String(statsData.total_organizers),
-          description: `${polishPlural(statsData.total_organizers, ["organizator", "organizatorzy", "organizatorów"])}`,
+          title: String(statsData.total_partners),
+          description: `${polishPlural(statsData.total_partners, ["partner", "partnerzy", "partnerów"])}`,
           projects: ["retreats", "workshops"],
         },
       ]

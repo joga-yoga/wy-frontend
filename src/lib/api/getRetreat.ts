@@ -16,7 +16,11 @@ export async function getRetreat(id: string): Promise<EventDetail | null> {
           throw new Error(`Failed to fetch retreat: ${res.statusText}`);
         }
 
-        return res.json();
+        const data = await res.json();
+        return {
+          ...data,
+          organizer: data.partner ?? data.organizer ?? null,
+        };
       } catch (error) {
         console.error("Error fetching retreat:", error);
         return null;

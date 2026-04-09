@@ -56,9 +56,9 @@ export const Sidebar = ({ className }: React.HTMLAttributes<HTMLElement>) => {
         icon: LayoutDashboard,
       },
       {
-        name: "Organizer Profile",
-        href: "/dashboard/organizer",
-        isActive: isActive("/dashboard/organizer"),
+        name: "Partner Profile",
+        href: "/dashboard/partner",
+        isActive: isActive("/dashboard/partner"),
         icon: User,
       },
       {

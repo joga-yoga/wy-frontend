@@ -4,7 +4,7 @@ export interface OrganizerInfo {
   id: string;
   name: string;
   phone_number: string | null;
-  email: string;
+  email?: string | null;
   image_id: string | null;
   description: string | null;
   user_id: string;
@@ -29,7 +29,8 @@ export interface OrganizerEvent {
   language: string;
   location: OrganizerLocation;
   main_attractions: string[];
-  organizer_id: string;
+  partner_id?: string;
+  organizer_id?: string;
   paid_attractions: string[];
   price: number;
   price_excludes: string[];
@@ -53,7 +54,8 @@ export interface OrganizerLocation {
   id: string;
   latitude: number;
   longitude: number;
-  organizer_id: string;
+  partner_id?: string;
+  organizer_id?: string;
   postal_code: string | null;
   state_province: string;
   title: string;

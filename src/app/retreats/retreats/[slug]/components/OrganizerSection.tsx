@@ -5,6 +5,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 
 import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,6 +26,7 @@ interface OrganizerSectionProps {
 }
 
 export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, project }) => {
+  const partner = event.partner ?? event.organizer;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -33,7 +35,7 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
   const [modalState, setModalState] = useState<"default" | "error" | "success">("default");
   const eventEntity = project === "workshops" ? "wydarzenia" : "wyjazdu";
 
-  if (!event.organizer) {
+  if (!partner) {
     return null;
   }
 
@@ -63,7 +65,7 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
       const formattedMessage = [
         `Typ zgłoszenia: Kontakt do organizatora ${eventEntity}`,
         `ID ${eventEntity}: ${event.id}`,
-        `Organizator: ${event.organizer?.name}`,
+        `Partner: ${partner?.name}`,
         "",
         "Wiadomość:",
         message.trim(),
@@ -90,20 +92,22 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
   return (
     <div className="md:px-5">
       <Link
-        href={`/organizer/${event.organizer.id}`}
+        href={`/partner/${partner.id}`}
         className="flex items-center gap-5 hover:opacity-80 transition"
       >
-        <div className="relative h-[80px] w-[80px] flex-shrink-0">
-          <Image
-            src={getImageUrl(event.organizer.image_id, 1)}
-            alt={event.organizer.name}
-            fill
-            className="rounded-full object-cover border"
-          />
-        </div>
+        {partner.image_id && (
+          <div className="relative h-[80px] w-[80px] flex-shrink-0">
+            <WyImage
+              src={partner.image_id}
+              alt={partner.name}
+              fill
+              className="rounded-full object-cover border"
+            />
+          </div>
+        )}
         <div>
           <p className="text-subheader">Organizator</p>
-          <p className="text-sub-descript-18 text-gray-500">{event.organizer.name}</p>
+          <p className="text-sub-descript-18 text-gray-500">{partner.name}</p>
         </div>
       </Link>
 
@@ -114,7 +118,7 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
           className="w-full bg-gray-200 text-gray-800 hover:bg-gray-300"
           onClick={() => setIsModalOpen(true)}
         >
-          Napisz do: {event.organizer.name}
+          Napisz do: {partner.name}
         </Button>
       </div>
 
@@ -123,7 +127,7 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
           {modalState === "default" && (
             <>
               <DialogHeader>
-                <DialogTitle>Napisz do: {event.organizer.name}</DialogTitle>
+                <DialogTitle>Napisz do: {partner.name}</DialogTitle>
                 <DialogDescription>
                   Wyślij wiadomość, aby dowiedzieć się więcej na temat tego {eventEntity}.
                 </DialogDescription>
@@ -183,9 +187,7 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
             <div className="space-y-4">
               <DialogHeader>
                 <DialogTitle>Wiadomość została wysłana</DialogTitle>
-                <DialogDescription>
-                  Dziękujemy! Organizator otrzyma Twoje zgłoszenie.
-                </DialogDescription>
+                <DialogDescription>Dziękujemy. Partner otrzyma Twoje zgłoszenie.</DialogDescription>
               </DialogHeader>
 
               <div className="flex justify-end">
