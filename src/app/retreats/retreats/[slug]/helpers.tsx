@@ -32,7 +32,7 @@ export const formatMultiLineText = (text: string | undefined | null): React.Reac
     }
     // Otherwise, treat as a paragraph or part of one
     return (
-      <p key={index} className="mb-1">
+      <p key={index} className="mb-1 min-h-[20px]">
         {line.trim()}
       </p>
     ); // Add some margin between paragraphs

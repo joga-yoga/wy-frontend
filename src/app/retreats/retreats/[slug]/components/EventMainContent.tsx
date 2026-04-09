@@ -22,9 +22,9 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
   return (
     <div className={`space-y-5 md:space-y-[44px] ${className}`}>
       {event.description && (
-        <p className="text-m-descript md:text-listing-description text-gray-500">
-          {event.description}
-        </p>
+        <div className="text-m-descript md:text-listing-description text-gray-500">
+          {formatMultiLineText(event.description)}
+        </div>
       )}
 
       {/* Program Section */}
@@ -148,41 +148,42 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
               Cena obejmuje
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-              <div>
-                <h3 className="text-m-header md:text-subheader text-gray-800">Wliczone w cenę</h3>
-                {event.price_includes && event.price_includes.length > 0 && (
+              {event.price_includes && event.price_includes.length > 0 && (
+                <div>
+                  <h3 className="text-m-header md:text-subheader text-gray-800">Wliczone w cenę</h3>
                   <ul className="list-disc pl-5 text-m-sunscript-font md:text-sub-descript-18 text-gray-500 space-y-1 mt-2">
                     {event.price_includes.map((item, index) => (
                       <li key={index}>{item}</li>
                     ))}
                   </ul>
-                )}
-              </div>
+                </div>
+              )}
               <div className="space-y-4 mt-5 md:mt-0">
-                <div>
-                  <h3 className="text-m-header md:text-subheader text-gray-800">
-                    Nie wliczone w cenę
-                  </h3>
-                  {event.price_excludes && event.price_excludes.length > 0 && (
+                {event.price_excludes && event.price_excludes.length > 0 && (
+                  <div>
+                    <h3 className="text-m-header md:text-subheader text-gray-800">
+                      Nie wliczone w cenę
+                    </h3>
+
                     <ul className="list-disc pl-5 text-m-sunscript-font md:text-sub-descript-18 text-gray-500 space-y-1 mt-2">
                       {event.price_excludes.map((item, index) => (
                         <li key={index}>{item}</li>
                       ))}
                     </ul>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-m-header md:text-subheader text-gray-800">
-                    Dodatkowe atrakcje za dopłatą
-                  </h3>
-                  {event.paid_attractions && event.paid_attractions.length > 0 && (
+                  </div>
+                )}
+                {event.paid_attractions && event.paid_attractions.length > 0 && (
+                  <div>
+                    <h3 className="text-m-header md:text-subheader text-gray-800">
+                      Dodatkowe atrakcje za dopłatą
+                    </h3>
                     <ul className="list-disc pl-5 text-m-sunscript-font md:text-sub-descript-18 text-gray-500 space-y-1 mt-2">
                       {event.paid_attractions.map((item, index) => (
                         <li key={index}>{item}</li>
                       ))}
                     </ul>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
