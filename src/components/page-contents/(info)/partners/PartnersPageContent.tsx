@@ -229,11 +229,11 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
         </div>
       </section>
       <Separator className="container-wy mx-auto my-6 lg:my-10" />
-      {/* "Co dostaniesz w spówpracy" Section */}
+      {/* "Co dostaniesz we wspówpracy" Section */}
       <section className="">
         <div className="container-wy mx-auto px-0 lg:px-8">
           <h2 className="px-4 lg:px-0 mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-800">
-            Co dostaniesz w spówpracy z{" "}
+            Co dostaniesz we wspówpracy z{" "}
             <span className="text-nowrap">
               {project === "retreats" ? "wyjazdy" : "wydarzenia"}
               <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
