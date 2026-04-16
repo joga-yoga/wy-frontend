@@ -22,6 +22,7 @@ const calculatePricePerDay = (
   price: number | null,
   startDateStr: string,
   endDateStr: string | null,
+  currency?: string | null,
 ): string | null => {
   if (price === null || !startDateStr) {
     return null;
@@ -44,7 +45,7 @@ const calculatePricePerDay = (
     }
 
     const pricePerDay = price / durationDays;
-    return `${Math.round(pricePerDay)} zł./dobę`;
+    return `${Math.round(pricePerDay)} ${currency || "PLN"}/dobę`;
   } catch (e) {
     console.error("Error calculating price per day:", e);
     return null;
@@ -194,7 +195,12 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
               {event.start_date && (
                 <div className="flex flex-row justify-end items-center w-full h-[22px]">
                   <span className="text-m-sunscript-font md:text-sub-descript-18 text-gray-400 text-right flex-grow">
-                    {calculatePricePerDay(event.price, event.start_date, event.end_date)}
+                    {calculatePricePerDay(
+                      event.price,
+                      event.start_date,
+                      event.end_date,
+                      event.currency,
+                    )}
                   </span>
                 </div>
               )}
