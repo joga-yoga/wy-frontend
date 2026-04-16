@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 
+import { CookieConsentManager } from "@/components/cookies/CookieConsentManager";
 import { Footer } from "@/components/layout/Footer";
 import { PublicHeader } from "@/components/layout/Header";
 import { EventsFilterProvider } from "@/context/EventsFilterContext";
@@ -18,6 +19,7 @@ export default function WorkshopsLayout({ children }: { children: React.ReactNod
     <EventsFilterProvider>
       <PublicHeader project="workshops" />
       {children}
+      <CookieConsentManager project="workshops" />
       <Footer project="workshops" />
     </EventsFilterProvider>
   );

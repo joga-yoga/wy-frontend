@@ -1,247 +1,324 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const PrivacyPolicyPageContent = ({ project }: { project: "retreats" | "workshops" }) => {
+type Project = "retreats" | "workshops";
+
+const projectConfig: Record<
+  Project,
+  { domain: string; serviceName: string; contactEmail: string }
+> = {
+  retreats: {
+    domain: "wyjazdy.yoga",
+    serviceName: "wyjazdy.yoga",
+    contactEmail: "hello@wyjazdy.yoga",
+  },
+  workshops: {
+    domain: "wydarzenia.yoga",
+    serviceName: "wydarzenia.yoga",
+    contactEmail: "hello@wydarzenia.yoga",
+  },
+};
+
+const basePolicyHtml = `
+<h2>1. Informacje ogólne</h2>
+<ol>
+  <li>Niniejsza polityka dotyczy Serwisu www, funkcjonującego pod adresem url: <b>https://wyjazdy.yoga/</b></li>
+  <li>
+    Operatorem serwisu oraz Administratorem danych osobowych jest: SVYATOSLAV BORYSENKO Liściasta 12, 91-001 Łódź 
+              </li>
+
+              <li>Adres kontaktowy poczty elektronicznej operatora: hello@wyjazdy.yoga</li>
+  
+  <li>
+    Operator jest Administratorem Twoich danych osobowych w odniesieniu do danych podanych dobrowolnie w
+    Serwisie.
+              </li><li>Serwis wykorzystuje dane osobowe w następujących celach:</li>
+
+  <ul>
+                  <li>Prowadzenie newslettera</li>
+                  <li>Wyświetlanie ogłoszeń użytkowników</li>
+                  <li>Prowadzenie rozmów typu chat online</li>
+                  <li>Prezentacja profil użytkownika innym użytkownikom</li>
+                  <li>Obsługa zapytań przez formularz</li>
+              </ul>
+               <li>
+    Serwis realizuje funkcje pozyskiwania informacji o użytkownikach i ich zachowaniu w następujący sposób:
+    <ol>
+      <li>
+        Poprzez dobrowolnie wprowadzone w formularzach dane, które zostają wprowadzone do systemów Operatora.
+      </li>
+      <li>Poprzez zapisywanie w urządzeniach końcowych plików cookie (tzw. „ciasteczka").</li>
+    </ol>
+  </li>
+</ol>
+<h2>2. Wybrane metody ochrony danych stosowane przez Operatora</h2>
+<ol>
+            <li>Miejsca logowania i wprowadzania danych osobowych są chronione w warstwie
+transmisji (certyfikat SSL). Dzięki temu dane osobowe i dane logowania, wprowadzone na stronie, zostają zaszyfrowane w
+komputerze użytkownika i mogą być odczytane jedynie na docelowym serwerze.</li>
+   
+
+   
+
+            <li>Hasła użytkowników są przechowywane w postaci
+hashowanej. Funkcja hashująca działa jednokierunkowo - nie jest możliwe odwrócenie jej działania, co stanowi obecnie
+współczesny standard w zakresie przechowywania haseł użytkowników.</li>
+   
+
+            <li>Operator okresowo zmienia swoje hasła
+administracyjne.</li>
+   
+
+   
+
+   
+
+            <li>Istotnym elementem ochrony danych jest regularna aktualizacja wszelkiego oprogramowania, wykorzystywanego
+przez Operatora do przetwarzania danych osobowych, co w szczególności oznacza regularne aktualizacje komponentów
+programistycznych.</li>
+   
+
+            <li>W celu ochrony danych Operator regularnie wykonuje kopie bezpieczeństwa.</li>
+          </ol>
+<h2>3. Hosting</h2>
+<ol>
+  
+  <li>Serwis jest hostowany (technicznie utrzymywany) na serwerze operatora: Vercel</li>
+  
+   
+  
+  
+  <li>
+    Firma hostingowa w celu zapewnienia niezawodności technicznej prowadzi logi na poziomie serwera. Zapisowi
+    mogą podlegać:
+    <ul>
+      <li>zasoby określone identyfikatorem URL (adresy żądanych zasobów – stron, plików),</li>
+      <li>czas nadejścia zapytania,</li>
+      <li>czas wysłania odpowiedzi,</li>
+      <li>nazwę stacji klienta – identyfikacja realizowana przez protokół HTTP,</li>
+      <li>informacje o błędach jakie nastąpiły przy realizacji transakcji HTTP,</li>
+      <li>
+        adres URL strony poprzednio odwiedzanej przez użytkownika (referer link) – w przypadku gdy przejście do
+        Serwisu nastąpiło przez odnośnik,
+      </li>
+      <li>informacje o przeglądarce użytkownika,</li>
+      <li>informacje o adresie IP,</li>
+      <li>
+        informacje diagnostyczne związane z procesem samodzielnego zamawiania usług poprzez rejestratory na
+        stronie,
+      </li>
+      <li>
+        informacje związane z obsługą poczty elektronicznej kierowanej do Operatora oraz wysyłanej przez
+        Operatora.
+      </li>
+    </ul>
+  </li>
+</ol>
+<h2>4. Twoje prawa i dodatkowe informacje o sposobie wykorzystania danych</h2>
+<ol>
+   
+  
+            <li>
+    W niektórych sytuacjach Administrator ma prawo przekazywać Twoje dane osobowe innym odbiorcom, jeśli będzie
+    to niezbędne do wykonania zawartej z Tobą umowy lub do zrealizowania obowiązków ciążących na
+    Administratorze. Dotyczy to takich grup odbiorców:
+    <ul>
+                      <li>firma hostingowa na zasadzie powierzenia</li>
+                      <li>upoważnieni pracownicy i współpracownicy, którzy korzystają z danych w celu realizacji celu działania strony</li>
+                  </ul>
+  </li>
+  
+  <li>
+    Twoje dane osobowe przetwarzane przez Administratora nie dłużej, niż jest to konieczne do wykonania
+    związanych z nimi czynności określonych osobnymi przepisami (np. o prowadzeniu rachunkowości). W odniesieniu
+    do danych marketingowych dane nie będą przetwarzane dłużej niż przez 3 lata.
+  </li>
+  <li>
+    Przysługuje Ci prawo żądania od Administratora:
+    <ul>
+      <li>dostępu do danych osobowych Ciebie dotyczących,</li>
+      <li>ich sprostowania,</li>
+      <li>usunięcia,</li>
+      <li>ograniczenia przetwarzania,</li>
+      <li>oraz przenoszenia danych.</li>
+    </ul>
+  </li>
+  <li>
+    Przysługuje Ci prawo do złożenia sprzeciwu w zakresie przetwarzania wskazanego w pkt 3.3 c) wobec
+    przetwarzania danych osobowych w celu wykonania prawnie uzasadnionych interesów realizowanych przez
+    Administratora, w tym profilowania, przy czym prawo sprzeciwu nie będzie mogło być wykonane w przypadku
+    istnienia ważnych prawnie uzasadnionych podstaw do przetwarzania, nadrzędnych wobec Ciebie interesów, praw i
+    wolności, w szczególności ustalenia, dochodzenia lub obrony roszczeń.
+  </li>
+  <li>
+    Na działania Administratora przysługuje skarga do Prezesa Urzędu Ochrony Danych Osobowych, ul. Stawki 2,
+    00-193 Warszawa.
+  </li>
+  <li>Podanie danych osobowych jest dobrowolne, lecz niezbędne do obsługi Serwisu.</li>
+  <li>
+    W stosunku do Ciebie mogą być podejmowane czynności polegające na zautomatyzowanym podejmowaniu decyzji, w
+    tym profilowaniu w celu świadczenia usług w ramach zawartej umowy oraz w celu prowadzenia przez
+    Administratora marketingu bezpośredniego.
+  </li>
+
+            <li>
+    Dane osobowe są przekazywane od krajów trzecich w rozumieniu przepisów o ochronie danych osobowych. Oznacza
+    to, że przesyłamy je poza teren Unii Europejskiej.
+  </li>
+
+          </ol>
+<h2>5. Informacje w formularzach</h2>
+<ol>
+  <li>
+    Serwis zbiera informacje podane dobrowolnie przez użytkownika, w tym dane osobowe, o ile zostaną one podane.
+  </li>
+  <li>Serwis może zapisać informacje o parametrach połączenia (oznaczenie czasu, adres IP).</li>
+  <li>
+    Serwis, w niektórych wypadkach, może zapisać informację ułatwiającą powiązanie danych w formularzu z adresem
+    e-mail użytkownika wypełniającego formularz. W takim wypadku adres e-mail użytkownika pojawia się wewnątrz
+    adresu url strony zawierającej formularz.
+  </li>
+  <li>
+    Dane podane w formularzu są przetwarzane w celu wynikającym z funkcji konkretnego formularza, np. w celu
+    dokonania procesu obsługi zgłoszenia serwisowego lub kontaktu handlowego, rejestracji usług itp. Każdorazowo
+    kontekst i opis formularza w czytelny sposób informuje, do czego on służy.
+  </li>
+</ol>
+<h2>6. Logi Administratora</h2>
+<ol>
+  <li>
+    Informacje zachowaniu użytkowników w serwisie mogą podlegać logowaniu. Dane te są wykorzystywane w celu
+    administrowania serwisem.
+  </li>
+</ol>
+<h2>7. Istotne techniki marketingowe</h2>
+<ol>
+            <li>Operator stosuje analizę
+statystyczną ruchu na stronie, poprzez Google Analytics (Google Inc. z siedzibą w USA). Operator nie przekazuje do
+operatora tej usługi danych osobowych, a jedynie zanonimizowane informacje. Usługa bazuje na wykorzystaniu ciasteczek w
+urządzeniu końcowym użytkownika. W zakresie informacji o preferencjach użytkownika gromadzonych przez sieć reklamową
+Google użytkownik może przeglądać i edytować informacje wynikające z plików cookies przy pomocy narzędzia:
+https://www.google.com/ads/preferences/</li>
+   
+
+            <li>Operator stosuje korzysta z piksela Facebooka. Ta technologia
+powoduje, że serwis Facebook (Facebook Inc. z siedzibą w USA) wie, że dana osoba w nim zarejestrowana korzysta z
+Serwisu. Bazuje w tym wypadku na danych, wobec których sam jest administratorem, Operator nie przekazuje od siebie
+żadnych dodatkowych danych osobowych serwisowi Facebook. Usługa bazuje na wykorzystaniu ciasteczek w urządzeniu końcowym
+użytkownika.</li>
+   
+
+   
+
+  
+   
+  
+            <li>Operator może
+stosować profilowanie w rozumieniu przepisów o ochronie danych osobowych</li>
+          </ol>
+<h2>8. Informacja o plikach cookies</h2>
+<ol>
+  <li>Serwis korzysta z plików cookies.</li>
+  <li>
+    Pliki cookies (tzw. „ciasteczka") stanowią dane informatyczne, w szczególności pliki tekstowe, które
+    przechowywane są w urządzeniu końcowym Użytkownika Serwisu i przeznaczone są do korzystania ze stron
+    internetowych Serwisu. Cookies zazwyczaj zawierają nazwę strony internetowej, z której pochodzą, czas
+    przechowywania ich na urządzeniu końcowym oraz unikalny numer.
+  </li>
+  <li>
+    Podmiotem zamieszczającym na urządzeniu końcowym Użytkownika Serwisu pliki cookies oraz uzyskującym do nich
+    dostęp jest operator Serwisu.
+  </li>
+  <li>
+    Pliki cookies wykorzystywane są w następujących celach:
+    <ol>
+      <li>
+        utrzymanie sesji użytkownika Serwisu (po zalogowaniu), dzięki której użytkownik nie musi na każdej
+        podstronie Serwisu ponownie wpisywać loginu i hasła;
+      </li>
+      <li>realizacji celów określonych powyżej w części "Istotne techniki marketingowe";</li>
+    </ol>
+  </li>
+  <li>
+    W ramach Serwisu stosowane są dwa zasadnicze rodzaje plików cookies: „sesyjne" (session cookies) oraz
+    „stałe" (persistent cookies). Cookies „sesyjne" są plikami tymczasowymi, które przechowywane są w urządzeniu
+    końcowym Użytkownika do czasu wylogowania, opuszczenia strony internetowej lub wyłączenia oprogramowania
+    (przeglądarki internetowej). „Stałe" pliki cookies przechowywane są w urządzeniu końcowym Użytkownika przez
+    czas określony w parametrach plików cookies lub do czasu ich usunięcia przez Użytkownika.
+  </li>
+  <li>
+    Oprogramowanie do przeglądania stron internetowych (przeglądarka internetowa) zazwyczaj domyślnie dopuszcza
+    przechowywanie plików cookies w urządzeniu końcowym Użytkownika. Użytkownicy Serwisu mogą dokonać zmiany
+    ustawień w tym zakresie. Przeglądarka internetowa umożliwia usunięcie plików cookies. Możliwe jest także
+    automatyczne blokowanie plików cookies Szczegółowe informacje na ten temat zawiera pomoc lub dokumentacja
+    przeglądarki internetowej.
+  </li>
+  <li>
+    Ograniczenia stosowania plików cookies mogą wpłynąć na niektóre funkcjonalności dostępne na stronach
+    internetowych Serwisu.
+  </li>
+  <li>
+    Pliki cookies zamieszczane w urządzeniu końcowym Użytkownika Serwisu wykorzystywane mogą być również przez
+    współpracujące z operatorem Serwisu podmioty, w szczególności dotyczy to firm: Google (Google Inc. z
+    siedzibą w USA), Facebook (Facebook Inc. z siedzibą w USA), Twitter (Twitter Inc. z siedzibą w USA).
+  </li>
+</ol>
+<h2>9. Zarządzanie plikami cookies – jak w praktyce wyrażać i cofać zgodę?</h2>
+<ol>
+  <li>
+    Jeśli użytkownik nie chce otrzymywać plików cookies, może zmienić ustawienia przeglądarki. Zastrzegamy, że
+    wyłączenie obsługi plików cookies niezbędnych dla procesów uwierzytelniania, bezpieczeństwa, utrzymania
+    preferencji użytkownika może utrudnić, a w skrajnych przypadkach może uniemożliwić korzystanie ze stron www
+  </li>
+  <li>
+    W celu zarządzania ustawienia cookies wybierz z listy poniżej przeglądarkę internetową, której używasz i
+    postępuj zgodnie z instrukcjami:
+    <ul>
+      <li>
+        <a href="https://support.microsoft.com/pl-pl/help/10607/microsoft-edge-view-delete-browser-history">Edge</a>
+      </li>
+      <li>
+        <a href="https://support.microsoft.com/pl-pl/help/278835/how-to-delete-cookie-files-in-internet-explorer">Internet Explorer</a>
+      </li>
+      <li><a href="http://support.google.com/chrome/bin/answer.py?hl=pl&amp;answer=95647">Chrome</a></li>
+      <li><a href="http://support.apple.com/kb/PH5042">Safari</a></li>
+      <li>
+        <a href="http://support.mozilla.org/pl/kb/W%C5%82%C4%85czanie%20i%20wy%C5%82%C4%85czanie%20obs%C5%82ugi%20ciasteczek">Firefox</a>
+      </li>
+      <li><a href="http://help.opera.com/Windows/12.10/pl/cookies.html">Opera</a></li>
+    </ul>
+    <p>Urządzenia mobilne:</p>
+    <ul>
+      <li><a href="http://support.google.com/chrome/bin/answer.py?hl=pl&amp;answer=95647">Android</a></li>
+      <li><a href="http://support.apple.com/kb/HT1677?viewlocale=pl_PL">Safari (iOS)</a></li>
+      <li>
+        <a href="http://www.windowsphone.com/pl-pl/how-to/wp7/web/changing-privacy-and-other-browser-settings">Windows Phone</a>
+      </li>
+    </ul>
+  </li>
+</ol>
+`;
+
+export const PrivacyPolicyPageContent = ({ project }: { project: Project }) => {
+  const config = projectConfig[project];
+
+  const policyHtml = basePolicyHtml
+    .replaceAll("https://wyjazdy.yoga/", `https://${config.domain}/`)
+    .replaceAll("hello@wyjazdy.yoga", config.contactEmail);
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 py-8 px-2 sm:py-12 sm:px-4">
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl sm:text-3xl font-bold text-center mb-6 pt-4">
-            Polityka Prywatności {project === "retreats" ? "wyjazdy.yoga" : "wydarzenia.yoga"}
+          <CardTitle className="text-2xl sm:text-3xl font-bold text-center pt-4">
+            Polityka Prywatności – {config.serviceName}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-8 text-gray-700 dark:text-gray-300">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">JAKIE INFORMACJE ZBIERAMY</h2>
-            <p className="mb-4">
-              Kiedy odwiedzasz stronę {project === "retreats" ? "wyjazdy.yoga" : "wydarzenia.yoga"},
-              automatycznie zbieramy pewne informacje o Twoim urządzeniu, w tym o przeglądarce,
-              adresie IP, strefie czasowej oraz niektórych plikach cookies zainstalowanych na Twoim
-              urządzeniu. Podczas przeglądania strony zbieramy także informacje o poszczególnych
-              stronach lub wydarzeniach, które przeglądasz, stronach internetowych lub frazach
-              wyszukiwania, które skierowały Cię na naszą stronę oraz o Twojej interakcji ze stroną.
-              Informacje te nazywamy „Informacjami o Urządzeniu”.
-            </p>
-            <p className="mb-4">Zbieramy Informacje o Urządzeniu używając:</p>
-            <ul className="list-disc list-inside space-y-2 mb-4 pl-4">
-              <li>
-                „Cookies”, które są plikami danych umieszczanymi na urządzeniu użytkownika.
-                Szczegółowe informacje o cookies oraz sposobie ich wyłączania znajdziesz na stronie:{" "}
-                <a
-                  href="http://www.allaboutcookies.org"
-                  className="text-blue-600 hover:underline break-words"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  http://www.allaboutcookies.org
-                </a>
-                .
-              </li>
-              <li>
-                „Pliki dziennika” (log files), które śledzą działania na stronie, zbierając dane
-                takie jak adres IP, typ przeglądarki, dostawcę usług internetowych, strony
-                odsyłające, strony wyjścia oraz datę i godzinę.
-              </li>
-              <li>
-                „Web beacons”, „tagi” i „pixele”, czyli elektroniczne pliki używane do rejestrowania
-                informacji o przeglądaniu strony.
-              </li>
-            </ul>
-            <p className="mb-4">
-              Gdy dokonujesz zakupu lub próbujesz dokonać zakupu przez naszą stronę, zbieramy od
-              Ciebie dodatkowe dane, takie jak imię i nazwisko, adres do faktury, adres wysyłki,
-              dane płatności (w tym numer karty kredytowej), adres email oraz numer telefonu.
-              Informacje te określamy jako „Informacje o Zamówieniu”.
-            </p>
-            <p className="mb-4">
-              Email marketing (opcjonalnie): Za Twoją zgodą możemy przesyłać Ci wiadomości o naszych
-              usługach, nowych wydarzeniach i innych aktualizacjach.
-            </p>
-            <p className="mb-4">
-              Mówiąc o „Danych Osobowych” w tej Polityce Prywatności, mamy na myśli zarówno
-              Informacje o Urządzeniu, jak i Informacje o Zamówieniu.
-            </p>
-          </div>
 
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">
-              1. JAK WYKORZYSTUJEMY TWOJE DANE OSOBOWE
-            </h2>
-            <p className="mb-4">
-              Informacje o Zamówieniu wykorzystujemy do realizacji zamówień dokonanych przez stronę,
-              przetwarzania płatności, organizacji wydarzenia oraz dostarczania faktur i
-              potwierdzeń. Komunikujemy się z Tobą, aby identyfikować potencjalne ryzyko lub
-              oszustwo oraz dostarczać istotne informacje lub reklamy związane z naszymi produktami
-              i usługami.
-            </p>
-            <p className="mb-4">
-              Informacje o Urządzeniu pomagają nam wykrywać ryzyko i oszustwa (w szczególności adres
-              IP), poprawiać i optymalizować naszą stronę, generować analizy interakcji użytkowników
-              oraz oceniać skuteczność kampanii marketingowych.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">
-              2. UDOSTĘPNIANIE DANYCH OSOBOWYCH
-            </h2>
-            <p className="mb-4">
-              Twoje Dane Osobowe udostępniamy wybranym stronom trzecim, aby pomóc nam w realizacji
-              celów opisanych powyżej. Przykłady to firmy zajmujące się backupem danych, dostawcy
-              usług emailowych, Stripe dla obsługi płatności (szczegóły polityki prywatności Stripe:{" "}
-              <a
-                href="https://stripe.com/us/privacy#personal-data-definition"
-                className="text-blue-600 hover:underline break-words"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                https://stripe.com/us/privacy#personal-data-definition
-              </a>
-              ), oraz Google Analytics do analizowania korzystania ze strony (więcej informacji
-              tutaj:{" "}
-              <a
-                href="https://www.google.com/intl/pl/policies/privacy/"
-                className="text-blue-600 hover:underline break-words"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                https://www.google.com/intl/pl/policies/privacy/
-              </a>
-              ). Możesz zrezygnować z Google Analytics tutaj:{" "}
-              <a
-                href="https://tools.google.com/dlpage/gaoptout"
-                className="text-blue-600 hover:underline break-words"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                https://tools.google.com/dlpage/gaoptout
-              </a>
-              .
-            </p>
-            <p className="mb-4">
-              Możemy również udostępniać Twoje Dane Osobowe, aby spełnić obowiązujące przepisy prawa
-              lub odpowiedzieć na wezwanie sądowe, nakaz przeszukania lub inne uzasadnione żądanie.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">3. REKLAMA UKIERUNKOWANA</h2>
-            <p className="mb-4">
-              Więcej informacji o reklamie ukierunkowanej znajdziesz na stronie Network Advertising
-              Initiative („NAI”):{" "}
-              <a
-                href="https://www.networkadvertising.org/understanding-online-advertising/how-does-it-work"
-                className="text-blue-600 hover:underline break-words"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                https://www.networkadvertising.org/understanding-online-advertising/how-does-it-work
-              </a>
-              . Możesz z niej zrezygnować:
-            </p>
-            <ul className="list-disc list-inside space-y-2 mb-4 pl-4">
-              <li>
-                FACEBOOK -{" "}
-                <a
-                  href="https://www.facebook.com/settings/?tab=ads"
-                  className="text-blue-600 hover:underline break-words"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  https://www.facebook.com/settings/?tab=ads
-                </a>
-              </li>
-              <li>
-                GOOGLE -{" "}
-                <a
-                  href="https://www.google.com/settings/ads/anonymous"
-                  className="text-blue-600 hover:underline break-words"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  https://www.google.com/settings/ads/anonymous
-                </a>
-              </li>
-              <li>
-                BING -{" "}
-                <a
-                  href="https://advertise.bingads.microsoft.com/en-us/resources/policies/personalized-ads"
-                  className="text-blue-600 hover:underline break-words"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  https://advertise.bingads.microsoft.com/en-us/resources/policies/personalized-ads
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">4. TWOJE PRAWA (RODO)</h2>
-            <p className="mb-4">
-              Jeśli jesteś rezydentem Unii Europejskiej, masz prawo do dostępu, poprawienia,
-              aktualizacji lub usunięcia swoich danych osobowych. Jeśli chcesz skorzystać z tych
-              praw, skontaktuj się z nami za pomocą danych kontaktowych poniżej.
-            </p>
-            <p className="mb-4">
-              Dodatkowo informujemy, że Twoje dane osobowe będą przetwarzane zgodnie z zawartymi
-              umowami (np. zamówienia) lub na podstawie naszych uzasadnionych interesów biznesowych.
-              Twoje dane są przechowywane i przetwarzane wyłącznie na terenie Europejskiego Obszaru
-              Gospodarczego (EOG). Nie przekazujemy danych osobowych poza EOG. W przypadku
-              konieczności przekazania danych do krajów trzecich w przyszłości, zapewnimy
-              odpowiednie zabezpieczenia zgodne z przepisami RODO, takie jak Standardowe Klauzule
-              Umowne zatwierdzone przez Komisję Europejską lub inne mechanizmy zgodne z prawem UE. O
-              każdej zmianie w zakresie przetwarzania danych osobowych zostaniesz poinformowany z
-              odpowiednim wyprzedzeniem.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">5. PRZECHOWYWANIE DANYCH</h2>
-            <p className="mb-4">
-              Twoje Informacje o Zamówieniu przechowujemy, chyba że poprosisz nas o ich usunięcie.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">6. BEZPIECZEŃSTWO</h2>
-            <p className="mb-4">
-              Aby chronić Twoje dane osobowe, stosujemy rozsądne środki ostrożności zgodne z
-              najlepszymi praktykami branżowymi. Informacje o karcie kredytowej są szyfrowane za
-              pomocą technologii SSL i przechowywane z szyfrowaniem AES-256.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">7. WIEK ZGODY</h2>
-            <p className="mb-4">
-              Korzystając z naszej strony, oświadczasz, że masz co najmniej 18 lat lub jesteś
-              pełnoletni w miejscu swojego zamieszkania i wyrażasz zgodę na korzystanie ze strony
-              przez osoby niepełnoletnie, za które jesteś odpowiedzialny.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">8. ZMIANY</h2>
-            <p className="mb-4">
-              Możemy okresowo aktualizować tę politykę prywatności. Zachęcamy do regularnego
-              sprawdzania zmian.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">9. KONTAKT</h2>
-            <p className="mb-4">
-              Więcej informacji o naszej polityce prywatności, pytania lub reklamacje prosimy
-              kierować na adres email:{" "}
-              <a
-                href="mailto:hello@wyjazdy.yoga"
-                className="text-blue-600 hover:underline break-words"
-              >
-                hello@wyjazdy.yoga
-              </a>{" "}
-              lub pocztą na adres: SVYATOSLAV BORYSENKO, ul. Liściasta 12, Polska.
-            </p>
-          </div>
+        <CardContent className="text-gray-700 dark:text-gray-300">
+          <article
+            className="space-y-4 text-sm sm:text-base leading-7 [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-semibold [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-1 [&_a]:underline [&_a]:underline-offset-2"
+            dangerouslySetInnerHTML={{ __html: policyHtml }}
+          />
         </CardContent>
       </Card>
     </div>

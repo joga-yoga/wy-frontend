@@ -13,7 +13,21 @@ export const initMixpanel = () => {
     ignore_dnt: true,
     api_host: "https://mix.gorbatiuk.com",
     debug: MIXPANEL_MODE === "production" ? false : true,
+    opt_out_tracking_by_default: true,
   });
+};
+
+export const syncMixpanelAnalyticsConsent = (analyticsEnabled: boolean) => {
+  try {
+    if (analyticsEnabled) {
+      mixpanel.opt_in_tracking();
+      return;
+    }
+
+    mixpanel.opt_out_tracking();
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 enum MIXPANEL_EVENTS {

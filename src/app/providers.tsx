@@ -4,8 +4,9 @@ import { Suspense, useEffect, useRef } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/context/AuthContext";
+import { getStoredCookieConsent } from "@/lib/cookieConsent";
 
-import { initMixpanel, trackPageview } from "../lib/mixpanelClient";
+import { initMixpanel, syncMixpanelAnalyticsConsent, trackPageview } from "../lib/mixpanelClient";
 
 export const NavigationEvents = () => {
   // Temporary disabled, as we testing autocapture
@@ -30,6 +31,9 @@ export const NavigationEvents = () => {
 export function Providers({ children }: React.PropsWithChildren) {
   useEffect(() => {
     initMixpanel();
+
+    const storedConsent = getStoredCookieConsent();
+    syncMixpanelAnalyticsConsent(storedConsent?.analytics ?? false);
   }, []);
 
   return (

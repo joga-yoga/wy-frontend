@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import React from "react";
 import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5";
 
+import { COOKIE_SETTINGS_OPEN_EVENT } from "@/lib/cookieConsent";
 import { cn } from "@/lib/utils";
 
 import LogoTransparentSmall from "../icons/LogoTransparentSmall";
@@ -207,11 +208,15 @@ export const LogoFooter = ({
 };
 
 export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
-  const pathname = usePathname();
   const params = useParams();
   const isEventPage = !!params.slug;
   const FOOTER_SECTIONS =
     project === "retreats" ? RETREATS_FOOTER_SECTIONS : WORKSHOPS_FOOTER_SECTIONS;
+
+  const handleOpenCookieSettings = () => {
+    window.dispatchEvent(new CustomEvent(COOKIE_SETTINGS_OPEN_EVENT));
+  };
+
   return (
     <>
       <footer className="w-full bg-gray-100">
@@ -252,6 +257,15 @@ export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ projec
                 </div>
               ) : null,
             )}
+          </div>
+          <div className="mt-4">
+            <button
+              type="button"
+              className="text-m-sunscript-font text-gray-500 underline underline-offset-2 hover:text-gray-700"
+              onClick={handleOpenCookieSettings}
+            >
+              Ustawienia plików cookie
+            </button>
           </div>
         </div>
       </footer>
