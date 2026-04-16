@@ -18,6 +18,9 @@ const projectConfig: Record<
   },
 };
 
+const LAST_UPDATED_DATE = "2026-04-16";
+const LAST_UPDATED_LABEL = "16 kwietnia 2026";
+
 const basePolicyHtml = `
 <h2>1. Informacje ogólne</h2>
 <ol>
@@ -199,6 +202,12 @@ urządzeniu końcowym użytkownika. W zakresie informacji o preferencjach użytk
 Google użytkownik może przeglądać i edytować informacje wynikające z plików cookies przy pomocy narzędzia:
 https://www.google.com/ads/preferences/</li>
    
+            <li>Operator stosuje również narzędzie analityczne Mixpanel (Mixpanel Inc. z siedzibą w USA) w celu analizy
+zachowań użytkowników w Serwisie i ulepszania działania platformy. Operator nie przekazuje do operatora tej usługi
+danych pozwalających na bezpośrednią identyfikację osoby, a usługa może wykorzystywać pliki cookies lub podobne
+technologie. Zakres działania narzędzi analitycznych można ograniczyć poprzez ustawienia plików cookies dostępne
+w Serwisie.</li>
+   
 
             <li>Operator stosuje korzysta z piksela Facebooka. Ta technologia
 powoduje, że serwis Facebook (Facebook Inc. z siedzibą w USA) wie, że dana osoba w nim zarejestrowana korzysta z
@@ -259,7 +268,8 @@ stosować profilowanie w rozumieniu przepisów o ochronie danych osobowych</li>
   <li>
     Pliki cookies zamieszczane w urządzeniu końcowym Użytkownika Serwisu wykorzystywane mogą być również przez
     współpracujące z operatorem Serwisu podmioty, w szczególności dotyczy to firm: Google (Google Inc. z
-    siedzibą w USA), Facebook (Facebook Inc. z siedzibą w USA), Twitter (Twitter Inc. z siedzibą w USA).
+    siedzibą w USA), Mixpanel (Mixpanel Inc. z siedzibą w USA), Facebook (Facebook Inc. z siedzibą w USA), Twitter
+    (Twitter Inc. z siedzibą w USA).
   </li>
 </ol>
 <h2>9. Zarządzanie plikami cookies – jak w praktyce wyrażać i cofać zgodę?</h2>
@@ -312,6 +322,9 @@ export const PrivacyPolicyPageContent = ({ project }: { project: Project }) => {
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center pt-4">
             Polityka Prywatności – {config.serviceName}
           </CardTitle>
+          <p className="text-center text-sm text-muted-foreground">
+            Ostatnia aktualizacja: <time dateTime={LAST_UPDATED_DATE}>{LAST_UPDATED_LABEL}</time>
+          </p>
         </CardHeader>
 
         <CardContent className="text-gray-700 dark:text-gray-300">
