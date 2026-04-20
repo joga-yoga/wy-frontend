@@ -26,6 +26,20 @@ export const defaultImagesIds = [
   "w.yoga26_oh1die_pqvlad",
   "w.yoga28_gh7x1m_gb5ap5",
   "w.yoga29_w11ire_wvhgq3",
+  "joga-yoga_014_jhyq2s",
+  "joga-yoga_013_bzmgym",
+  "joga-yoga_012_nzfo9r",
+  "joga-yoga_010_yyoybd",
+  "joga-yoga_011_m0wp6a",
+  "joga-yoga_008_cpii7x",
+  "joga-yoga_009_gxw3yj",
+  "joga-yoga_004_a4ozkm",
+  "joga-yoga_007_nhpdm6",
+  "joga-yoga_005_dx00a4",
+  "joga-yoga_003_cpib0x",
+  "joga-yoga_006_a4ehwp",
+  "joga-yoga_002_h20tzb",
+  "joga-yoga_001_ri6vp5",
 ];
 
 export const getRandomDefaultImageId = () => {
