@@ -1,6 +1,5 @@
-import { unstable_cache } from "next/cache";
-
 import { EventDetail as RetreatEventDetail } from "@/app/retreats/retreats/[slug]/types";
+import { fetchEventDetail, isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 
 // Extend retreat EventDetail with workshop-specific fields
 export interface WorkshopEventDetail extends RetreatEventDetail {
@@ -10,33 +9,13 @@ export interface WorkshopEventDetail extends RetreatEventDetail {
 }
 
 export async function getWorkshop(id: string): Promise<WorkshopEventDetail | null> {
-  return unstable_cache(
-    async (workshopId: string): Promise<WorkshopEventDetail | null> => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/workshops/${workshopId}`);
+  try {
+    return await fetchEventDetail<WorkshopEventDetail>("workshop", id);
+  } catch (error) {
+    if (isEventDetailNotFoundError(error)) {
+      return null;
+    }
 
-        if (res.status === 404) {
-          return null;
-        }
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch workshop: ${res.statusText}`);
-        }
-
-        const data = await res.json();
-        return {
-          ...data,
-          organizer: data.partner ?? data.organizer ?? null,
-        };
-      } catch (error) {
-        console.error("Error fetching workshop:", error);
-        return null;
-      }
-    },
-    ["workshop-detail", id],
-    {
-      revalidate: 300,
-      tags: ["workshops"],
-    },
-  )(id);
+    throw error;
+  }
 }
