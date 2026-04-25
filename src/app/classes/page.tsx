@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   openGraph: {
     images: ["/images/social_wydarzenia.png"],
   },
+  alternates: {
+    canonical: "https://wydarzenia.yoga/classes",
+    languages: {
+      pl: "https://wydarzenia.yoga/classes",
+    },
+  },
 };
 
 interface PageProps {

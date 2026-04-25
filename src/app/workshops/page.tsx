@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   openGraph: {
     images: ["/images/social_wydarzenia.png"],
   },
+  alternates: {
+    canonical: "/",
+    languages: {
+      pl: "/",
+    },
+  },
 };
 
 interface PageProps {

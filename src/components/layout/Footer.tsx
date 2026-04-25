@@ -7,13 +7,11 @@ import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5";
 import { COOKIE_SETTINGS_OPEN_EVENT } from "@/lib/cookieConsent";
 import { cn } from "@/lib/utils";
 
-import LogoTransparentSmall from "../icons/LogoTransparentSmall";
 import { Separator } from "../ui/separator";
 
 const RETREATS_FOOTER_SECTIONS: {
   title: string;
   links: { label: string; href: string; isExternal?: boolean }[];
-  description: React.ReactNode;
 }[] = [
   {
     title: "Pomoc",
@@ -21,68 +19,16 @@ const RETREATS_FOOTER_SECTIONS: {
       { label: "FAQ dla organizatorów", href: "/faq/organizers" },
       { label: "FAQ dla podróżujących", href: "/faq/travelers" },
     ],
-    description: (
-      <p className="text-m-sunscript-font text-gray-500">{`© ${new Date().getFullYear()} All Rights Reserved`}</p>
-    ),
   },
-  {
-    title: "News",
-    links: [
-      { label: "Wyjazdy jogowe 2025", href: "#" },
-      { label: "Najlepsze wyjazdy jogowe", href: "#" },
-    ],
-    description: (
-      <Link href="/policy" className="text-m-sunscript-font text-gray-500 hover:underline">
-        Polityka prywatności
-      </Link>
-    ),
-  },
-  {
-    title: "Opinia",
-    links: [
-      { label: "Doskonałe miejsce na odpoczynek", href: "#" },
-      { label: "Joga w Polsce 2025", href: "#" },
-    ],
-    description: (
-      <Link href="/terms" className="text-m-sunscript-font text-gray-500 hover:underline">
-        Regulamin
-      </Link>
-    ),
-  },
-
   {
     title: "O nas",
-    links: [
-      { label: "Blog", href: "https://wiedza.joga.yoga", isExternal: true },
-      { label: "Kontakt", href: "/contact" },
-    ],
-    description: (
-      <div className="flex gap-2">
-        <Link
-          href="https://www.facebook.com/groups/wyjazdyjogowe"
-          className="text-gray-800 hover:text-gray-600 duration-200"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <IoLogoFacebook className="w-6 h-6" />
-        </Link>
-        <Link
-          href="https://www.instagram.com/wyjazdy.yoga/"
-          className="text-gray-800 hover:text-gray-600 duration-200"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <IoLogoInstagram className="w-6 h-6" />
-        </Link>
-      </div>
-    ),
+    links: [{ label: "Kontakt", href: "/contact" }],
   },
 ];
 
 const WORKSHOPS_FOOTER_SECTIONS: {
   title: string;
   links: { label: string; href: string; isExternal?: boolean }[];
-  description: React.ReactNode;
 }[] = [
   {
     title: "Pomoc",
@@ -90,61 +36,10 @@ const WORKSHOPS_FOOTER_SECTIONS: {
       { label: "FAQ dla organizatorów", href: "/faq/organizers" },
       { label: "FAQ dla uczestników", href: "/faq/travelers" },
     ],
-    description: (
-      <p className="text-m-sunscript-font text-gray-500">{`© ${new Date().getFullYear()} All Rights Reserved`}</p>
-    ),
   },
-  {
-    title: "News",
-    links: [
-      { label: "Wydarzenia jogowe 2025", href: "#" },
-      { label: "Najlepsze wydarzenia jogowe", href: "#" },
-    ],
-    description: (
-      <Link href="/policy" className="text-m-sunscript-font text-gray-500 hover:underline">
-        Polityka prywatności
-      </Link>
-    ),
-  },
-  {
-    title: "Opinia",
-    links: [
-      { label: "Doskonałe miejsce na odpoczynek", href: "#" },
-      { label: "Joga w Polsce 2025", href: "#" },
-    ],
-    description: (
-      <Link href="/terms" className="text-m-sunscript-font text-gray-500 hover:underline">
-        Regulamin
-      </Link>
-    ),
-  },
-
   {
     title: "O nas",
-    links: [
-      { label: "Blog", href: "https://wiedza.joga.yoga", isExternal: true },
-      { label: "Kontakt", href: "/contact" },
-    ],
-    description: (
-      <div className="flex gap-2">
-        <Link
-          href="https://www.facebook.com/groups/wyjazdyjogowe"
-          className="text-gray-800 hover:text-gray-600 duration-200"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <IoLogoFacebook className="w-6 h-6" />
-        </Link>
-        <Link
-          href="https://www.instagram.com/wyjazdy.yoga/"
-          className="text-gray-800 hover:text-gray-600 duration-200"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <IoLogoInstagram className="w-6 h-6" />
-        </Link>
-      </div>
-    ),
+    links: [{ label: "Kontakt", href: "/contact" }],
   },
 ];
 
@@ -158,7 +53,7 @@ const FooterSection = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("flex flex-col gap-4 w-full", className)}>
+    <div className={cn("flex flex-col gap-4", className)}>
       <h3 className="text-footer-links font-bold text-gray-600">{title}</h3>
       <ul className="flex flex-col gap-4">
         {links.map((link) => (
@@ -186,13 +81,13 @@ export const LogoFooter = ({
 }) => {
   return (
     <div className={cn("flex flex-col items-center gap-2 md:gap-3", className)}>
-      <div
+      {/* <div
         className={cn(
           "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] text-xl md:text-h-middle bg-gray-600",
         )}
       >
         <LogoTransparentSmall className={`w-10 h-10 md:w-12 md:h-12 text-white`} />
-      </div>
+      </div> */}
       <p className={`flex items-center text-xl font-semibold text-gray-600`}>
         {project === "retreats" ? "wyjazdy" : "wydarzenia"}
         <span
@@ -204,6 +99,65 @@ export const LogoFooter = ({
         </span>
       </p>
     </div>
+  );
+};
+
+const FooterBottom = ({
+  onOpenCookieSettings,
+  project,
+}: {
+  onOpenCookieSettings: () => void;
+  project: "retreats" | "workshops";
+}) => {
+  return (
+    <>
+      <div className="flex w-full md:justify-start mb-6 md:mb-6">
+        <LogoFooter project={project} />
+      </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-m-sunscript-font text-gray-500 order-2 md:order-1">
+          <span className="w-full md:w-auto">{`© ${new Date().getFullYear()} All Rights Reserved`}</span>
+          <span aria-hidden="true" className="hidden md:block">
+            ·
+          </span>
+          <Link href="/policy" className="hover:underline">
+            Prywatność
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/terms" className="hover:underline">
+            Warunki
+          </Link>
+          <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            className="hover:text-gray-700 hover:underline"
+            onClick={onOpenCookieSettings}
+          >
+            Ustawienia plików cookie
+          </button>
+        </div>
+        <div className="flex items-center gap-5 order-1 md:order-2">
+          <Link
+            href="https://www.facebook.com/groups/wyjazdyjogowe"
+            className="text-gray-800 duration-200 hover:text-gray-600"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            aria-label="Facebook"
+          >
+            <IoLogoFacebook className="h-6 w-6" />
+          </Link>
+          <Link
+            href="https://www.instagram.com/wyjazdy.yoga/"
+            className="text-gray-800 duration-200 hover:text-gray-600"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            aria-label="Instagram"
+          >
+            <IoLogoInstagram className="h-6 w-6" />
+          </Link>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -226,47 +180,13 @@ export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ projec
             isEventPage && "pb-[160px] md:pb-[160px]",
           )}
         >
-          <div className="flex justify-center w-full mb-8 md:mb-10">
-            <LogoFooter project={project} />
-          </div>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-10 md:gap-0">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-start gap-10 md:gap-20">
             {FOOTER_SECTIONS.map((section, index) => (
-              <FooterSection
-                key={section.title}
-                title={section.title}
-                links={section.links}
-                className={cn(
-                  "w-full",
-                  index === FOOTER_SECTIONS.length - 1 && "w-max min-w-[80px]",
-                )}
-              />
+              <FooterSection key={section.title} title={section.title} links={section.links} />
             ))}
           </div>
           <Separator className="my-6" />
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
-            {FOOTER_SECTIONS.map((section, index) =>
-              section.description ? (
-                <div
-                  key={section.title}
-                  className={cn(
-                    "w-full",
-                    index === FOOTER_SECTIONS.length - 1 && "w-max min-w-[80px]",
-                  )}
-                >
-                  {section.description}
-                </div>
-              ) : null,
-            )}
-          </div>
-          <div className="mt-4">
-            <button
-              type="button"
-              className="text-m-sunscript-font text-gray-500 underline underline-offset-2 hover:text-gray-700"
-              onClick={handleOpenCookieSettings}
-            >
-              Ustawienia plików cookie
-            </button>
-          </div>
+          <FooterBottom onOpenCookieSettings={handleOpenCookieSettings} project={project} />
         </div>
       </footer>
     </>
