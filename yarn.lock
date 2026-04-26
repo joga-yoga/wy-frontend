@@ -3538,7 +3538,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@wy/frontend@workspace:."
   dependencies:
-    "@eslint/eslintrc": "npm:^3.3.1"
     "@eslint/js": "npm:^9.26.0"
     "@hookform/resolvers": "npm:^5.0.1"
     "@radix-ui/react-alert-dialog": "npm:^1.1.10"
