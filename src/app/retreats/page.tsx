@@ -7,8 +7,6 @@ import RetreatsList from "./components/RetreatsList";
 import { RetreatsPageFilters } from "./components/RetreatsPageFilters";
 import { Event } from "./types";
 
-export const revalidate = 300;
-
 export const metadata: Metadata = {
   title: "Wyjazdy jogowe w Polsce i na świecie – sprawdź aktualne terminy | wyjazdy.yoga",
   description:

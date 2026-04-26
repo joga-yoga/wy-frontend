@@ -1,26 +1,30 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { Event } from "@/app/retreats/types";
 
 import { prepareSearchParams } from "../prepareSearchParams";
 
+async function getCachedRetreats(queryString: string): Promise<{ items: Event[]; total: number }> {
+  "use cache";
+
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag("retreats");
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
+  }
+
+  const res = await fetch(`${baseUrl}/retreats/public?${queryString}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch retreats: ${res.status} ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
 export const getRetreats = (searchParams: URLSearchParams) => {
   const preparedSearchParams = prepareSearchParams(searchParams);
-  const queryString = preparedSearchParams.toString();
-
-  return unstable_cache(
-    async (paramsString: string): Promise<{ items: Event[]; total: number }> => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ENDPOINT}/retreats/public?${paramsString}`,
-      );
-
-      if (!res.ok) throw new Error("Failed to fetch retreats");
-      return res.json();
-    },
-    ["retreats-list", queryString],
-    {
-      revalidate: 300,
-      tags: ["retreats"],
-    },
-  )(queryString);
+  return getCachedRetreats(preparedSearchParams.toString());
 };

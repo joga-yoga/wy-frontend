@@ -9,9 +9,11 @@ import { formatDurationInHours } from "@/lib/formatDateRange";
 
 import { isMultiDayEvent } from "../helpers";
 import { EventDetail } from "../types";
-import { CancellationPolicySection, InstructorSection, OrganizerSection } from ".";
+import { CancellationPolicySection } from "./CancellationPolicySection";
 import { EventReservation } from "./EventReservation";
 import { EventSidebarLocation } from "./EventSidebarLocation";
+import { InstructorSection } from "./InstructorSection";
+import { OrganizerSection } from "./OrganizerSection";
 
 interface EventSidebarProps {
   event: EventDetail;

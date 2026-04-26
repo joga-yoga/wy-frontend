@@ -1,40 +1,62 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { OrganizerDetails, OrganizerReview } from "@/components/page-contents/organizer/types";
 
+export class OrganizerNotFoundError extends Error {
+  constructor(readonly id: string) {
+    super(`Organizer not found: ${id}`);
+    this.name = "OrganizerNotFoundError";
+  }
+}
+
+export function isOrganizerNotFoundError(error: unknown): error is OrganizerNotFoundError {
+  return (
+    error instanceof OrganizerNotFoundError || (error as Error)?.name === "OrganizerNotFoundError"
+  );
+}
+
+async function getCachedOrganizer(id: string): Promise<OrganizerDetails> {
+  "use cache";
+
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag("organizers", `organizer:${id}`);
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
+  }
+
+  const res = await fetch(`${baseUrl}/partner/${id}`);
+
+  if (res.status === 404) {
+    throw new OrganizerNotFoundError(id);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch organizer: ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
+  return {
+    organizer: data.partner,
+    upcoming_retreats: data.upcoming_retreats,
+    past_retreats: data.past_retreats,
+    upcoming_workshops: data.upcoming_workshops,
+    past_workshops: data.past_workshops,
+  };
+}
+
 export async function getOrganizer(id: string): Promise<OrganizerDetails | null> {
-  return unstable_cache(
-    async (organizerId: string): Promise<OrganizerDetails | null> => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/partner/${organizerId}`);
+  try {
+    return await getCachedOrganizer(id);
+  } catch (error) {
+    if (isOrganizerNotFoundError(error)) {
+      return null;
+    }
 
-        if (res.status === 404) {
-          return null;
-        }
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch organizer: ${res.statusText}`);
-        }
-
-        const data = await res.json();
-        return {
-          organizer: data.partner,
-          upcoming_retreats: data.upcoming_retreats,
-          past_retreats: data.past_retreats,
-          upcoming_workshops: data.upcoming_workshops,
-          past_workshops: data.past_workshops,
-        };
-      } catch (error) {
-        console.error("Error fetching organizer:", error);
-        return null;
-      }
-    },
-    ["organizer-detail", id],
-    {
-      revalidate: 300,
-      tags: ["organizers"],
-    },
-  )(id);
+    console.error("Error fetching organizer:", error);
+    throw error;
+  }
 }
 
 export async function getOrganizerReviews(
@@ -42,35 +64,34 @@ export async function getOrganizerReviews(
   limit = 10,
   offset = 0,
 ): Promise<{ reviews: OrganizerReview[]; has_more: boolean } | null> {
-  const cacheKey = `${placeId}:${limit}:${offset}`;
+  try {
+    return await getCachedOrganizerReviews(placeId, limit, offset);
+  } catch (error) {
+    console.error("Error fetching organizer reviews:", error);
+    return null;
+  }
+}
 
-  return unstable_cache(
-    async (
-      organizerPlaceId: string,
-      reviewsLimit: number,
-      reviewsOffset: number,
-    ): Promise<{ reviews: OrganizerReview[]; has_more: boolean } | null> => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_ENDPOINT}/partner/reviews/${organizerPlaceId}?limit=${reviewsLimit}&offset=${reviewsOffset}`,
-        );
+async function getCachedOrganizerReviews(
+  placeId: string,
+  limit: number,
+  offset: number,
+): Promise<{ reviews: OrganizerReview[]; has_more: boolean }> {
+  "use cache";
 
-        if (!res.ok) {
-          // Reviews might fail independently, so just return null or empty
-          console.error(`Failed to fetch reviews: ${res.statusText}`);
-          return null;
-        }
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag("organizers", `organizer-reviews:${placeId}`);
 
-        return res.json();
-      } catch (error) {
-        console.error("Error fetching organizer reviews:", error);
-        return null;
-      }
-    },
-    ["organizer-reviews", cacheKey],
-    {
-      revalidate: 300,
-      tags: ["organizers"],
-    },
-  )(placeId, limit, offset);
+  const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
+  }
+
+  const res = await fetch(`${baseUrl}/partner/reviews/${placeId}?limit=${limit}&offset=${offset}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch reviews: ${res.status} ${res.statusText}`);
+  }
+
+  return res.json();
 }

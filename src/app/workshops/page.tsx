@@ -7,8 +7,6 @@ import { getWorkshops } from "@/lib/api/workshops";
 import Filters from "./components/Filters";
 import WorkshopsList from "./components/WorkshopsList";
 
-export const revalidate = 300;
-
 export const metadata: Metadata = {
   title: "wydarzenia.yoga – kalendarz wydarzeń jogowych",
   description:

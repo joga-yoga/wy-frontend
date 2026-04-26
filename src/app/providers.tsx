@@ -8,25 +8,25 @@ import { getStoredCookieConsent } from "@/lib/cookieConsent";
 
 import { initMixpanel, syncMixpanelAnalyticsConsent, trackPageview } from "../lib/mixpanelClient";
 
-export const NavigationEvents = () => {
-  // Temporary disabled, as we testing autocapture
+// export const NavigationEvents = () => {
+//   // Temporary disabled, as we testing autocapture
 
-  // const pathname = usePathname();
-  // const searchParams = useSearchParams();
-  // const currentUrl = useRef("");
+//   // const pathname = usePathname();
+//   // const searchParams = useSearchParams();
+//   // const currentUrl = useRef("");
 
-  // useEffect(() => {
-  //   const url = `${pathname}?${searchParams}`;
-  //   if (currentUrl.current !== url) {
-  //     currentUrl.current = url;
-  //     // Mixpanel rounting events
-  //     //Send track event when new pages is loaded
-  //     trackPageview();
-  //   }
-  // }, [pathname, searchParams]);
+//   // useEffect(() => {
+//   //   const url = `${pathname}?${searchParams}`;
+//   //   if (currentUrl.current !== url) {
+//   //     currentUrl.current = url;
+//   //     // Mixpanel rounting events
+//   //     //Send track event when new pages is loaded
+//   //     trackPageview();
+//   //   }
+//   // }, [pathname, searchParams]);
 
-  return null;
-};
+//   return null;
+// };
 
 export function Providers({ children }: React.PropsWithChildren) {
   useEffect(() => {
@@ -42,9 +42,9 @@ export function Providers({ children }: React.PropsWithChildren) {
         {children}
         <Toaster />
       </AuthProvider>
-      <Suspense>
+      {/* <Suspense>
         <NavigationEvents />
-      </Suspense>
+      </Suspense> */}
     </>
   );
 }

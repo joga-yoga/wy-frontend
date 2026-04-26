@@ -1,9 +1,16 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  cacheComponents: true,
   reactStrictMode: false,
   images: {
-    domains: ["res.cloudinary.com", "via.placeholder.com", "images.unsplash.com", "avatar.vercel.sh", "placehold.co"]
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "via.placeholder.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "avatar.vercel.sh" },
+      { protocol: "https", hostname: "placehold.co" },
+    ],
   },
   async redirects() {
     return [

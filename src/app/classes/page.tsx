@@ -6,8 +6,6 @@ import { getClasses } from "@/lib/api/classes";
 
 import ClassesList from "./components/ClassesList";
 
-export const revalidate = 300;
-
 export const metadata: Metadata = {
   title: "wydarzenia.yoga – zajęcia jogi",
   description: "Aktualne zajęcia jogi w studiach i szkołach jogi.",

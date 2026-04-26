@@ -4,7 +4,9 @@ import { WyImage } from "@/components/custom/WyImage";
 
 import { formatMultiLineText, getImageUrl } from "../helpers";
 import { EventDetail } from "../types";
-import { CancellationPolicySection, InstructorSection, OrganizerSection } from ".";
+import { CancellationPolicySection } from "./CancellationPolicySection";
+import { InstructorSection } from "./InstructorSection";
+import { OrganizerSection } from "./OrganizerSection";
 
 interface EventMainContentProps {
   event: EventDetail;

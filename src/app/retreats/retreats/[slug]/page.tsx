@@ -1,6 +1,9 @@
 import { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import React from "react";
 
+import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getRetreat } from "@/lib/api/getRetreat";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 
@@ -13,8 +16,6 @@ import {
 } from "./components";
 import { isMultiDayEvent } from "./helpers";
 
-export const revalidate = 300;
-
 interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -23,14 +24,19 @@ export async function generateMetadata(
   { params }: EventDetailPageProps,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const event = await getRetreat(slug);
 
-  if (!event) {
-    return {
-      title: "Event Not Found",
-    };
+  if (!slug) {
+    notFound();
   }
+
+  const event = await getRetreat(slug).catch((error) => {
+    if (isEventDetailNotFoundError(error)) {
+      notFound();
+    }
+    throw error;
+  });
 
   const title = `${event.title} | wyjazdy.yoga`;
   const description = event.description || "Zobacz szczegóły wyjazdu na wyjazdy.yoga";
@@ -55,25 +61,19 @@ export async function generateMetadata(
 }
 
 const EventDetailPage = async ({ params }: EventDetailPageProps) => {
+  await connection();
   const { slug } = await params;
 
   if (!slug) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-red-600">
-        Error: Event Slug not found.
-      </div>
-    );
+    notFound();
   }
 
-  const event = await getRetreat(slug);
-
-  if (!event) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-gray-500">
-        Event details could not be loaded or event not found.
-      </div>
-    );
-  }
+  const event = await getRetreat(slug).catch((error) => {
+    if (isEventDetailNotFoundError(error)) {
+      notFound();
+    }
+    throw error;
+  });
   const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
 
   return (

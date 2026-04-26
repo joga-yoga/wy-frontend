@@ -3,7 +3,11 @@ import { MetadataRoute } from "next";
 const BASE_URL = "https://wyjazdy.yoga";
 const API_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
+import { connection } from "next/server";
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  await connection();
   // Main routes
   const mainPages = [""].map((route) => ({
     url: `${BASE_URL}${route}`,
@@ -30,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch retreat Slugs
   let retreatRoutes: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch(`${API_URL}/retreats/slugs`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/retreats/slugs`);
     if (res.ok) {
       const slugs: string[] = await res.json();
       retreatRoutes = slugs.map((slug) => ({
@@ -47,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // // Fetch organizer IDs
   // let organizerRoutes: MetadataRoute.Sitemap = [];
   // try {
-  //   const res = await fetch(`${API_URL}/partner/ids`, { next: { revalidate: 3600 } });
+  //   const res = await fetch(`${API_URL}/partner/ids`);
   //   if (res.ok) {
   //     const ids: string[] = await res.json();
   //     organizerRoutes = ids.map((id) => ({

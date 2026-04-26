@@ -1,4 +1,6 @@
 import { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import React from "react";
 
 import {
@@ -9,10 +11,9 @@ import {
   ImageGallery,
 } from "@/app/retreats/retreats/[slug]/components";
 import { isMultiDayEvent } from "@/app/retreats/retreats/[slug]/helpers";
+import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getClass } from "@/lib/api/getClass";
 import { getOgImageUrl } from "@/lib/imageHelpers";
-
-export const revalidate = 300;
 
 interface ClassDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -22,12 +23,19 @@ export async function generateMetadata(
   { params }: ClassDetailPageProps,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const event = await getClass(slug);
 
-  if (!event) {
-    return { title: "Class Not Found" };
+  if (!slug) {
+    notFound();
   }
+
+  const event = await getClass(slug).catch((error) => {
+    if (isEventDetailNotFoundError(error)) {
+      notFound();
+    }
+    throw error;
+  });
 
   const title = `${event.title} | wydarzenia.yoga`;
   const description = event.description || "Zobacz szczegóły zajęć na wydarzenia.yoga";
@@ -50,16 +58,19 @@ export async function generateMetadata(
 }
 
 const ClassDetailPage = async ({ params }: ClassDetailPageProps) => {
+  await connection();
   const { slug } = await params;
-  const event = await getClass(slug);
 
-  if (!event) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-gray-500">
-        Event details could not be loaded or event not found.
-      </div>
-    );
+  if (!slug) {
+    notFound();
   }
+
+  const event = await getClass(slug).catch((error) => {
+    if (isEventDetailNotFoundError(error)) {
+      notFound();
+    }
+    throw error;
+  });
 
   const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
   return (

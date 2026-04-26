@@ -1,4 +1,6 @@
 import { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import React from "react";
 
 import {
@@ -9,10 +11,9 @@ import {
   ImageGallery,
 } from "@/app/retreats/retreats/[slug]/components";
 import { isMultiDayEvent } from "@/app/retreats/retreats/[slug]/helpers";
+import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getWorkshop } from "@/lib/api/getWorkshop";
 import { getOgImageUrl } from "@/lib/imageHelpers";
-
-export const revalidate = 300;
 
 interface WorkshopDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -22,14 +23,19 @@ export async function generateMetadata(
   { params }: WorkshopDetailPageProps,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const event = await getWorkshop(slug);
 
-  if (!event) {
-    return {
-      title: "Event Not Found",
-    };
+  if (!slug) {
+    notFound();
   }
+
+  const event = await getWorkshop(slug).catch((error) => {
+    if (isEventDetailNotFoundError(error)) {
+      notFound();
+    }
+    throw error;
+  });
 
   const title = `${event.title} | wydarzenia.yoga`;
   const description = event.description || "Zobacz szczegóły wydarzenia na wydarzenia.yoga";
@@ -54,25 +60,19 @@ export async function generateMetadata(
 }
 
 const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
+  await connection();
   const { slug } = await params;
 
   if (!slug) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-red-600">
-        Error: Event Slug not found.
-      </div>
-    );
+    notFound();
   }
 
-  const event = await getWorkshop(slug);
-
-  if (!event) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-gray-500">
-        Event details could not be loaded or event not found.
-      </div>
-    );
-  }
+  const event = await getWorkshop(slug).catch((error) => {
+    if (isEventDetailNotFoundError(error)) {
+      notFound();
+    }
+    throw error;
+  });
 
   const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
   return (

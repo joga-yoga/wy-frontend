@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 
 import { Separator } from "../ui/separator";
 
+const COPYRIGHT_YEAR = 2026;
+
 const RETREATS_FOOTER_SECTIONS: {
   title: string;
   links: { label: string; href: string; isExternal?: boolean }[];
@@ -116,7 +118,7 @@ const FooterBottom = ({
       </div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-m-sunscript-font text-gray-500 order-2 md:order-1">
-          <span className="w-full md:w-auto">{`© ${new Date().getFullYear()} All Rights Reserved`}</span>
+          <span className="w-full md:w-auto">{`© ${COPYRIGHT_YEAR} All Rights Reserved`}</span>
           <span aria-hidden="true" className="hidden md:block">
             ·
           </span>

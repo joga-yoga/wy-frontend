@@ -1,9 +1,13 @@
 import { MetadataRoute } from "next";
+import { connection } from "next/server";
 
 const BASE_URL = "https://wydarzenia.yoga";
 const API_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  await connection();
   // Main routes
   const mainPages = [""].map((route) => ({
     url: `${BASE_URL}${route}`,
@@ -30,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch workshop Slugs
   let workshopRoutes: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch(`${API_URL}/workshops/slugs`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/workshops/slugs`);
     if (res.ok) {
       const slugs: string[] = await res.json();
       workshopRoutes = slugs.map((slug) => ({

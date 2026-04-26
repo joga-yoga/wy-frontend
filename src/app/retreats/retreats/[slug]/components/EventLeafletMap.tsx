@@ -2,12 +2,8 @@
 
 import "leaflet/dist/leaflet.css";
 
-import L from "leaflet";
-import MarkerIcon from "leaflet/dist/images/marker-icon.png";
-import MarkerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import MarkerShadow from "leaflet/dist/images/marker-shadow.png";
 import { Expand } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,31 +15,70 @@ interface EventLeafletMapProps {
   title?: string | null;
 }
 
-const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) => {
-  const [Map, setMap] = useState<any>(null);
-  const isMobile = useIsMobile();
-  const [isFullScreen, setIsFullScreen] = useState(false);
+interface LeafletMapProps {
+  dragging: boolean;
+  latitude: number;
+  longitude: number;
+  scrollWheelZoom: boolean;
+}
+
+const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletMapProps) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Import Leaflet components only on client side
-    const initMap = async () => {
-      const L = await import("leaflet");
-      const { MapContainer, TileLayer, Marker } = await import("react-leaflet");
+    let map: import("leaflet").Map | null = null;
+    let isMounted = true;
 
-      // Fix Leaflet default icon issue
+    const initMap = async () => {
+      if (!containerRef.current || !isMounted) {
+        return;
+      }
+
+      const L = await import("leaflet");
+
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: MarkerIcon2x.src,
-        iconUrl: MarkerIcon.src,
-        shadowUrl: MarkerShadow.src,
+        iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+        iconUrl: "/leaflet/marker-icon.png",
+        shadowUrl: "/leaflet/marker-shadow.png",
       });
 
-      setMap({ MapContainer, TileLayer, Marker });
+      map = L.map(containerRef.current, {
+        center: [latitude, longitude],
+        dragging,
+        scrollWheelZoom,
+        zoom: 13,
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      L.marker([latitude, longitude]).addTo(map);
     };
 
     initMap();
+
+    return () => {
+      isMounted = false;
+      map?.remove();
+      map = null;
+    };
+  }, [dragging, latitude, longitude, scrollWheelZoom]);
+
+  return <div ref={containerRef} className="h-full w-full md:rounded-lg z-0" />;
+};
+
+const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) => {
+  const isMobile = useIsMobile();
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
   }, []);
 
-  if (!Map) {
+  if (!isClient) {
     return (
       <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
         Loading map...
@@ -51,28 +86,15 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
     );
   }
 
-  const { MapContainer, TileLayer, Marker } = Map;
-
-  const renderMap = (isFullScreenMap = false) => (
-    <MapContainer
-      center={[latitude, longitude]}
-      zoom={13}
-      scrollWheelZoom={isFullScreenMap}
-      dragging={isFullScreenMap || !isMobile}
-      className="h-full w-full md:rounded-lg z-0"
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Marker position={[latitude, longitude]} />
-    </MapContainer>
-  );
-
   return (
     <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
       <div className="relative h-[440px] w-full">
-        {renderMap(false)}
+        <LeafletMap
+          dragging={!isMobile}
+          latitude={latitude}
+          longitude={longitude}
+          scrollWheelZoom={false}
+        />
         {isMobile && (
           <DialogTrigger asChild>
             <Button
@@ -89,7 +111,14 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
         <div className="hidden">
           <DialogTitle>Map</DialogTitle>
         </div>
-        {renderMap(true)}
+        {isFullScreen ? (
+          <LeafletMap
+            dragging={true}
+            latitude={latitude}
+            longitude={longitude}
+            scrollWheelZoom={true}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   );

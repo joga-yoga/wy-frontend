@@ -1,6 +1,8 @@
+import { cacheLife, cacheTag } from "next/cache";
+
 export class EventDetailNotFoundError extends Error {
   constructor(
-    readonly eventType: "retreat" | "workshop",
+    readonly eventType: "class" | "retreat" | "workshop",
     readonly id: string,
     readonly url: string,
   ) {
@@ -10,7 +12,10 @@ export class EventDetailNotFoundError extends Error {
 }
 
 export function isEventDetailNotFoundError(error: unknown): error is EventDetailNotFoundError {
-  return error instanceof EventDetailNotFoundError;
+  return (
+    error instanceof EventDetailNotFoundError ||
+    (error as Error)?.name === "EventDetailNotFoundError"
+  );
 }
 
 function safeErrorDetails(error: unknown) {
@@ -26,20 +31,25 @@ function safeErrorDetails(error: unknown) {
 }
 
 export async function fetchEventDetail<T>(
-  eventType: "retreat" | "workshop",
+  eventType: "class" | "retreat" | "workshop",
   id: string,
 ): Promise<T> {
+  "use cache";
+
   const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
-  const url = `${baseUrl}/${eventType}s/${id}`;
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
+  }
+
+  const collection = eventType === "class" ? "classes" : `${eventType}s`;
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag(collection, `${eventType}:${id}`);
+
+  const url = `${baseUrl}/${collection}/${id}`;
   const startedAt = Date.now();
 
   try {
-    const res = await fetch(url, {
-      next: {
-        revalidate: 300,
-        tags: [`${eventType}s`],
-      },
-    });
+    const res = await fetch(url);
     const durationMs = Date.now() - startedAt;
 
     if (res.status === 404) {
@@ -77,9 +87,9 @@ export async function fetchEventDetail<T>(
     });
 
     return {
-      ...data,
+      ...(data as object),
       organizer: data.partner ?? data.organizer ?? null,
-    };
+    } as T;
   } catch (error) {
     if (isEventDetailNotFoundError(error)) {
       throw error;

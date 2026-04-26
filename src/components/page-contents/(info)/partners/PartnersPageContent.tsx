@@ -1,4 +1,5 @@
 import { CheckCheck, Clock, ImagePlus, Megaphone, Sparkles } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -8,8 +9,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Separator } from "@/components/ui/separator";
 
 import { LogoPartners } from "./components/LogoPartners";
-
-export const revalidate = 300;
 
 type PublicStats = {
   total_public_retreats: number;
@@ -38,18 +37,34 @@ function polishCountriesLocativePhrase(count: number) {
   return `${noun}, ${pronoun} działamy`;
 }
 
+async function fetchCachedPublicStats(): Promise<PublicStats> {
+  "use cache";
+
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag("public-stats");
+
+  const base = process.env.NEXT_PUBLIC_API_ENDPOINT;
+  if (!base) {
+    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
+  }
+
+  // We intentionally use fetch here (and not axiosInstance):
+  // - This is a server component; axiosInstance adds a browser-only localStorage interceptor,
+  //   which breaks on the server.
+  // - Cache Components keeps these public stats reusable without request-time refetching.
+  const res = await fetch(`${base}/public/stats`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch public stats: ${res.status} ${res.statusText}`);
+  }
+
+  return (await res.json()) as PublicStats;
+}
+
 async function fetchPublicStats(): Promise<PublicStats | null> {
   try {
-    const base = process.env.NEXT_PUBLIC_API_ENDPOINT;
-    if (!base) return null;
-    // We intentionally use fetch here (and not axiosInstance):
-    // - This is a server component; axiosInstance adds a browser-only localStorage interceptor,
-    //   which breaks on the server.
-    // - fetch integrates with Next.js caching/ISR (see revalidate: 300) for better performance.
-    const res = await fetch(`${base}/public/stats`, { next: { revalidate: 300 } });
-    if (!res.ok) return null;
-    return (await res.json()) as PublicStats;
-  } catch {
+    return await fetchCachedPublicStats();
+  } catch (error) {
+    console.error("Failed to fetch public stats:", error);
     return null;
   }
 }

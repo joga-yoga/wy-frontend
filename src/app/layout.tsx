@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Viewport } from "next";
+import { Suspense } from "react";
 
 import { fonts } from "./fonts";
 import { Providers } from "./providers";
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="googlebot" content="all" />
       </head>
       <body suppressHydrationWarning={true}>
-        <Providers>{children}</Providers>
+        <Suspense>
+          <Providers>{children}</Providers>
+        </Suspense>
       </body>
     </html>
   );

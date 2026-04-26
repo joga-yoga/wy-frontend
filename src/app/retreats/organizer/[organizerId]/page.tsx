@@ -5,8 +5,6 @@ import { OrganizerPageContent } from "@/components/page-contents/organizer/Organ
 import { getOrganizer, getOrganizerReviews } from "@/lib/api/getOrganizer";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 
-export const revalidate = 300;
-
 interface OrganizerPageProps {
   params: Promise<{ organizerId: string }>;
 }
