@@ -1,17 +1,16 @@
 import { Metadata } from "next";
 
 import { FAQOrganizersPageContent } from "@/components/page-contents/(info)/FAQOrganizersPageContent";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "FAQ dla Organizatorów | wydarzenia.yoga",
-  description:
-    "Pytania i odpowiedzi dla organizatorów warsztatów. Sprawdź jak promować swoje wydarzenia jogowe.",
-  openGraph: {
+  ...buildPageMetadata({
+    project: "workshops",
     title: "FAQ dla Organizatorów | wydarzenia.yoga",
     description:
       "Pytania i odpowiedzi dla organizatorów warsztatów. Sprawdź jak promować swoje wydarzenia jogowe.",
-    images: ["/images/social_wydarzenia.png"],
-  },
+    path: "/faq/organizers",
+  }),
 };
 
 export default function FAQOrganizersWorkshopsPage() {

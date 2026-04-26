@@ -1,17 +1,16 @@
 import { Metadata } from "next";
 
 import { PrivacyPolicyPageContent } from "@/components/page-contents/(info)/PrivacyPolicyPageContent";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Polityka Prywatności | wydarzenia.yoga",
-  description:
-    "Zasady przetwarzania danych osobowych i polityka prywatności serwisu wydarzenia.yoga.",
-  openGraph: {
+  ...buildPageMetadata({
+    project: "workshops",
     title: "Polityka Prywatności | wydarzenia.yoga",
     description:
       "Zasady przetwarzania danych osobowych i polityka prywatności serwisu wydarzenia.yoga.",
-    images: ["/images/social_wydarzenia.png"],
-  },
+    path: "/policy",
+  }),
 };
 
 export default function PrivacyPolicyWorkshopsPage() {

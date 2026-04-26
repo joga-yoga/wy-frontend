@@ -1,17 +1,16 @@
 import { Metadata } from "next";
 
 import { FAQTravelersPageContent } from "@/components/page-contents/(info)/FAQTravelersPageContent";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "FAQ dla Uczestników | wyjazdy.yoga",
-  description:
-    "Odpowiedzi na pytania uczestników wyjazdów jogowych. Jak się przygotować, co zabrać i jak rezerwować.",
-  openGraph: {
+  ...buildPageMetadata({
+    project: "retreats",
     title: "FAQ dla Uczestników | wyjazdy.yoga",
     description:
       "Odpowiedzi na pytania uczestników wyjazdów jogowych. Jak się przygotować, co zabrać i jak rezerwować.",
-    images: ["/images/social_wyjazdy.png"],
-  },
+    path: "/faq/travelers",
+  }),
 };
 
 export default function FAQTravelersRetreatsPage() {

@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import React from "react";
 
+import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getRetreat } from "@/lib/api/getRetreat";
 import { getOgImageUrl } from "@/lib/imageHelpers";
+import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
 
 import {
   EventHeader,
@@ -44,19 +46,13 @@ export async function generateMetadata(
   const imageUrl = getOgImageUrl(imageId);
 
   return {
-    title,
-    description,
-    openGraph: {
+    ...buildPageMetadata({
+      project: "retreats",
       title,
       description,
-      images: imageUrl ? [imageUrl] : [],
-    },
-    alternates: {
-      canonical: `/retreats/${slug}`,
-      languages: {
-        pl: `/retreats/${slug}`,
-      },
-    },
+      path: `/retreats/${slug}`,
+      image: imageUrl || undefined,
+    }),
   };
 }
 
@@ -75,9 +71,19 @@ const EventDetailPage = async ({ params }: EventDetailPageProps) => {
     throw error;
   });
   const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
+  const imageId = event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : null;
+  const imageUrl = getOgImageUrl(imageId);
 
   return (
     <div className="bg-white">
+      <JsonLd
+        data={buildEventJsonLd({
+          project: "retreats",
+          path: `/retreats/${slug}`,
+          event,
+          imageUrl: imageUrl || undefined,
+        })}
+      />
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
         <EventHeader title={event.title} eventId={slug} />
         <ImageGallery title={event.title} image_ids={event.image_ids || []} />

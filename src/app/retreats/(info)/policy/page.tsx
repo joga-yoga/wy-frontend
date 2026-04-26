@@ -1,16 +1,16 @@
 import { Metadata } from "next";
 
 import { PrivacyPolicyPageContent } from "@/components/page-contents/(info)/PrivacyPolicyPageContent";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Polityka Prywatności | wyjazdy.yoga",
-  description: "Zasady przetwarzania danych osobowych i polityka prywatności serwisu wyjazdy.yoga.",
-  openGraph: {
+  ...buildPageMetadata({
+    project: "retreats",
     title: "Polityka Prywatności | wyjazdy.yoga",
     description:
       "Zasady przetwarzania danych osobowych i polityka prywatności serwisu wyjazdy.yoga.",
-    images: ["/images/social_wyjazdy.png"],
-  },
+    path: "/policy",
+  }),
 };
 
 export default function PrivacyPolicyRetreatsPage() {

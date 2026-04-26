@@ -11,9 +11,11 @@ import {
   ImageGallery,
 } from "@/app/retreats/retreats/[slug]/components";
 import { isMultiDayEvent } from "@/app/retreats/retreats/[slug]/helpers";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getClass } from "@/lib/api/getClass";
 import { getOgImageUrl } from "@/lib/imageHelpers";
+import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
 
 interface ClassDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -43,17 +45,13 @@ export async function generateMetadata(
   const imageUrl = getOgImageUrl(imageId);
 
   return {
-    title,
-    description,
-    openGraph: {
+    ...buildPageMetadata({
+      project: "workshops",
       title,
       description,
-      images: imageUrl ? [imageUrl] : [],
-    },
-    alternates: {
-      canonical: `/classes/${slug}`,
-      languages: { pl: `/classes/${slug}` },
-    },
+      path: `/classes/${slug}`,
+      image: imageUrl || undefined,
+    }),
   };
 }
 
@@ -73,8 +71,18 @@ const ClassDetailPage = async ({ params }: ClassDetailPageProps) => {
   });
 
   const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
+  const imageId = event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : null;
+  const imageUrl = getOgImageUrl(imageId);
   return (
     <div className="bg-white">
+      <JsonLd
+        data={buildEventJsonLd({
+          project: "workshops",
+          path: `/classes/${slug}`,
+          event,
+          imageUrl: imageUrl || undefined,
+        })}
+      />
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
         <EventHeader title={event.title} eventId={slug} />
         <ImageGallery title={event.title} image_ids={event.image_ids || []} />

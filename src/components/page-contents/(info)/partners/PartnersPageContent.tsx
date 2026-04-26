@@ -40,7 +40,7 @@ function polishCountriesLocativePhrase(count: number) {
 async function fetchCachedPublicStats(): Promise<PublicStats> {
   "use cache";
 
-  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheLife({ stale: 1800, revalidate: 1800, expire: 7200 });
   cacheTag("public-stats");
 
   const base = process.env.NEXT_PUBLIC_API_ENDPOINT;

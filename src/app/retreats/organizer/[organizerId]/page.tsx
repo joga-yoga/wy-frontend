@@ -1,9 +1,12 @@
 import { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
 import React from "react";
 
 import { OrganizerPageContent } from "@/components/page-contents/organizer/OrganizerPageContent";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getOrganizer, getOrganizerReviews } from "@/lib/api/getOrganizer";
 import { getOgImageUrl } from "@/lib/imageHelpers";
+import { buildOrganizerJsonLd, buildPageMetadata } from "@/lib/seo";
 
 interface OrganizerPageProps {
   params: Promise<{ organizerId: string }>;
@@ -17,9 +20,7 @@ export async function generateMetadata(
   const organizerData = await getOrganizer(organizerId);
 
   if (!organizerData) {
-    return {
-      title: "Partner Not Found",
-    };
+    notFound();
   }
 
   const { organizer } = organizerData;
@@ -28,19 +29,13 @@ export async function generateMetadata(
   const imageUrl = getOgImageUrl(organizer.image_id);
 
   return {
-    title,
-    description,
-    openGraph: {
+    ...buildPageMetadata({
+      project: "retreats",
       title,
       description,
-      images: imageUrl ? [imageUrl] : [],
-    },
-    alternates: {
-      canonical: `/partner/${organizerId}`,
-      languages: {
-        pl: `/partner/${organizerId}`,
-      },
-    },
+      path: `/partner/${organizerId}`,
+      image: imageUrl || undefined,
+    }),
   };
 }
 
@@ -48,21 +43,13 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
   const { organizerId } = await params;
 
   if (!organizerId) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-red-600">
-        Error: Partner ID not found.
-      </div>
-    );
+    notFound();
   }
 
   const organizer = await getOrganizer(organizerId);
 
   if (!organizer) {
-    return (
-      <div className="container mx-auto px-4 py-10 text-center text-gray-500">
-        Partner details could not be loaded or partner not found.
-      </div>
-    );
+    notFound();
   }
 
   let reviews: any[] = [];
@@ -76,7 +63,23 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
     }
   }
 
+  const imageUrl = getOgImageUrl(organizer.organizer.image_id);
+
   return (
-    <OrganizerPageContent organizer={organizer} reviews={reviews} hasMoreReviews={hasMoreReviews} />
+    <>
+      <JsonLd
+        data={buildOrganizerJsonLd({
+          project: "retreats",
+          path: `/partner/${organizerId}`,
+          organizer: organizer.organizer,
+          imageUrl: imageUrl || undefined,
+        })}
+      />
+      <OrganizerPageContent
+        organizer={organizer}
+        reviews={reviews}
+        hasMoreReviews={hasMoreReviews}
+      />
+    </>
   );
 }

@@ -18,7 +18,7 @@ export function isOrganizerNotFoundError(error: unknown): error is OrganizerNotF
 async function getCachedOrganizer(id: string): Promise<OrganizerDetails> {
   "use cache";
 
-  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheLife({ stale: 900, revalidate: 900, expire: 3600 });
   cacheTag("organizers", `organizer:${id}`);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
@@ -79,7 +79,7 @@ async function getCachedOrganizerReviews(
 ): Promise<{ reviews: OrganizerReview[]; has_more: boolean }> {
   "use cache";
 
-  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheLife({ stale: 3600, revalidate: 3600, expire: 86400 });
   cacheTag("organizers", `organizer-reviews:${placeId}`);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;

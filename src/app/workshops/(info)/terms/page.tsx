@@ -1,15 +1,15 @@
 import { Metadata } from "next";
 
 import { TermsOfServicePageContent } from "@/components/page-contents/(info)/TermsOfServicePageContent";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Regulamin | wydarzenia.yoga",
-  description: "Regulamin korzystania z serwisu wydarzenia.yoga dla uczestników i organizatorów.",
-  openGraph: {
+  ...buildPageMetadata({
+    project: "workshops",
     title: "Regulamin | wydarzenia.yoga",
     description: "Regulamin korzystania z serwisu wydarzenia.yoga dla uczestników i organizatorów.",
-    images: ["/images/social_wydarzenia.png"],
-  },
+    path: "/terms",
+  }),
 };
 
 export default function TermsOfServiceWorkshopsPage() {

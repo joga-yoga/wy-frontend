@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 
 import { ContactPageContent } from "@/components/page-contents/(info)/ContactPageContent";
+import { buildPageMetadata } from "@/lib/seo";
 
 interface ContactPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -23,13 +24,13 @@ export const generateMetadata = async (props: ContactPageProps): Promise<Metadat
   const description = isTakeoverFlow ? takeoverDescription : defaultDescription;
 
   return {
-    title,
-    description,
-    openGraph: {
+    ...buildPageMetadata({
+      project: "workshops",
       title,
       description,
-      images: ["/images/social_wydarzenia.png"],
-    },
+      path: "/contact",
+      noIndex: isTakeoverFlow,
+    }),
   };
 };
 

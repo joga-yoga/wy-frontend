@@ -1,25 +1,25 @@
 import { Metadata } from "next";
 import React, { Suspense } from "react";
 
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getRetreats } from "@/lib/api/retreats";
+import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
 
 import RetreatsList from "./components/RetreatsList";
 import { RetreatsPageFilters } from "./components/RetreatsPageFilters";
 import { Event } from "./types";
 
+const pageTitle = "Wyjazdy jogowe w Polsce i na świecie – sprawdź aktualne terminy | wyjazdy.yoga";
+const pageDescription =
+  "Odkrywaj najlepsze wyjazdy jogowe, retrity i weekendowe praktyki. Pełne opisy, aktualne terminy i przejrzyste zasady.";
+
 export const metadata: Metadata = {
-  title: "Wyjazdy jogowe w Polsce i na świecie – sprawdź aktualne terminy | wyjazdy.yoga",
-  description:
-    "Odkrywaj najlepsze wyjazdy jogowe, retrity i weekendowe praktyki. Pełne opisy, aktualne terminy i przejrzyste zasady",
-  openGraph: {
-    images: ["/images/social_wyjazdy.png"],
-  },
-  alternates: {
-    canonical: "/",
-    languages: {
-      pl: "/",
-    },
-  },
+  ...buildPageMetadata({
+    project: "retreats",
+    title: pageTitle,
+    description: pageDescription,
+    path: "/",
+  }),
 };
 
 interface PageProps {
@@ -54,6 +54,14 @@ const RetreatsPage = async (props: PageProps) => {
 
   return (
     <div className="">
+      <JsonLd
+        data={buildCollectionJsonLd({
+          project: "retreats",
+          path: "/",
+          name: pageTitle,
+          description: pageDescription,
+        })}
+      />
       <Suspense>
         <RetreatsPageFilters />
       </Suspense>

@@ -1,13 +1,14 @@
 import { MetadataRoute } from "next";
+import { connection } from "next/server";
 
 const BASE_URL = "https://wyjazdy.yoga";
 const API_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
-import { connection } from "next/server";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
+
   // Main routes
   const mainPages = [""].map((route) => ({
     url: `${BASE_URL}${route}`,
@@ -56,7 +57,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   //     const ids: string[] = await res.json();
   //     organizerRoutes = ids.map((id) => ({
   //       url: `${BASE_URL}/partner/${id}`,
-  //       lastModified: new Date(),
   //       changeFrequency: "weekly" as const,
   //       priority: 0.7,
   //     }));

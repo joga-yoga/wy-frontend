@@ -78,13 +78,6 @@ export async function fetchEventDetail<T>(
     }
 
     const data = await res.json();
-    console.info("[event-detail] fetched", {
-      eventType,
-      id,
-      url,
-      status: res.status,
-      durationMs,
-    });
 
     return {
       ...(data as object),

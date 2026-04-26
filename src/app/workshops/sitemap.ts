@@ -8,6 +8,7 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
+
   // Main routes
   const mainPages = [""].map((route) => ({
     url: `${BASE_URL}${route}`,
@@ -18,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static routes
   const staticRoutes = [
+    // "/classes",
     "/contact",
     "/faq/travelers",
     "/faq/organizers",
@@ -48,15 +50,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to fetch workshop Slugs for sitemap", error);
   }
 
+  // // Fetch class Slugs
+  // let classRoutes: MetadataRoute.Sitemap = [];
+  // try {
+  //   const res = await fetch(`${API_URL}/classes/slugs`);
+  //   if (res.ok) {
+  //     const slugs: string[] = await res.json();
+  //     classRoutes = slugs.map((slug) => ({
+  //       url: `${BASE_URL}/classes/${slug}`,
+  //       changeFrequency: "daily" as const,
+  //       priority: 0.7,
+  //     }));
+  //   }
+  // } catch (error) {
+  //   console.error("Failed to fetch class Slugs for sitemap", error);
+  // }
+
   // // Fetch organizer IDs
   // let organizerRoutes: MetadataRoute.Sitemap = [];
   // try {
-  //   const res = await fetch(`${API_URL}/partner/ids`, { next: { revalidate: 3600 } });
+  //   const res = await fetch(`${API_URL}/partner/ids`);
   //   if (res.ok) {
   //     const ids: string[] = await res.json();
   //     organizerRoutes = ids.map((id) => ({
   //       url: `${BASE_URL}/partner/${id}`,
-  //       lastModified: new Date(),
   //       changeFrequency: "weekly" as const,
   //       priority: 0.7,
   //     }));

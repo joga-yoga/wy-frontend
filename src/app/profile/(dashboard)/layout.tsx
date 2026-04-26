@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 
 import { ProfileHeader } from "@/components/layout/Header";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +10,14 @@ import useIsMobile from "@/hooks/useIsMobile";
 import { NavigationBlockerProvider } from "./components/EventForm/block-navigation/navigation-block";
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <ProfileLayoutContent>{children}</ProfileLayoutContent>
+    </Suspense>
+  );
+}
+
+function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
 

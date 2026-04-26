@@ -2,24 +2,24 @@ import { Metadata } from "next";
 import React, { Suspense } from "react";
 
 import { Event } from "@/app/retreats/types";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getWorkshops } from "@/lib/api/workshops";
+import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
 
 import Filters from "./components/Filters";
 import WorkshopsList from "./components/WorkshopsList";
 
+const pageTitle = "wydarzenia.yoga – kalendarz wydarzeń jogowych";
+const pageDescription =
+  "Aktualne warsztaty, kursy i wydarzenia jogowe zebrane w jednym miejscu. Jasna struktura, uporządkowane dane i dostęp dla organizatorów bez opłat.";
+
 export const metadata: Metadata = {
-  title: "wydarzenia.yoga – kalendarz wydarzeń jogowych",
-  description:
-    "Aktualne warsztaty, kursy i wydarzenia jogowe zebrane w jednym miejscu. Jasna struktura, uporządkowane dane i dostęp dla organizatorów bez opłat",
-  openGraph: {
-    images: ["/images/social_wydarzenia.png"],
-  },
-  alternates: {
-    canonical: "/",
-    languages: {
-      pl: "/",
-    },
-  },
+  ...buildPageMetadata({
+    project: "workshops",
+    title: pageTitle,
+    description: pageDescription,
+    path: "/",
+  }),
 };
 
 interface PageProps {
@@ -54,6 +54,14 @@ const WorkshopsPage = async (props: PageProps) => {
 
   return (
     <div className="">
+      <JsonLd
+        data={buildCollectionJsonLd({
+          project: "workshops",
+          path: "/",
+          name: pageTitle,
+          description: pageDescription,
+        })}
+      />
       <Suspense>
         <Filters />
       </Suspense>

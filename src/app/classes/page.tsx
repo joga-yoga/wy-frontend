@@ -2,22 +2,22 @@ import { Metadata } from "next";
 import React, { Suspense } from "react";
 
 import { Event } from "@/app/retreats/types";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getClasses } from "@/lib/api/classes";
+import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
 
 import ClassesList from "./components/ClassesList";
 
+const pageTitle = "wydarzenia.yoga – zajęcia jogi";
+const pageDescription = "Aktualne zajęcia jogi w studiach i szkołach jogi.";
+
 export const metadata: Metadata = {
-  title: "wydarzenia.yoga – zajęcia jogi",
-  description: "Aktualne zajęcia jogi w studiach i szkołach jogi.",
-  openGraph: {
-    images: ["/images/social_wydarzenia.png"],
-  },
-  alternates: {
-    canonical: "https://wydarzenia.yoga/classes",
-    languages: {
-      pl: "https://wydarzenia.yoga/classes",
-    },
-  },
+  ...buildPageMetadata({
+    project: "workshops",
+    title: pageTitle,
+    description: pageDescription,
+    path: "/classes",
+  }),
 };
 
 interface PageProps {
@@ -50,6 +50,14 @@ const ClassesPage = async (props: PageProps) => {
 
   return (
     <div>
+      <JsonLd
+        data={buildCollectionJsonLd({
+          project: "workshops",
+          path: "/classes",
+          name: pageTitle,
+          description: pageDescription,
+        })}
+      />
       <main className="container-wy mx-auto px-0 md:px-8 pt-0 md:pt-5 pb-[calc(72px+1px+20px)] md:pb-8">
         {error ? (
           <p className="text-center text-red-600 py-10">Error: {error}</p>
