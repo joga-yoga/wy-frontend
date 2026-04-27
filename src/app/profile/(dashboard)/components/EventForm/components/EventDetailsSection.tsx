@@ -73,7 +73,7 @@ export const EventDetailsSection = ({
           id="description"
           {...register("description")}
           rows={4}
-          placeholder="Opis"
+          placeholder="Opis – max. 1000 znaków"
           onFocus={() => {
             focusTip("description");
           }}
