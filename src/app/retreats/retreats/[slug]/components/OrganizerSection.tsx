@@ -60,21 +60,11 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
     setModalState("default");
 
     try {
-      const formattedMessage = [
-        `Typ zgłoszenia: Kontakt do organizatora ${eventEntity}`,
-        `ID ${eventEntity}: ${event.id}`,
-        `Partner: ${partner?.name}`,
-        "",
-        "Wiadomość:",
-        message.trim(),
-      ]
-        .filter(Boolean)
-        .join("\n");
-
-      await axiosInstance.post("/utils/contact", {
+      await axiosInstance.post("/utils/contact/event", {
+        event_id: event.id,
         email: email.trim(),
         contact_info: phone.trim() || undefined,
-        message: formattedMessage,
+        message: message.trim(),
       });
       setModalState("success");
       setEmail("");
