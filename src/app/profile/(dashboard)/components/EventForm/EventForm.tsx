@@ -711,10 +711,19 @@ export function EventForm({
   };
 
   const handleLocationSaved = (savedLocation: Location) => {
+    setLocations((prevLocations) => {
+      const existingLocationIndex = prevLocations.findIndex((loc) => loc.id === savedLocation.id);
+
+      if (existingLocationIndex === -1) {
+        return [...prevLocations, savedLocation];
+      }
+
+      return prevLocations.map((loc) => (loc.id === savedLocation.id ? savedLocation : loc));
+    });
+    setValue("location_id", savedLocation.id, { shouldDirty: true, shouldValidate: true });
     fetchLocations();
     setIsLocationModalOpen(false);
     setEditingLocation(null);
-    setValue("location_id", savedLocation.id, { shouldDirty: true });
     toast({ description: "Lokalizacja zapisana pomyślnie." });
   };
 

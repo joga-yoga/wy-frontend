@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -29,6 +29,7 @@ interface GooglePlaceLocation {
   id: string;
   title: string;
   country?: string | null;
+  address_line1?: string | null;
   google_place_id?: string | null;
 }
 
@@ -43,7 +44,7 @@ const schema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   description: z.string().optional(),
   image: z.any().optional(),
-  google_place_id: z.string().optional().nullable(),
+  selected_location_id: z.string().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -56,11 +57,15 @@ export default function PartnerProfilePage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [removeCurrentImage, setRemoveCurrentImage] = useState(false);
   const [locations, setLocations] = useState<GooglePlaceLocation[]>([]);
+  const [locationsLoaded, setLocationsLoaded] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<GooglePlaceLocation | null>(null);
+  const [savedPartnerGooglePlaceId, setSavedPartnerGooglePlaceId] = useState<
+    string | null | undefined
+  >(undefined);
+  const [hasInitializedLocationSelection, setHasInitializedLocationSelection] = useState(false);
 
   // Reviews management state
-  const [currentGooglePlaceId, setCurrentGooglePlaceId] = useState<string | null>(null);
   const [reviewsCount, setReviewsCount] = useState<number>(0);
   const [isLoadingReviewsCount, setIsLoadingReviewsCount] = useState(false);
   const [isCollectingReviews, setIsCollectingReviews] = useState(false);
@@ -68,6 +73,7 @@ export default function PartnerProfilePage() {
 
   const router = useRouter();
   const { toast } = useToast();
+  const reviewCountRequestIdRef = useRef(0);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -75,51 +81,84 @@ export default function PartnerProfilePage() {
       name: "",
       description: "",
       image: undefined,
-      google_place_id: null,
+      selected_location_id: null,
     },
   });
 
   const {
     handleSubmit,
     setValue,
+    getValues,
+    reset,
     watch,
     control,
     formState: { isSubmitting },
   } = form;
 
   const imageFile = watch("image");
+  const selectedLocationId = watch("selected_location_id");
+  const selectedLocation = useMemo(() => {
+    return locations.find((loc) => loc.id === selectedLocationId) ?? null;
+  }, [locations, selectedLocationId]);
+  const selectedGooglePlaceId = selectedLocation?.google_place_id ?? null;
+  const hasUnsavedLocationChange =
+    savedPartnerGooglePlaceId !== undefined &&
+    (selectedGooglePlaceId ?? null) !== (savedPartnerGooglePlaceId ?? null);
+
+  const setSelectedLocationId = useCallback(
+    (
+      nextLocationId: string | null,
+      source: string,
+      mode: "setValue" | "reset" = "setValue",
+      options?: Parameters<typeof setValue>[2],
+    ) => {
+      if (mode === "reset") {
+        reset({ ...getValues(), selected_location_id: nextLocationId });
+      } else {
+        setValue("selected_location_id", nextLocationId, options);
+      }
+    },
+    [getValues, reset, setValue],
+  );
 
   // Fetch reviews count
-  const fetchReviewsCount = async (placeId: string) => {
+  const fetchReviewsCount = useCallback(async (placeId: string | null) => {
+    const requestId = reviewCountRequestIdRef.current + 1;
+    reviewCountRequestIdRef.current = requestId;
+
+    if (!placeId) {
+      setReviewsCount(0);
+      setIsLoadingReviewsCount(false);
+      return;
+    }
+
     try {
       setIsLoadingReviewsCount(true);
       setCollectReviewsError(null);
-      const response = await axiosInstance.get(`/partner/reviews/${placeId}`, {
-        params: {
-          offset: 0,
-          limit: 1,
-        },
-        validateStatus: (status) => status < 500, // Accept 404 and other 4xx as valid responses
+      const response = await axiosInstance.get("/partner/reviews-count", {
+        params: { place_id: placeId },
       });
-
-      // Handle 404 - means reviews haven't been parsed yet
-      if (response.status === 404) {
-        setReviewsCount(0);
-      } else if (response.status === 200) {
-        setReviewsCount(response.data.total_count);
-      }
+      if (reviewCountRequestIdRef.current !== requestId) return;
+      setReviewsCount(response.data.total_count);
     } catch (error: any) {
+      if (reviewCountRequestIdRef.current !== requestId) return;
       console.error("Failed to fetch reviews count:", error);
       setReviewsCount(0);
     } finally {
-      setIsLoadingReviewsCount(false);
+      if (reviewCountRequestIdRef.current === requestId) {
+        setIsLoadingReviewsCount(false);
+      }
     }
-  };
+  }, []);
 
   // Collect reviews from Google Maps
   const handleCollectReviews = async () => {
-    if (!currentGooglePlaceId) {
-      setCollectReviewsError("Google Place ID is not set.");
+    if (!selectedLocation) {
+      setCollectReviewsError("Wybierz lokalizację, aby pobrać recenzje.");
+      return;
+    }
+    if (!selectedGooglePlaceId) {
+      setCollectReviewsError("Wybrana lokalizacja nie ma Google Place ID.");
       return;
     }
 
@@ -127,16 +166,15 @@ export default function PartnerProfilePage() {
     setCollectReviewsError(null);
 
     try {
-      const response = await axiosInstance.post("/partner/collect-reviews");
+      const response = await axiosInstance.post("/partner/collect-reviews", {
+        location_id: selectedLocation.id,
+      });
 
       toast({
         description: `Pomyślnie pobrano recenzje! Zapisano ${response.data.saved_count} nowych recenzji (znaleziono ${response.data.total_found} razem).`,
       });
 
-      // Refresh reviews count
-      if (currentGooglePlaceId) {
-        await fetchReviewsCount(currentGooglePlaceId);
-      }
+      await fetchReviewsCount(selectedGooglePlaceId);
     } catch (error: any) {
       console.error("Failed to collect reviews:", error);
       const errorMessage =
@@ -161,9 +199,11 @@ export default function PartnerProfilePage() {
       .get<GooglePlaceLocation[]>("/locations")
       .then((response) => {
         setLocations(response.data);
+        setLocationsLoaded(true);
       })
       .catch((error) => {
         console.error("Failed to fetch locations:", error);
+        setLocationsLoaded(true);
         toast({
           description: "Nie udało się załadować listy lokalizacji.",
           variant: "destructive",
@@ -182,29 +222,11 @@ export default function PartnerProfilePage() {
         setCurrentImageId(res.data.image_id || null);
         setRemoveCurrentImage(false);
 
-        // Match organizer's google_place_id with locations
+        setSavedPartnerGooglePlaceId(res.data.google_place_id || null);
+
         if (res.data.google_place_id) {
-          // Set current google place id for reviews
-          setCurrentGooglePlaceId(res.data.google_place_id);
-
-          // Fetch reviews count if google_place_id exists
           fetchReviewsCount(res.data.google_place_id);
-
-          // Find location with matching google_place_id
-          const matchingLocation = locations.find(
-            (loc) => loc.google_place_id === res.data.google_place_id,
-          );
-          if (matchingLocation) {
-            // Set to the matched location's ID
-            setValue("google_place_id", matchingLocation.id);
-          } else {
-            // If no match found, still set the google_place_id
-            // This handles case where location was deleted but organizer still has reference
-            setValue("google_place_id", res.data.google_place_id || null);
-          }
         } else {
-          setValue("google_place_id", null);
-          setCurrentGooglePlaceId(null);
           setReviewsCount(0);
         }
       })
@@ -225,7 +247,45 @@ export default function PartnerProfilePage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [setValue, toast, router, locations]);
+  }, [setValue, toast, router]);
+
+  useEffect(() => {
+    if (
+      hasInitializedLocationSelection ||
+      savedPartnerGooglePlaceId === undefined ||
+      !locationsLoaded
+    ) {
+      return;
+    }
+
+    if (!savedPartnerGooglePlaceId) {
+      setSelectedLocationId(null, "init:no saved partner google_place_id", "reset");
+      setHasInitializedLocationSelection(true);
+      return;
+    }
+
+    const matchingLocation = locations.find(
+      (loc) =>
+        loc.google_place_id === savedPartnerGooglePlaceId || loc.id === savedPartnerGooglePlaceId,
+    );
+
+    if (matchingLocation) {
+      setSelectedLocationId(matchingLocation.id, "init:matched saved partner location", "reset");
+    }
+    setHasInitializedLocationSelection(true);
+  }, [
+    hasInitializedLocationSelection,
+    getValues,
+    locations,
+    locationsLoaded,
+    reset,
+    savedPartnerGooglePlaceId,
+    setSelectedLocationId,
+  ]);
+
+  useEffect(() => {
+    fetchReviewsCount(selectedGooglePlaceId);
+  }, [fetchReviewsCount, selectedGooglePlaceId]);
 
   useEffect(() => {
     const file = imageFile?.[0];
@@ -287,7 +347,6 @@ export default function PartnerProfilePage() {
   }
 
   async function onSubmit(data: FormData) {
-    console.log("🚀 ~ onSubmit ~ data:", data);
     const payload: {
       name?: string;
       description?: string;
@@ -298,13 +357,7 @@ export default function PartnerProfilePage() {
     payload.name = data.name;
     payload.description = data.description;
 
-    // If location is selected, find its google_place_id
-    if (data.google_place_id) {
-      const selectedLocation = locations.find((loc) => loc.id === data.google_place_id);
-      payload.google_place_id = selectedLocation?.google_place_id || null;
-    } else {
-      payload.google_place_id = null;
-    }
+    payload.google_place_id = selectedLocation?.google_place_id || null;
 
     if (newlyUploadedImageId) {
       payload.image_id = newlyUploadedImageId;
@@ -316,32 +369,8 @@ export default function PartnerProfilePage() {
       const response = await axiosInstance.put("/partner", payload);
       toast({ description: "Profil zaktualizowany pomyślnie!" });
       setCurrentImageId(response.data.image_id || null);
-      // setValue("google_place_id", response.data.google_place_id || null);
-      // Match organizer's google_place_id with locations
-      if (response.data.google_place_id) {
-        // Update current google place id and fetch reviews count if location changed
-        setCurrentGooglePlaceId(response.data.google_place_id);
-
-        // Fetch reviews count for the new/updated location
-        await fetchReviewsCount(response.data.google_place_id);
-
-        // Find location with matching google_place_id
-        const matchingLocation = locations.find(
-          (loc) => loc.google_place_id === response.data.google_place_id,
-        );
-        if (matchingLocation) {
-          // Set to the matched location's ID
-          setValue("google_place_id", matchingLocation.id);
-        } else {
-          // If no match found, still set the google_place_id
-          // This handles case where location was deleted but organizer still has reference
-          setValue("google_place_id", response.data.google_place_id || null);
-        }
-      } else {
-        setValue("google_place_id", null);
-        setCurrentGooglePlaceId(null);
-        setReviewsCount(0);
-      }
+      setSavedPartnerGooglePlaceId(response.data.google_place_id || null);
+      await fetchReviewsCount(response.data.google_place_id || null);
 
       setNewlyUploadedImageId(null);
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
@@ -357,23 +386,33 @@ export default function PartnerProfilePage() {
   }
 
   function handleLocationSaved(savedLocation: GooglePlaceLocation) {
-    // Reload locations to get the updated list with the saved location
+    setLocations((prevLocations) => {
+      const existingLocationIndex = prevLocations.findIndex((loc) => loc.id === savedLocation.id);
+
+      if (existingLocationIndex === -1) {
+        return [...prevLocations, savedLocation];
+      }
+
+      return prevLocations.map((loc) => (loc.id === savedLocation.id ? savedLocation : loc));
+    });
+    setSelectedLocationId(savedLocation.id, "location modal saved", "setValue", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setHasInitializedLocationSelection(true);
+    fetchReviewsCount(savedLocation.google_place_id || null);
+
     axiosInstance
       .get<GooglePlaceLocation[]>("/locations")
       .then((response) => {
-        setLocations(response.data);
+        const reloadedLocations = response.data;
+        const savedLocationExists = reloadedLocations.some((loc) => loc.id === savedLocation.id);
 
-        // Find the newly saved location by google_place_id or id
-        const newLocation = response.data.find(
-          (loc) =>
-            loc.google_place_id === savedLocation.google_place_id || loc.id === savedLocation.id,
+        setLocations(
+          savedLocationExists
+            ? reloadedLocations.map((loc) => (loc.id === savedLocation.id ? savedLocation : loc))
+            : [...reloadedLocations, savedLocation],
         );
-
-        if (newLocation) {
-          // Set the location ID to the form field (not google_place_id)
-          // The onSubmit will extract the google_place_id from the location
-          setValue("google_place_id", newLocation.id, { shouldDirty: true });
-        }
       })
       .catch((error) => {
         console.error("Failed to reload locations:", error);
@@ -462,7 +501,7 @@ export default function PartnerProfilePage() {
                 <LocationSelector
                   control={control}
                   errors={{}}
-                  fieldName="google_place_id"
+                  fieldName="selected_location_id"
                   label="Lokalizacja Google Place"
                   locations={locations}
                   onEditClick={(location) => {
@@ -476,8 +515,15 @@ export default function PartnerProfilePage() {
                 />
               </div>
 
-              {/* No Location Selected Message */}
-              {!currentGooglePlaceId && (
+              {hasUnsavedLocationChange && selectedLocation && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-amber-800 text-sm">
+                    Zapisz profil, aby używać tej lokalizacji na publicznej stronie organizatora.
+                  </p>
+                </div>
+              )}
+
+              {!selectedLocation && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-blue-700 text-sm">
                     📍 Wybierz lokalizację powyżej, aby móc pobierać recenzje z Google Maps.
@@ -485,12 +531,23 @@ export default function PartnerProfilePage() {
                 </div>
               )}
 
-              {/* Reviews Count Display */}
-              {currentGooglePlaceId && (
+              {selectedLocation && !selectedGooglePlaceId && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    Wybrana lokalizacja nie ma Google Place ID. Edytuj lokalizację i wybierz wynik z
+                    Google Maps.
+                  </p>
+                </div>
+              )}
+
+              {selectedLocation && selectedGooglePlaceId && (
                 <div className="p-4 bg-white rounded-lg border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Pobrane recenzje</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {selectedLocation.title || selectedLocation.address_line1}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         {isLoadingReviewsCount ? (
                           <div className="flex items-center gap-2">
@@ -513,13 +570,12 @@ export default function PartnerProfilePage() {
                 </div>
               )}
 
-              {/* Collect Reviews Button */}
-              {currentGooglePlaceId && (
+              {selectedLocation && selectedGooglePlaceId && (
                 <>
                   <Button
                     type="button"
                     onClick={handleCollectReviews}
-                    disabled={isCollectingReviews || isSubmitting}
+                    disabled={isCollectingReviews || isSubmitting || !selectedGooglePlaceId}
                     className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {isCollectingReviews ? (
