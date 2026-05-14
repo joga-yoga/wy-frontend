@@ -199,16 +199,16 @@ const tipsWorkshops: Tip[] = [
   },
   {
     id: "date",
-    title: "Termin",
-    content:
-      "Podaj datę i godzinę rozpoczęcia oraz zakończenia wydarzenia. Sprawdź zgodność z harmonogramem sali lub platformy online.",
+    title: "Data i godziny",
+    content: "Wybierz datę oraz godziny rozpoczęcia i zakończenia każdego dnia wydarzenia.",
   },
   {
     id: "program",
-    title: "Plan i harmonogram",
-    content: "Wymień, co dokładnie wydarzy się podczas spotkania.",
+    title: "Plan wydarzenia",
+    content:
+      "Opisz przebieg dnia bez wpisywania daty ani dnia tygodnia. Datę pokażemy automatycznie na stronie wydarzenia.",
     example:
-      "17:00 – rozpoczęcie i krótkie wprowadzenie\n17:15 – praktyka asan\n18:00 – pranajama\n18:20 – relaksacja i podsumowanie.",
+      "Rozpoczęcie i krótkie wprowadzenie, praktyka asan, pranajama, relaksacja i podsumowanie.",
   },
   {
     id: "location_id",

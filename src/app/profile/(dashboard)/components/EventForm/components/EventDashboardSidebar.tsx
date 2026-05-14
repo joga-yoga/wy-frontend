@@ -14,7 +14,7 @@ interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
 const menuItems = [
   { id: "event-details-section", icon: FileText, label: "Podstawowe informacje" },
   { id: "event-instructors-section", icon: Users, label: "Instruktorzy" },
-  { id: "event-program-section", icon: ListTodo, label: "Program wyjazdu" },
+  { id: "event-program-section", icon: ListTodo, label: "Plan wydarzenia" },
   { id: "event-location-section", icon: MapPin, label: "Lokalizacja" },
   { id: "event-pricing-section", icon: DollarSign, label: "Cennik" },
   { id: "event-photos-section", icon: Camera, label: "Zdjęcia" },

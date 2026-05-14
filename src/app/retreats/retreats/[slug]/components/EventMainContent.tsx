@@ -2,11 +2,33 @@ import React from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
 
-import { formatMultiLineText, getImageUrl } from "../helpers";
+import { formatMultiLineText } from "../helpers";
 import { EventDetail } from "../types";
 import { CancellationPolicySection } from "./CancellationPolicySection";
 import { InstructorSection } from "./InstructorSection";
 import { OrganizerSection } from "./OrganizerSection";
+
+const getFormattedProgramDateTitle = (dateValue?: string | null) => {
+  if (!dateValue) {
+    return null;
+  }
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const dateString = date.toLocaleDateString("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const dayOfWeekString = date.toLocaleDateString("pl-PL", {
+    weekday: "long",
+  });
+
+  return `${dateString} (${dayOfWeekString})`;
+};
 
 interface EventMainContentProps {
   event: EventDetail;
@@ -19,7 +41,6 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
   event,
   project,
   className,
-  isMultiDay,
 }) => {
   return (
     <div className={`space-y-5 md:space-y-[44px] ${className}`}>
@@ -39,19 +60,19 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
               const isStartDateValid = !isNaN(startDateObj.getTime());
 
               return event.program!.map((day, index) => {
-                let displayDayTitle = `Dzień ${index + 1}`;
-                if (isStartDateValid) {
+                let displayDayTitle =
+                  project === "workshops"
+                    ? getFormattedProgramDateTitle(
+                        event.occurrences?.[index]?.start_time ||
+                          event.occurrences?.[index]?.end_time,
+                      ) || `Dzień ${index + 1}`
+                    : `Dzień ${index + 1}`;
+
+                if (project === "retreats" && isStartDateValid) {
                   const currentDate = new Date(startDateObj);
                   currentDate.setDate(startDateObj.getDate() + index);
-                  const dateString = currentDate.toLocaleDateString("pl-PL", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  });
-                  const dayOfWeekString = currentDate.toLocaleDateString("pl-PL", {
-                    weekday: "long",
-                  });
-                  displayDayTitle = `${dateString} (${dayOfWeekString})`;
+                  displayDayTitle =
+                    getFormattedProgramDateTitle(currentDate.toISOString()) || `Dzień ${index + 1}`;
                 }
 
                 return (
@@ -69,9 +90,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
                       )}
 
                       <div className="flex-grow">
-                        {project === "retreats" || isMultiDay ? (
-                          <h3 className="text-subheader text-gray-800">{displayDayTitle}</h3>
-                        ) : null}
+                        <h3 className="text-subheader text-gray-800">{displayDayTitle}</h3>
                         <div className="text-md text-gray-500">
                           {formatMultiLineText(day.description)}
                         </div>
