@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import type { EventDetail } from "@/app/retreats/retreats/[slug]/types";
+import type { EventDetail } from "@/app/retreats/[slug]/types";
 import type { OrganizerInfo } from "@/components/page-contents/organizer/types";
 
 export type SeoProject = "retreats" | "workshops";
@@ -13,13 +13,13 @@ type ProjectSeoConfig = {
 
 export const PROJECT_SEO: Record<SeoProject, ProjectSeoConfig> = {
   retreats: {
-    siteName: "wyjazdy.yoga",
-    baseUrl: "https://wyjazdy.yoga",
+    siteName: "joga.yoga",
+    baseUrl: "https://joga.yoga",
     defaultImage: "/images/social_wyjazdy.png",
   },
   workshops: {
-    siteName: "wydarzenia.yoga",
-    baseUrl: "https://wydarzenia.yoga",
+    siteName: "joga.yoga",
+    baseUrl: "https://joga.yoga",
     defaultImage: "/images/social_wydarzenia.png",
   },
 };

@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
-import { buildGlobalLogoutStartUrl, clearAuthStorage } from "@/lib/auth/logoutChain";
+import { clearAuthStorage } from "@/lib/auth/logoutChain";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 type Partner = {
@@ -158,14 +158,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function signOut() {
-    const currentOrigin = window.location.origin;
-    const finalRedirect = process.env.NEXT_PUBLIC_PROFILE_HOST || currentOrigin;
-    const startUrl = buildGlobalLogoutStartUrl({
-      currentOrigin,
-      finalRedirect,
-    });
-
-    window.location.assign(startUrl);
+    clearAuthStorage();
+    delete axios.defaults.headers.common["Authorization"];
+    setUser(null);
+    window.location.href = "/";
   }
 
   return (

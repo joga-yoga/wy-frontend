@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getLoginLogoHref, saveReturnContext } from "@/lib/auth/returnContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 const resetPasswordSchema = z.object({
@@ -30,11 +29,8 @@ function ResetPasswordForm() {
   const { toast } = useToast();
   const { storeToken } = useAuth();
   const [email, setEmail] = useState("");
-  const [logoHref, setLogoHref] = useState("/");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const token = searchParams.get("token");
-  const returnTo = searchParams.get("return_to");
-  const spokeNext = searchParams.get("spoke_next");
 
   const {
     register,
@@ -43,11 +39,6 @@ function ResetPasswordForm() {
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
   });
-
-  useEffect(() => {
-    saveReturnContext(returnTo, spokeNext);
-    setLogoHref(getLoginLogoHref());
-  }, [returnTo, spokeNext]);
 
   useEffect(() => {
     if (token) {
@@ -92,7 +83,7 @@ function ResetPasswordForm() {
         toast({
           description: "Hasło zostało zmienione pomyślnie. Logowanie...",
         });
-        router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+        router.push("/profile");
       }
     } catch (error: any) {
       toast({
@@ -110,7 +101,7 @@ function ResetPasswordForm() {
   return (
     <div className="flex flex-col items-center justify-start min-h-[100svh] px-4">
       <div className="py-10 pb-[100px]">
-        <Link href={logoHref}>
+        <Link href="/">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-600 text-xl shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] md:h-16 md:w-16 md:text-h-middle">
             <LogoTransparentSmall className="h-10 w-10 text-white md:h-16 md:w-16" />
           </div>

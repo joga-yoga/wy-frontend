@@ -9,7 +9,7 @@ import { PROJECT_SEO } from "@/lib/seo";
 export const metadata: Metadata = {
   metadataBase: new URL(PROJECT_SEO.workshops.baseUrl),
   title: {
-    default: "Zajęcia jogi | wydarzenia.yoga",
+    default: "Zajęcia jogi | joga.yoga",
     template: "%s",
   },
   description: "Aktualne zajęcia jogi w studiach i szkołach jogi.",

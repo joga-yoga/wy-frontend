@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { getImageUrl } from "@/app/retreats/retreats/[slug]/helpers";
+import { getImageUrl } from "@/app/retreats/[slug]/helpers";
 import { DynamicCloudinaryImage } from "@/components/custom/DynamicCloudinaryImage";
 import CustomGalleryIcon from "@/components/icons/CustomGalleryIcon";
 import { Button } from "@/components/ui/button";

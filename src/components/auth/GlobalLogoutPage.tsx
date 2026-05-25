@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { clearAuthStorage, isAllowedLogoutTarget } from "@/lib/auth/logoutChain";
+import { clearAuthStorage } from "@/lib/auth/logoutChain";
 
 const REDIRECT_DELAY_MS = 100;
 
@@ -20,35 +20,8 @@ function LogoutContent() {
     }
     isProcessing.current = true;
 
-    const cid = params.get("cid") || "no-cid";
-    const next = params.get("next");
-    const final = params.get("final") || `${process.env.NEXT_PUBLIC_PROFILE_HOST}/`;
-    const currentOrigin = window.location.origin;
-    const visitedKey = `logout-visited:${cid}:${currentOrigin}`;
-    let resolvedTarget = final;
-
-    if (!sessionStorage.getItem(visitedKey)) {
-      sessionStorage.setItem(visitedKey, "1");
-
-      if (next) {
-        try {
-          const decoded = decodeURIComponent(next);
-          const allowed = isAllowedLogoutTarget(decoded);
-
-          if (allowed) {
-            resolvedTarget = decoded;
-          }
-        } catch (error) {
-          console.error("[logout] malformed-next", {
-            currentOrigin,
-            cid,
-            rawNext: next,
-            final,
-            error,
-          });
-        }
-      }
-    }
+    const final = params.get("final") || "/";
+    const resolvedTarget = final;
 
     clearAuthStorage();
     delete axios.defaults.headers.common["Authorization"];

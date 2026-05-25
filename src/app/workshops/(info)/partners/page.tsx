@@ -6,10 +6,10 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     project: "workshops",
-    title: "Zostań partnerem | wydarzenia.yoga",
+    title: "Zostań partnerem | joga.yoga",
     description:
       "Dołącz do grona organizatorów wydarzeń jogowych. Promuj swoje warsztaty i kursy, docierając do szerokiej grupy odbiorców.",
-    path: "/partners",
+    path: "/wydarzenia/partners",
   }),
 };
 

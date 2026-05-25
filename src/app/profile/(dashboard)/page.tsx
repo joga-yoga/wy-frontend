@@ -271,8 +271,8 @@ export default function DashboardPage() {
       // Redirect to create page
       const createLink =
         event.kind === "workshop"
-          ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/create?duplicate=true`
-          : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/create?duplicate=true`;
+          ? `/profile/workshops/create?duplicate=true`
+          : `/profile/retreats/create?duplicate=true`;
 
       router.push(createLink);
 
@@ -325,7 +325,7 @@ export default function DashboardPage() {
             }`}
           >
             <Link
-              href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/create`}
+              href={`/profile/retreats/create`}
               onClick={() => setIsCreateOpen(false)}
               className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
             >
@@ -333,7 +333,7 @@ export default function DashboardPage() {
               <div className="mt-3 text-base font-semibold">Wyjazd</div>
             </Link>
             <Link
-              href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/create`}
+              href={`/profile/workshops/create`}
               onClick={() => setIsCreateOpen(false)}
               className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
             >
@@ -342,7 +342,7 @@ export default function DashboardPage() {
             </Link>
             {classesEnabled ? (
               <Link
-                href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes/create`}
+                href={`/profile/classes/create`}
                 onClick={() => setIsCreateOpen(false)}
                 className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
               >
@@ -409,8 +409,8 @@ export default function DashboardPage() {
               const status = getEventStatus(event);
               const editLink =
                 event.kind === "workshop"
-                  ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
-                  : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`;
+                  ? `/profile/workshops/${event.id}/edit`
+                  : `/profile/retreats/${event.id}/edit`;
 
               const eventImageId = event.image_ids?.[0] || event.image_id;
               return (
@@ -456,8 +456,8 @@ export default function DashboardPage() {
                               <Link
                                 href={
                                   event.kind === "workshop"
-                                    ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops/${event.id}/edit`
-                                    : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats/${event.id}/edit`
+                                    ? `/profile/workshops/${event.id}/edit`
+                                    : `/profile/retreats/${event.id}/edit`
                                 }
                               >
                                 Edytuj
@@ -476,8 +476,8 @@ export default function DashboardPage() {
                               <Link
                                 href={
                                   event.kind === "workshop"
-                                    ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops/${event.slug}`
-                                    : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats/${event.slug}`
+                                    ? `/w/${event.slug}`
+                                    : `/r/${event.slug}`
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"

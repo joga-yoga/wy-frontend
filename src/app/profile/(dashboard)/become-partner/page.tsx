@@ -120,7 +120,7 @@ export default function BecomePartnerPage() {
       .get("/partner/me")
       .then(() => {
         toast({ description: "Masz już profil partnera.", variant: "default" });
-        router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+        router.push("/profile");
       })
       .catch((err) => {
         if (err.response?.status !== 404) {
@@ -337,7 +337,7 @@ export default function BecomePartnerPage() {
       });
 
       toast({ description: "Twój profil partnera został utworzony. Przekierowywanie..." });
-      router.replace(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+      router.replace("/profile");
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||

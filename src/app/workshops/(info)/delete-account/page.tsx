@@ -6,9 +6,9 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     project: "workshops",
-    title: "Usuwanie konta | wydarzenia.yoga",
-    description: "Procedura usuwania konta i danych osobowych z serwisu wydarzenia.yoga.",
-    path: "/delete-account",
+    title: "Usuwanie konta | joga.yoga",
+    description: "Procedura usuwania konta i danych osobowych z serwisu joga.yoga.",
+    path: "/wydarzenia/delete-account",
   }),
 };
 

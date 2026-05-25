@@ -6,9 +6,9 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     project: "workshops",
-    title: "Regulamin | wydarzenia.yoga",
-    description: "Regulamin korzystania z serwisu wydarzenia.yoga dla uczestników i organizatorów.",
-    path: "/terms",
+    title: "Regulamin | joga.yoga",
+    description: "Regulamin korzystania z serwisu joga.yoga dla uczestników i organizatorów.",
+    path: "/wydarzenia/terms",
   }),
 };
 

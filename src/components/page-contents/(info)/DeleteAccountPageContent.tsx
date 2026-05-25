@@ -42,7 +42,7 @@ export const DeleteAccountPageContent = () => {
           <p className="text-left text-gray-600 dark:text-gray-400 mb-6">
             Jeśli chcesz usunąć swoje konto i powiązane dane, wyślij nam wiadomość. Twoja prośba
             zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu
-            wyjazdy.yoga. Zostaw preferowany sposób kontaktu – e-mail, telefon (WhatsApp) lub social
+            joga.yoga. Zostaw preferowany sposób kontaktu – e-mail, telefon (WhatsApp) lub social
             media, abyśmy mogli potwierdzić prośbę.
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">

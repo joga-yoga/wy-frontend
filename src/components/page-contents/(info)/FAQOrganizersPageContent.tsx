@@ -5,7 +5,7 @@ export const FAQOrganizersPageContent = ({ project }: { project: "retreats" | "w
     {
       question: "1) Czy publikacja jest płatna?",
       answer:
-        "Nie. Publikacja jest bez opłat. Jesteśmy w fazie rozwoju i stawiamy na wartość dla społeczności: chcemy pomóc polskim joginom szybciej znaleźć dobre wyjazdy. W zamian prosimy tylko o link zwrotny do wyjazdy.yoga (np. w stopce strony wydarzenia lub studia). To uczciwy „give & get”: Ty zyskujesz zasięg wśród polskich odbiorców, my – widoczność SEO i wiarygodność ekosystemu.",
+        "Nie. Publikacja jest bez opłat. Jesteśmy w fazie rozwoju i stawiamy na wartość dla społeczności: chcemy pomóc polskim joginom szybciej znaleźć dobre wyjazdy. W zamian prosimy tylko o link zwrotny do joga.yoga (np. w stopce strony wydarzenia lub studia). To uczciwy „give & get”: Ty zyskujesz zasięg wśród polskich odbiorców, my – widoczność SEO i wiarygodność ekosystemu.",
     },
     {
       question: "2) Jakie wydarzenia można dodać?",
@@ -280,7 +280,7 @@ export const FAQOrganizersPageContent = ({ project }: { project: "retreats" | "w
         <CardHeader>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center mb-6 pt-4">
             {project === "retreats"
-              ? "FAQ dla Organizatorów na wyjazdy.yoga"
+              ? "FAQ dla Organizatorów na joga.yoga"
               : "🌸 Najczęściej zadawane pytania (FAQ) dla organizatorów wydarzeń jogowych i rozwojowych"}
           </CardTitle>
         </CardHeader>

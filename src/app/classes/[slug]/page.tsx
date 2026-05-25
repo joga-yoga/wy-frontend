@@ -9,8 +9,8 @@ import {
   EventMainContent,
   EventSidebar,
   ImageGallery,
-} from "@/app/retreats/retreats/[slug]/components";
-import { isMultiDayEvent } from "@/app/retreats/retreats/[slug]/helpers";
+} from "@/app/retreats/[slug]/components";
+import { isMultiDayEvent } from "@/app/retreats/[slug]/helpers";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getClass } from "@/lib/api/getClass";
@@ -39,8 +39,8 @@ export async function generateMetadata(
     throw error;
   });
 
-  const title = `${event.title} | wydarzenia.yoga`;
-  const description = event.description || "Zobacz szczegóły zajęć na wydarzenia.yoga";
+  const title = `${event.title} | joga.yoga`;
+  const description = event.description || "Zobacz szczegóły zajęć na joga.yoga";
   const imageId = event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : null;
   const imageUrl = getOgImageUrl(imageId);
 
@@ -49,7 +49,7 @@ export async function generateMetadata(
       project: "workshops",
       title,
       description,
-      path: `/classes/${slug}`,
+      path: `/c/${slug}`,
       image: imageUrl || undefined,
     }),
   };
@@ -78,7 +78,7 @@ const ClassDetailPage = async ({ params }: ClassDetailPageProps) => {
       <JsonLd
         data={buildEventJsonLd({
           project: "workshops",
-          path: `/classes/${slug}`,
+          path: `/c/${slug}`,
           event,
           imageUrl: imageUrl || undefined,
         })}

@@ -20,7 +20,7 @@ const ClassesList: React.FC<ClassesListProps> = ({ initialEvents }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
       {initialEvents.map((event) => (
-        <Link key={event.id} href={`/classes/${event.slug}`} passHref>
+        <Link key={event.id} href={`/c/${event.slug}`} passHref>
           <WorkshopCard event={event} />
         </Link>
       ))}

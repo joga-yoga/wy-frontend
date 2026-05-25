@@ -25,7 +25,7 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({
   const pageTitle = isTakeoverFlow ? `Przejęcie i edycja ${takeoverEntity}` : "Kontakt";
   const pageDescription = isTakeoverFlow
     ? `${takeoverEntityNominative} został opublikowany na naszej platformie i chcesz przejąć nad nim kontrolę? Wypełnij formularz. Po weryfikacji skontaktujemy się z Tobą i pomożemy przypisać ${takeoverEntity} do Twojego konta.`
-    : `Twoja wiadomość zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu ${isRetreatsContext ? "wyjazdy.yoga" : "wydarzenia.yoga"}. Zostaw w wiadomości preferowany sposób kontaktu - e-mail, telefon (WhatsApp) lub social media itd.`;
+    : `Twoja wiadomość zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu ${isRetreatsContext ? "joga.yoga" : "joga.yoga"}. Zostaw w wiadomości preferowany sposób kontaktu - e-mail, telefon (WhatsApp) lub social media itd.`;
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://app.joga.yoga"),
+  metadataBase: new URL("https://joga.yoga"),
   title: "Joga.Yoga App",
   description: "Joga.Yoga Application",
 };

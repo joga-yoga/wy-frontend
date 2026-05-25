@@ -9,7 +9,7 @@ import RetreatsList from "./components/RetreatsList";
 import { RetreatsPageFilters } from "./components/RetreatsPageFilters";
 import { Event } from "./types";
 
-const pageTitle = "Wyjazdy jogowe w Polsce i na świecie – sprawdź aktualne terminy | wyjazdy.yoga";
+const pageTitle = "Wyjazdy jogowe w Polsce i na świecie – sprawdź aktualne terminy | joga.yoga";
 const pageDescription =
   "Odkrywaj najlepsze wyjazdy jogowe, retrity i weekendowe praktyki. Pełne opisy, aktualne terminy i przejrzyste zasady.";
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     project: "retreats",
     title: pageTitle,
     description: pageDescription,
-    path: "/",
+    path: "/wyjazdy",
   }),
 };
 
@@ -57,7 +57,7 @@ const RetreatsPage = async (props: PageProps) => {
       <JsonLd
         data={buildCollectionJsonLd({
           project: "retreats",
-          path: "/",
+          path: "/wyjazdy",
           name: pageTitle,
           description: pageDescription,
         })}

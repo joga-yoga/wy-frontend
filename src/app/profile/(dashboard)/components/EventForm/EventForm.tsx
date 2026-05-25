@@ -139,17 +139,13 @@ export function EventForm({
   const isWorkshop = mode === "workshop";
   const isClass = mode === "class";
   const isOccurrenceBased = isWorkshop;
-  const eventBasePath = isWorkshop ? "/workshops" : isClass ? "/classes" : "/retreats";
+  const eventBaseApiPath = isWorkshop ? "/workshops" : isClass ? "/classes" : "/retreats";
   const profileEditPath = isWorkshop
-    ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/workshops`
+    ? `/profile/workshops`
     : isClass
-      ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes`
-      : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/retreats`;
-  const publicPath = isWorkshop
-    ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/workshops`
-    : isClass
-      ? `${process.env.NEXT_PUBLIC_WORKSHOPS_HOST}/classes`
-      : `${process.env.NEXT_PUBLIC_RETREATS_HOST}/retreats`;
+      ? `/profile/classes`
+      : `/profile/retreats`;
+  const publicPath = isWorkshop ? `/w` : isClass ? `/c` : `/r`;
   const isEditMode = !!eventId;
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -393,7 +389,7 @@ export function EventForm({
     setFetchError(null);
 
     axiosInstance
-      .get<EventInitialData>(`${eventBasePath}/${eventId}`)
+      .get<EventInitialData>(`${eventBaseApiPath}/${eventId}`)
       .then((res) => {
         const fetchedData = res.data;
         setCurrentIsPublic(fetchedData.is_public ?? false);
@@ -538,7 +534,7 @@ export function EventForm({
 
     try {
       if (isEditMode && eventId) {
-        const updatedEvent = await axiosInstance.put(`${eventBasePath}/${eventId}`, payload);
+        const updatedEvent = await axiosInstance.put(`${eventBaseApiPath}/${eventId}`, payload);
         toast({
           description:
             mode === "workshop"
@@ -551,7 +547,7 @@ export function EventForm({
         reset({ ...getValues(), slug: updatedEvent.data.slug });
         router.refresh();
       } else {
-        const response = await axiosInstance.post<{ id: string }>(eventBasePath, payload);
+        const response = await axiosInstance.post<{ id: string }>(eventBaseApiPath, payload);
         const newEventId = response.data.id;
         toast({
           description:
@@ -598,7 +594,7 @@ export function EventForm({
       const payloadForPublish = prepareEventPayload(formDataForPublish, mode);
 
       try {
-        await axiosInstance.put(`${eventBasePath}/${eventId}`, payloadForPublish);
+        await axiosInstance.put(`${eventBaseApiPath}/${eventId}`, payloadForPublish);
         setCurrentIsPublic(true); // Successfully published and saved
         reset(getValues());
         toast({
@@ -632,7 +628,7 @@ export function EventForm({
     } else {
       // Attempting to unpublish (newStatus === false)
       try {
-        await axiosInstance.patch(`${eventBasePath}/${eventId}`, { is_public: false });
+        await axiosInstance.patch(`${eventBaseApiPath}/${eventId}`, { is_public: false });
         setCurrentIsPublic(false);
         setValue("is_public", false, { shouldDirty: false, shouldValidate: false });
         toast({

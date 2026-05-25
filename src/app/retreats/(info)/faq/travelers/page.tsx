@@ -6,10 +6,10 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     project: "retreats",
-    title: "FAQ dla Uczestników | wyjazdy.yoga",
+    title: "FAQ dla Uczestników | joga.yoga",
     description:
       "Odpowiedzi na pytania uczestników wyjazdów jogowych. Jak się przygotować, co zabrać i jak rezerwować.",
-    path: "/faq/travelers",
+    path: "/wyjazdy/faq/travelers",
   }),
 };
 

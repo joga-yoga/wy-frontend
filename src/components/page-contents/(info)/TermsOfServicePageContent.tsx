@@ -6,8 +6,7 @@ export const TermsOfServicePageContent = ({ project }: { project: "retreats" | "
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center mb-6 pt-4">
-            Regulamin korzystania z serwisu{" "}
-            {project === "retreats" ? "wyjazdy.yoga" : "wydarzenia.yoga"}
+            Regulamin korzystania z serwisu {project === "retreats" ? "joga.yoga" : "joga.yoga"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 text-gray-700 dark:text-gray-300">
@@ -15,8 +14,7 @@ export const TermsOfServicePageContent = ({ project }: { project: "retreats" | "
             <h2 className="text-xl sm:text-2xl font-semibold mb-4">1. Postanowienia ogólne</h2>
             <p className="mb-4">
               1.1. Niniejszy regulamin (&quot;Regulamin&quot;) określa zasady korzystania z serwisu
-              internetowego{" "}
-              <strong>{project === "retreats" ? "wyjazdy.yoga" : "wydarzenia.yoga"}</strong>{" "}
+              internetowego <strong>{project === "retreats" ? "joga.yoga" : "joga.yoga"}</strong>{" "}
               (&quot;Serwis&quot;).
             </p>
             <p className="mb-4">

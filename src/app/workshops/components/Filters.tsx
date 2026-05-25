@@ -48,8 +48,6 @@ const Filters = () => {
   const {
     searchTerm,
     setSearchTerm,
-    sortConfig,
-    setSortConfigAndReset,
     isSearchActive,
     setIsSearchActiveAndReset,
     isBookmarksActive,
@@ -64,50 +62,47 @@ const Filters = () => {
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const cityDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sort state derived directly from URL — no context, no stale-state risk across navigation
+  const sortByParam = searchParams.get("sortBy");
+  const sortOrderParam = searchParams.get("sortOrder");
+
+  const handleSortClick = (field: "start_date" | "price") => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.get("sortBy") === field) {
+      if (params.get("sortOrder") === "asc") {
+        params.set("sortOrder", "desc");
+      } else {
+        params.delete("sortBy");
+        params.delete("sortOrder");
+      }
+    } else {
+      params.set("sortBy", field);
+      params.set("sortOrder", "asc");
+    }
+    router.push(`/?${params.toString()}`);
+  };
+
   // Load filter initial data to get available cities from server
   const { data: filterInitialData, loading: filterDataLoading } = useFilterInitialData(true);
 
-  // 1. Initialize Context State from URL on Mount
+  // Initialize search from URL on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const urlSearch = searchParams.get("search");
-    if (urlSearch) setSearchTerm(urlSearch);
+    setSearchTerm(searchParams.get("search") || "");
   }, []);
 
-  // 2. Sync Context State changes TO URL
+  // Sync debounced search term to URL
   useEffect(() => {
+    const currentUrlSearch = searchParams.get("search") || "";
+    if (debouncedSearchTerm === currentUrlSearch) return;
     const params = new URLSearchParams(searchParams.toString());
-    let changed = false;
-
-    // Sync Search
-    // Note: debouncedSearchTerm comes from context which delays searchTerm updates
-    // But we need to check if it actually CHANGED from URL to avoid loop or premature push
-    const currentUrlSearch = params.get("search") || "";
-    // We use debounced term for the push
-    if (debouncedSearchTerm !== currentUrlSearch) {
-      if (debouncedSearchTerm) {
-        params.set("search", debouncedSearchTerm);
-      } else {
-        params.delete("search");
-      }
-      changed = true;
+    if (debouncedSearchTerm) {
+      params.set("search", debouncedSearchTerm);
+    } else {
+      params.delete("search");
     }
-
-    // Sync Sort
-    if (sortConfig && sortConfig.field) {
-      if (
-        params.get("sortBy") !== sortConfig.field ||
-        params.get("sortOrder") !== sortConfig.order
-      ) {
-        params.set("sortBy", sortConfig.field);
-        params.set("sortOrder", sortConfig.order || "asc");
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      router.push(`/?${params.toString()}`);
-    }
-  }, [debouncedSearchTerm, sortConfig, router, searchParams]);
+    router.push(`/?${params.toString()}`);
+  }, [debouncedSearchTerm, router, searchParams]);
 
   const hasActiveFiltersFromUrl = () => {
     const cities = searchParams.get("cities");
@@ -236,42 +231,41 @@ const Filters = () => {
       <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
-            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
+            onClick={() => handleSortClick("start_date")}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
               "hover:bg-gray-100 duration-200",
-              sortConfig?.field === "start_date" &&
+              sortByParam === "start_date" &&
                 "border-2 border-brand-green hover:border-brand-green",
             )}
           >
             <Calendar className="w-6 h-6" />
             <div className="absolute bottom-[-6px] right-[-6px]">
-              {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+              {sortByParam === "start_date" && sortOrderParam === "asc" && (
                 <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
               )}
-              {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+              {sortByParam === "start_date" && sortOrderParam === "desc" && (
                 <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
               )}
             </div>
           </button>
 
           <button
-            onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
+            onClick={() => handleSortClick("price")}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
               "hover:bg-gray-100 duration-200",
-              sortConfig?.field === "price" &&
-                "border-2 border-brand-green hover:border-brand-green",
+              sortByParam === "price" && "border-2 border-brand-green hover:border-brand-green",
             )}
           >
             <DollarSign className="w-6 h-6" />
             <div className="absolute bottom-[-6px] right-[-6px]">
-              {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+              {sortByParam === "price" && sortOrderParam === "asc" && (
                 <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
               )}
-              {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+              {sortByParam === "price" && sortOrderParam === "desc" && (
                 <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
               )}
             </div>
@@ -376,41 +370,40 @@ const Filters = () => {
               <CustomFilterTagsIcon className="w-[56px] h-[56px] stroke-[0.8px]" />
             </button>
             <button
-              onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
+              onClick={() => handleSortClick("start_date")}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
                 "h-[80px] w-[80px]",
                 "hover:bg-gray-100 duration-200",
-                sortConfig?.field === "start_date" &&
+                sortByParam === "start_date" &&
                   "border-2 border-brand-green hover:border-brand-green",
               )}
             >
               <Calendar className="w-[48px] h-[48px] stroke-[0.8px]" />
               <div className="absolute bottom-[-6px] right-[-6px]">
-                {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+                {sortByParam === "start_date" && sortOrderParam === "asc" && (
                   <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
                 )}
-                {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+                {sortByParam === "start_date" && sortOrderParam === "desc" && (
                   <ArrowDown className="h-4 w-4 text-brand-green stroke-3" />
                 )}
               </div>
             </button>
             <button
-              onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
+              onClick={() => handleSortClick("price")}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
                 "h-[80px] w-[80px]",
                 "hover:bg-gray-100 duration-200",
-                sortConfig?.field === "price" &&
-                  "border-2 border-brand-green hover:border-brand-green",
+                sortByParam === "price" && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
               <DollarSign className="w-[48px] h-[48px] stroke-[0.8px]" />
               <div className="absolute bottom-[-6px] right-[-6px]">
-                {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+                {sortByParam === "price" && sortOrderParam === "asc" && (
                   <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
                 )}
-                {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+                {sortByParam === "price" && sortOrderParam === "desc" && (
                   <ArrowDown className="h-4 w-4 text-brand-green stroke-3" />
                 )}
               </div>

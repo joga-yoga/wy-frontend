@@ -23,7 +23,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/profile/login");
     }
   }, [user, loading, router]);
 

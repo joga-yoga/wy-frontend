@@ -11,39 +11,32 @@ import { Separator } from "../ui/separator";
 
 const COPYRIGHT_YEAR = 2026;
 
-const RETREATS_FOOTER_SECTIONS: {
+type FooterSectionDef = {
   title: string;
   links: { label: string; href: string; isExternal?: boolean }[];
-}[] = [
-  {
-    title: "Pomoc",
-    links: [
-      { label: "FAQ dla organizatorów", href: "/faq/organizers" },
-      { label: "FAQ dla podróżujących", href: "/faq/travelers" },
-    ],
-  },
-  {
-    title: "O nas",
-    links: [{ label: "Kontakt", href: "/contact" }],
-  },
-];
+};
 
-const WORKSHOPS_FOOTER_SECTIONS: {
-  title: string;
-  links: { label: string; href: string; isExternal?: boolean }[];
-}[] = [
-  {
-    title: "Pomoc",
-    links: [
-      { label: "FAQ dla organizatorów", href: "/faq/organizers" },
-      { label: "FAQ dla uczestników", href: "/faq/travelers" },
-    ],
-  },
-  {
-    title: "O nas",
-    links: [{ label: "Kontakt", href: "/contact" }],
-  },
-];
+function buildFooterSections(
+  prefix: string,
+  project: "retreats" | "workshops",
+): FooterSectionDef[] {
+  return [
+    {
+      title: "Pomoc",
+      links: [
+        { label: "FAQ dla organizatorów", href: `${prefix}/faq/organizers` },
+        {
+          label: project === "retreats" ? "FAQ dla podróżujących" : "FAQ dla uczestników",
+          href: `${prefix}/faq/travelers`,
+        },
+      ],
+    },
+    {
+      title: "O nas",
+      links: [{ label: "Kontakt", href: `${prefix}/contact` }],
+    },
+  ];
+}
 
 const FooterSection = ({
   title,
@@ -107,9 +100,11 @@ export const LogoFooter = ({
 const FooterBottom = ({
   onOpenCookieSettings,
   project,
+  sectionPrefix,
 }: {
   onOpenCookieSettings: () => void;
   project: "retreats" | "workshops";
+  sectionPrefix: string;
 }) => {
   return (
     <>
@@ -122,11 +117,11 @@ const FooterBottom = ({
           <span aria-hidden="true" className="hidden md:block">
             ·
           </span>
-          <Link href="/policy" className="hover:underline">
+          <Link href={`${sectionPrefix}/policy`} className="hover:underline">
             Prywatność
           </Link>
           <span aria-hidden="true">·</span>
-          <Link href="/terms" className="hover:underline">
+          <Link href={`${sectionPrefix}/terms`} className="hover:underline">
             Warunki
           </Link>
           <span aria-hidden="true">·</span>
@@ -166,8 +161,8 @@ const FooterBottom = ({
 export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
   const params = useParams();
   const isEventPage = !!params.slug;
-  const FOOTER_SECTIONS =
-    project === "retreats" ? RETREATS_FOOTER_SECTIONS : WORKSHOPS_FOOTER_SECTIONS;
+  const sectionPrefix = project === "retreats" ? "/wyjazdy" : "/wydarzenia";
+  const FOOTER_SECTIONS = buildFooterSections(sectionPrefix, project);
 
   const handleOpenCookieSettings = () => {
     window.dispatchEvent(new CustomEvent(COOKIE_SETTINGS_OPEN_EVENT));
@@ -188,7 +183,11 @@ export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ projec
             ))}
           </div>
           <Separator className="my-6" />
-          <FooterBottom onOpenCookieSettings={handleOpenCookieSettings} project={project} />
+          <FooterBottom
+            onOpenCookieSettings={handleOpenCookieSettings}
+            project={project}
+            sectionPrefix={sectionPrefix}
+          />
         </div>
       </footer>
     </>

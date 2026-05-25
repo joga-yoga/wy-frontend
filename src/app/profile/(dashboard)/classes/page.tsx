@@ -67,7 +67,7 @@ export default function DashboardClassesPage() {
           <h1 className="text-2xl font-semibold">Zajęcia</h1>
           <p className="text-sm text-gray-500 mt-1">Podgląd istniejących zajęć w panelu.</p>
         </div>
-        <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes/create`}>
+        <Link href={`/profile/classes/create`}>
           <Button>Dodaj zajęcia</Button>
         </Link>
       </div>
@@ -77,7 +77,7 @@ export default function DashboardClassesPage() {
       ) : items.length === 0 ? (
         <div className="text-center py-10 border rounded-lg bg-gray-50">
           <p className="text-gray-500 mb-4">Nie masz jeszcze żadnych zajęć.</p>
-          <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes/create`}>
+          <Link href={`/profile/classes/create`}>
             <Button>Utwórz pierwsze zajęcia</Button>
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default function DashboardClassesPage() {
             return (
               <Link
                 key={item.id}
-                href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/classes/${item.id}/edit`}
+                href={`/profile/classes/${item.id}/edit`}
                 className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px] cursor-pointer hover:shadow-md transition-shadow"
               >
                 {eventImageId && (

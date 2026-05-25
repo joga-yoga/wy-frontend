@@ -10,7 +10,7 @@ import { PROJECT_SEO } from "@/lib/seo";
 export const metadata: Metadata = {
   metadataBase: new URL(PROJECT_SEO.retreats.baseUrl),
   title: {
-    default: "Wyjazdy jogowe | wyjazdy.yoga",
+    default: "Wyjazdy jogowe | joga.yoga",
     template: "%s",
   },
   description: "Aktualne wyjazdy jogowe, retrity i profile organizatorów.",

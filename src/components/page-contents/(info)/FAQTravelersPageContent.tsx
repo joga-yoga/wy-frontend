@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const FAQTravelersPageContent = ({ project }: { project: "retreats" | "workshops" }) => {
   const retreatsFaqItems = [
     {
-      question: "1. Jak działa wyjazdy.yoga?",
+      question: "1. Jak działa joga.yoga?",
       answer:
         "Wyjazdy.yoga to prosta i przejrzysta platforma, która łączy osoby szukające wyjazdów jogowych z ich organizatorami. Nie sprzedajemy biletów ani nie pobieramy żadnych opłat – pokazujemy Ci wydarzenia, a następnie przekazujemy bezpośredni kontakt do organizatora. Dzięki temu możesz od razu zapytać o szczegóły i zarezerwować miejsce bez pośredników.",
     },
@@ -108,7 +108,7 @@ export const FAQTravelersPageContent = ({ project }: { project: "retreats" | "wo
         "<ul class='list-disc list-inside pl-4'><li>rezerwacja bez sprawdzenia, co obejmuje cena,</li><li>brak zapoznania się z polityką anulacji,</li><li>spakowanie się „na oko”, bez przeczytania listy rzeczy,</li><li>niepotwierdzenie szczegółów z organizatorem.</li></ul><p class='mt-2'>Warto o tym pamiętać, by uniknąć rozczarowań.</p>",
     },
     {
-      question: "22. Czy wyjazdy.yoga organizuje wydarzenia?",
+      question: "22. Czy joga.yoga organizuje wydarzenia?",
       answer:
         "Nie. My nie jesteśmy organizatorem. Łączymy tylko uczestników z osobami, które prowadzą wyjazdy jogowe.",
     },
@@ -118,7 +118,7 @@ export const FAQTravelersPageContent = ({ project }: { project: "retreats" | "wo
         "Bo wierzymy w transparentność. Chcemy, abyś przed kontaktem z organizatorem miał/miała już jasny obraz programu, miejsca i ceny.",
     },
     {
-      question: "24. Co wyróżnia wyjazdy.yoga od innych stron?",
+      question: "24. Co wyróżnia joga.yoga od innych stron?",
       answer:
         "<ul class='list-disc list-inside pl-4'><li>brak ukrytych opłat,</li><li>brak zbierania danych,</li><li>wszystkie opisy w języku polskim,</li><li>prostota i przejrzystość,</li><li>dbałość o kulturę i autentyczność jogi.</li></ul>",
     },
@@ -225,7 +225,7 @@ export const FAQTravelersPageContent = ({ project }: { project: "retreats" | "wo
         <CardHeader>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center mb-6 pt-4">
             {project === "retreats"
-              ? "FAQ dla Uczestników na wyjazdy.yoga"
+              ? "FAQ dla Uczestników na joga.yoga"
               : "🌿 Najczęściej zadawane pytania (FAQ)"}
           </CardTitle>
           {project === "retreats" ? null : (

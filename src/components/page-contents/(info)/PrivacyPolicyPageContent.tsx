@@ -7,14 +7,14 @@ const projectConfig: Record<
   { domain: string; serviceName: string; contactEmail: string }
 > = {
   retreats: {
-    domain: "wyjazdy.yoga",
-    serviceName: "wyjazdy.yoga",
-    contactEmail: "hello@wyjazdy.yoga",
+    domain: "joga.yoga",
+    serviceName: "joga.yoga",
+    contactEmail: "hello@joga.yoga",
   },
   workshops: {
-    domain: "wydarzenia.yoga",
-    serviceName: "wydarzenia.yoga",
-    contactEmail: "hello@wydarzenia.yoga",
+    domain: "joga.yoga",
+    serviceName: "joga.yoga",
+    contactEmail: "hello@joga.yoga",
   },
 };
 
@@ -24,12 +24,12 @@ const LAST_UPDATED_LABEL = "16 kwietnia 2026";
 const basePolicyHtml = `
 <h2>1. Informacje ogólne</h2>
 <ol>
-  <li>Niniejsza polityka dotyczy Serwisu www, funkcjonującego pod adresem url: <b>https://wyjazdy.yoga/</b></li>
+  <li>Niniejsza polityka dotyczy Serwisu www, funkcjonującego pod adresem url: <b>https://joga.yoga/</b></li>
   <li>
     Operatorem serwisu oraz Administratorem danych osobowych jest: SVYATOSLAV BORYSENKO Liściasta 12, 91-001 Łódź 
               </li>
 
-              <li>Adres kontaktowy poczty elektronicznej operatora: hello@wyjazdy.yoga</li>
+              <li>Adres kontaktowy poczty elektronicznej operatora: hello@joga.yoga</li>
   
   <li>
     Operator jest Administratorem Twoich danych osobowych w odniesieniu do danych podanych dobrowolnie w
@@ -312,8 +312,8 @@ export const PrivacyPolicyPageContent = ({ project }: { project: Project }) => {
   const config = projectConfig[project];
 
   const policyHtml = basePolicyHtml
-    .replaceAll("https://wyjazdy.yoga/", `https://${config.domain}/`)
-    .replaceAll("hello@wyjazdy.yoga", config.contactEmail);
+    .replaceAll("https://joga.yoga/", `https://${config.domain}/`)
+    .replaceAll("hello@joga.yoga", config.contactEmail);
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 py-8 px-2 sm:py-12 sm:px-4">

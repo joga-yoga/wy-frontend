@@ -7,12 +7,12 @@ interface ContactPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const defaultTitle = "Kontakt | wyjazdy.yoga";
+const defaultTitle = "Kontakt | joga.yoga";
 const defaultDescription =
-  "Skontaktuj się z zespołem wyjazdy.yoga. Masz pytania dotyczące platformy lub wyjazdów? Napisz do nas.";
-const takeoverTitle = "Przejęcie wyjazdu | wyjazdy.yoga";
+  "Skontaktuj się z zespołem joga.yoga. Masz pytania dotyczące platformy lub wyjazdów? Napisz do nas.";
+const takeoverTitle = "Przejęcie wyjazdu | joga.yoga";
 const takeoverDescription =
-  "Zgłoś przejęcie wyjazdu opublikowanego na wyjazdy.yoga. Po weryfikacji pomożemy przypisać Ci kontrolę nad ofertą.";
+  "Zgłoś przejęcie wyjazdu opublikowanego na joga.yoga. Po weryfikacji pomożemy przypisać Ci kontrolę nad ofertą.";
 
 export const generateMetadata = async (props: ContactPageProps): Promise<Metadata> => {
   const searchParams = await props.searchParams;
@@ -28,7 +28,7 @@ export const generateMetadata = async (props: ContactPageProps): Promise<Metadat
       project: "retreats",
       title,
       description,
-      path: "/contact",
+      path: "/wyjazdy/contact",
       noIndex: isTakeoverFlow,
     }),
   };

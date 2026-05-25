@@ -6,10 +6,9 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     project: "workshops",
-    title: "Polityka Prywatności | wydarzenia.yoga",
-    description:
-      "Zasady przetwarzania danych osobowych i polityka prywatności serwisu wydarzenia.yoga.",
-    path: "/policy",
+    title: "Polityka Prywatności | joga.yoga",
+    description: "Zasady przetwarzania danych osobowych i polityka prywatności serwisu joga.yoga.",
+    path: "/wydarzenia/policy",
   }),
 };
 

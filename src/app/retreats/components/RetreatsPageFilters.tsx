@@ -37,8 +37,6 @@ export const RetreatsPageFilters = () => {
     setSearchTerm,
     locationFilter,
     setLocationFilterAndReset,
-    sortConfig,
-    setSortConfigAndReset,
     isSearchActive,
     setIsSearchActiveAndReset,
     isBookmarksActive,
@@ -53,65 +51,47 @@ export const RetreatsPageFilters = () => {
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sort state derived directly from URL — no context, no stale-state risk across navigation
+  const sortByParam = searchParams.get("sortBy");
+  const sortOrderParam = searchParams.get("sortOrder");
+
+  const handleSortClick = (field: "start_date" | "price") => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.get("sortBy") === field) {
+      if (params.get("sortOrder") === "asc") {
+        params.set("sortOrder", "desc");
+      } else {
+        params.delete("sortBy");
+        params.delete("sortOrder");
+      }
+    } else {
+      params.set("sortBy", field);
+      params.set("sortOrder", "asc");
+    }
+    router.push(`/wyjazdy?${params.toString()}`);
+  };
+
   // Load filter initial data to get available countries from server
   const { data: filterInitialData, loading: filterDataLoading } = useFilterInitialData(true);
 
-  // 1. Initialize Context State from URL on Mount
+  // Initialize search from URL on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const urlSearch = searchParams.get("search");
-    if (urlSearch) setSearchTerm(urlSearch);
-
-    // We don't force sortConfig init here because setSortConfigAndReset logic is complex (resets other filters)
-    // and buttons show active state based on context.
-    // However, if we don't init context, buttons won't light up.
-    // Assuming EventsFilterProvider might have persisted state if layout didn't unmount,
-    // but if user refreshed, we need to sync.
-    // Let's trust the user to click or rely on the fact that if searchParams exist,
-    // the server rendered sorted list, and if context is unsynced, it's a UI glitch only.
+    setSearchTerm(searchParams.get("search") || "");
   }, []);
 
-  // 2. Sync Context State changes TO URL
+  // Sync debounced search term to URL
   useEffect(() => {
+    const currentUrlSearch = searchParams.get("search") || "";
+    if (debouncedSearchTerm === currentUrlSearch) return;
     const params = new URLSearchParams(searchParams.toString());
-    let changed = false;
-
-    // Sync Search
-    // Note: debouncedSearchTerm comes from context which delays searchTerm updates
-    const currentUrlSearch = params.get("search") || "";
-    if (debouncedSearchTerm !== currentUrlSearch) {
-      if (debouncedSearchTerm) {
-        params.set("search", debouncedSearchTerm);
-      } else {
-        params.delete("search");
-      }
-      changed = true;
+    if (debouncedSearchTerm) {
+      params.set("search", debouncedSearchTerm);
+    } else {
+      params.delete("search");
     }
-
-    // Sync Sort
-    if (sortConfig && sortConfig.field) {
-      if (
-        params.get("sortBy") !== sortConfig.field ||
-        params.get("sortOrder") !== sortConfig.order
-      ) {
-        params.set("sortBy", sortConfig.field);
-        params.set("sortOrder", sortConfig.order || "asc");
-        changed = true;
-      }
-    } else if (params.has("sortBy") || params.has("sortOrder")) {
-      // If context has no sort, but URL does, it implies user cleared sort via UI
-      // OR it implies we just loaded and context is empty.
-      // To distinguish, we check if we have "mounted" or interaction flag.
-      // Skipping clearing URL for now to avoid clearing initial params on load.
-      // Ideally, context should initialize from URL to avoid this mismatch.
-    }
-
-    if (changed) {
-      // Use replace to avoid history stack clutter while typing,
-      // OR push for debounced terms.
-      // Since it's debounced, push is fine.
-      router.push(`/?${params.toString()}`);
-    }
-  }, [debouncedSearchTerm, sortConfig, router, searchParams]);
+    router.push(`/wyjazdy?${params.toString()}`);
+  }, [debouncedSearchTerm, router, searchParams]);
 
   // Check if any filter parameters are present in URL
   const hasActiveFiltersFromUrl = () => {
@@ -130,12 +110,6 @@ export const RetreatsPageFilters = () => {
     return searchParams.get("country");
   };
 
-  // Check if selected country from URL exists in current filterItems
-  const isUrlCountryInFilterItems = (countryName: string | null) => {
-    if (!countryName) return false;
-    return allFilterItems.some((item) => item.filter.country === countryName);
-  };
-
   // Handle country click with URL navigation
   const handleLocationClick = (locationFilter: { country?: string; state_province?: string }) => {
     const currentCountry = searchParams.get("country");
@@ -146,7 +120,7 @@ export const RetreatsPageFilters = () => {
       (!!currentCountry && currentCountry === locationFilter.country) ||
       (!!currentStateProvince && currentStateProvince === locationFilter.state_province)
     ) {
-      router.push("/");
+      router.push("/wyjazdy");
     } else {
       // Navigate to URL with country parameter
       const params = new URLSearchParams(searchParams.toString());
@@ -160,7 +134,7 @@ export const RetreatsPageFilters = () => {
       } else {
         params.delete("state_province");
       }
-      router.push(`/?${params.toString()}`);
+      router.push(`/wyjazdy?${params.toString()}`);
     }
 
     // Also update context state for visual feedback
@@ -266,41 +240,40 @@ export const RetreatsPageFilters = () => {
       <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
-            onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
+            onClick={() => handleSortClick("start_date")}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
               "hover:bg-gray-100 duration-200",
-              sortConfig?.field === "start_date" &&
+              sortByParam === "start_date" &&
                 "border-2 border-brand-green hover:border-brand-green",
             )}
           >
             <Calendar className="w-6 h-6" />
             <div className="absolute bottom-[-6px] right-[-6px]">
-              {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+              {sortByParam === "start_date" && sortOrderParam === "asc" && (
                 <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
               )}
-              {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+              {sortByParam === "start_date" && sortOrderParam === "desc" && (
                 <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
               )}
             </div>
           </button>
           <button
-            onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
+            onClick={() => handleSortClick("price")}
             className={cn(
               "flex items-center justify-center rounded-full relative",
               "h-12 w-12",
               "hover:bg-gray-100 duration-200",
-              sortConfig?.field === "price" &&
-                "border-2 border-brand-green hover:border-brand-green",
+              sortByParam === "price" && "border-2 border-brand-green hover:border-brand-green",
             )}
           >
             <DollarSign className="w-6 h-6" />
             <div className="absolute bottom-[-6px] right-[-6px]">
-              {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+              {sortByParam === "price" && sortOrderParam === "asc" && (
                 <ArrowUp className="h-3 w-3 text-brand-green stroke-3" />
               )}
-              {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+              {sortByParam === "price" && sortOrderParam === "desc" && (
                 <ArrowDown className="h-3 w-3 text-brand-green stroke-3" />
               )}
             </div>
@@ -329,7 +302,9 @@ export const RetreatsPageFilters = () => {
                       }}
                       className={cn(
                         "w-full text-left px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-4",
-                        !locationFilter && "text-brand-green",
+                        !searchParams.get("country") &&
+                          !searchParams.get("state_province") &&
+                          "text-brand-green",
                       )}
                     >
                       <MapPin className="h-8 w-8 text-gray-700 stroke-1" />
@@ -345,11 +320,9 @@ export const RetreatsPageFilters = () => {
                         }}
                         className={cn(
                           "w-full text-left px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-4",
-                          ((locationFilter &&
-                            JSON.stringify(locationFilter) === JSON.stringify(item.filter)) ||
-                            (item.filter.country &&
-                              getSelectedCountryFromUrl() === item.filter.country &&
-                              isUrlCountryInFilterItems(item.filter.country))) &&
+                          (item.filter.country
+                            ? getSelectedCountryFromUrl() === item.filter.country
+                            : searchParams.get("state_province") === item.filter.state_province) &&
                             "text-brand-green",
                         )}
                       >
@@ -411,11 +384,11 @@ export const RetreatsPageFilters = () => {
                         aria-label={item.label}
                         className={cn(
                           "text-gray-800 group h-[calc(80px)] w-[calc(80px)] flex items-center justify-center rounded-0 border-transparent relative hover:bg-gray-100 duration-200 border-2",
-                          (locationFilter &&
-                            JSON.stringify(locationFilter) === JSON.stringify(item.filter)) ||
-                            (item.filter.country &&
-                              getSelectedCountryFromUrl() === item.filter.country &&
-                              isUrlCountryInFilterItems(item.filter.country))
+                          (
+                            item.filter.country
+                              ? getSelectedCountryFromUrl() === item.filter.country
+                              : searchParams.get("state_province") === item.filter.state_province
+                          )
                             ? "border-brand-green hover:border-brand-green"
                             : "",
                         )}
@@ -448,41 +421,40 @@ export const RetreatsPageFilters = () => {
               <Settings2 className="w-[48px] h-[48px] stroke-1" />
             </button>
             <button
-              onClick={() => setSortConfigAndReset({ field: "start_date", order: "asc" })}
+              onClick={() => handleSortClick("start_date")}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
                 "h-[80px] w-[80px]",
                 "hover:bg-gray-100 duration-200",
-                sortConfig?.field === "start_date" &&
+                sortByParam === "start_date" &&
                   "border-2 border-brand-green hover:border-brand-green",
               )}
             >
               <Calendar className="w-[48px] h-[48px] stroke-1" />
               <div className="absolute bottom-[-6px] right-[-6px]">
-                {sortConfig?.field === "start_date" && sortConfig.order === "asc" && (
+                {sortByParam === "start_date" && sortOrderParam === "asc" && (
                   <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
                 )}
-                {sortConfig?.field === "start_date" && sortConfig.order === "desc" && (
+                {sortByParam === "start_date" && sortOrderParam === "desc" && (
                   <ArrowDown className="h-4 w-4 text-brand-green stroke-3" />
                 )}
               </div>
             </button>
             <button
-              onClick={() => setSortConfigAndReset({ field: "price", order: "asc" })}
+              onClick={() => handleSortClick("price")}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
                 "h-[80px] w-[80px]",
                 "hover:bg-gray-100 duration-200",
-                sortConfig?.field === "price" &&
-                  "border-2 border-brand-green hover:border-brand-green",
+                sortByParam === "price" && "border-2 border-brand-green hover:border-brand-green",
               )}
             >
               <DollarSign className="w-[48px] h-[48px] stroke-1" />
               <div className="absolute bottom-[-6px] right-[-6px]">
-                {sortConfig?.field === "price" && sortConfig.order === "asc" && (
+                {sortByParam === "price" && sortOrderParam === "asc" && (
                   <ArrowUp className="h-4 w-4 text-brand-green stroke-3" />
                 )}
-                {sortConfig?.field === "price" && sortConfig.order === "desc" && (
+                {sortByParam === "price" && sortOrderParam === "desc" && (
                   <ArrowDown className="h-4 w-4 text-brand-green stroke-3" />
                 )}
               </div>

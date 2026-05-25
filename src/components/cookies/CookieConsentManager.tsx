@@ -15,8 +15,8 @@ import { syncMixpanelAnalyticsConsent } from "@/lib/mixpanelClient";
 import { CookieSettingsModal } from "./CookieSettingsModal";
 
 const SITE_NAME_BY_PROJECT = {
-  retreats: "wyjazdy.yoga",
-  workshops: "wydarzenia.yoga",
+  retreats: "joga.yoga",
+  workshops: "joga.yoga",
 } as const;
 
 type CookieConsentManagerProps = {

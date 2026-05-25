@@ -130,7 +130,7 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                 Publikacja bez opłaty <br />
                 Podlinkuj nas w podziękowaniu
               </p>
-              <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`} className="lg:hidden">
+              <Link href={"/profile"} className="lg:hidden">
                 <Button
                   size="lg"
                   className="mt-2 text-black bg-white hover:bg-white/90 duration-200 w-full lg:w-auto"
@@ -157,7 +157,7 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                   </div>
                 </div>
               ))}
-            <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}>
+            <Link href={"/profile"}>
               <Button size="cta" variant="cta" className="w-full rounded-lg">
                 Dołącz do nas
               </Button>
@@ -295,8 +295,8 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                   <div>
                     <h3 className="text-subheader">Siła wspólnoty</h3>
                     <p className="text-m-sunscript-font lg:text-sub-descript-18 text-gray-500">
-                      Społeczność {project === "retreats" ? "wyjazdy.yoga" : "wydarzenia.yoga"}{" "}
-                      wspiera Twoje {project === "retreats" ? "wyjazdy" : "wydarzenia"}
+                      Społeczność {project === "retreats" ? "joga.yoga" : "joga.yoga"} wspiera Twoje{" "}
+                      {project === "retreats" ? "wyjazdy" : "wydarzenia"}
                     </p>
                   </div>
                 </div>
@@ -388,7 +388,7 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                     Nie musisz być wielki, by zacząć
                   </span>
                 </div>
-                <Link href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}`}>
+                <Link href={"/profile"}>
                   <Button
                     size="lg"
                     className="w-full bg-gray-600 text-white hover:bg-gray-600/90"

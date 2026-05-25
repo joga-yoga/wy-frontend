@@ -62,7 +62,7 @@ export const buildFilterUrl = (
 ): string => {
   // Check if filters are in default state
   if (isDefaultFilterState(filters, serverPriceMin, serverPriceMax)) {
-    return "/"; // Return clean URL without any parameters
+    return "/wyjazdy"; // Return clean URL without any parameters
   }
 
   // Build URL with parameters for non-default state
@@ -94,7 +94,7 @@ export const buildFilterUrl = (
     params.append("language", filters.selectedLanguageCode);
   }
 
-  return params.toString() ? `/?${params.toString()}` : "/";
+  return params.toString() ? `/wyjazdy?${params.toString()}` : "/wyjazdy";
 };
 
 export const validatePriceRange = (min: number | null, max: number | null): boolean => {

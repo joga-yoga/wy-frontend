@@ -1,4 +1,4 @@
-import { EventDetail as RetreatEventDetail } from "@/app/retreats/retreats/[slug]/types";
+import { EventDetail as RetreatEventDetail } from "@/app/retreats/[slug]/types";
 import { fetchEventDetail } from "@/lib/api/eventDetailFetch";
 
 export interface ClassEventDetail extends RetreatEventDetail {

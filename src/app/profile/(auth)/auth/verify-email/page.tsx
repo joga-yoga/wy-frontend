@@ -42,7 +42,7 @@ function VerifyEmailContent() {
 
         // Redirect after a short delay
         setTimeout(() => {
-          router.push(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
+          router.push("/profile");
         }, 1500);
       } catch (error: any) {
         console.error("Verification failed:", error);
@@ -89,7 +89,7 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-semibold">Błąd weryfikacji</h1>
           <p className="text-gray-500">Link weryfikacyjny jest nieprawidłowy lub wygasł.</p>
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/profile/login")}
             className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors mt-4"
           >
             Wróć do logowania

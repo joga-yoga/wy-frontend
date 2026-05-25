@@ -10,7 +10,6 @@ import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext";
-import { getLoginLogoHref } from "@/lib/auth/returnContext";
 import { cn } from "@/lib/utils";
 
 import { WyImage } from "../custom/WyImage";
@@ -24,16 +23,7 @@ interface ProfileHeaderProps {
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true }) => {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
-  const [logoHref, setLogoHref] = React.useState("/");
-
-  React.useEffect(() => {
-    if (pathname === "/") {
-      setLogoHref(getLoginLogoHref());
-      return;
-    }
-
-    setLogoHref("/");
-  }, [pathname]);
+  const logoHref = pathname === "/profile" ? "/" : "/profile";
 
   return (
     <header
@@ -67,7 +57,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
         <div className="flex items-center gap-4">
           {/* Display user email if available */}
           {user && (
-            <LinkWithBlocker href={`${process.env.NEXT_PUBLIC_PROFILE_HOST}/partner`}>
+            <LinkWithBlocker href="/profile/partner">
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
@@ -91,108 +81,142 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
 
 export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
   const { user } = useAuth();
-  const { isBookmarksActive, toggleBookmarksView, setIsSearchActiveAndReset, isSearchActive } =
-    useEventsFilter();
+  const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
-  const normalizedPathname = pathname.replace(/^\/(retreats|workshops|profile)(?=\/|$)/, "") || "/";
-  const isMainPage = normalizedPathname === "/";
-  const isPartnersPage = normalizedPathname === "/partners";
 
-  const [accountHref, setAccountHref] = React.useState(
-    user
-      ? `${process.env.NEXT_PUBLIC_PROFILE_HOST}`
-      : `${process.env.NEXT_PUBLIC_PROFILE_HOST}/login`,
-  );
+  const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/r/");
+  const isWydarzenia =
+    pathname === "/" || pathname.startsWith("/wydarzenia") || pathname.startsWith("/w/");
+  const isMainPage = pathname === "/" || pathname === "/wyjazdy";
+  const sectionPrefix = isWyjazdy ? "/wyjazdy" : "/wydarzenia";
+  const isPartnersPage = pathname === "/wydarzenia/partners" || pathname === "/wyjazdy/partners";
 
-  React.useEffect(() => {
-    if (user) {
-      setAccountHref(`${process.env.NEXT_PUBLIC_PROFILE_HOST}`);
-      return;
-    }
-
-    const params = new URLSearchParams({
-      return_to: window.location.origin,
-      stay_on_spoke: "0",
-      spoke_next: `${window.location.pathname}${window.location.search}`,
-    });
-
-    setAccountHref(`${process.env.NEXT_PUBLIC_PROFILE_HOST}/login?${params.toString()}`);
-  }, [user]);
+  const accountHref = user ? "/profile" : `/profile/login?next=${encodeURIComponent(pathname)}`;
 
   if (isPartnersPage) {
     return null;
   }
 
   return (
-    <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background">
-        <div className="container mx-auto px-5 md:px-8 py-3 md:py-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            {isMainPage ? (
-              <LogoBlackIcon className="h-10 w-10 md:h-12 md:w-12" />
-            ) : (
-              <>
-                <LogoBlackIcon className="hidden md:block h-10 w-10 md:h-12 md:w-12" />
-                <div className="md:hidden flex items-center justify-center h-10 w-10 md:h-12 md:w-12 bg-gray-600 rounded-full text-white">
-                  <ChevronLeft className="h-7 w-7 stroke-2 ml-[-2px]" />
-                </div>
-              </>
+    <header className="sticky top-0 z-50 w-full border-b bg-background">
+      <div className="container mx-auto px-5 md:px-8 py-3 md:py-4 flex items-center justify-between gap-4">
+        {/* Logo — always links to / */}
+        <Link href="/" className="flex items-center shrink-0">
+          {isMainPage ? (
+            <LogoBlackIcon className="h-10 w-10 md:h-12 md:w-12" />
+          ) : (
+            <>
+              <LogoBlackIcon className="hidden md:block h-10 w-10 md:h-12 md:w-12" />
+              <div className="md:hidden flex items-center justify-center h-10 w-10 bg-gray-600 rounded-full text-white">
+                <ChevronLeft className="h-7 w-7 stroke-2 ml-[-2px]" />
+              </div>
+            </>
+          )}
+        </Link>
+
+        {/* Center: Airbnb-style tab switcher */}
+        <div className="hidden sm:flex items-center rounded-full border border-gray-200 overflow-hidden shadow-sm">
+          <Link
+            href="/"
+            className={cn(
+              "px-5 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+              isWydarzenia ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50",
             )}
+          >
+            🧘‍♀️ Wydarzenia
+          </Link>
+          <Link
+            href="/wyjazdy"
+            className={cn(
+              "px-5 py-2 text-sm font-medium transition-colors whitespace-nowrap border-l border-gray-200",
+              isWyjazdy ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50",
+            )}
+          >
+            🏕️ Wyjazdy
+          </Link>
+        </div>
+
+        {/* Right Section: Actions & Profile */}
+        <div className="flex items-center gap-3 md:gap-4">
+          <Link
+            href={`${sectionPrefix}/partners`}
+            passHref
+            className={cn(isMainPage ? undefined : "hidden md:inline-block")}
+          >
+            <button className="text-sm py-2.5 hover:underline">
+              <p className="text-gray-700 text-m-header md:text-xl font-medium">
+                {isWyjazdy ? "Dodaj wyjazd" : "Dodaj wydarzenie"}
+              </p>
+            </button>
+          </Link>
+          <Link
+            href={`${sectionPrefix}/partners`}
+            passHref
+            className={cn(isMainPage ? "hidden" : "md:hidden")}
+          >
+            <button
+              aria-label="Add Event"
+              className="group text-muted-foreground h-10 w-10 flex items-center justify-center relative"
+            >
+              <CustomPlusIconMobile className="h-10 w-10" />
+            </button>
           </Link>
 
-          {/* Right Section: Actions & Profile */}
-          <div className="flex items-center gap-3 md:gap-4">
-            <Link
-              href="/partners"
-              passHref
-              className={cn(isMainPage ? undefined : "hidden md:inline-block")}
-            >
-              <button className="text-sm py-2.5 hover:underline">
-                <p className="text-gray-700 text-m-header md:text-xl font-medium">
-                  {project === "retreats" ? "Dodaj wyjazd" : "Dodaj wydarzenie"}
-                </p>
-              </button>
-            </Link>
-            <Link href="/partners" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
-              <button
-                aria-label="Add Event"
-                className="group text-muted-foreground h-10 w-10 flex items-center justify-center relative"
-              >
-                <CustomPlusIconMobile className="h-10 w-10" />
-              </button>
-            </Link>
+          {/* Bookmark Toggle — only on listing pages */}
+          {isMainPage && (
+            <BookmarkButton
+              isActive={isBookmarksActive}
+              toggleHandler={toggleBookmarksView}
+              size="large"
+              className="hidden md:flex"
+            />
+          )}
 
-            {/* Bookmark Toggle Button */}
-            {isMainPage && (
-              <BookmarkButton
-                isActive={isBookmarksActive}
-                toggleHandler={toggleBookmarksView}
-                size="large"
-                className="hidden md:flex"
-              />
-            )}
-
-            <Link href={accountHref} passHref className="flex items-center justify-center">
-              <button aria-label="Account">
-                {user?.partner?.image_id ? (
-                  <WyImage
-                    src={user.partner.image_id}
-                    alt="Partner Avatar"
-                    className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover"
-                    width={128}
-                    height={128}
-                  />
-                ) : (
-                  <div className="h-10 w-10 md:h-12 md:w-12 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
-                    <IoPersonOutline className="h-6 w-6 md:h-8 md:w-8" />
-                  </div>
-                )}
-              </button>
-            </Link>
-          </div>
+          <Link href={accountHref} passHref className="flex items-center justify-center">
+            <button aria-label="Account">
+              {user?.partner?.image_id ? (
+                <WyImage
+                  src={user.partner.image_id}
+                  alt="Partner Avatar"
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover"
+                  width={128}
+                  height={128}
+                />
+              ) : (
+                <div className="h-10 w-10 md:h-12 md:w-12 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+                  <IoPersonOutline className="h-6 w-6 md:h-8 md:w-8" />
+                </div>
+              )}
+            </button>
+          </Link>
         </div>
-      </header>
-    </>
+      </div>
+
+      {/* Mobile tab switcher — shown below header on small screens */}
+      <div className="sm:hidden flex border-t border-gray-100">
+        <Link
+          href="/"
+          className={cn(
+            "flex-1 py-2 text-sm font-medium text-center transition-colors",
+            isWydarzenia
+              ? "border-b-2 border-gray-900 text-gray-900"
+              : "text-gray-500 hover:text-gray-700",
+          )}
+        >
+          🧘‍♀️ Wydarzenia
+        </Link>
+        <Link
+          href="/wyjazdy"
+          className={cn(
+            "flex-1 py-2 text-sm font-medium text-center transition-colors",
+            isWyjazdy
+              ? "border-b-2 border-gray-900 text-gray-900"
+              : "text-gray-500 hover:text-gray-700",
+          )}
+        >
+          🏕️ Wyjazdy
+        </Link>
+      </div>
+    </header>
   );
 };

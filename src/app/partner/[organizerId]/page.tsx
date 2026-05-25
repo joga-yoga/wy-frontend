@@ -8,13 +8,13 @@ import { getOrganizer, getOrganizerReviews } from "@/lib/api/getOrganizer";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 import { buildOrganizerJsonLd, buildPageMetadata } from "@/lib/seo";
 
-interface OrganizerPageProps {
+interface PartnerPageProps {
   params: Promise<{ organizerId: string }>;
 }
 
 export async function generateMetadata(
-  { params }: OrganizerPageProps,
-  parent: ResolvingMetadata,
+  { params }: PartnerPageProps,
+  _parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const { organizerId } = await params;
   const organizerData = await getOrganizer(organizerId);
@@ -24,13 +24,13 @@ export async function generateMetadata(
   }
 
   const { organizer } = organizerData;
-  const title = `${organizer.name || "Partner"} | wyjazdy.yoga`;
-  const description = organizer.description || "Zobacz profil partnera na wyjazdy.yoga";
+  const title = `${organizer.name || "Partner"} | joga.yoga`;
+  const description = organizer.description || "Zobacz profil partnera na joga.yoga";
   const imageUrl = getOgImageUrl(organizer.image_id);
 
   return {
     ...buildPageMetadata({
-      project: "retreats",
+      project: "workshops",
       title,
       description,
       path: `/partner/${organizerId}`,
@@ -39,7 +39,7 @@ export async function generateMetadata(
   };
 }
 
-export default async function OrganizerPage({ params }: OrganizerPageProps) {
+export default async function PartnerPage({ params }: PartnerPageProps) {
   const { organizerId } = await params;
 
   if (!organizerId) {
@@ -69,7 +69,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
     <>
       <JsonLd
         data={buildOrganizerJsonLd({
-          project: "retreats",
+          project: "workshops",
           path: `/partner/${organizerId}`,
           organizer: organizer.organizer,
           imageUrl: imageUrl || undefined,

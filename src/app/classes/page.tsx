@@ -8,7 +8,7 @@ import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
 
 import ClassesList from "./components/ClassesList";
 
-const pageTitle = "wydarzenia.yoga – zajęcia jogi";
+const pageTitle = "joga.yoga – zajęcia jogi";
 const pageDescription = "Aktualne zajęcia jogi w studiach i szkołach jogi.";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     project: "workshops",
     title: pageTitle,
     description: pageDescription,
-    path: "/classes",
+    path: "/zajecia",
   }),
 };
 
@@ -53,7 +53,7 @@ const ClassesPage = async (props: PageProps) => {
       <JsonLd
         data={buildCollectionJsonLd({
           project: "workshops",
-          path: "/classes",
+          path: "/zajecia",
           name: pageTitle,
           description: pageDescription,
         })}

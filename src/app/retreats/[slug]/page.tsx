@@ -3,26 +3,27 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import React from "react";
 
+import { JsonLd } from "@/components/seo/JsonLd";
+import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
+import { getRetreat } from "@/lib/api/getRetreat";
+import { getOgImageUrl } from "@/lib/imageHelpers";
+import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
+
 import {
   EventHeader,
   EventLocation,
   EventMainContent,
   EventSidebar,
   ImageGallery,
-} from "@/app/retreats/retreats/[slug]/components";
-import { isMultiDayEvent } from "@/app/retreats/retreats/[slug]/helpers";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
-import { getWorkshop } from "@/lib/api/getWorkshop";
-import { getOgImageUrl } from "@/lib/imageHelpers";
-import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
+} from "./components";
+import { isMultiDayEvent } from "./helpers";
 
-interface WorkshopDetailPageProps {
+interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata(
-  { params }: WorkshopDetailPageProps,
+  { params }: EventDetailPageProps,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   await connection();
@@ -32,30 +33,30 @@ export async function generateMetadata(
     notFound();
   }
 
-  const event = await getWorkshop(slug).catch((error) => {
+  const event = await getRetreat(slug).catch((error) => {
     if (isEventDetailNotFoundError(error)) {
       notFound();
     }
     throw error;
   });
 
-  const title = `${event.title} | wydarzenia.yoga`;
-  const description = event.description || "Zobacz szczegóły wydarzenia na wydarzenia.yoga";
+  const title = `${event.title} | joga.yoga`;
+  const description = event.description || "Zobacz szczegóły wyjazdu na joga.yoga";
   const imageId = event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : null;
   const imageUrl = getOgImageUrl(imageId);
 
   return {
     ...buildPageMetadata({
-      project: "workshops",
+      project: "retreats",
       title,
       description,
-      path: `/workshops/${slug}`,
+      path: `/r/${slug}`,
       image: imageUrl || undefined,
     }),
   };
 }
 
-const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
+const EventDetailPage = async ({ params }: EventDetailPageProps) => {
   await connection();
   const { slug } = await params;
 
@@ -63,22 +64,22 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
     notFound();
   }
 
-  const event = await getWorkshop(slug).catch((error) => {
+  const event = await getRetreat(slug).catch((error) => {
     if (isEventDetailNotFoundError(error)) {
       notFound();
     }
     throw error;
   });
-
   const isMultiDay = isMultiDayEvent(event.start_date, event.end_date);
   const imageId = event.image_ids && event.image_ids.length > 0 ? event.image_ids[0] : null;
   const imageUrl = getOgImageUrl(imageId);
+
   return (
     <div className="bg-white">
       <JsonLd
         data={buildEventJsonLd({
-          project: "workshops",
-          path: `/workshops/${slug}`,
+          project: "retreats",
+          path: `/r/${slug}`,
           event,
           imageUrl: imageUrl || undefined,
         })}
@@ -87,17 +88,17 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
         <EventHeader title={event.title} eventId={slug} />
         <ImageGallery title={event.title} image_ids={event.image_ids || []} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_428px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_400px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">
           <EventSidebar
             event={event}
             className="lg:col-span-1 order-1 lg:order-2"
-            project="workshops"
+            project="retreats"
             isMultiDay={isMultiDay}
           />
           <EventMainContent
             event={event}
             className="lg:col-span-2 order-2 lg:order-1"
-            project="workshops"
+            project="retreats"
             isMultiDay={isMultiDay}
           />
         </div>
@@ -110,4 +111,4 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
   );
 };
 
-export default WorkshopDetailPage;
+export default EventDetailPage;

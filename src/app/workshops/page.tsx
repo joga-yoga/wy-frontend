@@ -9,7 +9,7 @@ import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
 import Filters from "./components/Filters";
 import WorkshopsList from "./components/WorkshopsList";
 
-const pageTitle = "wydarzenia.yoga – kalendarz wydarzeń jogowych";
+const pageTitle = "joga.yoga – kalendarz wydarzeń jogowych";
 const pageDescription =
   "Aktualne warsztaty, kursy i wydarzenia jogowe zebrane w jednym miejscu. Jasna struktura, uporządkowane dane i dostęp dla organizatorów bez opłat.";
 
