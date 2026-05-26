@@ -16,6 +16,10 @@ const nextConfig = {
     return [
       // Root serves workshops listing (/ is canonical for wydarzenia)
       { source: "/", destination: "/workshops" },
+      // Section roots (explicit bare entries — :path* zero-segment matching unreliable for RSC)
+      { source: "/wyjazdy", destination: "/retreats" },
+      { source: "/wydarzenia", destination: "/workshops" },
+      { source: "/zajecia", destination: "/classes" },
       // Short canonical slug URLs → internal route folders
       { source: "/wydarzenia/:slug", destination: "/workshops/:slug" },
       { source: "/wyjazdy/:slug", destination: "/retreats/:slug" },
@@ -63,9 +67,12 @@ const nextConfig = {
 
       // /wydarzenia is redundant — / is canonical
       { source: "/wydarzenia", destination: "/", permanent: true },
-      // Old English paths → Polish paths
+      // Old English paths → Polish paths (bare + wildcard, explicit for RSC reliability)
+      { source: "/workshops", destination: "/", permanent: true },
       { source: "/workshops/:path*", destination: "/wydarzenia/:path*", permanent: true },
+      { source: "/retreats", destination: "/wyjazdy", permanent: true },
       { source: "/retreats/:path*", destination: "/wyjazdy/:path*", permanent: true },
+      { source: "/classes", destination: "/zajecia", permanent: true },
       { source: "/classes/:path*", destination: "/zajecia/:path*", permanent: true },
       // Section-specific partner pages → shared /partner/:id
       { source: "/wydarzenia/partner/:organizerId", destination: "/partner/:organizerId", permanent: true },
