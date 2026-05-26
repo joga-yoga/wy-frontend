@@ -226,7 +226,7 @@ export const PublicHeader = () => {
           <LayoutGroup id="public-header-mobile-tabs">
             <Link
               href="/"
-              className="min-w-[68px] flex flex-col items-center pt-3 pb-0 md:pb-4 gap-1"
+              className="min-w-[68px] flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
             >
               <span className="text-[36px] leading-none" aria-hidden="true">
                 🧘‍♀️
@@ -247,14 +247,14 @@ export const PublicHeader = () => {
                     initial={false}
                     transition={INDICATOR_TRANSITION}
                     aria-hidden="true"
-                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
                   />
                 )}
               </span>
             </Link>
             <Link
               href="/wyjazdy"
-              className="min-w-[68px] flex flex-col items-center pt-3 pb-0 md:pb-4 gap-1"
+              className="min-w-[68px] flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
             >
               <span className="text-[36px] leading-none" aria-hidden="true">
                 🏕️
@@ -275,7 +275,7 @@ export const PublicHeader = () => {
                     initial={false}
                     transition={INDICATOR_TRANSITION}
                     aria-hidden="true"
-                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
                   />
                 )}
               </span>
