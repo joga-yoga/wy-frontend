@@ -1,10 +1,10 @@
 "use client";
-import { motion } from "framer-motion";
 import { ChevronLeft, LogOut } from "lucide-react";
+import { LayoutGroup, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-import { IoPersonOutline } from "react-icons/io5";
+import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { WyImage } from "../custom/WyImage";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
-import LogoBlackIcon from "../icons/LogoBlackIcon";
+import { LogoFooter } from "./Footer";
 
 // Transition matching Airbnb's cubic-bezier(0.2, 0, 0, 1)
 const INDICATOR_TRANSITION = { duration: 0.5, ease: [0.2, 0, 0, 1] as const };
@@ -99,65 +99,70 @@ export const PublicHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
-      <div className="container mx-auto px-5 md:px-8 h-20 relative flex items-stretch">
-        {/* Logo — always links to / */}
-        <Link href="/" className="flex items-center shrink-0 self-center">
-          {isMainPage ? (
-            <LogoBlackIcon className="h-10 w-10 md:h-10 md:w-10" />
-          ) : (
-            <>
-              <LogoBlackIcon className="hidden md:block h-10 w-10 md:h-10 md:w-10" />
-              <div className="md:hidden flex items-center justify-center h-10 w-10 bg-gray-600 rounded-full text-white">
-                <ChevronLeft className="h-7 w-7 stroke-2 ml-[-2px]" />
-              </div>
-            </>
-          )}
+      <div className="container mx-auto px-5 md:px-8 h-16 md:h-20 relative flex items-stretch">
+        <Link
+          href={isWyjazdy ? "/wyjazdy" : "/"}
+          className="flex items-center shrink-0 self-center"
+        >
+          <LogoFooter className={isMainPage ? "block" : "hidden md:block"} />
+          <div
+            className={cn(
+              "h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200",
+              isMainPage ? "hidden" : "md:hidden",
+            )}
+          >
+            <IoChevronBack className="h-6 w-6 ml-[-2px]" />
+          </div>
         </Link>
 
         {/* Center: Airbnb-style flat tabs with sliding underline — absolutely centered on desktop */}
         <div className="hidden sm:flex absolute inset-y-0 left-1/2 -translate-x-1/2 items-center gap-[35px]">
-          <Link href="/" className="relative flex items-center gap-1.5 h-full">
-            <span className="text-[28px] leading-none" aria-hidden="true">
-              🧘‍♀️
-            </span>
-            <span
-              className={cn(
-                "text-md font-medium whitespace-nowrap transition-colors duration-150",
-                isWydarzenia ? "text-[#222222]" : "text-[#717171]",
+          <LayoutGroup id="public-header-desktop-tabs">
+            <Link href="/" className="relative flex items-center gap-1.5 h-full">
+              <span className="text-[28px] leading-none" aria-hidden="true">
+                🧘‍♀️
+              </span>
+              <span
+                className={cn(
+                  "text-md font-medium whitespace-nowrap transition-colors duration-150",
+                  isWydarzenia ? "text-[#222222]" : "text-[#717171]",
+                )}
+              >
+                Wydarzenia
+              </span>
+              {isWydarzenia && (
+                <motion.span
+                  layoutId="underline"
+                  initial={false}
+                  transition={INDICATOR_TRANSITION}
+                  aria-hidden="true"
+                  className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                />
               )}
-            >
-              Wydarzenia
-            </span>
-            {isWydarzenia && (
-              <motion.span
-                layoutId="desktop-underline"
-                transition={INDICATOR_TRANSITION}
-                aria-hidden="true"
-                className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
-              />
-            )}
-          </Link>
-          <Link href="/wyjazdy" className="relative flex items-center gap-1.5 h-full">
-            <span className="text-[28px] leading-none" aria-hidden="true">
-              🏕️
-            </span>
-            <span
-              className={cn(
-                "text-md font-medium whitespace-nowrap transition-colors duration-150",
-                isWyjazdy ? "text-[#222222]" : "text-[#717171]",
+            </Link>
+            <Link href="/wyjazdy" className="relative flex items-center gap-1.5 h-full">
+              <span className="text-[28px] leading-none" aria-hidden="true">
+                🏕️
+              </span>
+              <span
+                className={cn(
+                  "text-md font-medium whitespace-nowrap transition-colors duration-150",
+                  isWyjazdy ? "text-[#222222]" : "text-[#717171]",
+                )}
+              >
+                Wyjazdy
+              </span>
+              {isWyjazdy && (
+                <motion.span
+                  layoutId="underline"
+                  initial={false}
+                  transition={INDICATOR_TRANSITION}
+                  aria-hidden="true"
+                  className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                />
               )}
-            >
-              Wyjazdy
-            </span>
-            {isWyjazdy && (
-              <motion.span
-                layoutId="desktop-underline"
-                transition={INDICATOR_TRANSITION}
-                aria-hidden="true"
-                className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
-              />
-            )}
-          </Link>
+            </Link>
+          </LayoutGroup>
         </div>
 
         {/* Right Section: Actions & Profile */}
@@ -180,7 +185,7 @@ export const PublicHeader = () => {
           >
             <button
               aria-label="Add Event"
-              className="group text-muted-foreground h-10 w-10 flex items-center justify-center relative"
+              className="group text-black h-10 w-10 flex items-center justify-center relative"
             >
               <CustomPlusIconMobile className="h-10 w-10" />
             </button>
@@ -216,56 +221,68 @@ export const PublicHeader = () => {
       </div>
 
       {/* Mobile tab switcher — Airbnb-style: large emoji icon above text label */}
-      <div className="sm:hidden flex border-t border-gray-100">
-        <Link href="/" className="flex-1 flex flex-col items-center pt-3 pb-0 md:pd-4 gap-1">
-          <span className="text-[44px] leading-none" aria-hidden="true">
-            🧘‍♀️
-          </span>
-          {/* Underline is only as wide as the text label */}
-          <span className="relative inline-block pb-2">
-            <span
-              className={cn(
-                "text-[13px] font-semibold transition-colors duration-150",
-                isWydarzenia ? "text-[#222222]" : "text-[#717171]",
-              )}
+      {isMainPage && (
+        <div className="sm:hidden flex justify-around border-t border-gray-100 px-[40px]">
+          <LayoutGroup id="public-header-mobile-tabs">
+            <Link
+              href="/"
+              className="min-w-[68px] flex flex-col items-center pt-3 pb-0 md:pb-4 gap-1"
             >
-              Wydarzenia
-            </span>
-            {isWydarzenia && (
-              <motion.span
-                layoutId="mobile-underline"
-                transition={INDICATOR_TRANSITION}
-                aria-hidden="true"
-                className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
-              />
-            )}
-          </span>
-        </Link>
-        <Link href="/wyjazdy" className="flex-1 flex flex-col items-center pt-3 pb-0 md:pd-4 gap-1">
-          <span className="text-[44px] leading-none" aria-hidden="true">
-            🏕️
-          </span>
-          {/* Underline is only as wide as the text label */}
-          <span className="relative inline-block pb-2">
-            <span
-              className={cn(
-                "text-[13px] font-semibold transition-colors duration-150",
-                isWyjazdy ? "text-[#222222]" : "text-[#717171]",
-              )}
+              <span className="text-[36px] leading-none" aria-hidden="true">
+                🧘‍♀️
+              </span>
+              {/* Underline is only as wide as the text label */}
+              <span className="relative inline-block pb-[6px]">
+                <span
+                  className={cn(
+                    "text-[13px] font-semibold transition-colors duration-150",
+                    isWydarzenia ? "text-[#222222]" : "text-[#717171]",
+                  )}
+                >
+                  Wydarzenia
+                </span>
+                {isWydarzenia && (
+                  <motion.span
+                    layoutId="underline"
+                    initial={false}
+                    transition={INDICATOR_TRANSITION}
+                    aria-hidden="true"
+                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                  />
+                )}
+              </span>
+            </Link>
+            <Link
+              href="/wyjazdy"
+              className="min-w-[68px] flex flex-col items-center pt-3 pb-0 md:pb-4 gap-1"
             >
-              Wyjazdy
-            </span>
-            {isWyjazdy && (
-              <motion.span
-                layoutId="mobile-underline"
-                transition={INDICATOR_TRANSITION}
-                aria-hidden="true"
-                className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
-              />
-            )}
-          </span>
-        </Link>
-      </div>
+              <span className="text-[36px] leading-none" aria-hidden="true">
+                🏕️
+              </span>
+              {/* Underline is only as wide as the text label */}
+              <span className="relative inline-block pb-[6px]">
+                <span
+                  className={cn(
+                    "text-[13px] font-semibold transition-colors duration-150",
+                    isWyjazdy ? "text-[#222222]" : "text-[#717171]",
+                  )}
+                >
+                  Wyjazdy
+                </span>
+                {isWyjazdy && (
+                  <motion.span
+                    layoutId="underline"
+                    initial={false}
+                    transition={INDICATOR_TRANSITION}
+                    aria-hidden="true"
+                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                  />
+                )}
+              </span>
+            </Link>
+          </LayoutGroup>
+        </div>
+      )}
     </header>
   );
 };

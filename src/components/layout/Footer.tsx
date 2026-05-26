@@ -70,13 +70,6 @@ const FooterSection = ({
 export const LogoFooter = ({ className }: { className?: string }) => {
   return (
     <div className={cn("flex flex-col items-center gap-2 md:gap-3", className)}>
-      {/* <div
-        className={cn(
-          "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)] text-xl md:text-h-middle bg-gray-600",
-        )}
-      >
-        <LogoTransparentSmall className={`w-10 h-10 md:w-12 md:h-12 text-white`} />
-      </div> */}
       <p className={`flex items-center text-xl font-semibold text-gray-600`}>
         joga
         <span
