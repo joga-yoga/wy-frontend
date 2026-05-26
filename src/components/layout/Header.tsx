@@ -1,6 +1,6 @@
 "use client";
 import { ChevronLeft, LogOut } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
+import { LayoutGroup, motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -19,6 +19,20 @@ import { LogoFooter } from "./Footer";
 
 // Transition matching Airbnb's cubic-bezier(0.2, 0, 0, 1)
 const INDICATOR_TRANSITION = { duration: 0.5, ease: [0.2, 0, 0, 1] as const };
+const TAB_ACTIVE_COLOR = "#222222";
+const TAB_INACTIVE_COLOR = "#717171";
+const TAB_INTERACTION_TRANSITION = { duration: 0.3, ease: [0.2, 0, 0, 1] as const };
+const TAB_ICON_VARIANTS = {
+  rest: { scale: 1 },
+  hover: { scale: 1.16 },
+  tap: { scale: 1.04 },
+};
+const TAB_COMPACT_SCROLL_DISTANCE = 120;
+const getTabLabelVariants = (isActive: boolean) => ({
+  rest: { color: isActive ? TAB_ACTIVE_COLOR : TAB_INACTIVE_COLOR },
+  hover: { color: TAB_ACTIVE_COLOR },
+  tap: { color: TAB_ACTIVE_COLOR },
+});
 
 interface ProfileHeaderProps {
   isSticky?: boolean;
@@ -92,6 +106,12 @@ export const PublicHeader = () => {
   const isPartnersPage = pathname === "/wydarzenia/partners" || pathname === "/wyjazdy/partners";
 
   const accountHref = user ? "/profile" : `/profile/login?next=${encodeURIComponent(pathname)}`;
+  const { scrollY } = useScroll();
+  const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
+  const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);
+  const tabIconScale = useTransform(compactProgress, [0, 0.5], [1, 0]);
+  const mobileTabIconHeight = useTransform(compactProgress, [0, 1], [36, 0]);
+  const mobileTabIconMarginBottom = useTransform(compactProgress, [0, 1], [0, -2]);
 
   if (isPartnersPage) {
     return null;
@@ -118,18 +138,30 @@ export const PublicHeader = () => {
         {/* Center: Airbnb-style flat tabs with sliding underline — absolutely centered on desktop */}
         <div className="hidden sm:flex absolute inset-y-0 left-1/2 -translate-x-1/2 items-center gap-[35px]">
           <LayoutGroup id="public-header-desktop-tabs">
-            <Link href="/" className="relative flex items-center gap-1.5 h-full">
-              <span className="text-[28px] leading-none" aria-hidden="true">
-                🧘‍♀️
-              </span>
-              <span
-                className={cn(
-                  "text-md font-medium whitespace-nowrap transition-colors duration-150",
-                  isWydarzenia ? "text-[#222222]" : "text-[#717171]",
-                )}
+            <Link href="/" className="relative h-full">
+              <motion.span
+                initial="rest"
+                animate="rest"
+                whileHover={isWydarzenia ? undefined : "hover"}
+                whileTap={isWydarzenia ? undefined : "tap"}
+                className="flex items-center gap-1.5 h-full"
               >
-                Wydarzenia
-              </span>
+                <motion.span
+                  variants={TAB_ICON_VARIANTS}
+                  transition={TAB_INTERACTION_TRANSITION}
+                  className="text-[28px] leading-none"
+                  aria-hidden="true"
+                >
+                  🧘‍♀️
+                </motion.span>
+                <motion.span
+                  variants={getTabLabelVariants(isWydarzenia)}
+                  transition={TAB_INTERACTION_TRANSITION}
+                  className="text-md font-medium whitespace-nowrap"
+                >
+                  Wydarzenia
+                </motion.span>
+              </motion.span>
               {isWydarzenia && (
                 <motion.span
                   layoutId="underline"
@@ -140,18 +172,30 @@ export const PublicHeader = () => {
                 />
               )}
             </Link>
-            <Link href="/wyjazdy" className="relative flex items-center gap-1.5 h-full">
-              <span className="text-[28px] leading-none" aria-hidden="true">
-                🏕️
-              </span>
-              <span
-                className={cn(
-                  "text-md font-medium whitespace-nowrap transition-colors duration-150",
-                  isWyjazdy ? "text-[#222222]" : "text-[#717171]",
-                )}
+            <Link href="/wyjazdy" className="relative h-full">
+              <motion.span
+                initial="rest"
+                animate="rest"
+                whileHover={isWyjazdy ? undefined : "hover"}
+                whileTap={isWyjazdy ? undefined : "tap"}
+                className="flex items-center gap-1.5 h-full"
               >
-                Wyjazdy
-              </span>
+                <motion.span
+                  variants={TAB_ICON_VARIANTS}
+                  transition={TAB_INTERACTION_TRANSITION}
+                  className="text-[28px] leading-none"
+                  aria-hidden="true"
+                >
+                  🏕️
+                </motion.span>
+                <motion.span
+                  variants={getTabLabelVariants(isWyjazdy)}
+                  transition={TAB_INTERACTION_TRANSITION}
+                  className="text-md font-medium whitespace-nowrap"
+                >
+                  Wyjazdy
+                </motion.span>
+              </motion.span>
               {isWyjazdy && (
                 <motion.span
                   layoutId="underline"
@@ -224,61 +268,99 @@ export const PublicHeader = () => {
       {isMainPage && (
         <div className="sm:hidden flex justify-around border-t border-gray-100 px-[40px]">
           <LayoutGroup id="public-header-mobile-tabs">
-            <Link
-              href="/"
-              className="min-w-[68px] flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
-            >
-              <span className="text-[36px] leading-none" aria-hidden="true">
-                🧘‍♀️
-              </span>
-              {/* Underline is only as wide as the text label */}
-              <span className="relative inline-block pb-[6px]">
-                <span
-                  className={cn(
-                    "text-[13px] font-semibold transition-colors duration-150",
-                    isWydarzenia ? "text-[#222222]" : "text-[#717171]",
-                  )}
+            <Link href="/" className="min-w-[68px]">
+              <motion.span
+                initial="rest"
+                animate="rest"
+                whileHover={isWydarzenia ? undefined : "hover"}
+                whileTap={isWydarzenia ? undefined : "tap"}
+                className="flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
+              >
+                <motion.span
+                  style={{
+                    height: mobileTabIconHeight,
+                    marginBottom: mobileTabIconMarginBottom,
+                    opacity: tabIconOpacity,
+                    scale: tabIconScale,
+                  }}
+                  className="flex items-center justify-center overflow-hidden"
                 >
-                  Wydarzenia
-                </span>
-                {isWydarzenia && (
                   <motion.span
-                    layoutId="underline"
-                    initial={false}
-                    transition={INDICATOR_TRANSITION}
+                    variants={TAB_ICON_VARIANTS}
+                    transition={TAB_INTERACTION_TRANSITION}
+                    className="text-[36px] leading-none"
                     aria-hidden="true"
-                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
-                  />
-                )}
-              </span>
+                  >
+                    🧘‍♀️
+                  </motion.span>
+                </motion.span>
+                {/* Underline is only as wide as the text label */}
+                <span className="relative inline-block pb-[6px]">
+                  <motion.span
+                    variants={getTabLabelVariants(isWydarzenia)}
+                    transition={TAB_INTERACTION_TRANSITION}
+                    className="text-[13px] font-semibold"
+                  >
+                    Wydarzenia
+                  </motion.span>
+                  {isWydarzenia && (
+                    <motion.span
+                      layoutId="underline"
+                      initial={false}
+                      transition={INDICATOR_TRANSITION}
+                      aria-hidden="true"
+                      className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
+                    />
+                  )}
+                </span>
+              </motion.span>
             </Link>
-            <Link
-              href="/wyjazdy"
-              className="min-w-[68px] flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
-            >
-              <span className="text-[36px] leading-none" aria-hidden="true">
-                🏕️
-              </span>
-              {/* Underline is only as wide as the text label */}
-              <span className="relative inline-block pb-[6px]">
-                <span
-                  className={cn(
-                    "text-[13px] font-semibold transition-colors duration-150",
-                    isWyjazdy ? "text-[#222222]" : "text-[#717171]",
-                  )}
+            <Link href="/wyjazdy" className="min-w-[68px]">
+              <motion.span
+                initial="rest"
+                animate="rest"
+                whileHover={isWyjazdy ? undefined : "hover"}
+                whileTap={isWyjazdy ? undefined : "tap"}
+                className="flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
+              >
+                <motion.span
+                  style={{
+                    height: mobileTabIconHeight,
+                    marginBottom: mobileTabIconMarginBottom,
+                    opacity: tabIconOpacity,
+                    scale: tabIconScale,
+                  }}
+                  className="flex items-center justify-center overflow-hidden"
                 >
-                  Wyjazdy
-                </span>
-                {isWyjazdy && (
                   <motion.span
-                    layoutId="underline"
-                    initial={false}
-                    transition={INDICATOR_TRANSITION}
+                    variants={TAB_ICON_VARIANTS}
+                    transition={TAB_INTERACTION_TRANSITION}
+                    className="text-[36px] leading-none"
                     aria-hidden="true"
-                    className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
-                  />
-                )}
-              </span>
+                  >
+                    🏕️
+                  </motion.span>
+                </motion.span>
+                {/* Underline is only as wide as the text label */}
+                <span className="relative inline-block pb-[6px]">
+                  <motion.span
+                    variants={getTabLabelVariants(isWyjazdy)}
+                    transition={TAB_INTERACTION_TRANSITION}
+                    className="text-[13px] font-semibold"
+                  >
+                    Wyjazdy
+                  </motion.span>
+                  {isWyjazdy && (
+                    <motion.span
+                      layoutId="underline"
+                      initial={false}
+                      transition={INDICATOR_TRANSITION}
+                      aria-hidden="true"
+                      className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
+                    />
+                  )}
+                </span>
+              </motion.span>
             </Link>
           </LayoutGroup>
         </div>
