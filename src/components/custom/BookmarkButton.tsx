@@ -27,7 +27,7 @@ export const BookmarkButton = ({
         "relative flex items-center justify-center bg-gray-100 rounded-full",
         size === "xs" && "h-[22px] w-[22px] p-0 min-w-0 min-h-0",
         size === "small" && "h-8 w-8 md:h-10 md:w-10 min-w-8 md:min-w-10",
-        size === "large" && "h-10 w-10 md:h-12 md:w-12 min-w-10 md:min-w-12",
+        size === "large" && "h-10 w-10 md:h-10 md:w-10 min-w-10 md:min-w-10",
         size === "mobile-footer" && "h-12 w-12 min-w-12",
         size === "desktop-filter" && "h-[80px] w-[80px]",
         "hover:bg-gray-200 duration-200",
@@ -43,7 +43,7 @@ export const BookmarkButton = ({
           size === "small" &&
             "w-[calc(20px+2px)] h-[calc(20px+2px)] md:w-[calc(24px+2px)] md:h-[calc(24px+2px)]",
           size === "large" &&
-            "w-[calc(24px+2px)] h-[calc(24px+2px)] md:w-[calc(28px+2px)] md:h-[calc(28px+2px)]",
+            "w-[calc(24px+2px)] h-[calc(24px+2px)] md:w-[calc(24px+2px)] md:h-[calc(24px+2px)]",
           size === "mobile-footer" && "w-[calc(24px)] h-[calc(24px)]",
           size === "desktop-filter" && "w-10 h-10",
           variant === "black" && "text-white z-1",

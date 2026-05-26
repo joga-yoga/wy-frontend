@@ -1,4 +1,5 @@
 "use client";
+import { motion } from "framer-motion";
 import { ChevronLeft, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +17,9 @@ import { WyImage } from "../custom/WyImage";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
 import LogoBlackIcon from "../icons/LogoBlackIcon";
 
+// Transition matching Airbnb's cubic-bezier(0.2, 0, 0, 1)
+const INDICATOR_TRANSITION = { duration: 0.5, ease: [0.2, 0, 0, 1] as const };
+
 interface ProfileHeaderProps {
   isSticky?: boolean;
 }
@@ -30,7 +34,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
       className={cn("w-full text-primary border-b bg-background", isSticky && "sticky top-0 z-40")}
     >
       <div className="w-full px-3 md:px-4 md:pl-[22px] h-16 flex items-center justify-between">
-        {/* Placeholder for logo space */}
         <LinkWithBlocker
           href={logoHref}
           className="flex items-center justify-center w-[40px] h-[40px]"
@@ -53,9 +56,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
           </svg>
         </LinkWithBlocker>
 
-        {/* Right Section: User Email & Profile Icon */}
         <div className="flex items-center gap-4">
-          {/* Display user email if available */}
           {user && (
             <LinkWithBlocker href="/profile/partner">
               <span className="text-sm font-medium cursor-pointer hover:underline">
@@ -63,7 +64,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
               </span>
             </LinkWithBlocker>
           )}
-          {/* Log out button */}
           <Button
             variant="ghost"
             size="icon"
@@ -99,14 +99,14 @@ export const PublicHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
-      <div className="container mx-auto px-5 md:px-8 py-3 md:py-4 flex items-center justify-between gap-4">
+      <div className="container mx-auto px-5 md:px-8 h-20 relative flex items-stretch">
         {/* Logo — always links to / */}
-        <Link href="/" className="flex items-center shrink-0">
+        <Link href="/" className="flex items-center shrink-0 self-center">
           {isMainPage ? (
-            <LogoBlackIcon className="h-10 w-10 md:h-12 md:w-12" />
+            <LogoBlackIcon className="h-10 w-10 md:h-10 md:w-10" />
           ) : (
             <>
-              <LogoBlackIcon className="hidden md:block h-10 w-10 md:h-12 md:w-12" />
+              <LogoBlackIcon className="hidden md:block h-10 w-10 md:h-10 md:w-10" />
               <div className="md:hidden flex items-center justify-center h-10 w-10 bg-gray-600 rounded-full text-white">
                 <ChevronLeft className="h-7 w-7 stroke-2 ml-[-2px]" />
               </div>
@@ -114,37 +114,61 @@ export const PublicHeader = () => {
           )}
         </Link>
 
-        {/* Center: Airbnb-style tab switcher */}
-        <div className="hidden sm:flex items-center rounded-full border border-gray-200 overflow-hidden shadow-sm">
-          <Link
-            href="/"
-            className={cn(
-              "px-5 py-2 text-sm font-medium transition-colors whitespace-nowrap",
-              isWydarzenia ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50",
+        {/* Center: Airbnb-style flat tabs with sliding underline — absolutely centered on desktop */}
+        <div className="hidden sm:flex absolute inset-y-0 left-1/2 -translate-x-1/2 items-center gap-[35px]">
+          <Link href="/" className="relative flex items-center gap-1.5 h-full">
+            <span className="text-[28px] leading-none" aria-hidden="true">
+              🧘‍♀️
+            </span>
+            <span
+              className={cn(
+                "text-md font-medium whitespace-nowrap transition-colors duration-150",
+                isWydarzenia ? "text-[#222222]" : "text-[#717171]",
+              )}
+            >
+              Wydarzenia
+            </span>
+            {isWydarzenia && (
+              <motion.span
+                layoutId="desktop-underline"
+                transition={INDICATOR_TRANSITION}
+                aria-hidden="true"
+                className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+              />
             )}
-          >
-            🧘‍♀️ Wydarzenia
           </Link>
-          <Link
-            href="/wyjazdy"
-            className={cn(
-              "px-5 py-2 text-sm font-medium transition-colors whitespace-nowrap border-l border-gray-200",
-              isWyjazdy ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50",
+          <Link href="/wyjazdy" className="relative flex items-center gap-1.5 h-full">
+            <span className="text-[28px] leading-none" aria-hidden="true">
+              🏕️
+            </span>
+            <span
+              className={cn(
+                "text-md font-medium whitespace-nowrap transition-colors duration-150",
+                isWyjazdy ? "text-[#222222]" : "text-[#717171]",
+              )}
+            >
+              Wyjazdy
+            </span>
+            {isWyjazdy && (
+              <motion.span
+                layoutId="desktop-underline"
+                transition={INDICATOR_TRANSITION}
+                aria-hidden="true"
+                className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+              />
             )}
-          >
-            🏕️ Wyjazdy
           </Link>
         </div>
 
         {/* Right Section: Actions & Profile */}
-        <div className="flex items-center gap-3 md:gap-4">
+        <div className="ml-auto flex items-center gap-3 md:gap-3 self-center">
           <Link
             href={`${sectionPrefix}/partners`}
             passHref
             className={cn(isMainPage ? undefined : "hidden md:inline-block")}
           >
-            <button className="text-sm py-2.5 hover:underline">
-              <p className="text-gray-700 text-m-header md:text-xl font-medium">
+            <button className="text-md py-2.5 hover:underline">
+              <p className="text-black font-medium">
                 {isWyjazdy ? "Dodaj wyjazd" : "Dodaj wydarzenie"}
               </p>
             </button>
@@ -162,7 +186,6 @@ export const PublicHeader = () => {
             </button>
           </Link>
 
-          {/* Bookmark Toggle — only on listing pages */}
           {isMainPage && (
             <BookmarkButton
               isActive={isBookmarksActive}
@@ -178,13 +201,13 @@ export const PublicHeader = () => {
                 <WyImage
                   src={user.partner.image_id}
                   alt="Partner Avatar"
-                  className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover"
+                  className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover"
                   width={128}
                   height={128}
                 />
               ) : (
-                <div className="h-10 w-10 md:h-12 md:w-12 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
-                  <IoPersonOutline className="h-6 w-6 md:h-8 md:w-8" />
+                <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+                  <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
                 </div>
               )}
             </button>
@@ -192,29 +215,55 @@ export const PublicHeader = () => {
         </div>
       </div>
 
-      {/* Mobile tab switcher — shown below header on small screens */}
+      {/* Mobile tab switcher — Airbnb-style: large emoji icon above text label */}
       <div className="sm:hidden flex border-t border-gray-100">
-        <Link
-          href="/"
-          className={cn(
-            "flex-1 py-2 text-sm font-medium text-center transition-colors",
-            isWydarzenia
-              ? "border-b-2 border-gray-900 text-gray-900"
-              : "text-gray-500 hover:text-gray-700",
-          )}
-        >
-          🧘‍♀️ Wydarzenia
+        <Link href="/" className="flex-1 flex flex-col items-center pt-3 pb-0 md:pd-4 gap-1">
+          <span className="text-[44px] leading-none" aria-hidden="true">
+            🧘‍♀️
+          </span>
+          {/* Underline is only as wide as the text label */}
+          <span className="relative inline-block pb-2">
+            <span
+              className={cn(
+                "text-[13px] font-semibold transition-colors duration-150",
+                isWydarzenia ? "text-[#222222]" : "text-[#717171]",
+              )}
+            >
+              Wydarzenia
+            </span>
+            {isWydarzenia && (
+              <motion.span
+                layoutId="mobile-underline"
+                transition={INDICATOR_TRANSITION}
+                aria-hidden="true"
+                className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+              />
+            )}
+          </span>
         </Link>
-        <Link
-          href="/wyjazdy"
-          className={cn(
-            "flex-1 py-2 text-sm font-medium text-center transition-colors",
-            isWyjazdy
-              ? "border-b-2 border-gray-900 text-gray-900"
-              : "text-gray-500 hover:text-gray-700",
-          )}
-        >
-          🏕️ Wyjazdy
+        <Link href="/wyjazdy" className="flex-1 flex flex-col items-center pt-3 pb-0 md:pd-4 gap-1">
+          <span className="text-[44px] leading-none" aria-hidden="true">
+            🏕️
+          </span>
+          {/* Underline is only as wide as the text label */}
+          <span className="relative inline-block pb-2">
+            <span
+              className={cn(
+                "text-[13px] font-semibold transition-colors duration-150",
+                isWyjazdy ? "text-[#222222]" : "text-[#717171]",
+              )}
+            >
+              Wyjazdy
+            </span>
+            {isWyjazdy && (
+              <motion.span
+                layoutId="mobile-underline"
+                transition={INDICATOR_TRANSITION}
+                aria-hidden="true"
+                className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+              />
+            )}
+          </span>
         </Link>
       </div>
     </header>
