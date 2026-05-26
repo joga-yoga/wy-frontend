@@ -5,7 +5,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { ArrowLeft, ArrowRight, Calendar, ImageOff } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
@@ -33,7 +33,11 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
   const [hidePrev, setHidePrev] = useState(true);
   const [hideNext, setHideNext] = useState(!(event.image_ids && event.image_ids.length > 1));
 
-  const [isBookmarkedLocal, setIsBookmarkedLocal] = useState(bookmarkedEventIds.includes(event.id));
+  // Start false to match SSR output, then sync from localStorage after mount
+  const [isBookmarkedLocal, setIsBookmarkedLocal] = useState(false);
+  useEffect(() => {
+    setIsBookmarkedLocal(bookmarkedEventIds.includes(event.id));
+  }, [bookmarkedEventIds, event.id]);
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
