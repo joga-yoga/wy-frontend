@@ -49,7 +49,7 @@ export async function generateMetadata(
       project: "workshops",
       title,
       description,
-      path: `/w/${slug}`,
+      path: `/wydarzenia/${slug}`,
       image: imageUrl || undefined,
     }),
   };
@@ -78,7 +78,7 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
       <JsonLd
         data={buildEventJsonLd({
           project: "workshops",
-          path: `/w/${slug}`,
+          path: `/wydarzenia/${slug}`,
           event,
           imageUrl: imageUrl || undefined,
         })}

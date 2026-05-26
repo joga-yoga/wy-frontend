@@ -143,7 +143,7 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
         {events.map((event, index) => (
           <React.Fragment key={event.id}>
-            <Link href={`/w/${event.slug}`} passHref>
+            <Link href={`/wydarzenia/${event.slug}`} passHref>
               <WorkshopCard event={event} />
             </Link>
             {index < events.length - 1 && (

@@ -14,7 +14,7 @@ interface EventCardProps {
 
 const EventCard = ({ event, project }: EventCardProps) => {
   return (
-    <Link href={project === "retreats" ? `/r/${event.slug}` : `/w/${event.slug}`}>
+    <Link href={project === "retreats" ? `/wyjazdy/${event.slug}` : `/wydarzenia/${event.slug}`}>
       <div className="w-full max-w-[402px] flex flex-col items-start">
         <div className="relative w-full max-w-[358px] aspect-[16/10] rounded-[11px] overflow-hidden mt-6 mb-5 shrink-0">
           <WyImage src={event.image_ids[0]} alt={event.title} fill className="object-cover" />

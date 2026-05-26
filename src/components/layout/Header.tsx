@@ -84,9 +84,9 @@ export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ 
   const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
 
-  const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/r/");
+  const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/wyjazdy/");
   const isWydarzenia =
-    pathname === "/" || pathname.startsWith("/wydarzenia") || pathname.startsWith("/w/");
+    pathname === "/" || pathname.startsWith("/wydarzenia") || pathname.startsWith("/wydarzenia/");
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const sectionPrefix = isWyjazdy ? "/wyjazdy" : "/wydarzenia";
   const isPartnersPage = pathname === "/wydarzenia/partners" || pathname === "/wyjazdy/partners";

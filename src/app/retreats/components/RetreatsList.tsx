@@ -141,7 +141,7 @@ const RetreatsList: React.FC<RetreatsListProps> = ({ initialEvents, initialTotal
       <div className="flex flex-col gap-3 md:gap-6">
         {events.map((event, index) => (
           <React.Fragment key={event.id}>
-            <Link href={`/r/${event.slug}`} passHref>
+            <Link href={`/wyjazdy/${event.slug}`} passHref>
               <EventCard event={event} />
             </Link>
             {index < events.length - 1 && (

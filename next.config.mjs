@@ -17,9 +17,9 @@ const nextConfig = {
       // Root serves workshops listing (/ is canonical for wydarzenia)
       { source: "/", destination: "/workshops" },
       // Short canonical slug URLs → internal route folders
-      { source: "/w/:slug", destination: "/workshops/:slug" },
-      { source: "/r/:slug", destination: "/retreats/:slug" },
-      { source: "/c/:slug", destination: "/classes/:slug" },
+      { source: "/wydarzenia/:slug", destination: "/workshops/:slug" },
+      { source: "/wyjazdy/:slug", destination: "/retreats/:slug" },
+      { source: "/zajecia/:slug", destination: "/classes/:slug" },
       // Polish-facing URLs → internal English route folders (kept for backward compat)
       { source: "/wydarzenia/:path*", destination: "/workshops/:path*" },
       { source: "/wyjazdy/:path*", destination: "/retreats/:path*" },
@@ -36,14 +36,14 @@ const nextConfig = {
 
       // wyjazdy.yoga
       { source: "/", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy", permanent: true },
-      { source: "/retreats/:path*", has: [wyjazdy], destination: "https://joga.yoga/r/:path*", permanent: true },
+      { source: "/retreats/:path*", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy/:path*", permanent: true },
       { source: "/partner/:organizerId", has: [wyjazdy], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/organizer/:organizerId", has: [wyjazdy], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/:path*", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy/:path*", permanent: true },
 
       // wydarzenia.yoga
       { source: "/", has: [wydarzenia], destination: "https://joga.yoga/", permanent: true },
-      { source: "/workshops/:path*", has: [wydarzenia], destination: "https://joga.yoga/w/:path*", permanent: true },
+      { source: "/workshops/:path*", has: [wydarzenia], destination: "https://joga.yoga/wydarzenia/:path*", permanent: true },
       { source: "/partner/:organizerId", has: [wydarzenia], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/organizer/:organizerId", has: [wydarzenia], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/:path*", has: [wydarzenia], destination: "https://joga.yoga/wydarzenia/:path*", permanent: true },
@@ -56,9 +56,9 @@ const nextConfig = {
       // /wydarzenia is redundant — / is canonical
       { source: "/wydarzenia", destination: "/", permanent: true },
       // Old English paths → Polish paths
-      { source: "/workshops/:path*", destination: "/w/:path*", permanent: true },
-      { source: "/retreats/:path*", destination: "/r/:path*", permanent: true },
-      { source: "/classes/:path*", destination: "/c/:path*", permanent: true },
+      { source: "/workshops/:path*", destination: "/wydarzenia/:path*", permanent: true },
+      { source: "/retreats/:path*", destination: "/wyjazdy/:path*", permanent: true },
+      { source: "/classes/:path*", destination: "/zajecia/:path*", permanent: true },
       // Section-specific partner pages → shared /partner/:id
       { source: "/wydarzenia/partner/:organizerId", destination: "/partner/:organizerId", permanent: true },
       { source: "/wyjazdy/partner/:organizerId", destination: "/partner/:organizerId", permanent: true },

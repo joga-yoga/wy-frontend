@@ -476,8 +476,8 @@ export default function DashboardPage() {
                               <Link
                                 href={
                                   event.kind === "workshop"
-                                    ? `/w/${event.slug}`
-                                    : `/r/${event.slug}`
+                                    ? `/wydarzenia/${event.slug}`
+                                    : `/wyjazdy/${event.slug}`
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"

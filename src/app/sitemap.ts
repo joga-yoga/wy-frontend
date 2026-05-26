@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (res.ok) {
       const slugs: string[] = await res.json();
       workshopRoutes = slugs.map((slug) => ({
-        url: `${BASE_URL}/w/${slug}`,
+        url: `${BASE_URL}/wydarzenia/${slug}`,
         lastModified: new Date(),
         changeFrequency: "daily" as const,
         priority: 0.8,
@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (res.ok) {
       const slugs: string[] = await res.json();
       retreatRoutes = slugs.map((slug) => ({
-        url: `${BASE_URL}/r/${slug}`,
+        url: `${BASE_URL}/wyjazdy/${slug}`,
         lastModified: new Date(),
         changeFrequency: "daily" as const,
         priority: 0.8,
