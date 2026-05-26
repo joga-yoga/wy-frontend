@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CookieConsentManager } from "@/components/cookies/CookieConsentManager";
 import { Footer } from "@/components/layout/Footer";
 import { PublicHeader } from "@/components/layout/Header";
+import { PageSpinner } from "@/components/ui/page-spinner";
 import { EventsFilterProvider } from "@/context/EventsFilterContext";
 import { PROJECT_SEO } from "@/lib/seo";
 
@@ -22,13 +23,15 @@ export const metadata: Metadata = {
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={null}>
-      <EventsFilterProvider>
-        <PublicHeader project="retreats" />
-        {children}
-        <CookieConsentManager project="retreats" />
-        <Footer project="retreats" />
-      </EventsFilterProvider>
-    </Suspense>
+    <EventsFilterProvider>
+      <Suspense fallback={null}>
+        <PublicHeader />
+      </Suspense>
+      <Suspense fallback={<PageSpinner />}>{children}</Suspense>
+      <CookieConsentManager />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
+    </EventsFilterProvider>
   );
 }

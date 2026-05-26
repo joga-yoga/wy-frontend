@@ -14,21 +14,11 @@ import { syncMixpanelAnalyticsConsent } from "@/lib/mixpanelClient";
 
 import { CookieSettingsModal } from "./CookieSettingsModal";
 
-const SITE_NAME_BY_PROJECT = {
-  retreats: "joga.yoga",
-  workshops: "joga.yoga",
-} as const;
-
-type CookieConsentManagerProps = {
-  project: "retreats" | "workshops";
-};
-
-export function CookieConsentManager({ project }: CookieConsentManagerProps) {
+export function CookieConsentManager() {
   const [isBannerOpen, setIsBannerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
   const [marketingEnabled, setMarketingEnabled] = useState(true);
-  const siteName = useMemo(() => SITE_NAME_BY_PROJECT[project], [project]);
 
   useEffect(() => {
     const storedConsent = getStoredCookieConsent();
@@ -104,7 +94,7 @@ export function CookieConsentManager({ project }: CookieConsentManagerProps) {
             <p className="mt-3 text-base leading-relaxed text-gray-800">
               Klikając „Zaakceptuj wszystko”, wyrażasz zgodę na{" "}
               <Link href="/policy" className="font-semibold underline">
-                Politykę plików cookie {siteName}
+                Politykę plików cookie joga.yoga
               </Link>
               . Swoje preferencje możesz zmienić w dowolnym momencie.
             </p>

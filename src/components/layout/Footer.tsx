@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import React from "react";
 import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5";
 
@@ -144,9 +144,13 @@ const FooterBottom = ({ onOpenCookieSettings }: { onOpenCookieSettings: () => vo
   );
 };
 
-export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
+export const Footer: React.FC = () => {
   const params = useParams();
+  const pathname = usePathname();
   const isEventPage = !!params.slug;
+  const project: "retreats" | "workshops" = pathname.startsWith("/wyjazdy")
+    ? "retreats"
+    : "workshops";
   const sectionPrefix = project === "retreats" ? "/wyjazdy" : "/wydarzenia";
   const FOOTER_SECTIONS = buildFooterSections(sectionPrefix, project);
 

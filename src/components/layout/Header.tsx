@@ -79,7 +79,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
   );
 };
 
-export const PublicHeader: React.FC<{ project: "retreats" | "workshops" }> = ({ project }) => {
+export const PublicHeader = () => {
   const { user } = useAuth();
   const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
