@@ -14,8 +14,8 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      // Root serves workshops listing (/ is canonical for wydarzenia)
-      { source: "/", destination: "/workshops" },
+      // Note: "/" has an actual page at (public)/page.tsx — no rewrite needed.
+      // Rewrites for "/" caused RSC 404s during client-side navigation.
       // Section roots (explicit bare entries — :path* zero-segment matching unreliable for RSC)
       { source: "/wyjazdy", destination: "/retreats" },
       { source: "/wydarzenia", destination: "/workshops" },
