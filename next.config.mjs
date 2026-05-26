@@ -36,6 +36,10 @@ const nextConfig = {
 
       // wyjazdy.yoga
       { source: "/", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy", permanent: true },
+      { source: "/contact", has: [wyjazdy], destination: "https://joga.yoga/contact", permanent: true },
+      { source: "/policy", has: [wyjazdy], destination: "https://joga.yoga/policy", permanent: true },
+      { source: "/terms", has: [wyjazdy], destination: "https://joga.yoga/terms", permanent: true },
+      { source: "/delete-account", has: [wyjazdy], destination: "https://joga.yoga/delete-account", permanent: true },
       { source: "/retreats/:path*", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy/:path*", permanent: true },
       { source: "/partner/:organizerId", has: [wyjazdy], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/organizer/:organizerId", has: [wyjazdy], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
@@ -43,6 +47,10 @@ const nextConfig = {
 
       // wydarzenia.yoga
       { source: "/", has: [wydarzenia], destination: "https://joga.yoga/", permanent: true },
+      { source: "/contact", has: [wydarzenia], destination: "https://joga.yoga/contact", permanent: true },
+      { source: "/policy", has: [wydarzenia], destination: "https://joga.yoga/policy", permanent: true },
+      { source: "/terms", has: [wydarzenia], destination: "https://joga.yoga/terms", permanent: true },
+      { source: "/delete-account", has: [wydarzenia], destination: "https://joga.yoga/delete-account", permanent: true },
       { source: "/workshops/:path*", has: [wydarzenia], destination: "https://joga.yoga/wydarzenia/:path*", permanent: true },
       { source: "/partner/:organizerId", has: [wydarzenia], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/organizer/:organizerId", has: [wydarzenia], destination: "https://joga.yoga/partner/:organizerId", permanent: true },

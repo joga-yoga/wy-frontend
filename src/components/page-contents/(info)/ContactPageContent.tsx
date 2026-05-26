@@ -10,22 +10,15 @@ import { axiosInstance } from "@/lib/axiosInstance";
 
 interface ContactPageContentProps {
   eventId?: string;
-  context?: "retreats" | "workshops";
 }
 
-export const ContactPageContent: React.FC<ContactPageContentProps> = ({
-  eventId,
-  context = "retreats",
-}) => {
+export const ContactPageContent: React.FC<ContactPageContentProps> = ({ eventId }) => {
   const isTakeoverFlow = Boolean(eventId);
-  const isRetreatsContext = context === "retreats";
-  const takeoverEntity = isRetreatsContext ? "wyjazdu" : "wydarzenia";
-  const takeoverEntityNominative = isRetreatsContext ? "Wyjazd" : "Wydarzenie";
 
-  const pageTitle = isTakeoverFlow ? `Przejęcie i edycja ${takeoverEntity}` : "Kontakt";
+  const pageTitle = isTakeoverFlow ? `Przejęcie i edycja wyjazdu lub wydarzenia` : "Kontakt";
   const pageDescription = isTakeoverFlow
-    ? `${takeoverEntityNominative} został opublikowany na naszej platformie i chcesz przejąć nad nim kontrolę? Wypełnij formularz. Po weryfikacji skontaktujemy się z Tobą i pomożemy przypisać ${takeoverEntity} do Twojego konta.`
-    : `Twoja wiadomość zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu ${isRetreatsContext ? "joga.yoga" : "joga.yoga"}. Zostaw w wiadomości preferowany sposób kontaktu - e-mail, telefon (WhatsApp) lub social media itd.`;
+    ? `Wyjazd lub Wydarzenie zostało opublikowany na naszej platformie i chcesz przejąć nad nim kontrolę? Wypełnij formularz. Po weryfikacji skontaktujemy się z Tobą i pomożemy przypisać do Twojego konta.`
+    : `Twoja wiadomość zostanie przesłana przez bezpieczne połączenie (SSL) i trafi bezpośrednio do zespołu joga.yoga. Zostaw w wiadomości preferowany sposób kontaktu - e-mail, telefon (WhatsApp) lub social media itd.`;
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,9 +33,9 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({
     try {
       const formattedMessage = [
         isTakeoverFlow
-          ? `Typ zgłoszenia: Przejęcie i edycja ${takeoverEntity}`
+          ? `Typ zgłoszenia: Przejęcie i edycja wyjazdu lub wydarzenia`
           : "Typ zgłoszenia: Kontakt",
-        eventId ? `ID ${takeoverEntity}: ${eventId}` : null,
+        eventId ? `ID: ${eventId}` : null,
         "",
         "Wiadomość:",
         message.trim(),

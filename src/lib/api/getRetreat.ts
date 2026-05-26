@@ -1,4 +1,4 @@
-import { EventDetail } from "@/app/retreats/[slug]/types";
+import { EventDetail } from "@/app/(public)/retreats/[slug]/types";
 import { fetchEventDetail } from "@/lib/api/eventDetailFetch";
 
 export async function getRetreat(id: string): Promise<EventDetail> {

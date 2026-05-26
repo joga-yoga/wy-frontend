@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { getImageUrl } from "@/app/retreats/[slug]/helpers";
+import { getImageUrl } from "@/app/(public)/retreats/[slug]/helpers";
 import { WyImage } from "@/components/custom/WyImage";
 
 import { EventSection, ReviewSection } from "./components";

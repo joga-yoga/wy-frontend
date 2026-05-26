@@ -1,25 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type Project = "retreats" | "workshops";
-
-const projectConfig: Record<
-  Project,
-  { domain: string; serviceName: string; contactEmail: string }
-> = {
-  retreats: {
-    domain: "joga.yoga",
-    serviceName: "joga.yoga",
-    contactEmail: "hello@joga.yoga",
-  },
-  workshops: {
-    domain: "joga.yoga",
-    serviceName: "joga.yoga",
-    contactEmail: "hello@joga.yoga",
-  },
-};
-
-const LAST_UPDATED_DATE = "2026-04-16";
-const LAST_UPDATED_LABEL = "16 kwietnia 2026";
+const LAST_UPDATED_DATE = "2026-05-26";
+const LAST_UPDATED_LABEL = "26 maja 2026";
 
 const basePolicyHtml = `
 <h2>1. Informacje ogólne</h2>
@@ -308,8 +290,12 @@ stosować profilowanie w rozumieniu przepisów o ochronie danych osobowych</li>
 </ol>
 `;
 
-export const PrivacyPolicyPageContent = ({ project }: { project: Project }) => {
-  const config = projectConfig[project];
+export const PrivacyPolicyPageContent = () => {
+  const config = {
+    domain: "joga.yoga",
+    serviceName: "joga.yoga",
+    contactEmail: "hello@joga.yoga",
+  };
 
   const policyHtml = basePolicyHtml
     .replaceAll("https://joga.yoga/", `https://${config.domain}/`)

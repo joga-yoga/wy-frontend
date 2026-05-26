@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import type { EventDetail } from "@/app/retreats/[slug]/types";
+import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
 import type { OrganizerInfo } from "@/components/page-contents/organizer/types";
 
 export type SeoProject = "retreats" | "workshops";
@@ -11,21 +11,14 @@ type ProjectSeoConfig = {
   defaultImage: string;
 };
 
-export const PROJECT_SEO: Record<SeoProject, ProjectSeoConfig> = {
-  retreats: {
-    siteName: "joga.yoga",
-    baseUrl: "https://joga.yoga",
-    defaultImage: "/images/social_wyjazdy.png",
-  },
-  workshops: {
-    siteName: "joga.yoga",
-    baseUrl: "https://joga.yoga",
-    defaultImage: "/images/social_wydarzenia.png",
-  },
+export const PROJECT_SEO: ProjectSeoConfig = {
+  siteName: "joga.yoga",
+  baseUrl: "https://joga.yoga",
+  defaultImage: "/images/social_wydarzenia.png",
 };
 
 export function absoluteUrl(project: SeoProject, path: string) {
-  return new URL(path, PROJECT_SEO[project].baseUrl).toString();
+  return new URL(path, PROJECT_SEO.baseUrl).toString();
 }
 
 export function buildPageMetadata({
@@ -44,7 +37,7 @@ export function buildPageMetadata({
   noIndex?: boolean;
 }): Metadata {
   const canonical = absoluteUrl(project, path);
-  const images = [image || PROJECT_SEO[project].defaultImage];
+  const images = [image || PROJECT_SEO.defaultImage];
 
   return {
     title,
@@ -59,7 +52,7 @@ export function buildPageMetadata({
       title,
       description,
       url: canonical,
-      siteName: PROJECT_SEO[project].siteName,
+      siteName: PROJECT_SEO.siteName,
       locale: "pl_PL",
       type: "website",
       images,
@@ -192,8 +185,8 @@ export function buildCollectionJsonLd({
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: PROJECT_SEO[project].siteName,
-      url: PROJECT_SEO[project].baseUrl,
+      name: PROJECT_SEO.siteName,
+      url: PROJECT_SEO.baseUrl,
       inLanguage: "pl-PL",
     },
     {
@@ -205,8 +198,8 @@ export function buildCollectionJsonLd({
       inLanguage: "pl-PL",
       isPartOf: {
         "@type": "WebSite",
-        name: PROJECT_SEO[project].siteName,
-        url: PROJECT_SEO[project].baseUrl,
+        name: PROJECT_SEO.siteName,
+        url: PROJECT_SEO.baseUrl,
       },
     },
   ];

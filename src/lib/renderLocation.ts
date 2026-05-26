@@ -1,4 +1,4 @@
-import { Location } from "@/app/retreats/types";
+import { Location } from "@/app/(public)/retreats/types";
 
 export const renderLocation = (location?: Location | null) => {
   if (!location) return "";

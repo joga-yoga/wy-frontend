@@ -33,7 +33,7 @@ function buildFooterSections(
     },
     {
       title: "O nas",
-      links: [{ label: "Kontakt", href: `${prefix}/contact` }],
+      links: [{ label: "Kontakt", href: "/contact" }],
     },
   ];
 }
@@ -67,13 +67,7 @@ const FooterSection = ({
   );
 };
 
-export const LogoFooter = ({
-  className,
-  project,
-}: {
-  className?: string;
-  project: "retreats" | "workshops";
-}) => {
+export const LogoFooter = ({ className }: { className?: string }) => {
   return (
     <div className={cn("flex flex-col items-center gap-2 md:gap-3", className)}>
       {/* <div
@@ -84,7 +78,7 @@ export const LogoFooter = ({
         <LogoTransparentSmall className={`w-10 h-10 md:w-12 md:h-12 text-white`} />
       </div> */}
       <p className={`flex items-center text-xl font-semibold text-gray-600`}>
-        {project === "retreats" ? "wyjazdy" : "wydarzenia"}
+        joga
         <span
           className={cn(
             "inline-block rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] bg-gray-600 text-white",
@@ -97,19 +91,11 @@ export const LogoFooter = ({
   );
 };
 
-const FooterBottom = ({
-  onOpenCookieSettings,
-  project,
-  sectionPrefix,
-}: {
-  onOpenCookieSettings: () => void;
-  project: "retreats" | "workshops";
-  sectionPrefix: string;
-}) => {
+const FooterBottom = ({ onOpenCookieSettings }: { onOpenCookieSettings: () => void }) => {
   return (
     <>
       <div className="flex w-full md:justify-start mb-6 md:mb-6">
-        <LogoFooter project={project} />
+        <LogoFooter />
       </div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-m-sunscript-font text-gray-500 order-2 md:order-1">
@@ -117,11 +103,11 @@ const FooterBottom = ({
           <span aria-hidden="true" className="hidden md:block">
             ·
           </span>
-          <Link href={`${sectionPrefix}/policy`} className="hover:underline">
+          <Link href="/policy" className="hover:underline">
             Prywatność
           </Link>
           <span aria-hidden="true">·</span>
-          <Link href={`${sectionPrefix}/terms`} className="hover:underline">
+          <Link href="/terms" className="hover:underline">
             Warunki
           </Link>
           <span aria-hidden="true">·</span>
@@ -183,11 +169,7 @@ export const Footer: React.FC<{ project: "retreats" | "workshops" }> = ({ projec
             ))}
           </div>
           <Separator className="my-6" />
-          <FooterBottom
-            onOpenCookieSettings={handleOpenCookieSettings}
-            project={project}
-            sectionPrefix={sectionPrefix}
-          />
+          <FooterBottom onOpenCookieSettings={handleOpenCookieSettings} />
         </div>
       </footer>
     </>

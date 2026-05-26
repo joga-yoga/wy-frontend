@@ -1,4 +1,4 @@
-import { Event } from "@/app/retreats/types";
+import { Event } from "@/app/(public)/retreats/types";
 import { getCachedEventList } from "@/lib/api/eventLists";
 
 import { prepareSearchParams } from "../prepareSearchParams";

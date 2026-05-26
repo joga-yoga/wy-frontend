@@ -1,4 +1,4 @@
-import { ProgramDay } from "@/app/retreats/types";
+import { ProgramDay } from "@/app/(public)/retreats/types";
 
 export interface OrganizerInfo {
   id: string;
