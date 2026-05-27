@@ -329,7 +329,7 @@ export default function DashboardPage() {
               onClick={() => setIsCreateOpen(false)}
               className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
             >
-              <div className="text-6xl select-none">🏕️</div>
+              <img src="/images/logo/logo-retreats.png" className="w-16 h-16" alt="" />
               <div className="mt-3 text-base font-semibold">Wyjazd</div>
             </Link>
             <Link
@@ -337,7 +337,7 @@ export default function DashboardPage() {
               onClick={() => setIsCreateOpen(false)}
               className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
             >
-              <div className="text-6xl select-none">🧘‍♀️</div>
+              <img src="/images/logo/logo-workshops.png" className="w-16 h-16" alt="" />
               <div className="mt-3 text-base font-semibold">Wydarzenie</div>
             </Link>
             {classesEnabled ? (
@@ -346,7 +346,7 @@ export default function DashboardPage() {
                 onClick={() => setIsCreateOpen(false)}
                 className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
               >
-                <div className="text-6xl select-none">🧘</div>
+                <img src="/images/logo/logo-workshops.png" className="w-16 h-16" alt="" />
                 <div className="mt-3 text-base font-semibold">Zajęcia</div>
               </Link>
             ) : null}
@@ -525,7 +525,7 @@ export default function DashboardPage() {
 
                     {/* Footer with emoji - removed action buttons */}
                     <div className="mt-4 flex justify-end items-center">
-                      <span className="text-xl">{event.kind === "workshop" ? "🧘‍♀️" : "🏕️"}</span>
+                      <img src={event.kind === "workshop" ? "/images/logo/logo-workshops.png" : "/images/logo/logo-retreats.png"} className="w-5 h-5" alt="" />
                     </div>
                   </div>
 

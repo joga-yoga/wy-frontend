@@ -105,7 +105,10 @@ export const PublicHeader = () => {
   const sectionPrefix = isWyjazdy ? "/wyjazdy" : "/wydarzenia";
   const isPartnersPage = pathname === "/wydarzenia/partners" || pathname === "/wyjazdy/partners";
 
-  const accountHref = user ? "/profile" : `/profile/login?next=${encodeURIComponent(pathname)}`;
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const accountHref =
+    mounted && user ? "/profile" : `/profile/login?next=${encodeURIComponent(pathname)}`;
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);
@@ -149,10 +152,9 @@ export const PublicHeader = () => {
                 <motion.span
                   variants={TAB_ICON_VARIANTS}
                   transition={TAB_INTERACTION_TRANSITION}
-                  className="text-[28px] leading-none"
                   aria-hidden="true"
                 >
-                  🧘‍♀️
+                  <img src="/images/logo/logo-workshops.png" className="w-7 h-7" alt="" />
                 </motion.span>
                 <motion.span
                   variants={getTabLabelVariants(isWydarzenia)}
@@ -183,10 +185,9 @@ export const PublicHeader = () => {
                 <motion.span
                   variants={TAB_ICON_VARIANTS}
                   transition={TAB_INTERACTION_TRANSITION}
-                  className="text-[28px] leading-none"
                   aria-hidden="true"
                 >
-                  🏕️
+                  <img src="/images/logo/logo-retreats.png" className="w-7 h-7" alt="" />
                 </motion.span>
                 <motion.span
                   variants={getTabLabelVariants(isWyjazdy)}
@@ -288,10 +289,9 @@ export const PublicHeader = () => {
                   <motion.span
                     variants={TAB_ICON_VARIANTS}
                     transition={TAB_INTERACTION_TRANSITION}
-                    className="text-[36px] leading-none"
                     aria-hidden="true"
                   >
-                    🧘‍♀️
+                    <img src="/images/logo/logo-workshops.png" className="w-9 h-9" alt="" />
                   </motion.span>
                 </motion.span>
                 {/* Underline is only as wide as the text label */}
@@ -335,10 +335,9 @@ export const PublicHeader = () => {
                   <motion.span
                     variants={TAB_ICON_VARIANTS}
                     transition={TAB_INTERACTION_TRANSITION}
-                    className="text-[36px] leading-none"
                     aria-hidden="true"
                   >
-                    🏕️
+                    <img src="/images/logo/logo-retreats.png" className="w-9 h-9" alt="" />
                   </motion.span>
                 </motion.span>
                 {/* Underline is only as wide as the text label */}

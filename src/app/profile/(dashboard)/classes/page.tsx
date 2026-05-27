@@ -127,7 +127,7 @@ export default function DashboardClassesPage() {
                   </div>
 
                   <div className="mt-4 flex justify-end items-center">
-                    <span className="text-xl">🧘</span>
+                    <img src="/images/logo/logo-workshops.png" className="w-5 h-5" alt="" />
                   </div>
                 </div>
               </Link>
