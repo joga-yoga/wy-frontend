@@ -47,6 +47,7 @@ const nextConfig = {
       { source: "/retreats/:path*", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy/:path*", permanent: true },
       { source: "/partner/:organizerId", has: [wyjazdy], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/organizer/:organizerId", has: [wyjazdy], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
+      { source: "/sitemap.xml", has: [wyjazdy], destination: "https://joga.yoga/sitemap.xml", permanent: true },
       { source: "/:path*", has: [wyjazdy], destination: "https://joga.yoga/wyjazdy/:path*", permanent: true },
 
       // wydarzenia.yoga
@@ -58,6 +59,7 @@ const nextConfig = {
       { source: "/workshops/:path*", has: [wydarzenia], destination: "https://joga.yoga/wydarzenia/:path*", permanent: true },
       { source: "/partner/:organizerId", has: [wydarzenia], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
       { source: "/organizer/:organizerId", has: [wydarzenia], destination: "https://joga.yoga/partner/:organizerId", permanent: true },
+      { source: "/sitemap.xml", has: [wydarzenia], destination: "https://joga.yoga/sitemap.xml", permanent: true },
       { source: "/:path*", has: [wydarzenia], destination: "https://joga.yoga/wydarzenia/:path*", permanent: true },
 
       // app.joga.yoga (old profile subdomain)
