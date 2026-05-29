@@ -55,7 +55,7 @@ export const LocationSelector = ({
         : null;
 
     return (
-      <div className="flex min-w-0 flex-col items-start gap-0.5">
+      <div className="flex w-full min-w-0 flex-col items-start gap-0.5">
         <span className="max-w-full truncate font-medium">{primaryLabel}</span>
         {secondaryLabel && (
           <span className="max-w-full truncate text-xs text-muted-foreground">
@@ -89,7 +89,7 @@ export const LocationSelector = ({
                       }}
                       value={field.value || ""}
                     >
-                      <SelectTrigger className="h-auto min-h-[60px] w-full min-w-0 py-2 [&>span]:min-w-0">
+                      <SelectTrigger className="h-auto min-h-[60px] w-full min-w-0 overflow-hidden py-2 [&>span]:min-w-0 [&>span]:flex-1 [&>span]:overflow-hidden">
                         <SelectValue placeholder={`Wybierz ${label.toLowerCase()}`}>
                           {selectedLocation ? renderLocationLabel(selectedLocation) : undefined}
                         </SelectValue>

@@ -1,4 +1,5 @@
 import { Edit2, HelpCircle, PlusCircle, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { Control, Controller, FieldErrors, UseFormSetValue } from "react-hook-form";
 
 import { WyImage } from "@/components/custom/WyImage";
@@ -42,7 +43,6 @@ export const EventInstructorsSection = ({
   setValue,
   instructors,
   setIsInstructorModalOpen,
-  handleEditInstructor,
   instructorToDelete,
   setInstructorToDelete,
   isDeletingInstructor,
@@ -109,11 +109,17 @@ export const EventInstructorsSection = ({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditInstructor(instructor)}
                             className="h-8 px-2"
                             aria-label={`Edit ${instructor.name}`}
+                            asChild
                           >
-                            <Edit2 size={16} className="text-muted-foreground" />
+                            <Link
+                              href={`/profile/instructors/${instructor.id}/edit`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Edit2 size={16} className="text-muted-foreground" />
+                            </Link>
                           </Button>
                           <AlertDialogTrigger asChild>
                             <Button

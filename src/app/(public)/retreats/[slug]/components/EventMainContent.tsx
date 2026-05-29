@@ -35,12 +35,14 @@ interface EventMainContentProps {
   project: "retreats" | "workshops";
   className?: string;
   isMultiDay: boolean;
+  eventSlug?: string;
 }
 
 export const EventMainContent: React.FC<EventMainContentProps> = ({
   event,
   project,
   className,
+  eventSlug,
 }) => {
   return (
     <div className={`space-y-5 md:space-y-[44px] ${className}`}>
@@ -153,7 +155,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
 
       {/* Instructor Section (Mobile Only) */}
       <div className="block lg:hidden">
-        <InstructorSection event={event} />
+        <InstructorSection event={event} eventSlug={eventSlug} project={project} />
       </div>
 
       {event.price_includes?.length ||

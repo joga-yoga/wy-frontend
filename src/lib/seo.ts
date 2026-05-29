@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
 import type { OrganizerInfo } from "@/components/page-contents/organizer/types";
+import type { InstructorPublic } from "@/types/instructor";
 
 export type SeoProject = "retreats" | "workshops";
 
@@ -165,6 +166,28 @@ export function buildOrganizerJsonLd({
     url: absoluteUrl(project, path),
     email: organizer.email,
     telephone: organizer.phone_number,
+  });
+}
+
+export function buildInstructorJsonLd({
+  path,
+  instructor,
+  imageUrl,
+}: {
+  path: string;
+  instructor: InstructorPublic;
+  imageUrl?: string;
+}) {
+  return compactRecord({
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: instructor.name,
+    description: stripHtml(instructor.short_bio ?? instructor.description),
+    image: imageUrl,
+    url: absoluteUrl("workshops", path),
+    knowsAbout: instructor.yoga_styles
+      .map((ys) => ys.yoga_style?.name ?? ys.custom_name)
+      .filter(Boolean),
   });
 }
 

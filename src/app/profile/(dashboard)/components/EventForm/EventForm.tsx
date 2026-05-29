@@ -145,7 +145,7 @@ export function EventForm({
     : isClass
       ? `/profile/classes`
       : `/profile/retreats`;
-  const publicPath = isWorkshop ? `/w` : isClass ? `/c` : `/r`;
+  const publicPath = isWorkshop ? `/wydarzenia` : isClass ? `/zajecia` : `/wyjazdy`;
   const isEditMode = !!eventId;
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -904,10 +904,10 @@ export function EventForm({
       <BlockerWhenDirty control={control as any} />
       <BlockBrowserNavigation />
       <div
-        className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto"
+        className="flex flex-row md:justify-center gap-6 space-y-8 mx-auto max-w-full min-w-0"
         id="event-form-wrapper"
       >
-        <div className="flex flex-col event-form-section-gap max-w-3xl mx-auto px-4 pb-12 md:mx-10 ">
+        <div className="flex flex-col event-form-section-gap max-w-3xl w-full mx-auto px-4 pb-12 md:mx-10 ">
           {isClass ? (
             <ClassForm
               control={control}

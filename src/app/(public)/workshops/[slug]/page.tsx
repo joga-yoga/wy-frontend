@@ -93,12 +93,14 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
             className="lg:col-span-1 order-1 lg:order-2"
             project="workshops"
             isMultiDay={isMultiDay}
+            eventSlug={slug}
           />
           <EventMainContent
             event={event}
             className="lg:col-span-2 order-2 lg:order-1"
             project="workshops"
             isMultiDay={isMultiDay}
+            eventSlug={slug}
           />
         </div>
 

@@ -302,6 +302,16 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 mx-auto max-w-4xl">
+      <div className="mb-6">
+        <Link
+          href="/profile/instructors"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 border rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors"
+        >
+          <span className="font-medium">Instruktorzy</span>
+          <span className="text-gray-400">→</span>
+        </Link>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Twoje ogłoszenia</h1>
         <button
@@ -525,7 +535,15 @@ export default function DashboardPage() {
 
                     {/* Footer with emoji - removed action buttons */}
                     <div className="mt-4 flex justify-end items-center">
-                      <img src={event.kind === "workshop" ? "/images/logo/logo-workshops.png" : "/images/logo/logo-retreats.png"} className="w-5 h-5" alt="" />
+                      <img
+                        src={
+                          event.kind === "workshop"
+                            ? "/images/logo/logo-workshops.png"
+                            : "/images/logo/logo-retreats.png"
+                        }
+                        className="w-5 h-5"
+                        alt=""
+                      />
                     </div>
                   </div>
 

@@ -2,7 +2,7 @@
 import { ChevronLeft, LogOut } from "lucide-react";
 import { LayoutGroup, motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import React from "react";
 import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
@@ -97,6 +97,7 @@ export const PublicHeader = () => {
   const { user } = useAuth();
   const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/wyjazdy/");
   const isWydarzenia =
@@ -116,6 +117,8 @@ export const PublicHeader = () => {
   const mobileTabIconHeight = useTransform(compactProgress, [0, 1], [36, 0]);
   const mobileTabIconMarginBottom = useTransform(compactProgress, [0, 1], [0, -2]);
 
+  const fromPath = searchParams.get("from");
+  const logoHref = isWyjazdy ? "/wyjazdy" : "/";
   if (isPartnersPage) {
     return null;
   }
@@ -123,19 +126,23 @@ export const PublicHeader = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
       <div className="container mx-auto px-5 md:px-8 h-16 md:h-20 relative flex items-stretch">
+        {/* Desktop: always logo to section root */}
+        <Link href={logoHref} className="hidden md:flex items-center shrink-0 self-center">
+          <LogoFooter />
+        </Link>
+
+        {/* Mobile: back button (from param or detail page) or logo */}
         <Link
-          href={isWyjazdy ? "/wyjazdy" : "/"}
-          className="flex items-center shrink-0 self-center"
+          href={fromPath || logoHref}
+          className="flex md:hidden items-center shrink-0 self-center"
         >
-          <LogoFooter className={isMainPage ? "block" : "hidden md:block"} />
-          <div
-            className={cn(
-              "h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200",
-              isMainPage ? "hidden" : "md:hidden",
-            )}
-          >
-            <IoChevronBack className="h-6 w-6 ml-[-2px]" />
-          </div>
+          {fromPath ? (
+            <div className="h-10 w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+              <IoChevronBack className="h-6 w-6 ml-[-2px]" />
+            </div>
+          ) : (
+            <LogoFooter />
+          )}
         </Link>
 
         {/* Center: Airbnb-style flat tabs with sliding underline — absolutely centered on desktop */}

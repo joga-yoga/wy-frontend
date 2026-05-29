@@ -24,20 +24,27 @@ export const EventHeader: React.FC<EventHeaderProps> = ({ title, eventId }) => {
     }
   };
 
+  const getCleanUrl = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("from");
+    return url.toString();
+  };
+
   const handleShareClick = async () => {
+    const cleanUrl = getCleanUrl();
     if (navigator.share) {
       try {
         await navigator.share({
           title,
           text: `Check out this event: ${title}`,
-          url: window.location.href,
+          url: cleanUrl,
         });
       } catch (error) {
         console.error("Error sharing:", error);
       }
     } else {
       try {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(cleanUrl);
         alert("Link copied to clipboard!");
       } catch (err) {
         console.error("Could not copy text: ", err);

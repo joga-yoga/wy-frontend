@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const instructorSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  bio: z.string().optional(),
+  description: z.string().optional(),
   image: z.any().optional(),
 });
 
@@ -67,7 +67,7 @@ export function InstructorForm({
         />
         <FormField
           control={form.control}
-          name="bio"
+          name="description"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bio</FormLabel>

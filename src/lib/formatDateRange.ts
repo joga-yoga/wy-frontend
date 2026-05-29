@@ -321,6 +321,36 @@ export function formatDateStartWithTime(dateStr: string | Date | null | undefine
 }
 
 /**
+ * Compact variant of formatDateStartWithTime using abbreviated day and month.
+ * Produces e.g. "Pon, 10 sie, 14:30" — safe for narrow containers.
+ */
+export function formatDateStartWithTimeCompact(dateStr: string | Date | null | undefined): string {
+  if (!dateStr) return "";
+
+  try {
+    const date = typeof dateStr === "string" ? parseISO(dateStr) : dateStr;
+    if (isNaN(date.getTime())) return "Nieprawidłowa data";
+
+    const utcHours = String(date.getUTCHours()).padStart(2, "0");
+    const utcMinutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const timeStr = `${utcHours}:${utcMinutes}`;
+
+    const tempDate = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+    );
+    const dayAbbr = format(tempDate, "EEE", { locale: pl });
+    const dayNum = format(tempDate, "d", { locale: pl });
+    const monthAbbr = format(tempDate, "MMM", { locale: pl });
+
+    const capitalized = dayAbbr.charAt(0).toUpperCase() + dayAbbr.slice(1).replace(".", "");
+    return `${capitalized}, ${dayNum} ${monthAbbr.replace(".", "")}, ${timeStr}`;
+  } catch (error) {
+    console.error("Date format error:", error);
+    return "Nieprawidłowa data";
+  }
+}
+
+/**
  * Calculates the duration in hours between two dates.
  * @param startDateStr The start date as an ISO 8601 string (e.g., "2025-07-06T12:00:00Z"). Can be undefined or null.
  * @param endDateStr The end date as an ISO 8601 string (e.g., "2025-07-07T13:00:00Z"). Can be undefined or null.

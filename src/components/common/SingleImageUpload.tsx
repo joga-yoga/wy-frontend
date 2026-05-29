@@ -1,5 +1,5 @@
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import React from "react";
+import React, { useId } from "react";
 import { Control, useController } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,7 @@ import { Input } from "@/components/ui/input";
 
 import { WyImage } from "../custom/WyImage";
 
-interface SingleImageUploadProps {
-  name: string;
-  control: Control<any>;
+interface SingleImageUploadBaseProps {
   existingImageId?: string | null;
   imagePreviewUrl?: string | null;
   isUploading: boolean;
@@ -17,6 +15,79 @@ interface SingleImageUploadProps {
   disabled?: boolean;
   isRemoved?: boolean;
   onFileSelect?: (file: File) => void;
+}
+
+interface ControlledSingleImageUploadProps extends SingleImageUploadBaseProps {
+  name: string;
+  control: Control<any>;
+}
+
+interface StandaloneSingleImageUploadProps extends SingleImageUploadBaseProps {
+  name?: never;
+  control?: never;
+}
+
+type SingleImageUploadProps = ControlledSingleImageUploadProps | StandaloneSingleImageUploadProps;
+
+function ControlledFileInput({
+  name,
+  control,
+  inputId,
+  isUploading,
+  disabled,
+  onFileSelect,
+}: {
+  name: string;
+  control: Control<any>;
+  inputId: string;
+  isUploading: boolean;
+  disabled?: boolean;
+  onFileSelect?: (file: File) => void;
+}) {
+  const { field } = useController({ name, control });
+  return (
+    <Input
+      id={inputId}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        field.onChange(e.target.files);
+        if (onFileSelect && e.target.files?.[0]) {
+          onFileSelect(e.target.files[0]);
+        }
+      }}
+      disabled={isUploading || disabled}
+      ref={field.ref}
+    />
+  );
+}
+
+function StandaloneFileInput({
+  inputId,
+  isUploading,
+  disabled,
+  onFileSelect,
+}: {
+  inputId: string;
+  isUploading: boolean;
+  disabled?: boolean;
+  onFileSelect?: (file: File) => void;
+}) {
+  return (
+    <Input
+      id={inputId}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        if (onFileSelect && e.target.files?.[0]) {
+          onFileSelect(e.target.files[0]);
+        }
+      }}
+      disabled={isUploading || disabled}
+    />
+  );
 }
 
 export const SingleImageUpload = ({
@@ -30,15 +101,14 @@ export const SingleImageUpload = ({
   isRemoved,
   onFileSelect,
 }: SingleImageUploadProps) => {
-  const { field } = useController({ name, control });
-
   const existingImageUrl =
     !isRemoved && existingImageId
       ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/v1/${existingImageId}`
       : null;
 
   const currentPreviewUrl = imagePreviewUrl || existingImageUrl;
-  const inputId = `file-input-${name}`;
+  const generatedId = useId();
+  const inputId = `file-input-${name ?? generatedId}`;
 
   return (
     <div className="relative w-24 h-24 md:w-32 md:h-32 group">
@@ -91,20 +161,23 @@ export const SingleImageUpload = ({
         </label>
       )}
 
-      <Input
-        id={inputId}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          field.onChange(e.target.files);
-          if (onFileSelect && e.target.files && e.target.files.length > 0) {
-            onFileSelect(e.target.files[0]);
-          }
-        }}
-        disabled={isUploading || disabled}
-        ref={field.ref}
-      />
+      {control && name ? (
+        <ControlledFileInput
+          name={name}
+          control={control}
+          inputId={inputId}
+          isUploading={isUploading}
+          disabled={disabled}
+          onFileSelect={onFileSelect}
+        />
+      ) : (
+        <StandaloneFileInput
+          inputId={inputId}
+          isUploading={isUploading}
+          disabled={disabled}
+          onFileSelect={onFileSelect}
+        />
+      )}
     </div>
   );
 };

@@ -12,7 +12,9 @@ export interface InstructorDetail {
   id: string;
   name: string;
   image_id: string | null;
-  bio: string | null;
+  description: string | null;
+  short_bio: string | null;
+  slug: string | null;
 }
 
 export interface LocationDetail {

@@ -20,9 +20,8 @@ import { InstructorForm, InstructorFormData, instructorSchema } from "./Instruct
 export interface Instructor {
   id: string;
   name: string;
-  bio?: string | null; // Optional bio
-  image_id: string | null; // image_id can be string or null if no image
-  // Add other relevant fields like contact, expertise, etc.
+  description?: string | null;
+  image_id: string | null;
 }
 
 interface InstructorModalProps {
@@ -49,7 +48,7 @@ export function InstructorModal({
     resolver: zodResolver(instructorSchema),
     defaultValues: {
       name: initialInstructor?.name || "",
-      bio: initialInstructor?.bio || "",
+      description: initialInstructor?.description || "",
       image: undefined,
     },
   });
@@ -117,8 +116,8 @@ export function InstructorModal({
     if (isOpen) {
       const defaultVals = {
         name: initialInstructor?.name || "",
-        bio: initialInstructor?.bio || "",
-        image: undefined, // RHF image field
+        description: initialInstructor?.description || "",
+        image: undefined,
       };
       reset(defaultVals);
       setCurrentImageId(initialInstructor?.image_id || null);
@@ -142,10 +141,10 @@ export function InstructorModal({
   }
 
   async function onSubmit(data: InstructorFormData) {
-    const payload: { name: string; bio?: string; image_id?: string | null } = {
+    const payload: { name: string; description?: string; image_id?: string | null } = {
       name: data.name,
     };
-    if (data.bio) payload.bio = data.bio;
+    if (data.description) payload.description = data.description;
 
     if (newlyUploadedImageId) {
       payload.image_id = newlyUploadedImageId;

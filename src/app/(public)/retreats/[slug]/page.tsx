@@ -94,12 +94,14 @@ const EventDetailPage = async ({ params }: EventDetailPageProps) => {
             className="lg:col-span-1 order-1 lg:order-2"
             project="retreats"
             isMultiDay={isMultiDay}
+            eventSlug={slug}
           />
           <EventMainContent
             event={event}
             className="lg:col-span-2 order-2 lg:order-1"
             project="retreats"
             isMultiDay={isMultiDay}
+            eventSlug={slug}
           />
         </div>
 
