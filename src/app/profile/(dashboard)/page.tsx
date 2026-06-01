@@ -111,7 +111,7 @@ export default function DashboardPage() {
       .catch((err) => {
         if (err.response?.status === 404) {
           isRedirecting = true;
-          router.replace("/become-partner");
+          router.replace("/profile/become-partner");
         } else {
           setPartner(null);
         }
