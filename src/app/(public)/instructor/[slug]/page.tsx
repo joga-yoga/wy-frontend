@@ -33,7 +33,7 @@ export async function generateMetadata(
       project: "workshops",
       title,
       description,
-      path: `/instructor/${slug}`,
+      path: `/instruktor/${slug}`,
       image: imageUrl || undefined,
     }),
   };
@@ -54,7 +54,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
     <>
       <JsonLd
         data={buildInstructorJsonLd({
-          path: `/instructor/${slug}`,
+          path: `/instruktor/${slug}`,
           instructor: data.instructor,
           imageUrl: imageUrl || undefined,
         })}

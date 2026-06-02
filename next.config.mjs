@@ -28,6 +28,8 @@ const nextConfig = {
       { source: "/wydarzenia/:path*", destination: "/workshops/:path*" },
       { source: "/wyjazdy/:path*", destination: "/retreats/:path*" },
       { source: "/zajecia/:path*", destination: "/classes/:path*" },
+      // Polish instructor URL → internal English route folder
+      { source: "/instruktor/:slug", destination: "/instructor/:slug" },
     ];
   },
   async redirects() {

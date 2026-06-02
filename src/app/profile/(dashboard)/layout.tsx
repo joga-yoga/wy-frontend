@@ -3,11 +3,13 @@
 import { usePathname, useRouter } from "next/navigation";
 import React, { Suspense, useEffect } from "react";
 
-import { ProfileHeader } from "@/components/layout/Header";
+import { BottomTabBar } from "@/components/layout/BottomTabBar";
+import { DashboardTopBar } from "@/components/layout/DashboardTopBar";
 import { useAuth } from "@/context/AuthContext";
-import useIsMobile from "@/hooks/useIsMobile";
 
 import { NavigationBlockerProvider } from "./components/EventForm/block-navigation/navigation-block";
+
+const MAIN_TAB_PATHS = ["/profile", "/profile/oferta", "/profile/konto"];
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -20,6 +22,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -27,11 +30,18 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router]);
 
-  const pathname = usePathname();
+  // First-login redirect: new users land on Oferta, not Aktywność
+  useEffect(() => {
+    if (!loading && user && pathname === "/profile") {
+      const shown = localStorage.getItem("wy_onboarding_shown");
+      if (!shown) {
+        localStorage.setItem("wy_onboarding_shown", "true");
+        router.replace("/profile/oferta");
+      }
+    }
+  }, [loading, user, pathname, router]);
 
-  const isMobile = useIsMobile();
-  const isEventPage = pathname.includes("retreats") || pathname.includes("workshops");
-  const isSticky = !isMobile || !isEventPage;
+  const isMainTab = MAIN_TAB_PATHS.includes(pathname);
 
   if (loading || !user) {
     return (
@@ -47,11 +57,10 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
-      <NavigationBlockerProvider>
-        <ProfileHeader isSticky={isSticky} />
-        {children}
-      </NavigationBlockerProvider>
-    </>
+    <NavigationBlockerProvider>
+      <DashboardTopBar />
+      <main className={isMainTab ? "pb-28" : undefined}>{children}</main>
+      <BottomTabBar />
+    </NavigationBlockerProvider>
   );
 }

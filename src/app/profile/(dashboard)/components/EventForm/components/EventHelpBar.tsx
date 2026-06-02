@@ -336,7 +336,7 @@ export function EventHelpBar({ mode = "retreat" }: { mode?: "retreat" | "worksho
 
   if (!isHelpBarOpen) {
     return (
-      <div className="hidden md:block fixed top-[80px] bottom-[48px] right-4 z-1">
+      <div className="hidden md:block fixed top-24 bottom-20 right-4 z-1">
         <Button
           variant="outline"
           size="icon"
@@ -350,7 +350,7 @@ export function EventHelpBar({ mode = "retreat" }: { mode?: "retreat" | "worksho
   }
 
   return (
-    <div className="hidden md:flex flex-col w-[360px] bg-card border-l border-border shadow-lg z-1 sticky top-[65px] h-[calc(100dvh-65px-65px)] overflow-y-auto">
+    <div className="hidden md:flex flex-col w-[360px] bg-card border-l border-border shadow-lg z-1 sticky top-20 h-[calc(100dvh-80px-64px)] overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
         <h2 className="text-lg font-semibold">Pomoc</h2>
         <Button
@@ -362,7 +362,7 @@ export function EventHelpBar({ mode = "retreat" }: { mode?: "retreat" | "worksho
           <X className="h-5 w-5" />
         </Button>
       </div>
-      <ScrollArea className="flex-grow p-1">
+      <ScrollArea className="min-h-0 flex-1 p-1">
         <div ref={scrollAreaRef} className="space-y-3 p-3">
           {(mode === "retreat" ? tipsRetreats : tipsWorkshops).map((tip: Tip) => (
             <div

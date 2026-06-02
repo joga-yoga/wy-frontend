@@ -56,9 +56,9 @@ export const InstructorSection: React.FC<InstructorSectionProps> = ({
         const fromPrefix = project === "workshops" ? "/wydarzenia" : "/wyjazdy";
         const instructorHref =
           instructor.slug && eventSlug
-            ? `/instructor/${instructor.slug}?from=${fromPrefix}/${eventSlug}`
+            ? `/instruktor/${instructor.slug}?from=${fromPrefix}/${eventSlug}`
             : instructor.slug
-              ? `/instructor/${instructor.slug}`
+              ? `/instruktor/${instructor.slug}`
               : null;
 
         return instructorHref ? (

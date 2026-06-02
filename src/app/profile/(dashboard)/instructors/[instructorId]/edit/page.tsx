@@ -433,7 +433,7 @@ export default function InstructorProfileEditPage() {
             <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 flex gap-2 safe-area-bottom">
               {slug && (
                 <Button type="button" variant="outline" className="flex-1" asChild>
-                  <Link href={`/instructor/${slug}`} target="_blank" rel="noopener noreferrer">
+                  <Link href={`/instruktor/${slug}`} target="_blank" rel="noopener noreferrer">
                     <ExternalLink size={15} className="mr-1.5" />
                     Zobacz profil
                   </Link>

@@ -20,10 +20,15 @@ const menuItems = [
   { id: "event-photos-section", icon: Camera, label: "Zdjęcia" },
 ];
 
+const MOBILE_HEADER_HEIGHT = 64;
+const DESKTOP_HEADER_HEIGHT = 80;
+const SECTION_SCROLL_GAP = 20;
+
 export function EventDashboardSidebar({ className, isLoading }: SidebarProps) {
   const [activeId, setActiveId] = useState<string>(menuItems[0].id);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const isMobile = useIsMobile();
+  const headerHeight = isMobile ? MOBILE_HEADER_HEIGHT : DESKTOP_HEADER_HEIGHT;
 
   useEffect(() => {
     if (visibleSections.size > 0) {
@@ -58,7 +63,7 @@ export function EventDashboardSidebar({ className, isLoading }: SidebarProps) {
         });
       },
       {
-        rootMargin: `-${65 + 20}px 0px 0px 0px`,
+        rootMargin: `-${headerHeight + SECTION_SCROLL_GAP}px 0px 0px 0px`,
         threshold: 0.2,
       },
     );
@@ -76,14 +81,14 @@ export function EventDashboardSidebar({ className, isLoading }: SidebarProps) {
     return () => {
       elements.forEach((el) => observer.unobserve(el));
     };
-  }, [isLoading]);
+  }, [headerHeight, isLoading]);
 
   return (
     <aside
       className={cn(
         "sticky border-b md:border-b-0 md:border-r bg-background z-20",
-        "md:flex flex-col items-center md:h-[calc(100dvh-65px)] py-2 md:py-4 md:px-2 md:w-[84px]",
-        "top-0 md:top-[65px] w-full",
+        "md:flex flex-col items-center md:h-[calc(100dvh-80px)] py-2 md:py-4 md:px-2 md:w-[84px]",
+        "top-16 md:top-20 w-full",
         className,
       )}
     >
@@ -102,7 +107,7 @@ export function EventDashboardSidebar({ className, isLoading }: SidebarProps) {
                     activeId === item.id && "border-brand-green",
                   )}
                   onClick={() => {
-                    scrollTo(item.id, 65 + (isMobile ? 16 : 20));
+                    scrollTo(item.id, headerHeight + (isMobile ? 16 : SECTION_SCROLL_GAP));
                   }}
                 >
                   <item.icon className="h-8 w-8 md:size-10" strokeWidth={1} />

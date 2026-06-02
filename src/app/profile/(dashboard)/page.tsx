@@ -1,589 +1,168 @@
 "use client";
 
-import { format } from "date-fns";
-import { Calendar, MoreVertical } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { pl } from "date-fns/locale";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { WyImage } from "@/components/custom/WyImage";
-import CustomPlusIconMobile from "@/components/icons/CustomPlusIconMobile";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
-import { formatDateRange } from "@/lib/formatDateRange";
 
-interface Partner {
+interface OrderListItem {
   id: string;
-  name: string;
+  customer_name: string | null;
+  email: string;
+  event_title: string | null;
+  type: string | null;
+  created_at: string;
 }
 
-interface BaseEvent {
+interface MessageListItem {
   id: string;
-  slug: string;
-  title: string;
-  description: string;
-  location: string;
-  start_date: string;
-  end_date: string;
-  price: number;
-  image_ids?: string[];
-  image_id?: string;
-  is_public: boolean;
+  email: string | null;
+  message: string;
+  event_id: string | null;
+  event_title: string | null;
+  instructor_id: string | null;
+  instructor_name: string | null;
+  created_at: string;
 }
 
-type DashboardItem = BaseEvent & { kind: "retreat" | "workshop" };
+function getGreeting(name: string | undefined, email: string | undefined): string {
+  const display = name?.split(" ")[0] || email?.split("@")[0] || "";
+  return display ? `Dzień dobry, ${display} 👋` : "Dzień dobry 👋";
+}
 
-const getEventStatus = (event: BaseEvent): { text: string; className: string } => {
-  if (!event.is_public) {
-    return {
-      text: "Prywatne",
-      className: "bg-gray-100 text-gray-700 border border-gray-300",
-    };
+function avatarInitials(email: string | null | undefined): string {
+  if (!email) return "?";
+  return email.charAt(0).toUpperCase();
+}
+
+function timeAgo(dateStr: string): string {
+  try {
+    return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: pl });
+  } catch {
+    return "";
   }
+}
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const eventEndDate = event.end_date ? new Date(event.end_date) : null;
-
-  if (eventEndDate && eventEndDate < today) {
-    return {
-      text: "Minęło",
-      className: "bg-yellow-100 text-yellow-800",
-    };
-  }
-
-  return {
-    text: "Publiczne",
-    className: "bg-green-100 text-green-800",
-  };
-};
-
-export default function DashboardPage() {
-  const [partner, setPartner] = useState<Partner | null>(null);
-  const [loadingPartner, setLoadingPartner] = useState(true);
-  const [items, setItems] = useState<DashboardItem[]>([]);
-  const [loadingItems, setLoadingItems] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "retreat" | "workshop">("all");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const classesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
-
-  const { toast } = useToast();
-  const router = useRouter();
+export default function AktywnoscPage() {
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<OrderListItem[]>([]);
+  const [messages, setMessages] = useState<MessageListItem[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
 
   useEffect(() => {
-    let isRedirecting = false;
-    setLoadingPartner(true);
     axiosInstance
-      .get("/partner/me")
-      .then((res) => {
-        setPartner(res.data);
-      })
-      .catch((err) => {
-        if (err.response?.status === 404) {
-          isRedirecting = true;
-          router.replace("/profile/become-partner");
-        } else {
-          setPartner(null);
-        }
-      })
-      .finally(() => {
-        if (!isRedirecting) {
-          setLoadingPartner(false);
-        }
-      });
-  }, [toast, router]);
+      .get<OrderListItem[]>("/partner/orders")
+      .then((r) => setOrders(r.data))
+      .catch(() => setOrders([]))
+      .finally(() => setLoadingOrders(false));
 
-  useEffect(() => {
-    if (partner && !loadingPartner) {
-      setLoadingItems(true);
-      Promise.all([
-        axiosInstance
-          .get<BaseEvent[]>("/retreats")
-          .then((r) => r.data.map((e) => ({ ...e, kind: "retreat" as const })))
-          .catch(() => []),
-        axiosInstance
-          .get<BaseEvent[]>("/workshops")
-          .then((r) => r.data.map((e) => ({ ...e, kind: "workshop" as const })))
-          .catch(() => []),
-      ])
-        .then(([retreats, workshops]) => {
-          setItems([...(retreats || []), ...(workshops || [])]);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch retreats/workshops", err);
-          toast({
-            description: "Nie udało się załadować Twoich wyjazdów i warsztatów.",
-            variant: "destructive",
-          });
-        })
-        .finally(() => setLoadingItems(false));
-    }
-  }, [partner, loadingPartner, toast]);
-
-  const formatDate = (dateString: string | null | undefined) => {
-    try {
-      if (!dateString) return "Brak danych";
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Nieprawidłowy format daty";
-      return format(date, "d MMM yyyy");
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Nieprawidłowa data";
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!itemToDelete) return;
-    setIsDeleting(true);
-    try {
-      const endpoint = itemToDelete.kind === "workshop" ? "/workshops" : "/retreats";
-      await axiosInstance.delete(`${endpoint}/${itemToDelete.id}`);
-      toast({
-        description:
-          itemToDelete.kind === "workshop"
-            ? "Warsztat usunięty pomyślnie!"
-            : "Wyjazd usunięty pomyślnie!",
-      });
-      setItems((prev) => prev.filter((it) => it.id !== itemToDelete.id));
-      setItemToDelete(null);
-    } catch (error: any) {
-      console.error("Failed to delete event:", error);
-      toast({
-        description: `Nie udało się usunąć pozycji: ${error.response?.data?.detail || error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleHide = async (event: DashboardItem) => {
-    try {
-      const endpoint = event.kind === "workshop" ? "/workshops" : "/retreats";
-      await axiosInstance.patch(`${endpoint}/${event.id}`, { is_public: false });
-      toast({
-        description:
-          event.kind === "workshop" ? "Warsztat ukryty pomyślnie!" : "Wyjazd ukryty pomyślnie!",
-      });
-      setItems((prev) =>
-        prev.map((item) => (item.id === event.id ? { ...item, is_public: false } : item)),
-      );
-    } catch (error: any) {
-      console.error("Failed to hide event:", error);
-      toast({
-        description: `Nie udało się ukryć pozycji: ${error.response?.data?.detail || error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDuplicate = async (event: DashboardItem) => {
-    try {
-      // Fetch full event data
-      const endpoint = event.kind === "workshop" ? "/workshops" : "/retreats";
-      const response = await axiosInstance.get(`${endpoint}/${event.id}`);
-      const fullEventData = response.data;
-
-      // Transform data to match EventCreate schema format
-      // Convert full instructor/location objects to IDs
-      let duplicateData: any = {
-        title: fullEventData.title,
-        description: fullEventData.description,
-        // start_date: fullEventData.start_date,
-        // end_date: fullEventData.end_date,
-        image_ids: fullEventData.image_ids,
-        price: fullEventData.price,
-        currency: fullEventData.currency,
-        language: fullEventData.language,
-        cancellation_policy: fullEventData.cancellation_policy,
-        important_info: fullEventData.important_info,
-        program: fullEventData.program,
-        // Convert full instructor objects to just IDs
-        instructor_ids: fullEventData.instructors?.map((instr: any) => instr.id) || [],
-        // Convert full location object to just ID
-        location_id: fullEventData.location?.id || null,
-        is_public: false, // Reset to unpublished
-      };
-
-      // Add event-type specific fields
-      if (event.kind === "retreat") {
-        duplicateData = {
-          ...duplicateData,
-          main_attractions: fullEventData.main_attractions,
-          skill_level: fullEventData.skill_level,
-          food_description: fullEventData.food_description,
-          price_includes: fullEventData.price_includes,
-          price_excludes: fullEventData.price_excludes,
-          accommodation_description: fullEventData.accommodation_description,
-          guest_welcome_description: fullEventData.guest_welcome_description,
-          paid_attractions: fullEventData.paid_attractions,
-        };
-      } else if (event.kind === "workshop") {
-        duplicateData = {
-          ...duplicateData,
-          is_online: fullEventData.is_online,
-          is_onsite: fullEventData.is_onsite,
-          goals: fullEventData.goals,
-          tags: fullEventData.tags,
-        };
-      }
-
-      // Convert undefined values to null for proper validation
-      Object.keys(duplicateData).forEach((key) => {
-        if (duplicateData[key] === undefined) {
-          duplicateData[key] = null;
-        }
-      });
-
-      // Store in sessionStorage temporarily
-      sessionStorage.setItem("duplicateEventData", JSON.stringify(duplicateData));
-
-      // Redirect to create page
-      const createLink =
-        event.kind === "workshop"
-          ? `/profile/workshops/create?duplicate=true`
-          : `/profile/retreats/create?duplicate=true`;
-
-      router.push(createLink);
-
-      toast({
-        description: "Duplikowanie wyjazdu...",
-      });
-    } catch (error: any) {
-      console.error("Failed to duplicate event:", error);
-      toast({
-        description: `Nie udało się zduplikować wyjazdu: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loadingPartner) {
-    return <p className="text-center mt-20">Ładowanie...</p>;
-  }
-
-  if (!partner) {
-    return (
-      <p className="text-center mt-20">
-        Nie udało się załadować Twojego profilu. Spróbuj ponownie później.
-      </p>
-    );
-  }
+    axiosInstance
+      .get<MessageListItem[]>("/partner/messages")
+      .then((r) => setMessages(r.data))
+      .catch(() => setMessages([]))
+      .finally(() => setLoadingMessages(false));
+  }, []);
 
   return (
-    <div className="p-6 mx-auto max-w-4xl">
-      <div className="mb-6">
-        <Link
-          href="/profile/instructors"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 border rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors"
-        >
-          <span className="font-medium">Instruktorzy</span>
-          <span className="text-gray-400">→</span>
-        </Link>
-      </div>
+    <div className="max-w-lg mx-auto px-4 py-5 space-y-6">
+      {/* Greeting */}
+      <h1 className="text-xl font-semibold text-gray-900">
+        {getGreeting(user?.name, user?.email)}
+      </h1>
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Twoje ogłoszenia</h1>
-        <button
-          type="button"
-          aria-label="Dodaj nowe ogłoszenie"
-          onClick={() => setIsCreateOpen(true)}
-        >
-          <CustomPlusIconMobile />
-        </button>
-      </div>
-
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Co chcesz dodać?</DialogTitle>
-            <DialogDescription>Wybierz typ ogłoszenia.</DialogDescription>
-          </DialogHeader>
-          <div
-            className={`grid gap-4 pt-2 ${
-              classesEnabled ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"
-            }`}
-          >
-            <Link
-              href={`/profile/retreats/create`}
-              onClick={() => setIsCreateOpen(false)}
-              className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
-            >
-              <img src="/images/logo/logo-retreats.png" className="w-16 h-16" alt="" />
-              <div className="mt-3 text-base font-semibold">Wyjazd</div>
-            </Link>
-            <Link
-              href={`/profile/workshops/create`}
-              onClick={() => setIsCreateOpen(false)}
-              className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
-            >
-              <img src="/images/logo/logo-workshops.png" className="w-16 h-16" alt="" />
-              <div className="mt-3 text-base font-semibold">Wydarzenie</div>
-            </Link>
-            {classesEnabled ? (
-              <Link
-                href={`/profile/classes/create`}
-                onClick={() => setIsCreateOpen(false)}
-                className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center justify-center text-center"
-              >
-                <img src="/images/logo/logo-workshops.png" className="w-16 h-16" alt="" />
-                <div className="mt-3 text-base font-semibold">Zajęcia</div>
-              </Link>
-            ) : null}
+      {/* Rezerwacje */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Rezerwacje</h2>
+        {loadingOrders ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          onClick={() => setActiveTab("all")}
-          className={`px-5 py-2 rounded-full text-sm transition-colors ${
-            activeTab === "all"
-              ? "bg-black text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Wszystkie
-        </button>
-        <button
-          onClick={() => setActiveTab("retreat")}
-          className={`px-5 py-2 rounded-full text-sm transition-colors ${
-            activeTab === "retreat"
-              ? "bg-black text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Wyjazdy
-        </button>
-        <button
-          onClick={() => setActiveTab("workshop")}
-          className={`px-5 py-2 rounded-full text-sm transition-colors ${
-            activeTab === "workshop"
-              ? "bg-black text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Wydarzenia
-        </button>
-      </div>
-
-      <div className="mt-6 space-y-6 max-w-4xl">
-        {loadingItems ? (
-          <p className="text-center text-gray-500">Ładowanie Twoich ogłoszeń...</p>
-        ) : (activeTab === "all"
-            ? items
-            : items.filter((it) => it.kind === (activeTab === "retreat" ? "retreat" : "workshop"))
-          ).length === 0 ? (
-          <div className="text-center py-10 border rounded-lg bg-gray-50">
-            <p className="text-gray-500 mb-4">Nie utworzyłeś jeszcze żadnych ogłoszeń.</p>
-            <Button variant="default" onClick={() => setIsCreateOpen(true)}>
-              Utwórz swoje pierwsze ogłoszenie
-            </Button>
+        ) : orders.length === 0 ? (
+          <div className="rounded-xl border bg-gray-50 py-8 text-center">
+            <p className="text-sm text-gray-400">Brak rezerwacji</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {(activeTab === "all"
-              ? items
-              : items.filter((it) => it.kind === (activeTab === "retreat" ? "retreat" : "workshop"))
-            ).map((event) => {
-              const status = getEventStatus(event);
-              const editLink =
-                event.kind === "workshop"
-                  ? `/profile/workshops/${event.id}/edit`
-                  : `/profile/retreats/${event.id}/edit`;
-
-              const eventImageId = event.image_ids?.[0] || event.image_id;
-              return (
-                <Link
-                  key={event.id}
-                  href={editLink}
-                  className="border rounded-lg shadow-sm bg-white flex flex-col md:flex-row overflow-hidden min-h-[184px] cursor-pointer hover:shadow-md transition-shadow"
-                >
-                  {eventImageId && (
-                    <WyImage
-                      src={eventImageId}
-                      alt={event.title}
-                      width={200}
-                      height={200}
-                      className="object-cover min-w-[200px] w-full md:w-[200px] h-[200px]"
-                    />
+          <div className="divide-y rounded-xl border bg-white overflow-hidden">
+            {orders.slice(0, 5).map((order) => (
+              <Link
+                key={order.id}
+                href={`/profile/orders/${order.id}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {order.customer_name || order.email}
+                  </p>
+                  {order.event_title && (
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{order.event_title}</p>
                   )}
-                  <div className="p-4 flex flex-col justify-between w-full">
-                    <div>
-                      {/* Status above title */}
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className={`px-2 py-0.5 text-xs font-semibold rounded-md w-fit ${status.className}`}
-                        >
-                          {status.text}
-                        </span>
-                        {/* Dropdown menu in top-right */}
-                        <DropdownMenu
-                          open={openDropdownId === event.id}
-                          onOpenChange={(isOpen) => setOpenDropdownId(isOpen ? event.id : null)}
-                        >
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 bg-gray-100 hover:bg-gray-300"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem asChild className="cursor-pointer">
-                              <Link
-                                href={
-                                  event.kind === "workshop"
-                                    ? `/profile/workshops/${event.id}/edit`
-                                    : `/profile/retreats/${event.id}/edit`
-                                }
-                              >
-                                Edytuj
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                handleDuplicate(event);
-                                setOpenDropdownId(null);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              Duplikuj
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="cursor-pointer">
-                              <Link
-                                href={
-                                  event.kind === "workshop"
-                                    ? `/wydarzenia/${event.slug}`
-                                    : `/wyjazdy/${event.slug}`
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                Zobacz stronę publiczną
-                              </Link>
-                            </DropdownMenuItem>
-                            {event.is_public && (
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleHide(event);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                Ukryj
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setItemToDelete(event);
-                                setOpenDropdownId(null);
-                              }}
-                              className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                            >
-                              Usuń
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
-
-                      {event.start_date ? (
-                        <div className="flex flex-row justify-center items-center w-min py-1 gap-2">
-                          <Calendar className="w-[20px] h-[20px] md:w-[20px] md:h-[20px] text-gray-600" />
-                          <span className="text-md font-medium text-gray-600 whitespace-nowrap leading-1 md:pt-[2px]">
-                            {formatDateRange(event.start_date, event.end_date)}
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {/* Footer with emoji - removed action buttons */}
-                    <div className="mt-4 flex justify-end items-center">
-                      <img
-                        src={
-                          event.kind === "workshop"
-                            ? "/images/logo/logo-workshops.png"
-                            : "/images/logo/logo-retreats.png"
-                        }
-                        className="w-5 h-5"
-                        alt=""
-                      />
-                    </div>
-                  </div>
-
-                  {/* Delete confirmation dialog */}
-                  {itemToDelete?.id === event.id && (
-                    <AlertDialog
-                      open={itemToDelete?.id === event.id}
-                      onOpenChange={(open: boolean) => !open && setItemToDelete(null)}
-                    >
-                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie{" "}
-                            {event.kind === "workshop" ? "warsztatu" : "wyjazdu"}
-                            &quot;
-                            <strong>{event.title}</strong>&quot;.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-                          <AlertDialogAction
-                            disabled={isDeleting}
-                            onClick={handleDelete}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            {isDeleting
-                              ? "Usuwanie..."
-                              : `Tak, usuń ${event.kind === "workshop" ? "warsztat" : "wyjazd"}`}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </Link>
-              );
-            })}
+                  <p className="text-xs text-gray-400 mt-0.5">{timeAgo(order.created_at)}</p>
+                </div>
+                <ChevronRight size={16} className="text-gray-400 shrink-0" />
+              </Link>
+            ))}
+            {orders.length > 5 && (
+              <div className="px-4 py-3">
+                <span className="text-xs text-gray-400">
+                  Zobacz wszystkie rezerwacje ({orders.length})
+                </span>
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </section>
+
+      {/* Wiadomości */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Wiadomości</h2>
+        {loadingMessages ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="rounded-xl border bg-gray-50 py-8 text-center">
+            <p className="text-sm text-gray-400">Brak wiadomości</p>
+          </div>
+        ) : (
+          <div className="divide-y rounded-xl border bg-white overflow-hidden">
+            {messages.slice(0, 5).map((msg) => (
+              <Link
+                key={msg.id}
+                href={`/profile/messages/${msg.id}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div className="h-9 w-9 shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-gray-600">
+                    {avatarInitials(msg.email)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {msg.email || "Nieznany nadawca"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{msg.message}</p>
+                </div>
+                <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Dziś w kalendarzu */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+          Dziś w kalendarzu
+        </h2>
+        <div className="rounded-xl border border-dashed bg-gray-50 py-8 text-center">
+          <p className="text-sm text-gray-400">Kalendarz — wkrótce</p>
+        </div>
+      </section>
     </div>
   );
 }

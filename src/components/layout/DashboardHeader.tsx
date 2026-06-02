@@ -27,7 +27,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   isSubmitting,
 }) => {
   return (
-    <div className="sticky top-[65px] z-100 bg-background py-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 md:px-6">
+    <div className="sticky top-16 md:top-20 z-30 bg-background py-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-5 md:px-8">
       <div>
         <h1 className="text-lg font-bold text-gray-900">{title}</h1>
         {/* You can place breadcrumbs or subtitle here using children prop if needed */}

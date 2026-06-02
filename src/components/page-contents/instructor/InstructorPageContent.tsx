@@ -1,9 +1,20 @@
 "use client";
 
 import { Calendar, MessageCircle, User } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { axiosInstance } from "@/lib/axiosInstance";
 import type { InstructorDetails } from "@/types/instructor";
 
 import { AboutSection } from "./components/AboutSection";
@@ -28,6 +39,12 @@ export function InstructorPageContent({ data }: Props) {
   const [isHeroVisible, setIsHeroVisible] = useState(true);
   const [leftButtonMode, setLeftButtonMode] = useState<"about" | "calendar">("about");
   const [citiesExpanded, setCitiesExpanded] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalState, setModalState] = useState<"default" | "error" | "success">("default");
 
   const hasAbout = !!instructor.description;
   const totalUpcoming = upcoming_workshops.length + upcoming_retreats.length;
@@ -71,11 +88,51 @@ export function InstructorPageContent({ data }: Props) {
   const scrollToCalendar = () =>
     calendarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  const resetContactModalState = () => {
+    setModalState("default");
+    setIsSubmitting(false);
+    setEmail("");
+    setPhone("");
+    setMessage("");
+  };
+
+  const handleContactModalOpenChange = (open: boolean) => {
+    setIsContactModalOpen(open);
+    if (!open) {
+      resetContactModalState();
+    }
+  };
+
   const handleLeftButton = () => {
     if (leftButtonMode === "about") {
       scrollToAbout();
     } else {
       scrollToCalendar();
+    }
+  };
+
+  const handleContactSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !message.trim()) return;
+
+    setIsSubmitting(true);
+    setModalState("default");
+
+    try {
+      await axiosInstance.post("/utils/contact/instructor", {
+        instructor_id: instructor.id,
+        email: email.trim(),
+        contact_info: phone.trim() || undefined,
+        message: message.trim(),
+      });
+      setModalState("success");
+      setEmail("");
+      setPhone("");
+      setMessage("");
+    } catch (error) {
+      setModalState("error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -222,6 +279,9 @@ export function InstructorPageContent({ data }: Props) {
           )}
 
           <button
+            type="button"
+            onClick={() => setIsContactModalOpen(true)}
+            aria-label={`Napisz do: ${instructor.name}`}
             className={`${hasAbout ? "flex-1" : "w-full"} h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold`}
             style={{ background: "#222222", color: "#FFFFFF" }}
           >
@@ -230,6 +290,86 @@ export function InstructorPageContent({ data }: Props) {
           </button>
         </div>
       </div>
+
+      <Dialog open={isContactModalOpen} onOpenChange={handleContactModalOpenChange}>
+        <DialogContent className="sm:max-w-[560px]">
+          {modalState === "default" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Napisz do: {instructor.name}</DialogTitle>
+                <DialogDescription>
+                  Wyślij wiadomość, aby dowiedzieć się więcej o współpracy z instruktorem.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleContactSubmit} className="space-y-4">
+                <Input
+                  type="email"
+                  placeholder="Adres e-mail*"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <Input
+                  type="tel"
+                  placeholder="Telefon (opcjonalnie)"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Twoja wiadomość*"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={5}
+                  required
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting || !email.trim() || !message.trim()}
+                >
+                  {isSubmitting ? "Wysyłanie..." : "Wyślij wiadomość"}
+                </Button>
+              </form>
+            </>
+          )}
+
+          {modalState === "error" && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Nie udało się wysłać wiadomości</DialogTitle>
+                <DialogDescription>Spróbuj ponownie za chwilę.</DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => setModalState("default")}>
+                  Spróbuj ponownie
+                </Button>
+                <Button type="button" onClick={() => setIsContactModalOpen(false)}>
+                  Zamknij
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {modalState === "success" && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Wiadomość została wysłana</DialogTitle>
+                <DialogDescription>
+                  Dziękujemy. Organizator otrzyma Twoją wiadomość.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex justify-end">
+                <Button type="button" onClick={() => setIsContactModalOpen(false)}>
+                  Zamknij
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
