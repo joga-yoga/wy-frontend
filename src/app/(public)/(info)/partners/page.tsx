@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { connection } from "next/server";
 
 import { PartnersPageContent } from "@/components/page-contents/(info)/partners/PartnersPageContent";
 import { buildPageMetadata } from "@/lib/seo";
@@ -8,11 +9,13 @@ export const metadata: Metadata = {
     project: "workshops",
     title: "Zostań partnerem | joga.yoga",
     description:
-      "Dołącz do grona organizatorów wydarzeń jogowych. Promuj swoje warsztaty i kursy, docierając do szerokiej grupy odbiorców.",
-    path: "/wydarzenia/partners",
+      "Dodaj ogłoszenie jogowe, profil instruktora, wydarzenie, kurs lub wyjazd i zwiększ swoją widoczność na joga.yoga.",
+    path: "/partners",
   }),
 };
 
-export default function PartnersWorkshopsPage() {
-  return <PartnersPageContent project="workshops" />;
+export default async function PartnersPage() {
+  await connection();
+
+  return <PartnersPageContent />;
 }

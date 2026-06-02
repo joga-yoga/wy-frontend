@@ -1,11 +1,9 @@
-import { CheckCheck, Clock, ImagePlus, Megaphone, Sparkles } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 
 import CustomPartnersComunityIcon from "@/components/icons/CustomPartnersComunityIcon";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import { LogoPartners } from "./components/LogoPartners";
@@ -36,6 +34,42 @@ function polishCountriesLocativePhrase(count: number) {
   const pronoun = isSingular ? "w którym" : "w których";
   return `${noun}, ${pronoun} działamy`;
 }
+
+const addableItems = [
+  {
+    emoji: "🙋",
+    desktopTitle: "Dodaj się jako instruktor jogi",
+    desktopDescription:
+      "Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe przed publikacją",
+    mobileTitle: "Instruktora jogi",
+    mobileDescription: "Twój profil będzie widoczny na platformie jogi dla całej Polski",
+  },
+  {
+    emoji: "🧘‍♀️",
+    desktopTitle: "Wydarzenie jogowe",
+    desktopDescription: "Dodaj zdjęcia, które zainspirują uczestników i oddadzą klimat wydarzenia",
+    mobileTitle: "Wydarzenie jogowe",
+    mobileDescription:
+      "Pokaż warsztaty, spotkanie lub wydarzenie jogowe osobom szukającym jogi w Twoim mieście",
+  },
+  {
+    emoji: "🎓",
+    desktopTitle: "Kurs",
+    desktopDescription: "Udostępnij swoją podróż i rozpocznij zapisy na praktykę",
+    mobileTitle: "Kurs",
+    mobileDescription:
+      "Pokaż kurs jogi osobom, które szukają nauki, praktyki lub kursu dla początkujących",
+  },
+  {
+    emoji: "🏕️",
+    desktopTitle: "Wyjazd z jogą",
+    desktopDescription:
+      "Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie",
+    mobileTitle: "Wyjazd z jogą",
+    mobileDescription:
+      "Dodaj wyjazd z jogą, wakacje jogowe lub weekendową praktykę dla osób z całej Polski",
+  },
+];
 
 async function fetchCachedPublicStats(): Promise<PublicStats> {
   "use cache";
@@ -69,35 +103,27 @@ async function fetchPublicStats(): Promise<PublicStats | null> {
   }
 }
 
-export const PartnersPageContent = async ({ project }: { project: "retreats" | "workshops" }) => {
+export const PartnersPageContent = async () => {
   const statsData = await fetchPublicStats();
   const stats = statsData
     ? [
         {
-          title: String(
-            project === "retreats"
-              ? statsData.total_public_retreats
-              : statsData.total_public_workshops,
-          ),
-          description: `${polishPlural(statsData.total_public_retreats, project === "retreats" ? ["wyjazd", "wyjazdy", "wyjazdów"] : ["wydarzenie", "wydarzenia", "wydarzeń"])} z jogą w kalendarzu`,
-          projects: ["retreats", "workshops"],
+          title: String(statsData.total_public_retreats),
+          description: `${polishPlural(statsData.total_public_retreats, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w kalendarzu`,
+        },
+        {
+          title: String(statsData.total_public_workshops),
+          description: `${polishPlural(statsData.total_public_workshops, ["wydarzenie", "wydarzenia", "wydarzeń"])} z jogą w kalendarzu`,
         },
         {
           title: String(statsData.total_countries_with_public_retreats),
           description: polishCountriesLocativePhrase(
             statsData.total_countries_with_public_retreats,
           ),
-          projects: ["retreats"],
-        },
-        {
-          title: String(statsData.total_public_retreats_in_poland),
-          description: `${polishPlural(statsData.total_public_retreats_in_poland, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w Polsce`,
-          projects: ["retreats"],
         },
         {
           title: String(statsData.total_partners),
-          description: `${polishPlural(statsData.total_partners, ["partner", "partnerzy", "partnerów"])}`,
-          projects: ["retreats", "workshops"],
+          description: `${polishPlural(statsData.total_partners, ["organizator", "organizatorzy", "organizatorów"])}`,
         },
       ]
     : [];
@@ -114,28 +140,27 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
         <div className="container-wy flex flex-row lg:justify-between lg:items-center w-full z-10 mx-auto h-full py-8 lg:py-[80px]">
           <div className="flex flex-col items-center lg:items-start justify-between lg:justify-between h-full px-4 lg:px-8 text-left text-white lg:text-black w-full">
             <Link href="/" className="mb-4 text-2xl font-bold">
-              <LogoPartners
-                project={project}
-                variant="white-with-black-text"
-                className="hidden lg:flex"
-              />
-              <LogoPartners project={project} variant="white" className="lg:hidden" />
+              <LogoPartners variant="white-with-black-text" className="hidden lg:flex" />
+              <LogoPartners variant="white" className="lg:hidden" />
             </Link>
             <div className="flex flex-col gap-4">
-              <h1 className="text-center lg:text-left font-semibold text-4xl lg:text-[92px] lg:leading-[88px] tracking-tight">
-                Współpraca <br />
-                Partnerska
+              <h1 className="text-center lg:text-left font-semibold text-4xl lg:text-[80px] lg:leading-[70px] tracking-tight text-white lg:text-gray-700">
+                Dodaj <br />
+                ogłoszenie
+                <span className="hidden lg:inline">
+                  <br />
+                  jogowe
+                </span>
               </h1>
-              <p className="max-w-xl text-sm font-medium lg:text-2xl text-center lg:text-left ">
-                Publikacja bez opłaty <br />
-                Podlinkuj nas w podziękowaniu
+              <p className="mx-auto max-w-[260px] text-center text-lg font-medium leading-[22px] text-gray-100 lg:mx-0 lg:max-w-xl lg:text-left lg:text-2xl lg:leading-6 lg:text-gray-700">
+                To zajmie tylko kilka minut, ale zwiększy Twoją widoczność
               </p>
               <Link href={"/profile"} className="lg:hidden">
                 <Button
                   size="lg"
-                  className="mt-2 text-black bg-white hover:bg-white/90 duration-200 w-full lg:w-auto"
+                  className="mt-2 h-12 w-full bg-white !text-[22px] !font-medium !leading-[30px] text-black duration-200 hover:bg-white/90 lg:w-auto"
                 >
-                  Dołącz do nas
+                  Zacznij
                 </Button>
               </Link>
             </div>
@@ -144,102 +169,56 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
           </div>
 
           <div className="hidden lg:flex flex-col gap-6 p-12 bg-white/80 rounded-xl shadow-lg ">
-            {stats
-              .filter((stat) => stat.projects.includes(project))
-              .map((stat, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col items-center lg:items-start flex-1 min-w-[300px]"
-                >
-                  <div className="text-h-middle font-semibold text-gray-900">{stat.title}</div>
-                  <div className="text-sub_description text-gray-600 mt-1 text-center lg:text-left">
-                    {stat.description}
-                  </div>
+            {stats.map((stat, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center lg:items-start flex-1 min-w-[300px]"
+              >
+                <div className="text-h-middle font-semibold text-gray-900">{stat.title}</div>
+                <div className="text-sub_description text-gray-600 mt-1 text-center lg:text-left">
+                  {stat.description}
                 </div>
-              ))}
+              </div>
+            ))}
             <Link href={"/profile"}>
-              <Button size="cta" variant="cta" className="w-full rounded-lg">
-                Dołącz do nas
+              <Button
+                size="cta"
+                variant="cta"
+                className="w-full rounded-lg !text-[22px] !font-medium !leading-[30px]"
+              >
+                Zacznij
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* "Jak to wygląda krok po kroku" Section */}
-      <section className="pt-10">
+      <Separator className="container-wy mx-auto my-6 lg:my-10" />
+
+      {/* "Co możesz dodać" Section */}
+      <section className="">
         <div className="container-wy mx-auto px-4 lg:px-8">
-          <h2 className="mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-800">
-            Jak to wygląda krok po kroku
+          <h2 className="mb-6 lg:mb-12 text-center lg:text-left text-[22px] leading-[30px] lg:text-h-big text-gray-600">
+            Co możesz dodać
           </h2>
-          <div className="grid gap-4 lg:gap-8 lg:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-0 shadow-none flex flex-col justify-between">
-              <div>
-                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                  <Sparkles className="h-8 w-8 text-primary mx-auto lg:mx-0" />
-                  <CardTitle className="text-subheader font-medium">
-                    Dodaj szczegóły {project === "retreats" ? "wyjazdu" : "wydarzenia"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-0 pb-4 lg:pb-6">
-                  <p className="text-gray-500 text-sub-descript-18">
-                    Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie.
+          <div className="grid gap-[22px] lg:gap-6 lg:grid-cols-4">
+            {addableItems.map((item) => (
+              <div key={item.desktopTitle} className="flex flex-col gap-[22px]">
+                <div className="text-center text-[46px] leading-[50px]" aria-hidden="true">
+                  {item.emoji}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-[18px] font-medium leading-7 text-gray-800">
+                    <span className="hidden lg:inline">{item.desktopTitle}</span>
+                    <span className="lg:hidden">{item.mobileTitle}</span>
+                  </h3>
+                  <p className="text-[18px] font-medium leading-[22px] text-gray-500">
+                    <span className="hidden lg:inline">{item.desktopDescription}</span>
+                    <span className="lg:hidden">{item.mobileDescription}</span>
                   </p>
-                </CardContent>
+                </div>
               </div>
-
-              <CardFooter className="px-0 flex items-center text-m-sunscript-font text-gray-500">
-                <Clock className="mr-2 h-6 w-6" /> 3 min
-              </CardFooter>
-            </Card>
-            <Card className="border-0 shadow-none flex flex-col justify-between">
-              <div>
-                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                  <ImagePlus className="h-8 w-8 text-primary mx-auto lg:mx-0" />
-                  <CardTitle className="text-subheader font-medium">Dodaj zdjęcia</CardTitle>
-                </CardHeader>
-                <CardContent className="px-0 pb-4 lg:pb-6">
-                  <p className="text-gray-500 text-sub-descript-18">
-                    {project === "retreats"
-                      ? "Dodaj atrakcyjne zdjęcia, pokazujące atmosferę i najważniejsze elementy programu."
-                      : "Dodaj zdjęcia, które zainspirują uczestników i oddadzą klimat wydarzenia"}
-                  </p>
-                </CardContent>
-              </div>
-
-              <CardFooter className="px-0 flex items-center text-m-sunscript-font text-gray-500">
-                <Clock className="mr-2 h-6 w-6" /> 1 min
-              </CardFooter>
-            </Card>
-            <Card className="border-0 shadow-none flex flex-col justify-between">
-              <div>
-                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                  <CheckCheck className="h-8 w-8 text-primary mx-auto lg:mx-0" />
-                  <CardTitle className="text-subheader font-medium">Sprawdź i zatwierdź</CardTitle>
-                </CardHeader>
-                <CardContent className="px-0 pb-4 lg:pb-6">
-                  <p className="text-gray-500 text-sub-descript-18 lg:min-h-[66px]">
-                    Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe.
-                  </p>
-                </CardContent>
-              </div>
-              <CardFooter className="px-0 flex items-center text-m-sunscript-font text-gray-500">
-                <Clock className="mr-2 h-6 w-6" /> 1 min
-              </CardFooter>
-            </Card>
-            <Card className="border-0 shadow-none flex flex-col justify-between">
-              <div>
-                <CardHeader className="px-0 pt-0 pb-2 flex-col gap-5 space-y-0">
-                  <Megaphone className="h-8 w-8 text-primary mx-auto lg:mx-0" />
-                  <CardTitle className="text-subheader font-medium">Publikacja bezpłatna</CardTitle>
-                </CardHeader>
-                <CardContent className="px-0 pb-4 lg:pb-6">
-                  <p className="text-gray-500 text-sub-descript-18">
-                    Udostępnij swoją podróż i rozpocznij zapisy na praktykę.
-                  </p>
-                </CardContent>
-              </div>
-            </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -247,10 +226,10 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
       {/* "Co dostaniesz we wspówpracy" Section */}
       <section className="">
         <div className="container-wy mx-auto px-0 lg:px-8">
-          <h2 className="px-4 lg:px-0 mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-800">
-            Co dostaniesz we wspówpracy z{" "}
+          <h2 className="px-4 lg:px-0 mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-600">
+            Dlaczego warto mieć profil na{" "}
             <span className="text-nowrap">
-              {project === "retreats" ? "wyjazdy" : "wydarzenia"}
+              joga
               <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
                 .yoga
               </span>
@@ -262,19 +241,19 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                 <div>
                   <h3 className="text-subheader">Więcej rezerwacji</h3>
                   <p className="text-sub-descript-18 text-gray-500">
-                    Zwiększ liczbę rezerwacji bez dodatkowego nakładu pracy.
+                    Zwiększ liczbę rezerwacji bez dodatkowego nakładu pracy
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-subheader">Transparentne warunki</h3>
+                  <h3 className="text-subheader">Dodatkowy sygnał dla Google</h3>
                   <p className="text-sub-descript-18 text-gray-500">
-                    Zero ukrytych kosztów, tylko prośba o link.
+                    Profil na joga.yoga pomaga budować obecność marki w wynikach wyszukiwania
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-subheader">Szerszy zasięg marki</h3>
+                  <h3 className="text-subheader">Wszystkie wydarzenia razem</h3>
                   <p className="text-sub-descript-18 text-gray-500">
-                    Twoja nazwa trafia jeszce dalej.
+                    Warsztaty, kursy i wyjazdy dostępne pod jednym profilem
                   </p>
                 </div>
               </div>
@@ -295,8 +274,7 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
                   <div>
                     <h3 className="text-subheader">Siła wspólnoty</h3>
                     <p className="text-m-sunscript-font lg:text-sub-descript-18 text-gray-500">
-                      Społeczność {project === "retreats" ? "joga.yoga" : "joga.yoga"} wspiera Twoje{" "}
-                      {project === "retreats" ? "wyjazdy" : "wydarzenia"}
+                      Społeczność joga.yoga wspiera Twoje ogłoszenia jogowe
                     </p>
                   </div>
                 </div>
@@ -304,21 +282,27 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
               <div className="flex flex-col lg:flex-row gap-6 w-full">
                 <div className="gap-6 w-full h-full flex flex-col justify-around">
                   <div>
-                    <h3 className="text-subheader">Zaufanie społeczności</h3>
+                    <h3 className="text-subheader">Aktualizacja bez programisty</h3>
                     <p className="text-sub-descript-18 text-gray-500">
-                      Budujesz zaufanie wśród joginek i joginów
+                      Zmieniaj informacje samodzielnie, bez pomocy agencji i webmasterów
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-subheader">Link, który możesz wysłać wszędzie</h3>
+                    <p className="text-sub-descript-18 text-gray-500">
+                      Jeden adres do udostępniania w social mediach, mailach i komunikatorach
                     </p>
                   </div>
                   <div>
                     <h3 className="text-subheader">Wspólna misja</h3>
                     <p className="text-sub-descript-18 text-gray-500">
-                      Razem szerzymy spokój i radość jogi.
+                      Razem szerzymy spokój i radość jogi
                     </p>
                   </div>
                 </div>
                 <div className="relative min-w-[212px] lg:h-[212px]">
                   <Image
-                    src="/images/partners/meditation2.png"
+                    src="/images/partners/asana-yoga.png"
                     alt="Community"
                     width={212}
                     height={212}
@@ -334,27 +318,27 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
       {/* "Intencja" Section */}
       <section className="pb-10">
         <div className="container-wy mx-auto px-4 lg:px-8">
-          <h2 className="mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-800">
+          <h2 className="mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-600">
             Intencja
           </h2>
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
             <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-4 w-full rounded-2xl bg-white p-8 border border-gray-100 shadow-[0px_8px_16px_8px_#F2F2F3]">
-              <LogoPartners variant="black" className="w-full" project={project} />
+              <LogoPartners variant="black" className="w-full" />
               <div className="space-y-6 w-full">
-                <div className="flex text-gray-800 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
+                <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
+                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl text-gray-700">
                     एकम
                   </span>
                   <span>Działaj z serca - reszta przyjdzie naturalnie</span>
                 </div>
-                <div className="flex text-gray-800 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
+                <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
+                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl text-gray-700">
                     द्वे
                   </span>
                   <span>Najważniejsze dzieje się w trakcie</span>
                 </div>
-                <div className="flex text-gray-800 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl italic text-gray-700">
+                <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
+                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl text-gray-700">
                     त्रीणि
                   </span>
                   <span>Możesz nie być doskonały, ale bądź prawdziwy</span>
@@ -381,20 +365,20 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
 
               <div className="flex flex-col gap-6">
                 <div className="flex justify-between text-lg lg:max-w-[370px] w-full h-full">
-                  <span className="mr-2 min-w-12 w-12 font-serif text-2xl italic text-gray-700 hidden lg:block">
+                  <span className="mr-2 min-w-12 w-12 font-serif text-2xl text-gray-700 hidden lg:block">
                     चत्वारि
                   </span>
-                  <span className="text-left lg:text-center text-subheader text-gray-800 lg:pr-5">
+                  <span className="text-left lg:text-center text-subheader text-gray-500 lg:pr-5">
                     Nie musisz być wielki, by zacząć
                   </span>
                 </div>
                 <Link href={"/profile"}>
                   <Button
                     size="lg"
-                    className="w-full bg-gray-600 text-white hover:bg-gray-600/90"
+                    className="h-12 w-full bg-gray-600 !text-[22px] !font-medium !leading-[30px] text-white hover:bg-gray-600/90"
                     variant="secondary"
                   >
-                    Dołącz
+                    Zacznij
                   </Button>
                 </Link>
               </div>
@@ -402,6 +386,7 @@ export const PartnersPageContent = async ({ project }: { project: "retreats" | "
           </div>
         </div>
       </section>
+      <Separator className="container-wy mx-auto my-6 lg:my-10" />
     </div>
   );
 };
