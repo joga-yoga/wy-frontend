@@ -4,11 +4,9 @@ import { cn } from "@/lib/utils";
 export const LogoPartners = ({
   className,
   variant = "white",
-  project,
 }: {
   className?: string;
   variant?: "white" | "black" | "white-with-black-text";
-  project: "retreats" | "workshops";
 }) => {
   return (
     <div className={cn("flex flex-col items-center gap-2 md:gap-3", className)}>
@@ -25,12 +23,15 @@ export const LogoPartners = ({
         />
       </div>
       <p
-        className={`flex items-center text-xl md:text-h-middle ${variant === "white" ? "text-white" : "text-gray-800"}`}
+        className={cn(
+          "flex items-center text-xl !font-medium md:text-h-middle",
+          variant === "black" ? "text-gray-800" : "text-white",
+        )}
       >
-        {project === "retreats" ? "wyjazdy" : "wydarzenia"}
+        joga
         <span
           className={cn(
-            "inline-block rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px]",
+            "inline-block rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] !font-medium",
             variant === "white" && "bg-gray-800 text-white",
             variant === "white-with-black-text" && "bg-gray-800 text-white",
             variant === "black" && "bg-gray-600 text-white",

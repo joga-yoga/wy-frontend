@@ -9,32 +9,27 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
 
-  const staticRoutes = ["/", "/contact", "/policy", "/terms"].map((route) => ({
+  const staticRoutes = ["/", "/partners", "/contact", "/policy", "/terms"].map((route) => ({
     url: `${BASE_URL}${route}`,
     changeFrequency: "monthly" as const,
     priority: route === "/" ? 1 : 0.7,
   }));
 
-  const staticWorkshopRoutes = [
-    "/wydarzenia/faq/travelers",
-    "/wydarzenia/faq/organizers",
-    "/wydarzenia/partners",
-  ].map((route) => ({
-    url: `${BASE_URL}${route}`,
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  }));
+  const staticWorkshopRoutes = ["/wydarzenia/faq/travelers", "/wydarzenia/faq/organizers"].map(
+    (route) => ({
+      url: `${BASE_URL}${route}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }),
+  );
 
-  const staticRetreatRoutes = [
-    "/wyjazdy",
-    "/wyjazdy/faq/travelers",
-    "/wyjazdy/faq/organizers",
-    "/wyjazdy/partners",
-  ].map((route) => ({
-    url: `${BASE_URL}${route}`,
-    changeFrequency: "monthly" as const,
-    priority: route === "/wyjazdy" ? 0.9 : 0.7,
-  }));
+  const staticRetreatRoutes = ["/wyjazdy", "/wyjazdy/faq/travelers", "/wyjazdy/faq/organizers"].map(
+    (route) => ({
+      url: `${BASE_URL}${route}`,
+      changeFrequency: "monthly" as const,
+      priority: route === "/wyjazdy" ? 0.9 : 0.7,
+    }),
+  );
 
   let workshopRoutes: MetadataRoute.Sitemap = [];
   try {
