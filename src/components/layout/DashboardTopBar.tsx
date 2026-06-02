@@ -22,6 +22,11 @@ function getPageTitle(pathname: string): string | undefined {
   if (TAB_TITLES[pathname]) return TAB_TITLES[pathname];
   if (pathname.startsWith("/profile/orders/")) return "Rezerwacja";
   if (pathname.startsWith("/profile/messages/")) return "Wiadomość";
+  if (pathname.startsWith("/profile/instructors/") && pathname.endsWith("/edit"))
+    return "Edytuj instruktora";
+  if (pathname === "/profile/instructors/create") return "Nowy instruktor";
+  if (pathname === "/profile/retreats/create") return "Nowy wyjazd";
+  if (pathname === "/profile/workshops/create") return "Nowe wydarzenie";
   return undefined;
 }
 

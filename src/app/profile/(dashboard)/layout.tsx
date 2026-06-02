@@ -59,8 +59,12 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <NavigationBlockerProvider>
       <DashboardTopBar />
-      <main className={isMainTab ? "pb-28" : undefined}>{children}</main>
-      <BottomTabBar />
+      <div className="md:flex">
+        <BottomTabBar />
+        <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
+          {children}
+        </main>
+      </div>
     </NavigationBlockerProvider>
   );
 }

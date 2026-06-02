@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, MessageCircle, User } from "lucide-react";
+import { Calendar, MapPin, MessageCircle, User } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
@@ -27,6 +27,70 @@ interface Props {
 
 function Divider() {
   return <div style={{ height: "1px", background: "#EBEBEB" }} />;
+}
+
+function StylePills({ yogaStyles }: { yogaStyles: Props["data"]["instructor"]["yoga_styles"] }) {
+  return (
+    <>
+      {yogaStyles.slice(0, 4).map((style) => {
+        const name = style.yoga_style?.name ?? style.custom_name ?? "";
+        if (!name) return null;
+        return (
+          <span
+            key={style.id}
+            className="text-[13px] font-medium px-3 py-1 rounded-full"
+            style={{ background: "#F7F7F7", border: "1px solid #D9D9D9", color: "#444444" }}
+          >
+            {name}
+          </span>
+        );
+      })}
+      {yogaStyles.length > 4 && (
+        <span
+          className="text-[13px] font-medium px-3 py-1 rounded-full"
+          style={{ background: "#F7F7F7", border: "1px solid #D9D9D9", color: "#B0B0B0" }}
+        >
+          +{yogaStyles.length - 4}
+        </span>
+      )}
+    </>
+  );
+}
+
+function CitiesRow({
+  cities,
+  displayCities,
+  hiddenCitiesCount,
+  citiesExpanded,
+  onExpand,
+}: {
+  cities: { place_id: string; name: string }[];
+  displayCities: { place_id: string; name: string }[];
+  hiddenCitiesCount: number;
+  citiesExpanded: boolean;
+  onExpand: () => void;
+}) {
+  if (cities.length === 0) return null;
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "#B0B0B0" }} />
+      {displayCities.map((city, i) => (
+        <span key={city.place_id} className="text-sm" style={{ color: "#717171" }}>
+          {city.name}
+          {i < displayCities.length - 1 ? " ·" : ""}
+        </span>
+      ))}
+      {!citiesExpanded && hiddenCitiesCount > 0 && (
+        <button
+          onClick={onExpand}
+          className="text-sm font-medium underline underline-offset-2"
+          style={{ color: "#222222" }}
+        >
+          +{hiddenCitiesCount} więcej
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function InstructorPageContent({ data }: Props) {
@@ -138,13 +202,13 @@ export function InstructorPageContent({ data }: Props) {
 
   return (
     <div style={{ backgroundColor: "#FFFFFF", color: "#222222" }} className="min-h-screen">
-      {/* Main content */}
       <div className="container-wy mx-auto">
         {/* Hero */}
-        <div ref={heroRef} className="px-4 pt-8 pb-6">
-          <div className="flex items-start gap-4">
+        <div ref={heroRef} className="px-4 pt-4 pb-6 space-y-4">
+          {/* Avatar + name row */}
+          <div className="flex items-center gap-4">
             <div
-              className="relative h-[72px] w-[72px] rounded-full overflow-hidden flex-shrink-0"
+              className="relative h-16 w-16 rounded-full overflow-hidden flex-shrink-0"
               style={{ background: "#FEF3C7" }}
             >
               {instructor.image_id ? (
@@ -153,7 +217,7 @@ export function InstructorPageContent({ data }: Props) {
                   alt={instructor.name}
                   fill
                   className="object-cover"
-                  sizes="72px"
+                  sizes="64px"
                 />
               ) : (
                 <span
@@ -164,66 +228,35 @@ export function InstructorPageContent({ data }: Props) {
                 </span>
               )}
             </div>
-
-            <div className="flex-1 flex flex-col gap-2 min-w-0">
-              <h1 className="text-xl font-bold leading-tight" style={{ color: "#222222" }}>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold leading-tight" style={{ color: "#222222" }}>
                 {instructor.name}
               </h1>
-
               {instructor.short_bio && (
-                <p className="text-sm leading-snug" style={{ color: "#717171" }}>
+                <p className="text-sm mt-1 leading-snug" style={{ color: "#717171" }}>
                   {instructor.short_bio}
                 </p>
               )}
-
-              {yogaStyles.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {yogaStyles.slice(0, 3).map((style) => {
-                    const name = style.yoga_style?.name ?? style.custom_name ?? "";
-                    if (!name) return null;
-                    return (
-                      <span
-                        key={style.id}
-                        className="text-xs px-2.5 py-0.5 rounded-full"
-                        style={{
-                          background: "#F7F7F7",
-                          border: "1px solid #EBEBEB",
-                          color: "#717171",
-                        }}
-                      >
-                        {name}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-
-              {cities.length > 0 && (
-                <div className="flex items-center gap-1 flex-wrap">
-                  {displayCities.map((city, i) => (
-                    <span key={city.place_id} className="text-sm" style={{ color: "#717171" }}>
-                      {city.name}
-                      {i < displayCities.length - 1 ? " ·" : ""}
-                    </span>
-                  ))}
-                  {!citiesExpanded && hiddenCitiesCount > 0 && (
-                    <button
-                      onClick={() => setCitiesExpanded(true)}
-                      className="text-sm font-medium underline underline-offset-2"
-                      style={{ color: "#222222" }}
-                    >
-                      +{hiddenCitiesCount} więcej
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Styles + cities — full width below */}
+          {yogaStyles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              <StylePills yogaStyles={yogaStyles} />
+            </div>
+          )}
+          <CitiesRow
+            cities={cities}
+            displayCities={displayCities}
+            hiddenCitiesCount={hiddenCitiesCount}
+            citiesExpanded={citiesExpanded}
+            onExpand={() => setCitiesExpanded(true)}
+          />
         </div>
 
         <Divider />
 
-        {/* scroll-mt-14 offsets the 56px sticky header when scrolled into view */}
         <div ref={calendarRef} className="scroll-mt-14">
           <CalendarSection
             upcomingWorkshops={upcoming_workshops}
@@ -236,18 +269,15 @@ export function InstructorPageContent({ data }: Props) {
         {hasAbout && (
           <>
             <Divider />
-            {/* Zero-height sentinel: observed for enter/leave to drive the left bottom button.
-                scroll-mt-14 keeps the "O mnie" heading clear of the sticky header. */}
             <div ref={aboutSentinelRef} className="scroll-mt-14" />
             <AboutSection instructor={instructor} />
           </>
         )}
 
-        {/* Bottom padding so last content clears the fixed bottom bar (~72px) */}
         <div className="h-24" />
       </div>
 
-      {/* Fixed bottom bar — always visible */}
+      {/* Fixed bottom bar */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t"
         style={{ borderColor: "#EBEBEB" }}
@@ -277,7 +307,6 @@ export function InstructorPageContent({ data }: Props) {
               </span>
             </button>
           )}
-
           <button
             type="button"
             onClick={() => setIsContactModalOpen(true)}

@@ -3,7 +3,6 @@
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +19,6 @@ export function YogaStyleSelector({ value, onChange }: Props) {
   const [catalog, setCatalog] = useState<YogaStyle[]>([]);
   const [customName, setCustomName] = useState("");
   const [showCustom, setShowCustom] = useState(false);
-  const [uploadingIconIndex, setUploadingIconIndex] = useState<number | null>(null);
-  const [iconPreviewUrls, setIconPreviewUrls] = useState<Record<number, string>>({});
 
   useEffect(() => {
     axiosInstance
@@ -48,50 +45,7 @@ export function YogaStyleSelector({ value, onChange }: Props) {
   };
 
   const removeItem = (index: number) => {
-    const url = iconPreviewUrls[index];
-    if (url) URL.revokeObjectURL(url);
-    setIconPreviewUrls((prev) => {
-      const next = { ...prev };
-      delete next[index];
-      return next;
-    });
     onChange(value.filter((_, i) => i !== index));
-  };
-
-  const handleIconSelect = async (index: number, file: File) => {
-    const previewUrl = URL.createObjectURL(file);
-    setIconPreviewUrls((prev) => ({ ...prev, [index]: previewUrl }));
-    setUploadingIconIndex(index);
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const { data } = await axiosInstance.post<{ image_id: string }>(
-        "/instructors/image-upload",
-        fd,
-      );
-      onChange(value.map((v, i) => (i === index ? { ...v, custom_icon_id: data.image_id } : v)));
-    } catch {
-      // keep empty on failure
-    } finally {
-      setUploadingIconIndex(null);
-      URL.revokeObjectURL(previewUrl);
-      setIconPreviewUrls((prev) => {
-        const next = { ...prev };
-        delete next[index];
-        return next;
-      });
-    }
-  };
-
-  const handleIconRemove = (index: number) => {
-    const url = iconPreviewUrls[index];
-    if (url) URL.revokeObjectURL(url);
-    setIconPreviewUrls((prev) => {
-      const next = { ...prev };
-      delete next[index];
-      return next;
-    });
-    onChange(value.map((v, i) => (i === index ? { ...v, custom_icon_id: null } : v)));
   };
 
   return (
@@ -128,19 +82,6 @@ export function YogaStyleSelector({ value, onChange }: Props) {
                 <X size={14} />
               </button>
             </div>
-
-            {isCustom && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Ikona stylu (opcjonalnie)</p>
-                <SingleImageUpload
-                  existingImageId={item.custom_icon_id ?? null}
-                  imagePreviewUrl={iconPreviewUrls[i] ?? null}
-                  isUploading={uploadingIconIndex === i}
-                  onRemove={() => handleIconRemove(i)}
-                  onFileSelect={(file) => handleIconSelect(i, file)}
-                />
-              </div>
-            )}
 
             <Textarea
               placeholder="Opis (opcjonalnie)"

@@ -32,28 +32,30 @@ export default function CreateEventPage() {
   const [prompt, setPrompt] = useState("");
   const { toast } = useToast();
 
-  // Load duplicated event data from sessionStorage
+  // Reset to options on every mount (guards against Next.js router cache state persistence)
   useEffect(() => {
     if (isDuplicate) {
       try {
         const duplicateData = sessionStorage.getItem("duplicateEventData");
         if (duplicateData) {
-          const parsedData = JSON.parse(duplicateData);
-          setGeneratedData(parsedData);
+          setGeneratedData(JSON.parse(duplicateData));
           setView("form");
-          // Clear the data after loading
           sessionStorage.removeItem("duplicateEventData");
         }
-      } catch (error) {
-        console.error("Failed to load duplicated event data:", error);
+      } catch {
         toast({
           title: "Błąd",
           description: "Nie udało się załadować danych zduplikowanego wyjazdu.",
           variant: "destructive",
         });
       }
+    } else {
+      setView("options");
+      setGeneratedData(null);
+      setUrl("");
+      setPrompt("");
     }
-  }, [isDuplicate, toast]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Validate URL format
   const isValidUrl = (urlString: string): boolean => {
@@ -158,67 +160,64 @@ export default function CreateEventPage() {
   return (
     <div className="container max-w-4xl mx-auto py-10 px-4 md:px-10">
       {view === "options" && (
-        <>
-          <h1 className="text-3xl font-bold mb-8 text-center">Utwórz nowy wyjazd</h1>
-          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
-                  <IoSparkles className="h-5 w-5" />
-                  PROMPT
-                </CardTitle>
-                <CardDescription>
-                  Napisz parę słów o swoim wyjeździe – AI przygotuje całą resztę
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => setView("prompt-input")} className="w-full">
-                  Wybierz
-                </Button>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
+                <IoSparkles className="h-5 w-5" />
+                PROMPT
+              </CardTitle>
+              <CardDescription>
+                Napisz parę słów o swoim wyjeździe – AI przygotuje całą resztę
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setView("prompt-input")} className="w-full">
+                Wybierz
+              </Button>
+            </CardContent>
+          </Card>
 
-            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
-                  <AiOutlineLink className="h-5 w-5" />
-                  LINK
-                </CardTitle>
-                <CardDescription>
-                  Wklej link do strony, a wszystkie dane zostaną pobrane automatycznie
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => setView("url-input")} className="w-full">
-                  Wybierz
-                </Button>
-              </CardContent>
-            </Card>
+          <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
+                <AiOutlineLink className="h-5 w-5" />
+                LINK
+              </CardTitle>
+              <CardDescription>
+                Wklej link do strony, a wszystkie dane zostaną pobrane automatycznie
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setView("url-input")} className="w-full">
+                Wybierz
+              </Button>
+            </CardContent>
+          </Card>
 
-            <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
-                  <PencilIcon className="h-5 w-5" />
-                  RĘCZNIE
-                </CardTitle>
-                <CardDescription>
-                  Utwórz wyjazd od podstaw, wypełniając wszystkie pola formularza ręcznie.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => {
-                    setGeneratedData(null);
-                    setView("form");
-                  }}
-                  className="w-full"
-                >
-                  Wybierz
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </>
+          <Card className="hover:shadow-lg transition-shadow flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 mb-4 text-gray-600 font-semibold">
+                <PencilIcon className="h-5 w-5" />
+                RĘCZNIE
+              </CardTitle>
+              <CardDescription>
+                Utwórz wyjazd od podstaw, wypełniając wszystkie pola formularza ręcznie.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => {
+                  setGeneratedData(null);
+                  setView("form");
+                }}
+                className="w-full"
+              >
+                Wybierz
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {view === "url-input" && (

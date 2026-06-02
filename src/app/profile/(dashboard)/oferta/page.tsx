@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronRight, ExternalLink, MoreVertical, Pencil, Plus } from "lucide-react";
+import { Calendar, ExternalLink, ImageIcon, MoreVertical, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -136,15 +136,15 @@ function EventCard({
         isPast && "opacity-60",
       )}
     >
-      {imageId && (
-        <WyImage
-          src={imageId}
-          alt={event.title}
-          width={88}
-          height={88}
-          className="object-cover w-[88px] shrink-0"
-        />
-      )}
+      <div className="relative w-[140px] shrink-0 self-stretch">
+        {imageId ? (
+          <WyImage src={imageId} alt={event.title} fill className="object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+            <ImageIcon className="w-6 h-6 text-gray-300" />
+          </div>
+        )}
+      </div>
       <div className="p-3 flex flex-col justify-between w-full min-w-0">
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -193,7 +193,7 @@ function EventCard({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <h3 className="text-sm font-semibold text-gray-800 truncate">{event.title}</h3>
+          <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">{event.title}</h3>
           {event.start_date && (
             <div className="flex items-center gap-1 mt-0.5">
               <Calendar className="w-3.5 h-3.5 text-gray-500" />
@@ -627,11 +627,6 @@ export default function OfertaPage() {
                     const styleNames = instructor.yoga_styles
                       .map((s) => s.yoga_style?.name)
                       .join(" · ");
-                    console.log(
-                      "🚀 ~ OfertaPage ~ instructor.yoga_styles:",
-                      instructor.yoga_styles,
-                    );
-
                     const initials = instructor.name
                       .split(" ")
                       .slice(0, 2)
@@ -817,13 +812,13 @@ function EventSection({
       <div className="flex items-center justify-between pt-0.5">
         <button
           onClick={onShowAll}
-          className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
         >
           Zobacz wszystkie ({totalCount}) →
         </button>
         <Link
           href={createPath}
-          className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
         >
           <Plus size={14} />
           {createLabel}

@@ -67,10 +67,9 @@ export default function OrderDetailPage() {
     );
   }
 
-  const eventDate =
-    order.event_start_date
-      ? formatDateRange(order.event_start_date, order.event_end_date ?? undefined)
-      : null;
+  const eventDate = order.event_start_date
+    ? formatDateRange(order.event_start_date, order.event_end_date ?? undefined)
+    : null;
 
   const reservedAt = formatDistanceToNow(new Date(order.created_at), {
     addSuffix: true,

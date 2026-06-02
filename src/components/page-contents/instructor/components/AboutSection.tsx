@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, BookOpen, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Award, ChevronLeft, ChevronRight, Globe, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
@@ -82,18 +82,18 @@ function LanguagesBlock({ languages }: { languages: string[] }) {
   if (languages.length === 0) return null;
   return (
     <div className="px-4 pt-5">
-      <p
-        className="text-xs font-semibold uppercase tracking-widest mb-2.5"
-        style={{ color: "#B0B0B0" }}
-      >
-        Prowadzę zajęcia w językach
-      </p>
+      <div className="flex items-center gap-1.5 mb-3">
+        <Globe className="h-4 w-4" style={{ color: "#717171" }} />
+        <p className="text-sm font-semibold" style={{ color: "#444444" }}>
+          Prowadzę zajęcia w językach
+        </p>
+      </div>
       <div className="flex flex-wrap gap-2">
         {languages.map((code) => (
           <span
             key={code}
-            className="text-sm px-3 py-1.5 rounded-full"
-            style={{ background: "#F7F7F7", border: "1px solid #EBEBEB", color: "#222222" }}
+            className="text-[13px] font-medium px-3 py-1 rounded-full"
+            style={{ background: "#F7F7F7", border: "1px solid #D9D9D9", color: "#444444" }}
           >
             {LANGUAGE_FULL[code] ?? code.toUpperCase()}
           </span>
@@ -105,29 +105,20 @@ function LanguagesBlock({ languages }: { languages: string[] }) {
 
 function YogaStyleCard({ style }: { style: InstructorYogaStyle }) {
   const name = style.yoga_style?.name ?? style.custom_name ?? "";
-  const iconId = style.yoga_style?.icon_id ?? style.custom_icon_id;
   if (!name) return null;
 
   return (
     <div className="flex items-start gap-3 px-4 py-2.5">
-      <div
-        className="relative flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden"
-        style={{ background: "#F7F7F7", border: "1px solid #EBEBEB" }}
-      >
-        {iconId ? (
-          <WyImage src={iconId} alt={name} fill className="object-cover" sizes="40px" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <BookOpen className="h-4 w-4" style={{ color: "#B0B0B0" }} />
-          </div>
-        )}
-      </div>
+      <span
+        className="mt-[7px] h-1.5 w-1.5 rounded-full flex-shrink-0"
+        style={{ background: "#B0B0B0" }}
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-semibold" style={{ color: "#222222" }}>
+        <p className="text-[15px] font-semibold leading-tight" style={{ color: "#222222" }}>
           {name}
         </p>
         {style.description && (
-          <p className="text-sm mt-0.5" style={{ color: "#717171" }}>
+          <p className="text-sm mt-1 leading-snug" style={{ color: "#717171" }}>
             {style.description}
           </p>
         )}
@@ -168,7 +159,7 @@ function PhotoGrid({ photoIds, onOpen }: { photoIds: string[]; onOpen: (index: n
   const cells = hasMore ? photoIds.slice(0, 5) : photoIds.slice(0, maxCells);
 
   return (
-    <div className="px-4 pt-2 pb-4 grid grid-cols-3 gap-1.5">
+    <div className="px-4 pt-2 pb-4 grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
       {cells.map((id, i) => (
         <button
           key={id}
@@ -176,7 +167,13 @@ function PhotoGrid({ photoIds, onOpen }: { photoIds: string[]; onOpen: (index: n
           className="relative aspect-square rounded-lg overflow-hidden"
           style={{ background: "#F7F7F7" }}
         >
-          <WyImage src={id} alt="" fill className="object-cover" sizes="120px" />
+          <WyImage
+            src={id}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(min-width: 640px) 160px, 120px"
+          />
         </button>
       ))}
       {hasMore && (
@@ -190,7 +187,7 @@ function PhotoGrid({ photoIds, onOpen }: { photoIds: string[]; onOpen: (index: n
             alt=""
             fill
             className="object-cover opacity-40"
-            sizes="120px"
+            sizes="(min-width: 640px) 160px, 120px"
           />
           <span
             className="absolute inset-0 flex items-center justify-center text-sm font-semibold"

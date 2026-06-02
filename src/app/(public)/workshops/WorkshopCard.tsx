@@ -23,9 +23,10 @@ import { Event } from "../retreats/types";
 
 interface WorkshopCardProps {
   event: Event;
+  className?: string;
 }
 
-export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
+export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event, className }) => {
   const { bookmarkedEventIds, addBookmark, removeBookmark } = useEventsFilter();
 
   const displayLocationTitle = renderShortLocation(event.location);
@@ -60,7 +61,12 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event }) => {
   const nextButtonClass = `event-swiper-next-${event.id}`;
 
   return (
-    <div className="box-border flex flex-col items-start p-5 md:p-[22px] gap-4 md:gap-[22px] w-full md:bg-white md:border-[4px] md:border-gray-50 md:shadow-[0px_8px_16px_8px_#FAFAFA] md:rounded-[22px]">
+    <div
+      className={cn(
+        "box-border flex flex-col items-start p-5 md:p-[22px] gap-4 md:gap-[22px] w-full md:bg-white md:border-[4px] md:border-gray-50 md:shadow-[0px_8px_16px_8px_#FAFAFA] md:rounded-[22px]",
+        className,
+      )}
+    >
       <div className="flex flex-row items-center p-0 gap-2 md:gap-4 w-full h-[32px] md:h-[55px] self-stretch">
         <div className="flex flex-row justify-center items-center p-0 bg-gray-100 px-4 md:px-4 py-0.5 md:py-1.5 rounded-[4px] gap-2 md:gap-3">
           <Calendar className="w-[28px] h-[28px] md:w-[28px] md:h-[28px]" />
