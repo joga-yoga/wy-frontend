@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { WyImage } from "../custom/WyImage";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
+import LogoBlackIcon from "../icons/LogoBlackIcon";
 import { LogoFooter } from "./Footer";
 
 // Transition matching Airbnb's cubic-bezier(0.2, 0, 0, 1)
@@ -52,22 +53,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
           href={logoHref}
           className="flex items-center justify-center w-[40px] h-[40px]"
         >
-          <svg
-            viewBox="0 0 50 50"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full"
-          >
-            <circle cx="25" cy="25" r="25" fill="#313C42" />
-            <path
-              d="M20.4763 13.9364C20.9611 14.5 21.9834 16.4697 22.8341 18.3999C24.487 22.1878 25.1433 23.1288 26.1399 23.1288C27.0636 23.1288 27.89 22.1637 28.9838 19.7992C31.1958 15.0221 31.5604 14.2983 32.1681 13.6468C32.873 12.923 33.7237 12.7782 33.9425 13.3573C34.3557 14.3948 32.5327 19.1478 28.7651 26.9891C25.6045 33.7689 23.6119 36.64 22.4209 36.64C21.6493 36.58 21.4679 35.8 22.2264 34.5409C24.3169 30.4393 24.0495 28.0749 20.6708 20.137C18.8687 16.06 18.313 14.0329 18.556 13.3814C18.8234 12.73 19.6256 12.9471 20.4763 13.9364Z"
-              fill="#F8FAFC"
-            />
-            <path
-              d="M19.2313 34.9C19.2313 36.0598 18.2841 37 17.1157 37C15.9472 37 15 36.0598 15 34.9C15 33.7402 15.9472 32.8 17.1157 32.8C18.2841 32.8 19.2313 33.7402 19.2313 34.9Z"
-              fill="#F8FAFC"
-            />
-          </svg>
+          <LogoBlackIcon className="h-full w-full" />
         </LinkWithBlocker>
 
         <div className="flex items-center gap-4">
@@ -103,8 +89,7 @@ export const PublicHeader = () => {
   const isWydarzenia =
     pathname === "/" || pathname.startsWith("/wydarzenia") || pathname.startsWith("/wydarzenia/");
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
-  const sectionPrefix = isWyjazdy ? "/wyjazdy" : "/wydarzenia";
-  const isPartnersPage = pathname === "/wydarzenia/partners" || pathname === "/wyjazdy/partners";
+  const isPartnersPage = pathname === "/partners";
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -220,7 +205,7 @@ export const PublicHeader = () => {
         {/* Right Section: Actions & Profile */}
         <div className="ml-auto flex items-center gap-3 md:gap-3 self-center">
           <Link
-            href={`${sectionPrefix}/partners`}
+            href="/partners"
             passHref
             className={cn(isMainPage ? undefined : "hidden md:inline-block")}
           >
@@ -230,11 +215,7 @@ export const PublicHeader = () => {
               </p>
             </button>
           </Link>
-          <Link
-            href={`${sectionPrefix}/partners`}
-            passHref
-            className={cn(isMainPage ? "hidden" : "md:hidden")}
-          >
+          <Link href="/partners" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
             <button
               aria-label="Add Event"
               className="group text-black h-10 w-10 flex items-center justify-center relative"

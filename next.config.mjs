@@ -69,6 +69,11 @@ const nextConfig = {
 
       // ── joga.yoga internal redirects ──
 
+      // Canonical partners page
+      { source: "/wydarzenia/partners", destination: "/partners", permanent: true },
+      { source: "/wyjazdy/partners", destination: "/partners", permanent: true },
+      { source: "/workshops/partners", destination: "/partners", permanent: true },
+      { source: "/retreats/partners", destination: "/partners", permanent: true },
       // /wydarzenia is redundant — / is canonical
       { source: "/wydarzenia", destination: "/", permanent: true },
       // Old English paths → Polish paths (bare + wildcard, explicit for RSC reliability)
