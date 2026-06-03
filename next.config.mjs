@@ -69,6 +69,8 @@ const nextConfig = {
 
       // ── joga.yoga internal redirects ──
 
+      // Specific retreat redirects (renamed/replaced slugs)
+      { source: "/wyjazdy/april-6-retreat-by-karina-krueger", destination: "/wyjazdy/nepal", permanent: true },
       // Canonical partners page
       { source: "/wydarzenia/partners", destination: "/partners", permanent: true },
       { source: "/wyjazdy/partners", destination: "/partners", permanent: true },
