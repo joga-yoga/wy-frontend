@@ -71,6 +71,7 @@ const nextConfig = {
 
       // Specific retreat redirects (renamed/replaced slugs)
       { source: "/wyjazdy/april-6-retreat-by-karina-krueger", destination: "/wyjazdy/nepal", permanent: true },
+      { source: "/wyjazdy/podroz-w-glab-siebie-retreat-z-wykladami-thay-thien-sona-joga-i-medytacja", destination: "/wyjazdy/karkonosze", permanent: true },
       // Canonical partners page
       { source: "/wydarzenia/partners", destination: "/partners", permanent: true },
       { source: "/wyjazdy/partners", destination: "/partners", permanent: true },
