@@ -12,6 +12,7 @@ import { LogoFooter } from "@/components/layout/Footer";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 
 const MAIN_TAB_PATHS = ["/profile", "/profile/oferta", "/profile/konto"];
+const BECOME_PARTNER_PATH = "/profile/become-partner";
 
 const TAB_TITLES: Record<string, string> = {
   "/profile/oferta": "Oferta",
@@ -58,6 +59,10 @@ export function DashboardTopBar() {
   const searchParams = useSearchParams();
   const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
   const isMainTab = MAIN_TAB_PATHS.includes(pathname);
+  // On become-partner the user has no partner profile yet, so back-navigation can
+  // only lead into guarded pages (or the login bounce). Show the logo as a safe
+  // exit to the public site instead of a back button.
+  const showHomeLogo = isMainTab || pathname === BECOME_PARTNER_PATH;
   const title = getPageTitle(pathname);
   const showPlus = pathname === "/profile/oferta";
 
@@ -75,7 +80,7 @@ export function DashboardTopBar() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b h-16 md:h-20 relative flex items-center px-5 md:px-8">
-      {isMainTab ? (
+      {showHomeLogo ? (
         <LinkWithBlocker href="/" aria-label="Strona główna" className="shrink-0">
           <LogoFooter />
         </LinkWithBlocker>
