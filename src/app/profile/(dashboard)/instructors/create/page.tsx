@@ -1,337 +1,230 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { SingleImageUpload } from "@/components/common/SingleImageUpload";
+import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import type { CertificateItem, CityItem, InstructorYogaStyleIn } from "@/types/instructor";
 
-import { CertificatesField } from "../[instructorId]/edit/components/CertificatesField";
-import { CitySearchField } from "../[instructorId]/edit/components/CitySearchField";
-import { InstructorPhotoGallery } from "../[instructorId]/edit/components/InstructorPhotoGallery";
-import { LanguageMultiSelect } from "../[instructorId]/edit/components/LanguageMultiSelect";
-import { YogaStyleSelector } from "../[instructorId]/edit/components/YogaStyleSelector";
+type Step = "identify" | "preview";
 
-const schema = z.object({
-  name: z.string().min(1, "Imię i nazwisko jest wymagane"),
-  description: z.string().optional(),
-  short_bio: z.string().max(120, "Maksymalnie 120 znaków").optional(),
-  image_id: z.string().optional(),
-  photo_ids: z.array(z.string()).optional(),
-  languages: z.array(z.string()).optional(),
-  cities: z.array(z.any()).optional(),
-  certificates: z.array(z.any()).optional(),
-  yoga_styles: z.array(z.any()).optional(),
+interface PreviewData {
+  instructor_id: string;
+  name: string;
+  image_id: string | null;
+  claim_status: string;
+}
+
+const CLAIM_STATUS_LABEL: Record<string, string> = {
+  claimed: "Ma konto",
+  invited: "Zaproszony/a",
+  invitable: "Bez konta",
+  legacy: "Bez e-maila",
+};
+
+const emailSchema = z.object({
+  email: z.string().email("Podaj poprawny adres e-mail"),
 });
 
-type FormValues = z.infer<typeof schema>;
+type EmailForm = z.infer<typeof emailSchema>;
 
 export default function InstructorCreatePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string | null>(null);
-  const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
-  const [isProfileImageRemoved, setIsProfileImageRemoved] = useState(false);
+  const { user } = useAuth();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      description: "",
-      short_bio: "",
-      image_id: "",
-      photo_ids: [],
-      languages: [],
-      cities: [],
-      certificates: [],
-      yoga_styles: [],
-    },
+  const [step, setStep] = useState<Step>("identify");
+  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
+  const [isItsMe, setIsItsMe] = useState(false);
+
+  const form = useForm<EmailForm>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: { email: "" },
   });
 
-  const handleProfileImageSelect = async (file: File) => {
-    const preview = URL.createObjectURL(file);
-    setProfileImagePreviewUrl(preview);
-    setIsUploadingProfileImage(true);
-    setIsProfileImageRemoved(false);
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const { data } = await axiosInstance.post<{ image_id: string }>(
-        "/instructors/image-upload",
-        fd,
-      );
-      form.setValue("image_id", data.image_id);
-    } catch {
-      toast({ title: "Nie udało się przesłać zdjęcia profilowego", variant: "destructive" });
-    } finally {
-      setIsUploadingProfileImage(false);
-      URL.revokeObjectURL(preview);
-      setProfileImagePreviewUrl(null);
+  // Reset all local state on every mount (guards against client-side navigation stale state)
+  const isMountedRef = useRef(false);
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setStep("identify");
+      setPreview(null);
+      setIsItsMe(false);
+      form.reset({ email: "" });
     }
-  };
+    isMountedRef.current = true;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleProfileImageRemove = () => {
-    if (profileImagePreviewUrl) URL.revokeObjectURL(profileImagePreviewUrl);
-    setProfileImagePreviewUrl(null);
-    setIsProfileImageRemoved(true);
-    form.setValue("image_id", "");
-  };
-
-  const onSubmit = async (values: FormValues) => {
-    try {
-      await axiosInstance.post("/instructors", {
-        name: values.name,
-        description: values.description || null,
-        short_bio: values.short_bio || null,
-        image_id: isProfileImageRemoved ? null : values.image_id || null,
-        photo_ids: (values.photo_ids ?? []).length ? values.photo_ids : null,
-        languages: (values.languages ?? []).length ? values.languages : null,
-        cities: (values.cities ?? []).length ? values.cities : null,
-        certificates: (values.certificates ?? []).length ? values.certificates : null,
-        yoga_styles: values.yoga_styles ?? [],
+  // Check if user already has a claimed instructor
+  useEffect(() => {
+    axiosInstance
+      .get<Array<{ is_claimed: boolean; email: string | null }>>("/instructors")
+      .then(({ data }) => {
+        const claimed =
+          user != null &&
+          data.some(
+            (i) =>
+              i.is_claimed === true ||
+              (i.email && i.email.toLowerCase() === user.email.toLowerCase()),
+          );
+        setAlreadyClaimed(claimed);
+      })
+      .catch(() => {
+        // silently ignore — just show "It's me" by default
       });
-      toast({ title: "Instruktor utworzony" });
-      router.push("/profile/oferta");
-    } catch {
-      toast({ title: "Nie udało się utworzyć instruktora", variant: "destructive" });
+  }, [user]);
+
+  async function handleItsMe() {
+    setIsItsMe(true);
+    try {
+      const res = await axiosInstance.post<{ id: string }>("/instructors/self", {});
+      toast({ description: "Twój profil instruktora gotowy!" });
+      router.push(`/profile/instructors/${res.data.id}/edit`);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Nie udało się utworzyć profilu.", variant: "destructive" });
+      setIsItsMe(false);
     }
-  };
+  }
+
+  async function onEmailSubmit(data: EmailForm) {
+    try {
+      const res = await axiosInstance.post<{
+        instructor_id: string;
+        claim_status: string;
+        created: boolean;
+        name?: string | null;
+        image_id?: string | null;
+      }>("/instructors/resolve", { email: data.email });
+
+      if (res.data.created) {
+        // New stub — go straight to full edit form
+        router.push(`/profile/instructors/${res.data.instructor_id}/edit`);
+      } else {
+        setPreview({
+          instructor_id: res.data.instructor_id,
+          name: res.data.name ?? data.email,
+          image_id: res.data.image_id ?? null,
+          claim_status: res.data.claim_status,
+        });
+        setStep("preview");
+      }
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Wystąpił błąd. Spróbuj ponownie.", variant: "destructive" });
+    }
+  }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-28">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Imię i nazwisko *</FormLabel>
-                <FormDescription>
-                  Wyświetlane publicznie na listach instruktorów i stronach wydarzeń
-                </FormDescription>
-                <FormControl>
-                  <Input {...field} placeholder="np. Anna Kowalska" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+    <div className="max-w-md mx-auto px-4 py-10 space-y-8">
+      {step === "identify" && (
+        <>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold">Dodaj instruktora</h1>
+            <p className="text-sm text-muted-foreground">
+              Podaj e-mail instruktora — sprawdzimy, czy jest już w systemie.
+            </p>
+          </div>
+
+          {!alreadyClaimed && (
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 rounded-md border p-4 text-left hover:bg-muted/50 transition-colors"
+              onClick={handleItsMe}
+              disabled={isItsMe}
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-primary" />
+              <span className="text-sm font-medium">To ja — prowadzę te zajęcia osobiście</span>
+            </button>
+          )}
+
+          <form onSubmit={form.handleSubmit(onEmailSubmit)} className="space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="email">E-mail instruktora</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="instruktor@example.com"
+                {...form.register("email")}
+              />
+              {form.formState.errors.email && (
+                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Jeśli instruktor jest już w systemie, połączymy profile. Jeśli nie — wyślemy mu
+                zaproszenie.
+              </p>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Sprawdzam..." : "Dalej →"}
+            </Button>
+          </form>
+        </>
+      )}
+
+      {step === "preview" && preview && (
+        <>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold">Instruktor znaleziony</h1>
+            <p className="text-sm text-muted-foreground">
+              Ten e-mail jest już przypisany do istniejącego instruktora.
+            </p>
+          </div>
+
+          <div className="rounded-md border p-4 flex items-center gap-3">
+            <WyImage
+              src={
+                preview.image_id ||
+                `https://avatar.vercel.sh/${preview.name.replace(/\s+/g, "_")}.png?size=56`
+              }
+              alt={preview.name}
+              width={56}
+              height={56}
+              className="rounded-full object-cover border min-h-[56px] flex-shrink-0"
+            />
+            <div className="min-w-0 space-y-0.5">
+              <p className="font-medium truncate">{preview.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {CLAIM_STATUS_LABEL[preview.claim_status] ?? preview.claim_status}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {preview.claim_status === "claimed" ? (
+              <p className="text-sm text-muted-foreground rounded-md border p-3">
+                Ten instruktor jest już połączony z kontem. Możesz dodać go bezpośrednio do
+                wydarzenia z formularza wydarzeń — nie wymaga to żadnych dodatkowych kroków.
+              </p>
+            ) : (
+              <Button
+                onClick={() => router.push(`/profile/instructors/${preview.instructor_id}/edit`)}
+              >
+                Przejdź do profilu instruktora →
+              </Button>
             )}
-          />
-
-          <FormField
-            control={form.control}
-            name="image_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Zdjęcie profilowe</FormLabel>
-                <FormDescription>
-                  Główne zdjęcie widoczne na listach zajęć i publicznym profilu instruktora
-                </FormDescription>
-                <SingleImageUpload
-                  existingImageId={isProfileImageRemoved ? null : field.value || null}
-                  imagePreviewUrl={profileImagePreviewUrl}
-                  isUploading={isUploadingProfileImage}
-                  onRemove={handleProfileImageRemove}
-                  isRemoved={isProfileImageRemoved}
-                  onFileSelect={handleProfileImageSelect}
-                  disabled={form.formState.isSubmitting}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Separator />
-
-          <FormField
-            control={form.control}
-            name="short_bio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Twoje zdanie o sobie{" "}
-                  <span className="text-muted-foreground text-xs font-normal">
-                    (maks. 120 znaków)
-                  </span>
-                </FormLabel>
-                <FormDescription>
-                  Napisz jedno zdanie, które jak najlepiej opisuje Ciebie i Twój styl — wyświetlane
-                  przy nazwisku i przyciąga uwagę uczestników
-                </FormDescription>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    rows={2}
-                    placeholder="np. Certyfikowana instruktorka Hatha i Vinyasy z 10-letnim doświadczeniem"
-                  />
-                </FormControl>
-                <div className="text-xs text-muted-foreground text-right">
-                  {field.value?.length ?? 0}/120
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pełny opis</FormLabel>
-                <FormDescription>
-                  Biogram na publicznym profilu — opisz swoją drogę, filozofię i podejście do jogi
-                </FormDescription>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    rows={6}
-                    placeholder="np. Moją przygodę z jogą rozpoczęłam ponad 10 lat temu..."
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Separator />
-
-          <FormField
-            control={form.control}
-            name="photo_ids"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Galeria zdjęć</FormLabel>
-                <FormDescription>
-                  Pomagają uczestnikom poznać instruktora — zdjęcia z zajęć, treningów lub wydarzeń
-                </FormDescription>
-                <InstructorPhotoGallery
-                  value={(field.value ?? []) as string[]}
-                  onChange={field.onChange}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Separator />
-
-          <FormField
-            control={form.control}
-            name="languages"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Języki prowadzenia zajęć</FormLabel>
-                <FormDescription>
-                  Uczestnicy filtrują wydarzenia po języku — zaznacz wszystkie, w których prowadzisz
-                  zajęcia
-                </FormDescription>
-                <FormControl>
-                  <LanguageMultiSelect
-                    value={(field.value ?? []) as string[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="cities"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Lokalizacje</FormLabel>
-                <FormDescription>
-                  Pomagają uczestnikom znaleźć Cię w wyszukiwaniu — dodaj miasta, w których
-                  regularnie uczysz
-                </FormDescription>
-                <FormControl>
-                  <CitySearchField
-                    value={(field.value ?? []) as CityItem[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Separator />
-
-          <FormField
-            control={form.control}
-            name="yoga_styles"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Style jogi</FormLabel>
-                <FormDescription>
-                  Widoczne na profilu i w filtrach wyszukiwania — zaznacz style, w których się
-                  specjalizujesz
-                </FormDescription>
-                <FormControl>
-                  <YogaStyleSelector
-                    value={(field.value ?? []) as InstructorYogaStyleIn[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Separator />
-
-          <FormField
-            control={form.control}
-            name="certificates"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Certyfikaty i ukończone szkolenia</FormLabel>
-                <FormDescription>
-                  Budują wiarygodność i zaufanie uczestników — dodaj ukończone kursy, szkolenia
-                  nauczycielskie i certyfikaty
-                </FormDescription>
-                <FormControl>
-                  <CertificatesField
-                    value={(field.value ?? []) as CertificateItem[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Fixed bottom action bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 flex justify-end safe-area-bottom">
-            <Button type="submit" disabled={form.formState.isSubmitting || isUploadingProfileImage}>
-              <Save size={15} className="mr-1.5" />
-              {form.formState.isSubmitting ? "Tworzę..." : "Utwórz instruktora"}
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStep("identify");
+                setPreview(null);
+                form.reset({ email: "" });
+              }}
+            >
+              ← Podaj inny e-mail
             </Button>
           </div>
-        </form>
-      </Form>
+        </>
+      )}
     </div>
   );
 }

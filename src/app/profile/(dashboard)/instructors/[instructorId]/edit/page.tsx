@@ -49,6 +49,7 @@ import { LanguageMultiSelect } from "./components/LanguageMultiSelect";
 import { YogaStyleSelector } from "./components/YogaStyleSelector";
 
 const schema = z.object({
+  email: z.union([z.literal(""), z.string().email("Podaj poprawny adres e-mail")]).optional(),
   name: z.string().min(1, "Imię i nazwisko jest wymagane"),
   description: z.string().optional(),
   short_bio: z.string().max(120, "Maksymalnie 120 znaków").optional(),
@@ -68,6 +69,10 @@ export default function InstructorProfileEditPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [slug, setSlug] = useState<string | null>(null);
+  const [existingEmail, setExistingEmail] = useState<string | null>(null);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [isOwnClaimedInstructor, setIsOwnClaimedInstructor] = useState(false);
+  const [isInviting, setIsInviting] = useState(false);
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string | null>(null);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const [isProfileImageRemoved, setIsProfileImageRemoved] = useState(false);
@@ -76,6 +81,7 @@ export default function InstructorProfileEditPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
+      email: "",
       description: "",
       short_bio: "",
       image_id: "",
@@ -92,8 +98,13 @@ export default function InstructorProfileEditPage() {
       .get<InstructorProfile>(`/instructors/${params.instructorId}`)
       .then(({ data }) => {
         setSlug(data.slug);
+        const instructorEmail = data.email ?? null;
+        setExistingEmail(instructorEmail);
+        setClaimStatus(data.claim_status ?? null);
+        setIsOwnClaimedInstructor(data.is_claimed || data.claim_status === "claimed");
         form.reset({
           name: data.name,
+          email: instructorEmail ?? "",
           description: data.description ?? "",
           short_bio: data.short_bio ?? "",
           image_id: data.image_id ?? "",
@@ -146,8 +157,20 @@ export default function InstructorProfileEditPage() {
   };
 
   const onSubmit = async (values: FormValues) => {
+    const emailValue = (values.email ?? "").trim();
+    if (!isOwnClaimedInstructor && !emailValue) {
+      form.setError("email", { message: "E-mail instruktora jest wymagany" });
+      return;
+    }
+    const normalizedExistingEmail = existingEmail?.trim().toLowerCase() ?? null;
+    const normalizedEmailValue = emailValue.toLowerCase();
+    const didChangeEmail =
+      !isOwnClaimedInstructor &&
+      Boolean(emailValue) &&
+      normalizedEmailValue !== normalizedExistingEmail;
     try {
-      await axiosInstance.put(`/instructors/${params.instructorId}`, {
+      const payload = {
+        ...(!isOwnClaimedInstructor ? { email: emailValue } : {}),
         name: values.name,
         description: values.description || null,
         short_bio: values.short_bio || null,
@@ -157,10 +180,60 @@ export default function InstructorProfileEditPage() {
         cities: (values.cities ?? []).length ? values.cities : null,
         certificates: (values.certificates ?? []).length ? values.certificates : null,
         yoga_styles: values.yoga_styles ?? [],
-      });
-      toast({ title: "Profil zapisany", description: "Zmiany zostały pomyślnie zapisane." });
-    } catch {
+      };
+      const { data: updated } = await axiosInstance.put<InstructorProfile>(
+        `/instructors/${params.instructorId}`,
+        payload,
+      );
+      setClaimStatus(updated.claim_status ?? null);
+      setExistingEmail(updated.email ?? (isOwnClaimedInstructor ? existingEmail : emailValue));
+      setIsOwnClaimedInstructor(updated.is_claimed || updated.claim_status === "claimed");
+      if (didChangeEmail && updated.claim_status === "invited") {
+        toast({
+          title: "Profil zapisany",
+          description: `Poprzednie zaproszenie zostało wyłączone. Nowe zaproszenie wysłano na ${updated.email ?? emailValue}.`,
+        });
+      } else {
+        toast({ title: "Profil zapisany", description: "Zmiany zostały pomyślnie zapisane." });
+      }
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "";
+      if (
+        detail.toLowerCase().includes("email") ||
+        detail.toLowerCase().includes("already exists")
+      ) {
+        form.setError("email", {
+          message: "Ten e-mail jest już przypisany do innego instruktora.",
+        });
+        return;
+      }
       toast({ title: "Nie udało się zapisać profilu", variant: "destructive" });
+    }
+  };
+
+  const handleReinvite = async () => {
+    setIsInviting(true);
+    try {
+      await axiosInstance.post(`/instructors/${params.instructorId}/reinvite`);
+      setClaimStatus("invited");
+      toast({
+        title: "Zaproszenie wysłane",
+        description: "Instruktor otrzyma e-mail z linkiem do przejęcia profilu.",
+      });
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 429) {
+        toast({
+          title: "Za szybko",
+          description: "Zaproszenie zostało już wysłane. Spróbuj ponownie za kilka minut.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Nie udało się wysłać zaproszenia", variant: "destructive" });
+      }
+    } finally {
+      setIsInviting(false);
     }
   };
 
@@ -186,6 +259,55 @@ export default function InstructorProfileEditPage() {
     <div className="max-w-2xl mx-auto px-4 py-6 pb-28">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {!isOwnClaimedInstructor && (
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail instruktora *</FormLabel>
+                  <FormDescription>
+                    Wymagany do przejęcia profilu. Nie wyświetlamy go publicznie.
+                  </FormDescription>
+                  <FormControl>
+                    <Input {...field} type="email" placeholder="instruktor@example.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {existingEmail && (claimStatus === "invitable" || claimStatus === "invited") && (
+            <div className="flex items-center gap-3 rounded-md border p-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">
+                  {claimStatus === "invited"
+                    ? "Zaproszenie wysłane — oczekuje na odpowiedź"
+                    : "Instruktor jeszcze nie przejął profilu"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {claimStatus === "invited"
+                    ? "Możesz wysłać zaproszenie ponownie, jeśli instruktor go nie otrzymał."
+                    : "Wyślij zaproszenie e-mailem, aby instruktor mógł przejąć swój profil."}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleReinvite}
+                disabled={isInviting}
+              >
+                {isInviting
+                  ? "Wysyłam..."
+                  : claimStatus === "invited"
+                    ? "Wyślij ponownie"
+                    : "Wyślij zaproszenie"}
+              </Button>
+            </div>
+          )}
+
           <FormField
             control={form.control}
             name="name"

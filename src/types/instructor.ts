@@ -36,6 +36,7 @@ export interface InstructorProfile {
   id: string;
   partner_id: string;
   name: string;
+  email: string | null;
   description: string | null;
   short_bio: string | null;
   slug: string | null;
@@ -45,6 +46,10 @@ export interface InstructorProfile {
   photo_ids: string[] | null;
   certificates: CertificateItem[] | null;
   yoga_styles: InstructorYogaStyle[];
+  created_by_partner_id: string | null;
+  claimed_at: string | null;
+  is_claimed: boolean;
+  claim_status: "claimed" | "invited" | "invitable" | "legacy" | null;
   created_at: string;
   updated_at: string;
 }
@@ -75,6 +80,7 @@ export interface InstructorDetails {
 
 export interface InstructorUpdatePayload {
   name?: string;
+  email?: string | null;
   description?: string | null;
   short_bio?: string | null;
   image_id?: string | null;

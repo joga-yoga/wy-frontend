@@ -1,6 +1,6 @@
-import { Edit2, HelpCircle, PlusCircle, Trash2 } from "lucide-react";
+import { Edit2, PlusCircle, X } from "lucide-react";
 import Link from "next/link";
-import { Control, Controller, FieldErrors, UseFormSetValue } from "react-hook-form";
+import { Control, Controller, FieldErrors } from "react-hook-form";
 
 import { WyImage } from "@/components/custom/WyImage";
 import { Instructor } from "@/components/instructors/InstructorModal";
@@ -18,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { EventFormData } from "@/lib/schemas/event";
 
 import { useEventHelpBar } from "../contexts/EventHelpBarContext";
@@ -27,10 +26,8 @@ import { EventHelpBarTipButton } from "./EventHelpBar";
 interface EventInstructorsSectionProps {
   control: Control<EventFormData>;
   errors: FieldErrors<EventFormData>;
-  setValue: UseFormSetValue<EventFormData>;
   instructors: Instructor[];
   setIsInstructorModalOpen: (isOpen: boolean) => void;
-  handleEditInstructor: (instructor: Instructor) => void;
   instructorToDelete: Instructor | null;
   setInstructorToDelete: (instructor: Instructor | null) => void;
   isDeletingInstructor: boolean;
@@ -40,7 +37,6 @@ interface EventInstructorsSectionProps {
 export const EventInstructorsSection = ({
   control,
   errors,
-  setValue,
   instructors,
   setIsInstructorModalOpen,
   instructorToDelete,
@@ -75,117 +71,117 @@ export const EventInstructorsSection = ({
         <Controller
           control={control}
           name="instructor_ids"
-          render={({ field }) => (
-            <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
-              <div className="w-full rounded-md p-1" onClick={() => focusTip("instructors")}>
-                <div className="space-y-3">
-                  {instructors.length > 0 ? (
-                    instructors.map((instructor) => (
-                      <div
-                        key={instructor.id}
-                        className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow duration-200"
-                      >
-                        <div className="flex items-center gap-3 flex-grow">
-                          <WyImage
-                            src={
-                              instructor.image_id ||
-                              `https://avatar.vercel.sh/${instructor.name.replace(/\s+/g, "_")}.png?size=40`
-                            }
-                            alt={instructor.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover border min-h-[40px]"
-                          />
-                          <Label
-                            htmlFor={`instructor-switch-${instructor.id}`}
-                            className="font-medium cursor-pointer text-sm"
-                          >
-                            {instructor.name}
-                          </Label>
-                        </div>
+          render={({ field }) => {
+            const selectedInstructors = instructors.filter((instructor) =>
+              field.value?.includes(instructor.id),
+            );
 
-                        <div className="flex items-center flex-shrink-0 gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2"
-                            aria-label={`Edit ${instructor.name}`}
-                            asChild
+            return (
+              <AlertDialog onOpenChange={(open) => !open && setInstructorToDelete(null)}>
+                <div className="w-full rounded-md p-1" onClick={() => focusTip("instructors")}>
+                  <div className="space-y-3">
+                    {selectedInstructors.length > 0 ? (
+                      selectedInstructors.map((instructor) => {
+                        const canEdit = instructor.is_owned === true || !instructor.is_foreign;
+
+                        return (
+                          <div
+                            key={instructor.id}
+                            className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow duration-200"
                           >
-                            <Link
-                              href={`/profile/instructors/${instructor.id}/edit`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Edit2 size={16} className="text-muted-foreground" />
-                            </Link>
-                          </Button>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setInstructorToDelete(instructor)}
-                              className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              aria-label={`Delete ${instructor.name}`}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <Switch
-                            id={`instructor-switch-${instructor.id}`}
-                            checked={field.value?.includes(instructor.id)}
-                            onCheckedChange={(checked) => {
-                              const currentIds = field.value || [];
-                              if (checked) {
-                                field.onChange([...currentIds, instructor.id]);
-                              } else {
-                                field.onChange(currentIds.filter((id) => id !== instructor.id));
-                              }
-                            }}
-                            className="ml-2"
-                          />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-center py-4 text-gray-500">
-                      Nie znaleziono instruktorów. Kliknij &quot;Dodaj Instruktora&quot;, aby dodać
-                      nowego.
-                    </p>
+                            <div className="flex items-center gap-3 flex-grow">
+                              <WyImage
+                                src={
+                                  instructor.image_id ||
+                                  `https://avatar.vercel.sh/${instructor.name.replace(/\s+/g, "_")}.png?size=40`
+                                }
+                                alt={instructor.name}
+                                width={40}
+                                height={40}
+                                className="rounded-full object-cover border min-h-[40px]"
+                              />
+                              <p className="font-medium text-sm">{instructor.name}</p>
+                            </div>
+
+                            <div className="flex items-center flex-shrink-0 gap-2">
+                              {!canEdit && (
+                                <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full border">
+                                  Zewnętrzny
+                                </span>
+                              )}
+                              {canEdit && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                  aria-label={`Edytuj ${instructor.name}`}
+                                  asChild
+                                >
+                                  <Link
+                                    href={`/profile/instructors/${instructor.id}/edit`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Edit2 size={16} className="text-muted-foreground" />
+                                  </Link>
+                                </Button>
+                              )}
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setInstructorToDelete(instructor)}
+                                  className="h-8 px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                  aria-label={`Usuń ${instructor.name} z tego wydarzenia`}
+                                >
+                                  <X size={16} />
+                                </Button>
+                              </AlertDialogTrigger>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-sm text-center py-4 text-gray-500">
+                        Nie dodano jeszcze instruktorów do tego wydarzenia.
+                      </p>
+                    )}
+                  </div>
+                  {instructorToDelete && (
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Usunąć instruktora z tego wydarzenia?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Instruktor &quot;<strong>{instructorToDelete.name}</strong>&quot; zniknie
+                          z tego wydarzenia. Profil instruktora i lista zapisanych instruktorów
+                          pozostaną bez zmian.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingInstructor}>
+                          Anuluj
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          disabled={isDeletingInstructor}
+                          onClick={handleDeleteInstructor}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isDeletingInstructor ? "Usuwanie..." : "Usuń z wydarzenia"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
                   )}
+                  <div
+                    ref={field.ref}
+                    tabIndex={-1}
+                    className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                  />
                 </div>
-                {instructorToDelete && (
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Na pewno usunąć instruktora?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie instruktora &quot;
-                        <strong>{instructorToDelete.name}</strong>&quot; z Twojej listy i wszystkich
-                        powiązanych wydarzeń.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel disabled={isDeletingInstructor}>Anuluj</AlertDialogCancel>
-                      <AlertDialogAction
-                        disabled={isDeletingInstructor}
-                        onClick={handleDeleteInstructor}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        {isDeletingInstructor ? "Usuwanie..." : "Tak, usuń"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                )}
-                <div
-                  ref={field.ref}
-                  tabIndex={-1}
-                  className="absolute w-0 h-0 opacity-0 pointer-events-none"
-                />
-              </div>
-            </AlertDialog>
-          )}
+              </AlertDialog>
+            );
+          }}
         />
         {errors.instructor_ids && (
           <p className="text-sm text-destructive">{errors.instructor_ids.message}</p>

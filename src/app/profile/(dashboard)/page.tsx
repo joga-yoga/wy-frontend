@@ -6,7 +6,9 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 interface OrderListItem {
@@ -29,6 +31,24 @@ interface MessageListItem {
   created_at: string;
 }
 
+interface InvitationItem {
+  id: string;
+  instructor_id: string;
+  instructor_name: string;
+  event_title: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+interface InstructorListItem {
+  id: string;
+  name: string;
+  image_id: string | null;
+  short_bio: string | null;
+  slug: string | null;
+  is_owned?: boolean;
+}
+
 function getGreeting(name: string | undefined, email: string | undefined): string {
   const display = name?.split(" ")[0] || email?.split("@")[0] || "";
   return display ? `Dzień dobry, ${display} 👋` : "Dzień dobry 👋";
@@ -49,10 +69,16 @@ function timeAgo(dateStr: string): string {
 
 export default function AktywnoscPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [messages, setMessages] = useState<MessageListItem[]>([]);
+  const [invitations, setInvitations] = useState<InvitationItem[]>([]);
+  const [instructors, setInstructors] = useState<InstructorListItem[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(true);
+  const [loadingInstructors, setLoadingInstructors] = useState(true);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
 
   useEffect(() => {
     axiosInstance
@@ -66,7 +92,54 @@ export default function AktywnoscPage() {
       .then((r) => setMessages(r.data))
       .catch(() => setMessages([]))
       .finally(() => setLoadingMessages(false));
+
+    axiosInstance
+      .get<InvitationItem[]>("/users/me/invitations")
+      .then((r) => setInvitations(r.data))
+      .catch(() => setInvitations([]));
+
+    Promise.all([
+      axiosInstance.get<InstructorListItem[]>("/instructors").catch(() => ({ data: [] })),
+      axiosInstance.get<InstructorListItem[]>("/instructor-roster").catch(() => ({ data: [] })),
+    ])
+      .then(([ownedResponse, rosterResponse]) => {
+        const merged = new Map<string, InstructorListItem>();
+        for (const instructor of rosterResponse.data) {
+          merged.set(instructor.id, { ...instructor, is_owned: instructor.is_owned === true });
+        }
+        for (const instructor of ownedResponse.data) {
+          merged.set(instructor.id, { ...instructor, is_owned: true });
+        }
+        setInstructors([...merged.values()]);
+      })
+      .finally(() => setLoadingInstructors(false));
   }, []);
+
+  async function handleAccept(invitationId: string) {
+    setAcceptingId(invitationId);
+    try {
+      await axiosInstance.post(`/users/me/invitations/${invitationId}/accept`);
+      setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+      toast({ description: "Profil instruktora połączony z Twoim kontem!" });
+    } catch {
+      toast({ description: "Nie udało się zaakceptować zaproszenia.", variant: "destructive" });
+    } finally {
+      setAcceptingId(null);
+    }
+  }
+
+  async function handleDecline(invitationId: string) {
+    setDecliningId(invitationId);
+    try {
+      await axiosInstance.post(`/users/me/invitations/${invitationId}/decline`);
+      setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+      toast({ description: "Zaproszenie odrzucone." });
+    } catch {
+      toast({ description: "Nie udało się odrzucić zaproszenia.", variant: "destructive" });
+    } finally {
+      setDecliningId(null);
+    }
+  }
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-6">
@@ -74,6 +147,48 @@ export default function AktywnoscPage() {
       <h1 className="text-xl font-semibold text-gray-900">
         {getGreeting(user?.name, user?.email)}
       </h1>
+
+      {/* Zaproszenia — only shown when there are pending invitations */}
+      {invitations.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            Zaproszenia
+          </h2>
+          <div className="divide-y rounded-xl border bg-white overflow-hidden">
+            {invitations.map((inv) => (
+              <div key={inv.id} className="px-4 py-3 space-y-2">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    Zaproszenie do profilu instruktora:{" "}
+                    <span className="font-semibold">{inv.instructor_name}</span>
+                  </p>
+                  {inv.event_title && (
+                    <p className="text-xs text-gray-500 mt-0.5">Wydarzenie: {inv.event_title}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-0.5">Wygasa {timeAgo(inv.expires_at)}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleAccept(inv.id)}
+                    disabled={acceptingId === inv.id || decliningId === inv.id}
+                  >
+                    {acceptingId === inv.id ? "Akceptuję..." : "Zaakceptuj"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDecline(inv.id)}
+                    disabled={acceptingId === inv.id || decliningId === inv.id}
+                  >
+                    {decliningId === inv.id ? "Odrzucam..." : "Odrzuć"}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Rezerwacje */}
       <section className="space-y-2">

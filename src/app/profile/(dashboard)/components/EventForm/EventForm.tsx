@@ -155,7 +155,6 @@ export function EventForm({
   const [calculatedDuration, setCalculatedDuration] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
-  const [editingInstructor, setEditingInstructor] = useState<Instructor | null>(null);
   const [instructorToDelete, setInstructorToDelete] = useState<Instructor | null>(null);
   const [isDeletingInstructor, setIsDeletingInstructor] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -274,6 +273,7 @@ export function EventForm({
   const endDateString = watch("end_date");
   const slug = watch("slug");
   const watchedOccurrences = watch("occurrences");
+  const watchedInstructorIds = watch("instructor_ids") || [];
 
   useEffect(() => {
     const start = startDateString ? parseISO(startDateString) : undefined;
@@ -355,7 +355,32 @@ export function EventForm({
   const fetchInstructors = useCallback(async () => {
     try {
       const response = await axiosInstance.get<Instructor[]>("/instructors");
-      setInstructors(response.data);
+      let roster: Instructor[] = [];
+      try {
+        const rosterResponse = await axiosInstance.get<Instructor[]>("/instructor-roster");
+        roster = rosterResponse.data.map((instructor) => ({
+          ...instructor,
+          is_foreign: instructor.is_owned === false,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch instructor roster:", error);
+      }
+
+      const owned = response.data.map((instructor) => ({
+        ...instructor,
+        is_owned: true,
+        is_foreign: false,
+      }));
+      const merged = new Map<string, Instructor>();
+      for (const instructor of roster) merged.set(instructor.id, instructor);
+      for (const instructor of owned) merged.set(instructor.id, instructor);
+
+      setInstructors((prev) => {
+        // Preserve event-only foreign instructors already loaded from event details.
+        const fetchedIds = new Set(merged.keys());
+        const eventOnly = prev.filter((i) => !fetchedIds.has(i.id));
+        return [...merged.values(), ...eventOnly];
+      });
     } catch (error) {
       console.error("Failed to fetch instructors:", error);
       toast({
@@ -501,6 +526,26 @@ export function EventForm({
         }
         dataForReset.slug = fetchedData.slug;
         reset(dataForReset);
+
+        // Merge instructors from the event response into state so foreign
+        // instructors (owned by another partner) render as cards in the section.
+        const eventInstructors = (fetchedData as any).instructors as
+          | Array<{ id: string; name: string; image_id?: string | null }>
+          | undefined;
+        if (Array.isArray(eventInstructors) && eventInstructors.length > 0) {
+          setInstructors((prev) => {
+            const existingIds = new Set(prev.map((i) => i.id));
+            const toAdd = eventInstructors
+              .filter((i) => !existingIds.has(i.id))
+              .map((i) => ({
+                id: i.id,
+                name: i.name,
+                image_id: i.image_id ?? null,
+                is_foreign: true,
+              }));
+            return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+          });
+        }
       })
       .catch((err) => {
         console.error("Failed to fetch event data:", err);
@@ -732,21 +777,11 @@ export function EventForm({
     fetchLocations(); // Refetch to ensure consistency, though client-side update is done
   };
 
-  const handleEditInstructor = (instructor: Instructor) => {
-    setEditingInstructor(instructor);
-    setIsInstructorModalOpen(true);
-  };
-
   const handleDeleteInstructor = async () => {
     if (!instructorToDelete) return;
 
     setIsDeletingInstructor(true);
     try {
-      await axiosInstance.delete(`/instructors/${instructorToDelete.id}`);
-      toast({ description: `Instruktor "${instructorToDelete.name}" usunięty pomyślnie.` });
-
-      setInstructors((prev) => prev.filter((i) => i.id !== instructorToDelete.id));
-
       const currentIds = getValues("instructor_ids") || [];
       if (currentIds.includes(instructorToDelete.id)) {
         setValue(
@@ -757,6 +792,9 @@ export function EventForm({
           },
         );
       }
+      toast({
+        description: `Instruktor "${instructorToDelete.name}" zostanie usunięty z tego wydarzenia po zapisaniu zmian.`,
+      });
 
       setInstructorToDelete(null);
     } catch (error: any) {
@@ -936,10 +974,8 @@ export function EventForm({
               <EventInstructorsSection
                 control={control}
                 errors={errors}
-                setValue={setValue}
                 instructors={instructors}
                 setIsInstructorModalOpen={setIsInstructorModalOpen}
-                handleEditInstructor={handleEditInstructor}
                 instructorToDelete={instructorToDelete}
                 setInstructorToDelete={setInstructorToDelete}
                 isDeletingInstructor={isDeletingInstructor}
@@ -1125,10 +1161,12 @@ export function EventForm({
         isOpen={isInstructorModalOpen}
         onClose={() => {
           setIsInstructorModalOpen(false);
-          setEditingInstructor(null);
         }}
         onInstructorSaved={handleInstructorSaved}
-        initialInstructor={editingInstructor}
+        eventId={eventId}
+        existingInstructors={instructors}
+        availableInstructors={instructors}
+        selectedInstructorIds={watchedInstructorIds}
       />
 
       {isLocationModalOpen && (

@@ -42,7 +42,9 @@ export function LoginPage() {
   const [isLoginPasswordVisible, setIsLoginPasswordVisible] = useState(false);
   const [isSignupPasswordVisible, setIsSignupPasswordVisible] = useState(false);
   const hasAutoRedirected = useRef(false);
+  const hasAutoSubmittedEmail = useRef(false);
   const next = searchParams.get("next") || "/profile";
+  const emailParam = searchParams.get("email") || "";
 
   const googleAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login?next=${encodeURIComponent(next)}`;
   const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login?next=${encodeURIComponent(next)}`;
@@ -56,6 +58,13 @@ export function LoginPage() {
     setIsAutoRedirecting(true);
     window.location.href = next;
   }, [loading, next, user]);
+
+  // Auto-submit when ?email= is in the URL — skip step 1 and go straight to login/signup
+  useEffect(() => {
+    if (!emailParam || hasAutoSubmittedEmail.current || loading || user) return;
+    hasAutoSubmittedEmail.current = true;
+    onSubmitEmail({ email: emailParam });
+  }, [emailParam, loading, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Form for email only (used in email step)
   const { register: registerEmail, handleSubmit: handleEmailSubmit } = useForm({
@@ -188,6 +197,7 @@ export function LoginPage() {
               id="auth-email"
               placeholder="Adres e-mail"
               {...registerEmail("email")}
+              defaultValue={emailParam}
               className="h-10"
               type="email"
             />

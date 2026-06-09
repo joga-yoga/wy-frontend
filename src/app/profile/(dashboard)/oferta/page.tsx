@@ -3,7 +3,7 @@
 import { Calendar, ExternalLink, ImageIcon, MoreVertical, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
 import {
@@ -64,6 +64,17 @@ interface InstructorItem {
   short_bio: string | null;
   slug: string | null;
   yoga_styles: YogaStyle[];
+  is_owned?: boolean;
+  added_at?: string;
+}
+
+interface InvitationItem {
+  id: string;
+  instructor_id: string;
+  instructor_name: string;
+  event_title: string | null;
+  expires_at: string;
+  created_at: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -89,6 +100,18 @@ function sortActiveFirst(items: DashboardItem[]): DashboardItem[] {
 
 function instructorCompletion(i: InstructorItem): number {
   return Math.round(([i.name, i.short_bio, i.image_id, i.slug].filter(Boolean).length / 4) * 100);
+}
+
+function invitationExpiryLabel(expiresAt: string): string {
+  try {
+    return new Intl.DateTimeFormat("pl-PL", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(expiresAt));
+  } catch {
+    return "";
+  }
 }
 
 function editLink(item: DashboardItem) {
@@ -251,7 +274,10 @@ export default function OfertaPage() {
   const [classes, setClasses] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [instructors, setInstructors] = useState<InstructorItem[]>([]);
+  const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loadingInstructors, setLoadingInstructors] = useState(true);
+  const [acceptingInvitationId, setAcceptingInvitationId] = useState<string | null>(null);
+  const [decliningInvitationId, setDecliningInvitationId] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
@@ -288,7 +314,11 @@ export default function OfertaPage() {
   useEffect(() => {
     if (loadingItems || loadingInstructors || !showBanner) return;
     const hasContent =
-      retreats.length > 0 || workshops.length > 0 || classes.length > 0 || instructors.length > 0;
+      retreats.length > 0 ||
+      workshops.length > 0 ||
+      classes.length > 0 ||
+      instructors.length > 0 ||
+      invitations.length > 0;
     if (hasContent) {
       localStorage.setItem("wy_onboarding_done", "true");
       setShowBanner(false);
@@ -300,6 +330,7 @@ export default function OfertaPage() {
     workshops.length,
     classes.length,
     instructors.length,
+    invitations.length,
     showBanner,
   ]);
 
@@ -340,14 +371,95 @@ export default function OfertaPage() {
       .finally(() => setLoadingItems(false));
   }, [areClassesEnabled]);
 
-  // Fetch instructors
-  useEffect(() => {
-    axiosInstance
-      .get<InstructorItem[]>("/instructors")
-      .then(({ data }) => setInstructors(data))
-      .catch(() => setInstructors([]))
-      .finally(() => setLoadingInstructors(false));
+  const fetchInstructorSectionData = useCallback(async () => {
+    try {
+      const [{ data: owned }, rosterResult, invitationResult] = await Promise.all([
+        axiosInstance.get<InstructorItem[]>("/instructors"),
+        axiosInstance.get<InstructorItem[]>("/instructor-roster").catch(() => ({ data: [] })),
+        axiosInstance.get<InvitationItem[]>("/users/me/invitations").catch(() => ({ data: [] })),
+      ]);
+      const merged = new Map<string, InstructorItem>();
+      for (const instructor of rosterResult.data) {
+        merged.set(instructor.id, {
+          ...instructor,
+          yoga_styles: instructor.yoga_styles ?? [],
+          is_owned: instructor.is_owned === true,
+        });
+      }
+      for (const instructor of owned) {
+        merged.set(instructor.id, {
+          ...instructor,
+          yoga_styles: instructor.yoga_styles ?? [],
+          is_owned: true,
+        });
+      }
+      setInstructors([...merged.values()]);
+      setInvitations(invitationResult.data);
+    } catch {
+      setInstructors([]);
+      setInvitations([]);
+    } finally {
+      setLoadingInstructors(false);
+    }
   }, []);
+
+  // Fetch instructors and claim invitations
+  useEffect(() => {
+    fetchInstructorSectionData();
+  }, [fetchInstructorSectionData]);
+
+  const handleRemoveRosterInstructor = async (instructor: InstructorItem) => {
+    try {
+      const { data } = await axiosInstance.delete<{
+        remains_on_partner_events: boolean;
+        remaining_partner_event_count: number;
+      }>(`/instructor-roster/${instructor.id}`);
+      setInstructors((prev) => prev.filter((item) => item.id !== instructor.id));
+      toast({
+        description: data.remains_on_partner_events
+          ? `Usunięto z listy. Instruktor pozostaje na ${data.remaining_partner_event_count} wydarzeniach.`
+          : "Usunięto instruktora z zapisanej listy.",
+      });
+    } catch {
+      toast({
+        description: "Nie udało się usunąć instruktora z zapisanej listy.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAcceptInvitation = async (invitationId: string) => {
+    setAcceptingInvitationId(invitationId);
+    try {
+      await axiosInstance.post(`/users/me/invitations/${invitationId}/accept`);
+      setInvitations((prev) => prev.filter((item) => item.id !== invitationId));
+      await fetchInstructorSectionData();
+      toast({ description: "Profil instruktora połączony z Twoim kontem." });
+    } catch {
+      toast({
+        description: "Nie udało się zaakceptować zaproszenia.",
+        variant: "destructive",
+      });
+    } finally {
+      setAcceptingInvitationId(null);
+    }
+  };
+
+  const handleDeclineInvitation = async (invitationId: string) => {
+    setDecliningInvitationId(invitationId);
+    try {
+      await axiosInstance.post(`/users/me/invitations/${invitationId}/decline`);
+      setInvitations((prev) => prev.filter((item) => item.id !== invitationId));
+      toast({ description: "Zaproszenie odrzucone." });
+    } catch {
+      toast({
+        description: "Nie udało się odrzucić zaproszenia.",
+        variant: "destructive",
+      });
+    } finally {
+      setDecliningInvitationId(null);
+    }
+  };
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
@@ -617,89 +729,176 @@ export default function OfertaPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {instructors.length === 0 ? (
+                {instructors.length === 0 && invitations.length === 0 ? (
                   <div className="rounded-xl border bg-white px-4 py-4 text-sm text-gray-400">
                     Nie masz jeszcze żadnych instruktorów
                   </div>
                 ) : (
-                  instructors.map((instructor) => {
-                    const pct = instructorCompletion(instructor);
-                    const styleNames = instructor.yoga_styles
-                      .map((s) => s.yoga_style?.name)
-                      .join(" · ");
-                    const initials = instructor.name
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((w) => w[0])
-                      .join("")
-                      .toUpperCase();
-                    return (
-                      <div
-                        key={instructor.id}
-                        className="rounded-xl border bg-white overflow-hidden"
-                      >
-                        {/* Info row */}
-                        <div className="flex items-center gap-3 px-4 py-4">
-                          {instructor.image_id ? (
-                            <WyImage
-                              src={instructor.image_id}
-                              alt={instructor.name}
-                              width={48}
-                              height={48}
-                              className="rounded-full object-cover shrink-0 h-12 w-12"
-                            />
-                          ) : (
-                            <div className="h-12 w-12 shrink-0 rounded-full bg-blue-100 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-blue-600">
+                  <>
+                    {invitations.map((invitation) => {
+                      const initials = invitation.instructor_name
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((word) => word[0])
+                        .join("")
+                        .toUpperCase();
+                      const isBusy =
+                        acceptingInvitationId === invitation.id ||
+                        decliningInvitationId === invitation.id;
+                      const expiresLabel = invitationExpiryLabel(invitation.expires_at);
+
+                      return (
+                        <div
+                          key={invitation.id}
+                          className="rounded-xl border bg-white overflow-hidden"
+                        >
+                          <div className="flex items-center gap-3 px-4 py-4">
+                            <div className="h-12 w-12 shrink-0 rounded-full bg-green-100 flex items-center justify-center">
+                              <span className="text-sm font-semibold text-green-700">
                                 {initials}
                               </span>
                             </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {instructor.name}
-                            </p>
-                            {(styleNames || instructor.short_bio) && (
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                  {invitation.instructor_name}
+                                </p>
+                                <span className="shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                                  Zaproszenie
+                                </span>
+                              </div>
                               <p className="text-xs text-gray-500 mt-0.5 truncate">
-                                {styleNames || instructor.short_bio}
+                                {invitation.event_title
+                                  ? `Wydarzenie: ${invitation.event_title}`
+                                  : "Profil instruktora oczekuje na decyzję"}
                               </p>
+                              {expiresLabel && (
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  Wygasa: {expiresLabel}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex border-t divide-x">
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptInvitation(invitation.id)}
+                              disabled={isBusy}
+                              className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                              {acceptingInvitationId === invitation.id
+                                ? "Akceptuję..."
+                                : "Zaakceptuj"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeclineInvitation(invitation.id)}
+                              disabled={isBusy}
+                              className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                              {decliningInvitationId === invitation.id ? "Odrzucam..." : "Odrzuć"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {instructors.map((instructor) => {
+                      const pct = instructorCompletion(instructor);
+                      const styleNames = instructor.yoga_styles
+                        .map((s) => s.yoga_style?.name)
+                        .join(" · ");
+                      const initials = instructor.name
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((w) => w[0])
+                        .join("")
+                        .toUpperCase();
+                      return (
+                        <div
+                          key={instructor.id}
+                          className="rounded-xl border bg-white overflow-hidden"
+                        >
+                          {/* Info row */}
+                          <div className="flex items-center gap-3 px-4 py-4">
+                            {instructor.image_id ? (
+                              <WyImage
+                                src={instructor.image_id}
+                                alt={instructor.name}
+                                width={48}
+                                height={48}
+                                className="rounded-full object-cover shrink-0 h-12 w-12"
+                              />
+                            ) : (
+                              <div className="h-12 w-12 shrink-0 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span className="text-sm font-semibold text-blue-600">
+                                  {initials}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                  {instructor.name}
+                                </p>
+                                {instructor.is_owned === false && (
+                                  <span className="shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                    Z listy
+                                  </span>
+                                )}
+                              </div>
+                              {(styleNames || instructor.short_bio) && (
+                                <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                  {styleNames || instructor.short_bio}
+                                </p>
+                              )}
+                            </div>
+                            {instructor.is_owned !== false && pct < 100 && (
+                              <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                Profil {pct}%
+                              </span>
                             )}
                           </div>
-                          {pct < 100 && (
-                            <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                              Profil {pct}%
-                            </span>
-                          )}
+                          {/* Action buttons */}
+                          <div className="flex border-t divide-x">
+                            {instructor.is_owned === false ? (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveRosterInstructor(instructor)}
+                                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                Usuń z listy
+                              </button>
+                            ) : (
+                              <Link
+                                href={`/profile/instructors/${instructor.id}/edit`}
+                                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <Pencil size={14} className="text-gray-500" />
+                                Edytuj profil
+                              </Link>
+                            )}
+                            {instructor.slug ? (
+                              <a
+                                href={`/instruktor/${instructor.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <ExternalLink size={14} className="text-gray-500" />
+                                Strona publiczna
+                              </a>
+                            ) : (
+                              <span className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-300 cursor-not-allowed">
+                                <ExternalLink size={14} />
+                                Strona publiczna
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {/* Action buttons */}
-                        <div className="flex border-t divide-x">
-                          <Link
-                            href={`/profile/instructors/${instructor.id}/edit`}
-                            className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          >
-                            <Pencil size={14} className="text-gray-500" />
-                            Edytuj profil
-                          </Link>
-                          {instructor.slug ? (
-                            <a
-                              href={`/instruktor/${instructor.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              <ExternalLink size={14} className="text-gray-500" />
-                              Strona publiczna
-                            </a>
-                          ) : (
-                            <span className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-300 cursor-not-allowed">
-                              <ExternalLink size={14} />
-                              Strona publiczna
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </>
                 )}
                 <Link
                   href="/profile/instructors/create"
