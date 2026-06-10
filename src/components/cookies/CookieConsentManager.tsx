@@ -11,7 +11,11 @@ import {
   getStoredCookieConsent,
   saveCookieConsent,
 } from "@/lib/cookieConsent";
-import { identifyMixpanelUser, syncMixpanelAnalyticsConsent } from "@/lib/mixpanelClient";
+import {
+  buildMixpanelProfile,
+  identifyMixpanelUser,
+  syncMixpanelAnalyticsConsent,
+} from "@/lib/mixpanelClient";
 
 import { CookieSettingsModal } from "./CookieSettingsModal";
 
@@ -58,7 +62,7 @@ export function CookieConsentManager() {
     syncMixpanelAnalyticsConsent(consent.analytics, { trackDecision: true });
 
     if (consent.analytics && user) {
-      identifyMixpanelUser(user.id, user.email);
+      identifyMixpanelUser(user.id, buildMixpanelProfile(user));
     }
 
     setAnalyticsEnabled(consent.analytics);

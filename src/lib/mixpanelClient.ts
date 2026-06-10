@@ -1,6 +1,7 @@
 import mixpanel from "mixpanel-browser";
 
 import { getStoredCookieConsent } from "@/lib/cookieConsent";
+import { getImageUrl } from "@/lib/imageHelpers";
 
 const MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN;
 const MIXPANEL_MODE = process.env.NEXT_PUBLIC_MIXPANEL_MODE;
@@ -66,15 +67,46 @@ export const syncMixpanelAnalyticsConsent = (
   }
 };
 
-export const identifyMixpanelUser = (userId: string, email?: string) => {
+type MixpanelUserProfile = {
+  email?: string;
+  name?: string;
+  avatarUrl?: string;
+};
+
+// Partner profile data (name, photo) wins over the bare account name.
+export const buildMixpanelProfile = (user: {
+  email?: string;
+  name?: string;
+  partner?: { name?: string; image_id?: string } | null;
+}): MixpanelUserProfile => ({
+  email: user.email,
+  name: user.partner?.name ?? user.name,
+  // getImageUrl falls back to a stock photo when there is no id, so only
+  // build the avatar URL when the partner actually has an image.
+  avatarUrl: user.partner?.image_id ? getImageUrl(user.partner.image_id) : undefined,
+});
+
+export const identifyMixpanelUser = (userId: string, profile?: MixpanelUserProfile) => {
   try {
     if (!getStoredCookieConsent()?.analytics) {
       return;
     }
 
     mixpanel.identify(userId);
-    if (email) {
-      mixpanel.people.set({ $email: email });
+
+    // people.set merges, so omitted keys keep their existing profile values.
+    const people: Record<string, string> = {};
+    if (profile?.email) {
+      people["$email"] = profile.email;
+    }
+    if (profile?.name) {
+      people["$name"] = profile.name;
+    }
+    if (profile?.avatarUrl) {
+      people["$avatar"] = profile.avatarUrl;
+    }
+    if (Object.keys(people).length > 0) {
+      mixpanel.people.set(people);
     }
   } catch (e) {
     console.log(e);

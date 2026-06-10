@@ -5,7 +5,11 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 
 import { clearAuthStorage } from "@/lib/auth/logoutChain";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { identifyMixpanelUser, resetMixpanelUser } from "@/lib/mixpanelClient";
+import {
+  buildMixpanelProfile,
+  identifyMixpanelUser,
+  resetMixpanelUser,
+} from "@/lib/mixpanelClient";
 
 type Partner = {
   id: string;
@@ -83,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await axiosInstance.get("/me");
       setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
+
+      // Partner data (name, photo) is only available once /me resolves, so
+      // sync the Mixpanel profile here; no-ops without analytics consent.
+      const me: User = response.data;
+      if (me?.id) {
+        identifyMixpanelUser(me.id, buildMixpanelProfile(me));
+      }
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearToken();
@@ -143,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: decoded.name,
           partner: null,
         });
-        identifyMixpanelUser(decoded.sub, decoded.email);
+        identifyMixpanelUser(decoded.sub, { email: decoded.email, name: decoded.name });
         refreshUser();
       } catch (error) {
         setUser(null);
