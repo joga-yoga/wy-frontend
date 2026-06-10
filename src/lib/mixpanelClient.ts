@@ -24,6 +24,14 @@ export const initMixpanel = () => {
   });
 
   try {
+    // Legacy cleanup: the previous opt_out_tracking_by_default setup left a
+    // stored SDK opt-out flag (__mp_opt_in_out_*) that silently drops every
+    // event. Consent gating is ours now (consent_state + persistence), so
+    // clear it for everyone. Must stay before any set_config: the SDK only
+    // skips its enable-persistence side effect while disable_persistence
+    // is still true in config.
+    mixpanel.clear_opt_in_out_tracking();
+
     mixpanel.register({ consent_state: "pending" });
   } catch (e) {
     console.log(e);
