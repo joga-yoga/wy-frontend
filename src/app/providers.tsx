@@ -12,7 +12,9 @@ export function Providers({ children }: React.PropsWithChildren) {
     initMixpanel();
 
     const storedConsent = getStoredCookieConsent();
-    syncMixpanelAnalyticsConsent(storedConsent?.analytics ?? false);
+    if (storedConsent?.decided) {
+      syncMixpanelAnalyticsConsent(storedConsent.analytics);
+    }
   }, []);
 
   return (

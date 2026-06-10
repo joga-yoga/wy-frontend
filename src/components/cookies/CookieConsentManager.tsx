@@ -4,17 +4,19 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
   buildCookieConsent,
   COOKIE_SETTINGS_OPEN_EVENT,
   getStoredCookieConsent,
   saveCookieConsent,
 } from "@/lib/cookieConsent";
-import { syncMixpanelAnalyticsConsent } from "@/lib/mixpanelClient";
+import { identifyMixpanelUser, syncMixpanelAnalyticsConsent } from "@/lib/mixpanelClient";
 
 import { CookieSettingsModal } from "./CookieSettingsModal";
 
 export function CookieConsentManager() {
+  const { user } = useAuth();
   const [isBannerOpen, setIsBannerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
@@ -53,7 +55,11 @@ export function CookieConsentManager() {
   const saveConsent = ({ analytics, marketing }: { analytics: boolean; marketing: boolean }) => {
     const consent = buildCookieConsent({ analytics, marketing });
     saveCookieConsent(consent);
-    syncMixpanelAnalyticsConsent(consent.analytics);
+    syncMixpanelAnalyticsConsent(consent.analytics, { trackDecision: true });
+
+    if (consent.analytics && user) {
+      identifyMixpanelUser(user.id, user.email);
+    }
 
     setAnalyticsEnabled(consent.analytics);
     setMarketingEnabled(consent.marketing);
