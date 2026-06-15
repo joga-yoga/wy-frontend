@@ -31,12 +31,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  const staticCourseRoutes = ["/kursy"].map((route) => ({
-    url: `${BASE_URL}${route}`,
-    changeFrequency: "monthly" as const,
-    priority: 0.9,
-  }));
-
   let workshopRoutes: MetadataRoute.Sitemap = [];
   try {
     const res = await fetch(`${API_URL}/workshops/slugs`);
@@ -102,7 +96,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticRoutes,
     ...staticWorkshopRoutes,
     ...staticRetreatRoutes,
-    ...staticCourseRoutes,
     ...workshopRoutes,
     ...retreatRoutes,
     ...courseRoutes,

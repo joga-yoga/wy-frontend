@@ -254,6 +254,24 @@ export function formatDateTimeRange(
  * @param dateStr The date as an ISO 8601 string (e.g., "2025-05-15") or Date object.
  * @returns A formatted date string (e.g., "Wtorek, Maj 15") or "Nieprawidłowa data" if invalid.
  */
+/**
+ * Formats a start date as day number + full month name in Polish.
+ * e.g. "10 październik" or "10 październik 2024" for non-current year.
+ */
+export function formatDateStartFull(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  try {
+    const date = parseISO(dateStr);
+    if (isNaN(date.getTime())) return "Nieprawidłowa data";
+    const currentYear = new Date().getFullYear();
+    return currentYear === date.getFullYear()
+      ? format(date, "d MMMM", { locale: pl })
+      : format(date, "d MMMM yyyy", { locale: pl });
+  } catch {
+    return "";
+  }
+}
+
 export function formatDateStart(dateStr: string | Date | null | undefined): string {
   if (!dateStr) {
     return "";

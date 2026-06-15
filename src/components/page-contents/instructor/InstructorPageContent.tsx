@@ -94,7 +94,16 @@ function CitiesRow({
 }
 
 export function InstructorPageContent({ data }: Props) {
-  const { instructor, upcoming_retreats, past_retreats, upcoming_workshops, past_workshops } = data;
+  console.log("🚀 ~ InstructorPageContent ~ data:", data);
+  const {
+    instructor,
+    upcoming_retreats,
+    past_retreats,
+    upcoming_workshops,
+    past_workshops,
+    upcoming_courses,
+    past_courses,
+  } = data;
 
   const heroRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -111,7 +120,8 @@ export function InstructorPageContent({ data }: Props) {
   const [modalState, setModalState] = useState<"default" | "error" | "success">("default");
 
   const hasAbout = !!instructor.description;
-  const totalUpcoming = upcoming_workshops.length + upcoming_retreats.length;
+  const totalUpcoming =
+    upcoming_workshops.length + upcoming_retreats.length + upcoming_courses.length;
   const hasUpcoming = totalUpcoming > 0;
 
   useEffect(() => {
@@ -263,6 +273,8 @@ export function InstructorPageContent({ data }: Props) {
             upcomingRetreats={upcoming_retreats}
             pastWorkshops={past_workshops}
             pastRetreats={past_retreats}
+            upcomingCourses={upcoming_courses}
+            pastCourses={past_courses}
           />
         </div>
 

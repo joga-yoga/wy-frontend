@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { CourseCard, type CourseCardEvent } from "@/app/(public)/courses/CourseCard";
 import RetreatCard from "@/app/(public)/retreats/components/EventCard";
 import type { Event } from "@/app/(public)/retreats/types";
 import { WorkshopCard } from "@/app/(public)/workshops/WorkshopCard";
@@ -15,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 import { countLastYear, formatDateRange, formatMonthYear } from "./helpers";
 
-type EventType = "workshops" | "retreats";
+type EventType = "workshops" | "retreats" | "courses";
 
 interface EventGroup {
   key: EventType;
@@ -29,6 +30,8 @@ interface CalendarSectionProps {
   upcomingRetreats: OrganizerEvent[];
   pastWorkshops: OrganizerEvent[];
   pastRetreats: OrganizerEvent[];
+  upcomingCourses: OrganizerEvent[];
+  pastCourses: OrganizerEvent[];
 }
 
 function SubGroupLabel({ label, logo }: { label: string; logo: string }) {
@@ -50,14 +53,23 @@ function EventSubGroup({ group }: { group: EventGroup }) {
   const hiddenCount = group.events.length - 2;
 
   const hrefFor = (event: OrganizerEvent) => {
-    const base = group.key === "retreats" ? "/wyjazdy" : "/wydarzenia";
-    return `${base}/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    if (group.key === "retreats") return `/wyjazdy/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    if (group.key === "courses") return `/kursy/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    return `/wydarzenia/${event.slug}?from=${encodeURIComponent(pathname)}`;
   };
 
   return (
     <div>
       <SubGroupLabel label={group.label} logo={group.logo} />
-      {group.key === "workshops" ? (
+      {group.key === "courses" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 px-4 items-stretch">
+          {visible.map((event) => (
+            <Link key={event.id} href={hrefFor(event)} className="h-full">
+              <CourseCard event={event as unknown as CourseCardEvent} className="h-full" />
+            </Link>
+          ))}
+        </div>
+      ) : group.key === "workshops" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 px-4 items-stretch">
           {visible.map((event) => (
             <Link key={event.id} href={hrefFor(event)} className="h-full">
@@ -93,21 +105,21 @@ function EmptyCalendar() {
       <p className="text-sm text-center" style={{ color: "#717171" }}>
         Nie mam teraz zaplanowanych zajęć
       </p>
-      {/* <Button
-        variant="outline"
-        className="h-9 px-5 rounded-xl text-sm"
-        style={{ borderColor: "#EBEBEB", color: "#222222" }}
-      >
-        Śledź moje zajęcia
-      </Button> */}
     </div>
   );
 }
 
-type PastEvent = OrganizerEvent & { kind: "workshop" | "retreat" };
+type PastEvent = OrganizerEvent & { kind: "workshop" | "retreat" | "course" };
 
 function PastEventRow({ event, href }: { event: PastEvent; href: string }) {
   const imageId = event.image_ids?.[0];
+  const logo =
+    event.kind === "retreat"
+      ? "/images/logo/logo-retreats.png"
+      : event.kind === "course"
+        ? "/images/logo/logo-courses.png"
+        : "/images/logo/logo-workshops.png";
+
   return (
     <Link
       href={href}
@@ -128,15 +140,7 @@ function PastEventRow({ event, href }: { event: PastEvent; href: string }) {
           {formatDateRange(event.start_date, event.end_date)}
         </p>
       </div>
-      <img
-        src={
-          event.kind === "retreat"
-            ? "/images/logo/logo-retreats.png"
-            : "/images/logo/logo-workshops.png"
-        }
-        className="w-4 h-4 shrink-0 opacity-40"
-        alt=""
-      />
+      <img src={logo} className="w-4 h-4 shrink-0 opacity-40" alt="" />
     </Link>
   );
 }
@@ -144,9 +148,11 @@ function PastEventRow({ event, href }: { event: PastEvent; href: string }) {
 function PastEventsSection({
   pastWorkshops,
   pastRetreats,
+  pastCourses,
 }: {
   pastWorkshops: OrganizerEvent[];
   pastRetreats: OrganizerEvent[];
+  pastCourses: OrganizerEvent[];
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const pathname = usePathname();
@@ -154,6 +160,7 @@ function PastEventsSection({
   const all: PastEvent[] = [
     ...pastWorkshops.map((e) => ({ ...e, kind: "workshop" as const })),
     ...pastRetreats.map((e) => ({ ...e, kind: "retreat" as const })),
+    ...pastCourses.map((e) => ({ ...e, kind: "course" as const })),
   ].sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
 
   if (all.length === 0) return null;
@@ -162,8 +169,9 @@ function PastEventsSection({
   const displayed = all.slice(0, 3);
 
   const hrefFor = (event: PastEvent) => {
-    const base = event.kind === "retreat" ? "/wyjazdy" : "/wydarzenia";
-    return `${base}/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    if (event.kind === "retreat") return `/wyjazdy/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    if (event.kind === "course") return `/kursy/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    return `/wydarzenia/${event.slug}?from=${encodeURIComponent(pathname)}`;
   };
 
   return (
@@ -223,6 +231,8 @@ export function CalendarSection({
   upcomingRetreats,
   pastWorkshops,
   pastRetreats,
+  upcomingCourses,
+  pastCourses,
 }: CalendarSectionProps) {
   const allGroups: EventGroup[] = [
     {
@@ -237,6 +247,12 @@ export function CalendarSection({
       logo: "/images/logo/logo-retreats.png",
       events: upcomingRetreats,
     },
+    {
+      key: "courses",
+      label: "Moje kursy",
+      logo: "/images/logo/logo-courses.png",
+      events: upcomingCourses,
+    },
   ];
   const groups = allGroups.filter((g) => g.events.length > 0);
   const totalUpcoming = groups.reduce((s, g) => s + g.events.length, 0);
@@ -248,7 +264,11 @@ export function CalendarSection({
       ) : (
         groups.map((group) => <EventSubGroup key={group.key} group={group} />)
       )}
-      <PastEventsSection pastWorkshops={pastWorkshops} pastRetreats={pastRetreats} />
+      <PastEventsSection
+        pastWorkshops={pastWorkshops}
+        pastRetreats={pastRetreats}
+        pastCourses={pastCourses}
+      />
     </div>
   );
 }

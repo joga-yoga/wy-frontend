@@ -76,6 +76,8 @@ export interface InstructorDetails {
   past_retreats: import("@/components/page-contents/organizer/types").OrganizerEvent[];
   upcoming_workshops: import("@/components/page-contents/organizer/types").OrganizerEvent[];
   past_workshops: import("@/components/page-contents/organizer/types").OrganizerEvent[];
+  upcoming_courses: import("@/components/page-contents/organizer/types").OrganizerEvent[];
+  past_courses: import("@/components/page-contents/organizer/types").OrganizerEvent[];
 }
 
 export interface InstructorUpdatePayload {
