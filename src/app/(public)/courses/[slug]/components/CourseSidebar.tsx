@@ -7,8 +7,8 @@ import { ReservationModal } from "@/app/(public)/retreats/[slug]/components/Rese
 import { Button } from "@/components/ui/button";
 import { getCurrencySymbol } from "@/lib/currency";
 
-import { CourseEventDetail } from "../types";
 import { BALANCE_METHOD_SHORT, formatPolishDate } from "../helpers";
+import { CourseEventDetail } from "../types";
 
 interface CourseSidebarProps {
   event: CourseEventDetail;
@@ -80,12 +80,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({ event }) => {
         )}
 
         {/* CTA */}
-        <Button
-          variant="cta"
-          size="cta"
-          className="w-full"
-          onClick={() => setIsModalOpen(true)}
-        >
+        <Button variant="cta" size="cta" className="w-full" onClick={() => setIsModalOpen(true)}>
           Zapisz się
         </Button>
 
