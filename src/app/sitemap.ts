@@ -31,6 +31,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  const staticCourseRoutes = ["/kursy"].map((route) => ({
+    url: `${BASE_URL}${route}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.9,
+  }));
+
   let workshopRoutes: MetadataRoute.Sitemap = [];
   try {
     const res = await fetch(`${API_URL}/workshops/slugs`);
@@ -61,6 +67,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to fetch retreat slugs for sitemap", error);
   }
 
+  let courseRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const res = await fetch(`${API_URL}/courses/slugs`);
+    if (res.ok) {
+      const slugs: string[] = await res.json();
+      courseRoutes = slugs.map((slug) => ({
+        url: `${BASE_URL}/kursy/${slug}`,
+        changeFrequency: "daily" as const,
+        priority: 0.8,
+      }));
+    }
+  } catch (error) {
+    console.error("Failed to fetch course slugs for sitemap", error);
+  }
+
   let instructorRoutes: MetadataRoute.Sitemap = [];
   try {
     const res = await fetch(`${API_URL}/instructors/slugs`);
@@ -81,8 +102,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticRoutes,
     ...staticWorkshopRoutes,
     ...staticRetreatRoutes,
+    ...staticCourseRoutes,
     ...workshopRoutes,
     ...retreatRoutes,
+    ...courseRoutes,
     ...instructorRoutes,
   ];
 }

@@ -28,6 +28,8 @@ function getPageTitle(pathname: string): string | undefined {
   if (pathname === "/profile/instructors/create") return "Nowy instruktor";
   if (pathname === "/profile/retreats/create") return "Nowy wyjazd";
   if (pathname === "/profile/workshops/create") return "Nowe wydarzenie";
+  if (pathname === "/profile/courses/create") return "Nowy kurs";
+  if (pathname.startsWith("/profile/courses/") && pathname.endsWith("/edit")) return "Edytuj kurs";
   return undefined;
 }
 
@@ -79,7 +81,7 @@ export function DashboardTopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background border-b h-16 md:h-20 relative flex items-center px-5 md:px-8">
+    <header className="sticky top-0 z-50 w-full bg-background border-b h-16 md:h-20 relative flex items-center px-4 md:px-6">
       {showHomeLogo ? (
         <LinkWithBlocker href="/" aria-label="Strona główna" className="shrink-0">
           <LogoFooter />

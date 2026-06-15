@@ -68,7 +68,7 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
   return (
     <div>
       <div className="h-[56px] md:h-[64px]" />
-      <div className="fixed bottom-0 left-0 right-0 z-10 h-[56px] md:h-[64px] bg-background border-t flex flex-row justify-between items-center gap-0 md:gap-4 px-3 md:px-6 md:left-[81px]">
+      <div className="fixed bottom-0 left-0 right-0 z-10 h-[56px] md:h-[64px] bg-background border-t flex flex-row justify-between items-center gap-0 md:gap-4 px-3 md:px-6 md:left-[0px] md:z-20">
         <div>
           <h1 className="hidden text-lg font-bold text-gray-900 md:block">{title}</h1>
           {/* You can place breadcrumbs or subtitle here using children prop if needed */}

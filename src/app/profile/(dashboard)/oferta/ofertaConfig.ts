@@ -2,16 +2,16 @@ export interface BaseEvent {
   id: string;
   slug: string;
   title: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string | null;
+  end_date?: string | null;
   image_ids?: string[];
   image_id?: string;
   is_public: boolean;
 }
 
-export type DashboardItem = BaseEvent & { kind: "retreat" | "workshop" | "class" };
+export type DashboardItem = BaseEvent & { kind: "retreat" | "workshop" | "class" | "course" };
 
-export type FilterType = "all" | "wyjazdy" | "wydarzenia" | "zajecia";
+export type FilterType = "all" | "wyjazdy" | "wydarzenia" | "zajecia" | "kursy";
 
 export const getOfertaFilterPills = (
   includeClasses: boolean,
@@ -19,6 +19,7 @@ export const getOfertaFilterPills = (
   { key: "all", label: "Wszystkie" },
   { key: "wyjazdy", label: "Wyjazdy", logo: "/images/logo/logo-retreats.png" },
   { key: "wydarzenia", label: "Wydarzenia", logo: "/images/logo/logo-workshops.png" },
+  { key: "kursy", label: "Kursy", logo: "/images/logo/logo-courses.png" },
   ...(includeClasses ? [{ key: "zajecia" as const, label: "Zajęcia" }] : []),
 ];
 
@@ -33,6 +34,9 @@ export const getOfertaCreatePath = (filter: string | null, includeClasses: boole
   }
   if (filter === "wydarzenia") {
     return "/profile/workshops/create";
+  }
+  if (filter === "kursy") {
+    return "/profile/courses/create";
   }
   if (filter === "zajecia" && includeClasses) {
     return "/profile/classes/create";
@@ -54,6 +58,7 @@ export const getOfertaSingleTypeViewConfig = (
     retreats: DashboardItem[];
     workshops: DashboardItem[];
     classes: DashboardItem[];
+    courses: DashboardItem[];
   },
   includeClasses: boolean,
 ) => {
@@ -74,6 +79,16 @@ export const getOfertaSingleTypeViewConfig = (
       createPath: "/profile/workshops/create",
       emptyLabel: "wydarzeń",
       countLabel: `${n} ${plPlural(n, "wydarzenie", "wydarzenia", "wydarzeń")} łącznie`,
+    };
+  }
+
+  if (filter === "kursy") {
+    const n = items.courses.length;
+    return {
+      items: items.courses,
+      createPath: "/profile/courses/create",
+      emptyLabel: "kursów",
+      countLabel: `${n} ${plPlural(n, "kurs", "kursy", "kursów")} łącznie`,
     };
   }
 

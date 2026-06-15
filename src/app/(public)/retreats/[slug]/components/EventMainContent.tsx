@@ -1,6 +1,7 @@
 import React from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
+import { getCurrencySymbol } from "@/lib/currency";
 
 import { formatMultiLineText } from "../helpers";
 import { EventDetail } from "../types";
@@ -166,7 +167,7 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
           <div>
             <h2 className="text-listing-description mb-3 flex items-center gap-2">
               <div className="h-8 w-8 flex items-center justify-center border-2 border-yellow-500 rounded-full text-gray-500 text-subheader">
-                zł
+                {getCurrencySymbol(event.currency)}
               </div>
               Cena obejmuje
             </h2>

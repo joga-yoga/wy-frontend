@@ -26,6 +26,7 @@ interface EventPhotosSectionProps {
   control: Control<EventFormData>;
   name: string;
   handleSetCover: (imageId: string) => void;
+  showHeader?: boolean;
 }
 
 export const EventPhotosSection = ({
@@ -39,20 +40,25 @@ export const EventPhotosSection = ({
   control,
   name,
   handleSetCover,
+  showHeader = true,
 }: EventPhotosSectionProps) => {
   const { focusTip } = useEventHelpBar();
   return (
     <div className="space-y-2 event-form-section-padding" id="event-photos-section">
-      <div className="flex items-center gap-2">
-        <Label htmlFor="images" size="event">
-          Zdjęcia
-        </Label>
-        <EventHelpBarTipButton tipId="images" />
-      </div>
-      <Label htmlFor="images" size="event-description">
-        Dodaj zdjęcia, które będą promować tę podróż
-      </Label>
-      <Separator className="my-4 md:my-8" />
+      {showHeader && (
+        <>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="images" size="event">
+              Zdjęcia
+            </Label>
+            <EventHelpBarTipButton tipId="images" />
+          </div>
+          <Label htmlFor="images" size="event-description">
+            Dodaj zdjęcia, które będą promować tę podróż
+          </Label>
+          <Separator className="my-4 md:my-8" />
+        </>
+      )}
       <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {watchedImageIds.map((imageId, index) => (
           <div key={imageId} className="relative group aspect-[4/3]">

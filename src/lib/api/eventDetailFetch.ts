@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 export class EventDetailNotFoundError extends Error {
   constructor(
-    readonly eventType: "class" | "retreat" | "workshop",
+    readonly eventType: "class" | "retreat" | "workshop" | "course",
     readonly id: string,
     readonly url: string,
   ) {
@@ -31,7 +31,7 @@ function safeErrorDetails(error: unknown) {
 }
 
 export async function fetchEventDetail<T>(
-  eventType: "class" | "retreat" | "workshop",
+  eventType: "class" | "retreat" | "workshop" | "course",
   id: string,
 ): Promise<T> {
   "use cache";
@@ -41,7 +41,8 @@ export async function fetchEventDetail<T>(
     throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
   }
 
-  const collection = eventType === "class" ? "classes" : `${eventType}s`;
+  const collection =
+    eventType === "class" ? "classes" : eventType === "course" ? "courses" : `${eventType}s`;
   cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
   cacheTag(collection, `${eventType}:${id}`);
 

@@ -136,7 +136,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
     <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
       <div className="relative">
         {/* Desktop */}
-        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-3 mt-[22px] min-h-[340px]">
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-3 min-h-[340px]">
           {/* Main Image */}
           <DynamicCloudinaryImage
             imageId={image_ids[0]}
@@ -169,7 +169,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
           </div>
         </div>
         {/* Mobile */}
-        <div className="md:hidden grid grid-cols-2 gap-1 w-full pt-3 min-h-[236px]">
+        <div className="md:hidden grid grid-cols-2 gap-1 w-full min-h-[236px]">
           {image_ids.slice(0, 4).map((id, index) => (
             <button key={id} onClick={() => openSingleAt(index)} className="w-full">
               <DynamicCloudinaryImage

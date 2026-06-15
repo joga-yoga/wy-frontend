@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 import { Event } from "@/app/(public)/retreats/types";
 
-export type EventListKind = "classes" | "retreats" | "workshops";
+export type EventListKind = "classes" | "retreats" | "workshops" | "courses";
 
 export async function getCachedEventList(
   kind: EventListKind,

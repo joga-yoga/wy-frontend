@@ -42,7 +42,7 @@ export const PriceSection = ({
     !hasValidationError;
 
   // Format custom filter title
-  const customFilterTitle = showCustomFilter ? `${priceMin} - ${priceMax} PLN` : "";
+  const customFilterTitle = showCustomFilter ? `${priceMin} - ${priceMax} zł` : "";
 
   return (
     <div className="mx-7 mt-11 mb-5">

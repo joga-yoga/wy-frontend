@@ -13,6 +13,7 @@ import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { WyImage } from "@/components/custom/WyImage";
 import { FlagIcon } from "@/components/icons/react-flagkit";
 import { useEventsFilter } from "@/context/EventsFilterContext";
+import { getCurrencySymbol } from "@/lib/currency";
 import { formatDateRange } from "@/lib/formatDateRange";
 import { renderShortLocation } from "@/lib/renderLocation";
 
@@ -45,7 +46,7 @@ const calculatePricePerDay = (
     }
 
     const pricePerDay = price / durationDays;
-    return `${Math.round(pricePerDay)} ${currency || "PLN"}/dobę`;
+    return `${Math.round(pricePerDay)} ${getCurrencySymbol(currency)}/dobę`;
   } catch (e) {
     console.error("Error calculating price per day:", e);
     return null;
@@ -192,7 +193,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
               <div className="flex flex-row justify-end items-center w-full">
                 <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
                   {event.price !== null
-                    ? `od ${event.price} ${event.currency || "PLN"}`
+                    ? `od ${event.price} ${getCurrencySymbol(event.currency)}`
                     : "Cena N/A"}
                 </span>
               </div>

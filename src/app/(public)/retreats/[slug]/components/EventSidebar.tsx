@@ -5,6 +5,7 @@ import React from "react";
 import CustomLangIcon from "@/components/icons/CustomLangIcon";
 import CustomOnlineIcon from "@/components/icons/CustomOnlineIcon";
 import CustomSkillLevelIcon from "@/components/icons/CustomSkillLevelIcon";
+import { getCurrencySymbol } from "@/lib/currency";
 import { formatDurationInHours } from "@/lib/formatDateRange";
 
 import { isMultiDayEvent } from "../helpers";
@@ -70,13 +71,13 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
               )}
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 flex items-center justify-center border-2 border-yellow-500 rounded-full text-gray-500 text-subheader">
-                  zł
+                  {getCurrencySymbol(event.currency)}
                 </div>
                 <div>
                   <p className="text-m-header md:text-subheader">Cena</p>
                   <p className="text-m-descript md:text-sub-descript-18 text-gray-500">
                     {event.price
-                      ? `${event.price.toFixed(2)} ${event.currency || "PLN"} za jedną osobę`
+                      ? `${event.price.toFixed(2)} ${getCurrencySymbol(event.currency)} za jedną osobę`
                       : "Cena nie podana"}
                   </p>
                 </div>

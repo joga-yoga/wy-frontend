@@ -16,9 +16,17 @@ const classItem: DashboardItem = {
   kind: "class",
 };
 
+const courseItem: DashboardItem = {
+  id: "course-1",
+  slug: "course-1",
+  title: "Yoga foundations",
+  is_public: true,
+  kind: "course",
+};
+
 assert.deepEqual(
   getOfertaFilterPills(false).map((pill) => pill.key),
-  ["all", "wyjazdy", "wydarzenia"],
+  ["all", "wyjazdy", "wydarzenia", "kursy"],
 );
 
 assert.deepEqual(
@@ -27,6 +35,7 @@ assert.deepEqual(
     { key: "all", label: "Wszystkie" },
     { key: "wyjazdy", label: "Wyjazdy" },
     { key: "wydarzenia", label: "Wydarzenia" },
+    { key: "kursy", label: "Kursy" },
     { key: "zajecia", label: "Zajęcia" },
   ],
 );
@@ -34,7 +43,7 @@ assert.deepEqual(
 assert.equal(
   getOfertaSingleTypeViewConfig(
     "zajecia",
-    { retreats: [], workshops: [], classes: [classItem] },
+    { retreats: [], workshops: [], classes: [classItem], courses: [] },
     false,
   ),
   null,
@@ -43,13 +52,41 @@ assert.equal(
 assert.deepEqual(
   getOfertaSingleTypeViewConfig(
     "zajecia",
-    { retreats: [], workshops: [], classes: [classItem] },
+    { retreats: [], workshops: [], classes: [classItem], courses: [] },
     true,
   ),
   {
     items: [classItem],
     createPath: "/profile/classes/create",
     emptyLabel: "zajęć",
-    countLabel: "1 zajęcia łącznie",
+    countLabel: "1 zajęcie łącznie",
+  },
+);
+
+assert.deepEqual(
+  getOfertaSingleTypeViewConfig(
+    "kursy",
+    { retreats: [], workshops: [], classes: [], courses: [courseItem] },
+    false,
+  ),
+  {
+    items: [courseItem],
+    createPath: "/profile/courses/create",
+    emptyLabel: "kursów",
+    countLabel: "1 kurs łącznie",
+  },
+);
+
+assert.deepEqual(
+  getOfertaSingleTypeViewConfig(
+    "kursy",
+    { retreats: [], workshops: [], classes: [], courses: [] },
+    false,
+  ),
+  {
+    items: [],
+    createPath: "/profile/courses/create",
+    emptyLabel: "kursów",
+    countLabel: "0 kursów łącznie",
   },
 );

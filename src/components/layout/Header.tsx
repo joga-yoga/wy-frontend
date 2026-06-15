@@ -88,7 +88,8 @@ export const PublicHeader = () => {
   const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/wyjazdy/");
   const isWydarzenia =
     pathname === "/" || pathname.startsWith("/wydarzenia") || pathname.startsWith("/wydarzenia/");
-  const isMainPage = pathname === "/" || pathname === "/wyjazdy";
+  const isKursy = pathname.startsWith("/kursy");
+  const isMainPage = pathname === "/" || pathname === "/wyjazdy" || pathname === "/kursy";
   const isPartnersPage = pathname === "/partners";
 
   const [mounted, setMounted] = React.useState(false);
@@ -190,6 +191,32 @@ export const PublicHeader = () => {
                 </motion.span>
               </motion.span>
               {isWyjazdy && (
+                <motion.span
+                  layoutId="underline"
+                  initial={false}
+                  transition={INDICATOR_TRANSITION}
+                  aria-hidden="true"
+                  className="absolute bottom-[18px] inset-x-0 h-[3px] bg-[#222222] rounded-[1.5px]"
+                />
+              )}
+            </Link>
+            <Link href="/kursy" className="relative h-full">
+              <motion.span
+                initial="rest"
+                animate="rest"
+                whileHover={isKursy ? undefined : "hover"}
+                whileTap={isKursy ? undefined : "tap"}
+                className="flex items-center gap-1.5 h-full"
+              >
+                <motion.span
+                  variants={getTabLabelVariants(isKursy)}
+                  transition={TAB_INTERACTION_TRANSITION}
+                  className="text-md font-medium whitespace-nowrap"
+                >
+                  Kursy
+                </motion.span>
+              </motion.span>
+              {isKursy && (
                 <motion.span
                   layoutId="underline"
                   initial={false}
@@ -338,6 +365,45 @@ export const PublicHeader = () => {
                     Wyjazdy
                   </motion.span>
                   {isWyjazdy && (
+                    <motion.span
+                      layoutId="underline"
+                      initial={false}
+                      transition={INDICATOR_TRANSITION}
+                      aria-hidden="true"
+                      className="absolute bottom-0 inset-x-0 h-[3px] bg-[#222222] rounded-t-[1.5px]"
+                    />
+                  )}
+                </span>
+              </motion.span>
+            </Link>
+            <Link href="/kursy" className="min-w-[68px]">
+              <motion.span
+                initial="rest"
+                animate="rest"
+                whileHover={isKursy ? undefined : "hover"}
+                whileTap={isKursy ? undefined : "tap"}
+                className="flex flex-col items-center pt-2 pb-0 md:pb-4 gap-0"
+              >
+                <motion.span
+                  style={{
+                    height: mobileTabIconHeight,
+                    marginBottom: mobileTabIconMarginBottom,
+                    opacity: tabIconOpacity,
+                    scale: tabIconScale,
+                  }}
+                  className="flex items-center justify-center overflow-hidden"
+                >
+                  <motion.span aria-hidden="true" className="w-9 h-9" />
+                </motion.span>
+                <span className="relative inline-block pb-[6px]">
+                  <motion.span
+                    variants={getTabLabelVariants(isKursy)}
+                    transition={TAB_INTERACTION_TRANSITION}
+                    className="text-[13px] font-semibold"
+                  >
+                    Kursy
+                  </motion.span>
+                  {isKursy && (
                     <motion.span
                       layoutId="underline"
                       initial={false}

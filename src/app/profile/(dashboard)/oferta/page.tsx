@@ -117,12 +117,14 @@ function invitationExpiryLabel(expiresAt: string): string {
 function editLink(item: DashboardItem) {
   if (item.kind === "workshop") return `/profile/workshops/${item.id}/edit`;
   if (item.kind === "class") return `/profile/classes/${item.id}/edit`;
+  if (item.kind === "course") return `/profile/courses/${item.id}/edit`;
   return `/profile/retreats/${item.id}/edit`;
 }
 
-function publicLink(item: DashboardItem) {
+function publicLink(item: DashboardItem): string | null {
   if (item.kind === "workshop") return `/wydarzenia/${item.slug}`;
   if (item.kind === "class") return `/zajecia/${item.slug}`;
+  if (item.kind === "course") return null;
   return `/wyjazdy/${item.slug}`;
 }
 
@@ -191,11 +193,13 @@ function EventCard({
                 <DropdownMenuItem onClick={() => onDuplicate(event)} className="cursor-pointer">
                   Duplikuj
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href={publicLink(event)} target="_blank" rel="noopener noreferrer">
-                    Zobacz stronę publiczną
-                  </Link>
-                </DropdownMenuItem>
+                {publicLink(event) && (
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link href={publicLink(event)!} target="_blank" rel="noopener noreferrer">
+                      Zobacz stronę publiczną
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 {event.is_public && (
                   <DropdownMenuItem
                     onClick={(e) => {
@@ -231,7 +235,9 @@ function EventCard({
             src={
               event.kind === "retreat"
                 ? "/images/logo/logo-retreats.png"
-                : "/images/logo/logo-workshops.png"
+                : event.kind === "course"
+                  ? "/images/logo/logo-courses.png"
+                  : "/images/logo/logo-workshops.png"
             }
             className="w-4 h-4"
             alt=""
@@ -272,6 +278,7 @@ export default function OfertaPage() {
   const [retreats, setRetreats] = useState<DashboardItem[]>([]);
   const [workshops, setWorkshops] = useState<DashboardItem[]>([]);
   const [classes, setClasses] = useState<DashboardItem[]>([]);
+  const [courses, setCourses] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [instructors, setInstructors] = useState<InstructorItem[]>([]);
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
@@ -317,6 +324,7 @@ export default function OfertaPage() {
       retreats.length > 0 ||
       workshops.length > 0 ||
       classes.length > 0 ||
+      courses.length > 0 ||
       instructors.length > 0 ||
       invitations.length > 0;
     if (hasContent) {
@@ -329,6 +337,7 @@ export default function OfertaPage() {
     retreats.length,
     workshops.length,
     classes.length,
+    courses.length,
     instructors.length,
     invitations.length,
     showBanner,
@@ -356,6 +365,10 @@ export default function OfertaPage() {
         .get<BaseEvent[]>("/workshops")
         .then((r) => r.data.map((e) => ({ ...e, kind: "workshop" as const })))
         .catch(() => []),
+      axiosInstance
+        .get<BaseEvent[]>("/courses")
+        .then((r) => r.data.map((e) => ({ ...e, kind: "course" as const })))
+        .catch(() => []),
       areClassesEnabled
         ? axiosInstance
             .get<BaseEvent[]>("/classes")
@@ -363,9 +376,10 @@ export default function OfertaPage() {
             .catch(() => [])
         : Promise.resolve([]),
     ])
-      .then(([r, w, c]) => {
+      .then(([r, w, co, c]) => {
         setRetreats(sortActiveFirst(r));
         setWorkshops(sortActiveFirst(w));
+        setCourses(sortActiveFirst(co));
         setClasses(sortActiveFirst(c));
       })
       .finally(() => setLoadingItems(false));
@@ -470,13 +484,17 @@ export default function OfertaPage() {
           ? "/workshops"
           : itemToDelete.kind === "class"
             ? "/classes"
-            : "/retreats";
+            : itemToDelete.kind === "course"
+              ? "/courses"
+              : "/retreats";
       await axiosInstance.delete(`${ep}/${itemToDelete.id}`);
       toast({ description: "Usunięto pomyślnie!" });
       if (itemToDelete.kind === "retreat")
         setRetreats((p) => p.filter((i) => i.id !== itemToDelete.id));
       else if (itemToDelete.kind === "workshop")
         setWorkshops((p) => p.filter((i) => i.id !== itemToDelete.id));
+      else if (itemToDelete.kind === "course")
+        setCourses((p) => p.filter((i) => i.id !== itemToDelete.id));
       else setClasses((p) => p.filter((i) => i.id !== itemToDelete.id));
       setItemToDelete(null);
     } catch (error: any) {
@@ -496,13 +514,16 @@ export default function OfertaPage() {
           ? "/workshops"
           : event.kind === "class"
             ? "/classes"
-            : "/retreats";
+            : event.kind === "course"
+              ? "/courses"
+              : "/retreats";
       await axiosInstance.patch(`${ep}/${event.id}`, { is_public: false });
       toast({ description: "Ukryto pomyślnie!" });
       const updater = (p: DashboardItem[]) =>
         p.map((i) => (i.id === event.id ? { ...i, is_public: false } : i));
       if (event.kind === "retreat") setRetreats(updater);
       else if (event.kind === "workshop") setWorkshops(updater);
+      else if (event.kind === "course") setCourses(updater);
       else setClasses(updater);
     } catch (error: any) {
       toast({
@@ -519,7 +540,9 @@ export default function OfertaPage() {
           ? "/workshops"
           : event.kind === "class"
             ? "/classes"
-            : "/retreats";
+            : event.kind === "course"
+              ? "/courses"
+              : "/retreats";
       const { data: full } = await axiosInstance.get(`${ep}/${event.id}`);
       let payload: any = {
         title: full.title,
@@ -535,7 +558,14 @@ export default function OfertaPage() {
         location_id: full.location?.id || null,
         is_public: false,
       };
-      if (event.kind === "retreat") {
+      if (event.kind === "course") {
+        payload = {
+          title: full.title,
+          description: full.description,
+          image_ids: full.image_ids,
+          is_public: false,
+        };
+      } else if (event.kind === "retreat") {
         payload = {
           ...payload,
           main_attractions: full.main_attractions,
@@ -565,7 +595,9 @@ export default function OfertaPage() {
           ? "/profile/workshops/create?duplicate=true"
           : event.kind === "class"
             ? "/profile/classes/create?duplicate=true"
-            : "/profile/retreats/create?duplicate=true";
+            : event.kind === "course"
+              ? "/profile/courses/create?duplicate=true"
+              : "/profile/retreats/create?duplicate=true";
       router.push(createPath);
       toast({ description: "Duplikowanie..." });
     } catch (error: any) {
@@ -590,7 +622,7 @@ export default function OfertaPage() {
   if (!isLoading && activeFilter !== "all") {
     const viewConfig = getOfertaSingleTypeViewConfig(
       activeFilter,
-      { retreats, workshops, classes },
+      { retreats, workshops, classes, courses },
       areClassesEnabled,
     );
 
@@ -638,22 +670,42 @@ export default function OfertaPage() {
             <DialogDescription>Wybierz typ ogłoszenia.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <Link
                 href="/profile/retreats/create"
                 onClick={() => setIsCreateOpen(false)}
-                className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
+                className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
               >
-                <img src="/images/logo/logo-retreats.png" className="w-16 h-16" alt="" />
-                <div className="mt-3 text-base font-semibold">Wyjazd</div>
+                <img
+                  src="/images/logo/logo-retreats.png"
+                  className="w-12 h-12 sm:w-16 sm:h-16"
+                  alt=""
+                />
+                <div className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold">Wyjazd</div>
               </Link>
               <Link
                 href="/profile/workshops/create"
                 onClick={() => setIsCreateOpen(false)}
-                className="border rounded-xl p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
+                className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
               >
-                <img src="/images/logo/logo-workshops.png" className="w-16 h-16" alt="" />
-                <div className="mt-3 text-base font-semibold">Wydarzenie</div>
+                <img
+                  src="/images/logo/logo-workshops.png"
+                  className="w-12 h-12 sm:w-16 sm:h-16"
+                  alt=""
+                />
+                <div className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold">Wydarzenie</div>
+              </Link>
+              <Link
+                href="/profile/courses/create"
+                onClick={() => setIsCreateOpen(false)}
+                className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
+              >
+                <img
+                  src="/images/logo/logo-courses.png"
+                  className="w-12 h-12 sm:w-16 sm:h-16"
+                  alt=""
+                />
+                <div className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold">Kurs</div>
               </Link>
             </div>
             <Link
@@ -705,6 +757,18 @@ export default function OfertaPage() {
           />
 
           {/* Kursy */}
+          <EventSection
+            title="Kursy"
+            emptyText="Brak kursów"
+            items={courses.slice(0, 2)}
+            totalCount={courses.length}
+            onShowAll={() => setFilter("kursy")}
+            createPath="/profile/courses/create"
+            createLabel="Dodaj kurs"
+            cardProps={cardProps}
+          />
+
+          {/* Zajęcia */}
           {areClassesEnabled && (
             <EventSection
               title="Zajęcia"

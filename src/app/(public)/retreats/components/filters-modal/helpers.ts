@@ -1,13 +1,16 @@
 import { Price } from "@/app/(public)/retreats/components/filters-modal/types";
+import { CURRENCY_SYMBOLS } from "@/lib/currency";
+
+const PLN = CURRENCY_SYMBOLS.PLN;
 
 export function formatPrice(price: Price): string {
   const { min_price, max_price } = price;
 
   if (min_price === 0) {
-    return `< ${max_price} PLN`;
+    return `< ${max_price} ${PLN}`;
   }
 
-  return `${min_price} - ${max_price} PLN`;
+  return `${min_price} - ${max_price} ${PLN}`;
 }
 
 export function formatDateRange(startDate: string, endDate: string): string {

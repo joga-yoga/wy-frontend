@@ -15,6 +15,7 @@ import { WyImage } from "@/components/custom/WyImage";
 import CustomOnlineIcon from "@/components/icons/CustomOnlineIcon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEventsFilter } from "@/context/EventsFilterContext";
+import { getCurrencySymbol } from "@/lib/currency";
 import { formatDateStart, formatDateStartWithTimeCompact } from "@/lib/formatDateRange";
 import { renderShortLocation } from "@/lib/renderLocation";
 import { cn } from "@/lib/utils";
@@ -188,7 +189,7 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({ event, className }) 
               <div className="flex flex-col justify-center items-end w-full self-stretch gap-0">
                 <div className="flex flex-row justify-end items-center w-full">
                   <span className="text-sub-descript-18 md:text-middle-header-22 text-right text-gray-700 flex-grow">
-                    {`od ${event.price} ${event.currency || "PLN"} / osobę`}
+                    {`od ${event.price} ${getCurrencySymbol(event.currency)} / osobę`}
                   </span>
                 </div>
                 {/* {event.price !== null && event.start_date && (

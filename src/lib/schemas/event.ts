@@ -6,6 +6,28 @@ export interface EventOccurrenceFormValue {
   label?: string | null;
 }
 
+export const courseModuleSchema = yup.object().shape({
+  title: yup.string().required("Tytuł modułu jest wymagany"),
+  description: yup.string().nullable().optional(),
+  hours: yup.number().nullable().optional(),
+  topics: yup.array().of(yup.string().required()).optional().default([]),
+});
+
+export const certificationSchema = yup.object().shape({
+  type: yup
+    .string()
+    .oneOf(["recognized", "school", "other"] as const)
+    .required("Typ certyfikacji jest wymagany"),
+  designation: yup
+    .string()
+    .oneOf(["RYT_200", "RYT_300", "RYT_500", "RYS", "YACEP"] as const)
+    .nullable()
+    .optional(),
+  issuing_body: yup.string().nullable().optional(),
+  hours: yup.number().nullable().optional(),
+  name: yup.string().nullable().optional(),
+});
+
 // Base schema for event data validation
 export const retreatFormSchema = yup
   .object()
@@ -126,6 +148,20 @@ export const retreatFormSchema = yup
     level: yup.string().optional().nullable(),
     intensity: yup.number().integer().min(1).max(10).optional().nullable(),
     style: yup.string().optional().nullable(),
+
+    // Course-specific fields
+    is_teacher_training: yup.boolean().optional().default(false),
+    modules: yup.array().of(courseModuleSchema).optional().default([]),
+    includes: yup.array().of(yup.string()).optional().default([]),
+    prerequisites: yup.string().nullable().optional(),
+    certification: certificationSchema.nullable().optional().default(null),
+    enrollment_closes: yup.string().nullable().optional(),
+    harmonogram: yup.string().nullable().optional(),
+
+    // Payment fields (all event types)
+    deposit_amount: yup.number().nullable().optional(),
+    balance_payment_methods: yup.array().of(yup.string().required()).optional().default([]),
+    payment_terms: yup.string().nullable().optional(),
   })
   .test({
     name: "date-order",
@@ -250,6 +286,16 @@ export const classFormSchema = retreatFormSchema.shape({
   style: yup.string().optional().nullable(),
 });
 
+export const courseFormSchema = workshopFormSchema.shape({
+  enrollment_closes: yup.string().nullable().optional(),
+  modules: yup.array().of(courseModuleSchema).optional().default([]),
+  is_teacher_training: yup.boolean().optional().default(false),
+  certification: certificationSchema.nullable().optional().default(null),
+  includes: yup.array().of(yup.string()).optional().default([]),
+  prerequisites: yup.string().nullable().optional(),
+  harmonogram: yup.string().nullable().optional(),
+});
+
 // Define a type for the nested location information in initial event data
 interface LocationInitialInfo {
   id: string;
@@ -279,5 +325,25 @@ export type EventInitialData = Partial<
     level?: string | null;
     intensity?: number | null;
     style?: string | null;
+    // Course fields from API
+    modules?:
+      | { title: string; description?: string | null; hours?: number | null; topics?: string[] }[]
+      | null;
+    includes?: string[] | null;
+    certification?: {
+      type: string;
+      designation?: string | null;
+      issuing_body?: string | null;
+      hours?: number | null;
+      name?: string | null;
+    } | null;
+    enrollment_closes?: string | null;
+    harmonogram?: string | null;
+    prerequisites?: string | null;
+    is_teacher_training?: boolean | null;
+    // Payment fields from API
+    deposit_amount?: number | null;
+    balance_payment_methods?: string[] | null;
+    payment_terms?: string | null;
   }
 >;

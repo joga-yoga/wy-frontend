@@ -20,14 +20,17 @@ const nextConfig = {
       { source: "/wyjazdy", destination: "/retreats" },
       { source: "/wydarzenia", destination: "/workshops" },
       { source: "/zajecia", destination: "/classes" },
+      { source: "/kursy", destination: "/courses" },
       // Short canonical slug URLs → internal route folders
       { source: "/wydarzenia/:slug", destination: "/workshops/:slug" },
       { source: "/wyjazdy/:slug", destination: "/retreats/:slug" },
       { source: "/zajecia/:slug", destination: "/classes/:slug" },
+      { source: "/kursy/:slug", destination: "/courses/:slug" },
       // Polish-facing URLs → internal English route folders (kept for backward compat)
       { source: "/wydarzenia/:path*", destination: "/workshops/:path*" },
       { source: "/wyjazdy/:path*", destination: "/retreats/:path*" },
       { source: "/zajecia/:path*", destination: "/classes/:path*" },
+      { source: "/kursy/:path*", destination: "/courses/:path*" },
       // Polish instructor URL → internal English route folder
       { source: "/instruktor/:slug", destination: "/instructor/:slug" },
     ];
