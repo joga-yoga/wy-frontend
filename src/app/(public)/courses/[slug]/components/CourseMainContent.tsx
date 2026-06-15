@@ -88,7 +88,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
   const fromPrefix = "/kursy";
 
   return (
-    <div className="space-y-0 pb-24">
+    <div className="space-y-0 pb-24 lg:pb-0">
       {/* Tags */}
       {(event.is_teacher_training || formatBadge || event.total_hours != null) && (
         <div className="flex flex-wrap gap-2 mt-3">
@@ -191,7 +191,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
 
       {/* Terminy i zapisy */}
       {hasDates && (
-        <>
+        <div className="lg:hidden">
           <hr className="mt-6" />
           <div className="pt-6">
             <h2 className="text-xl font-semibold mb-4">Terminy i zapisy</h2>
@@ -220,7 +220,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Harmonogram */}
@@ -387,7 +387,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
 
       {/* Płatność */}
       {hasPayment && event.price != null && (
-        <>
+        <div className="lg:hidden">
           <hr className="mt-6" />
           <div className="pt-6">
             <h2 className="text-xl font-semibold mb-4">Płatność</h2>
@@ -437,7 +437,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Polityka rezygnacji */}
