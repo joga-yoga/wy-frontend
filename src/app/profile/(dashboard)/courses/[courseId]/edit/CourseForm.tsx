@@ -174,6 +174,22 @@ export function CourseForm({ routeId }: CourseFormProps) {
 
   const watchedImageIds = values.image_ids ?? [];
 
+  // Reset to initial create state on every mount (guards against Next.js router cache state persistence)
+  useEffect(() => {
+    if (!isCreateRoute) return;
+    setCourseId(null);
+    setIsLoading(false);
+    setLoadError(null);
+    setIsPaymentExpanded(false);
+    setIsDepositEnabled(false);
+    setIsHarmonogramEditing(false);
+    setCurrentIsPublic(false);
+    setIsUploadingImage(false);
+    setDirectUploadError(null);
+    setPendingImages([]);
+    reset(emptyCourseFormValues);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!courseId) return;
     setIsLoading(true);
