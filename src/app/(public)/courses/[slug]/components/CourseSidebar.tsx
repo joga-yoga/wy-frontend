@@ -24,7 +24,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({ event }) => {
 
   return (
     <>
-      <div className="sticky top-8 self-start border border-gray-200 rounded-2xl shadow-sm p-6 space-y-5">
+      <div className="hidden lg:block sticky top-8 self-start border border-gray-200 rounded-2xl shadow-sm p-6 space-y-5">
         {/* Price */}
         <div>
           <p className="text-3xl font-bold text-gray-900">
