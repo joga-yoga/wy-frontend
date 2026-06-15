@@ -12,6 +12,7 @@ import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
 
 import { CourseBottomBar } from "./components/CourseBottomBar";
 import { CourseMainContent } from "./components/CourseMainContent";
+import { CourseSidebar } from "./components/CourseSidebar";
 
 interface CourseDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -83,7 +84,10 @@ const CourseDetailPage = async ({ params }: CourseDetailPageProps) => {
           <ImageGallery title={event.title} image_ids={event.image_ids || []} />
           <EventHeader title={event.title} eventId={slug} />
         </div>
-        <CourseMainContent event={event} eventSlug={slug} />
+        <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-12 lg:items-start">
+          <CourseMainContent event={event} eventSlug={slug} />
+          <CourseSidebar event={event} />
+        </div>
       </div>
       <CourseBottomBar event={event} />
     </div>
