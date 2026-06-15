@@ -194,7 +194,9 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
         <div className="lg:hidden">
           <hr className="mt-6" />
           <div className="pt-6">
-            <h2 className="text-xl font-semibold mb-4">Terminy i zapisy</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {event.enrollment_closes ? "Terminy i zapisy" : "Terminy"}
+            </h2>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Początek</span>
@@ -274,7 +276,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
                 <div key={i} className="border-l-[3px] border-brand-green pl-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-gray-900">{module.title}</h3>
-                    {module.hours != null && (
+                    {module.hours != null && module.hours > 0 && (
                       <span className="text-sm text-gray-500 shrink-0">{module.hours}h</span>
                     )}
                   </div>
