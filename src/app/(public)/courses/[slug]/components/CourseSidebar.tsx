@@ -24,7 +24,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({ event }) => {
 
   return (
     <>
-      <div className="hidden lg:block sticky top-8 self-start border border-gray-200 rounded-2xl shadow-sm p-6 space-y-5">
+      <div className="hidden lg:block sticky top-[100px] self-start border border-gray-200 rounded-2xl shadow-sm p-5 space-y-4 lg:mt-[56px]">
         {/* Price */}
         <div>
           <p className="text-3xl font-bold text-gray-900">
@@ -32,7 +32,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({ event }) => {
           </p>
           {event.deposit_amount != null && (
             <p className="text-sm text-gray-500 mt-1">
-              zadatek {event.deposit_amount.toLocaleString("pl-PL")} {currency} online
+              zadatek {event.deposit_amount.toLocaleString("pl-PL")} {currency}
             </p>
           )}
           {event.balance_payment_methods && event.balance_payment_methods.length > 0 && (
@@ -48,35 +48,32 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({ event }) => {
           )}
         </div>
 
-        {/* Dates */}
+        {/* Dates — border-t replaces the standalone <hr> to avoid double space-y gap */}
         {hasDates && (
-          <>
-            <hr />
-            <div className="space-y-2">
+          <div className="border-t border-gray-200 pt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Początek</span>
+              <span className="text-gray-900 font-medium">
+                {formatPolishDate(event.start_date!)}
+              </span>
+            </div>
+            {event.end_date && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Początek</span>
+                <span className="text-gray-600">Koniec</span>
                 <span className="text-gray-900 font-medium">
-                  {formatPolishDate(event.start_date!)}
+                  {formatPolishDate(event.end_date)}
                 </span>
               </div>
-              {event.end_date && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Koniec</span>
-                  <span className="text-gray-900 font-medium">
-                    {formatPolishDate(event.end_date)}
-                  </span>
-                </div>
-              )}
-              {event.enrollment_closes && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Zapisy do</span>
-                  <span className="text-gray-900 font-medium">
-                    {formatPolishDate(event.enrollment_closes)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </>
+            )}
+            {event.enrollment_closes && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Zapisy do</span>
+                <span className="text-gray-900 font-medium">
+                  {formatPolishDate(event.enrollment_closes)}
+                </span>
+              </div>
+            )}
+          </div>
         )}
 
         {/* CTA */}

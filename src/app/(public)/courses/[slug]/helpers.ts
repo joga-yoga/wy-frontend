@@ -11,6 +11,6 @@ export function formatPolishDate(dateStr: string): string {
 
 export const BALANCE_METHOD_SHORT: Record<string, string> = {
   online: "online",
-  cash_on_site: "gotówką na miejscu",
+  cash: "gotówką",
   bank_transfer: "przelewem",
 };

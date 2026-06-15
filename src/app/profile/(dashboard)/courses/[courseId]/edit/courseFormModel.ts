@@ -29,7 +29,7 @@ export const CERTIFICATION_LABELS: Record<CertificationDesignation, string> = {
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   online: "Online",
-  cash: "Gotówka na miejscu",
+  cash: "Gotówka",
   bank_transfer: "Przelew",
 };
 

@@ -30,7 +30,7 @@ export const CourseBottomBar: React.FC<CourseBottomBarProps> = ({ event }) => {
             </p>
             {event.deposit_amount != null && (
               <p className="text-sm text-gray-500 leading-tight truncate">
-                zadatek {event.deposit_amount.toLocaleString("pl-PL")} {currency} online
+                zadatek {event.deposit_amount.toLocaleString("pl-PL")} {currency}
               </p>
             )}
           </div>

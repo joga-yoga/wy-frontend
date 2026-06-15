@@ -406,9 +406,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
                   <div className="px-4 py-4 space-y-3">
                     {event.deposit_amount != null && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm">
-                          Zadatek online (rezerwuje miejsce)
-                        </span>
+                        <span className="text-gray-600 text-sm">Zadatek (rezerwuje miejsce)</span>
                         <span className="font-medium text-gray-900 text-sm">
                           {event.deposit_amount.toLocaleString("pl-PL")}{" "}
                           {getCurrencySymbol(event.currency)}
