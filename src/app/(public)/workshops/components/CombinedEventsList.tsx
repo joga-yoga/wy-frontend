@@ -26,15 +26,27 @@ interface CombinedEventsListProps {
 
 const EVENTS_PER_PAGE = 10;
 
-function mergeSortedByDate(workshops: Event[], courses: CourseCardEvent[]): CombinedItem[] {
+function mergeAndSort(
+  workshops: Event[],
+  courses: CourseCardEvent[],
+  sortBy: string | null,
+  sortOrder: string | null,
+): CombinedItem[] {
   const tagged: CombinedItem[] = [
     ...workshops.map((e) => ({ ...e, _type: "workshop" as const })),
     ...courses.map((e) => ({ ...e, _type: "course" as const })),
   ];
+  const dir = sortOrder === "desc" ? -1 : 1;
   return tagged.sort((a, b) => {
+    if (sortBy === "price") {
+      const pa = a.price ?? Infinity;
+      const pb = b.price ?? Infinity;
+      return (pa - pb) * dir;
+    }
+    // default: sort by start_date
     if (!a.start_date) return 1;
     if (!b.start_date) return -1;
-    return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+    return (new Date(a.start_date).getTime() - new Date(b.start_date).getTime()) * dir;
   });
 }
 
@@ -119,12 +131,15 @@ const CombinedEventsList: React.FC<CombinedEventsListProps> = ({
     }
   };
 
-  // Merge workshops + courses, sorted by start_date.
+  const sortBy = searchParams.get("sortBy");
+  const sortOrder = searchParams.get("sortOrder");
+
+  // Merge workshops + courses and sort by the active sort params.
   // In bookmark mode, only show workshops (courses are not bookmarkable yet).
   const combined = useMemo(() => {
     const courses = isBookmarksActive ? [] : initialCourses;
-    return mergeSortedByDate(workshopEvents, courses);
-  }, [workshopEvents, initialCourses, isBookmarksActive]);
+    return mergeAndSort(workshopEvents, courses, sortBy, sortOrder);
+  }, [workshopEvents, initialCourses, isBookmarksActive, sortBy, sortOrder]);
 
   if (loading && combined.length === 0) {
     return <p className="text-center py-10">Ładowanie wydarzeń...</p>;
