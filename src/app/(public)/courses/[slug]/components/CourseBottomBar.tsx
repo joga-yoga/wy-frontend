@@ -22,7 +22,7 @@ export const CourseBottomBar: React.FC<CourseBottomBarProps> = ({ event }) => {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
         <div className="container-wy mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xl font-bold leading-tight">
