@@ -34,6 +34,10 @@ export interface LocationDetail {
 export interface ProgramDay {
   description: string;
   imageId?: string | null;
+  // Course program blocks carry their own dates ("YYYY-MM-DD");
+  // workshops/retreats leave these undefined (their dates come from occurrences).
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface EventOccurrence {

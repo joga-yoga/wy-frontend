@@ -8,6 +8,7 @@ import type {
   CourseFormValues,
   CourseModuleValue,
   CoursePayload,
+  CourseProgramItem,
   PaymentMethod,
 } from "./types";
 
@@ -59,6 +60,25 @@ const moduleSchema = yup.object({
   description: optionalString.nullable(),
 });
 
+const programItemSchema = yup.object({
+  start_date: yup.string().trim().required("Wybierz datę rozpoczęcia"),
+  end_date: yup
+    .string()
+    .nullable()
+    .optional()
+    .test(
+      "end-after-start",
+      "Data zakończenia nie może być wcześniejsza niż rozpoczęcie",
+      function (value) {
+        const start = this.parent?.start_date;
+        if (!value || !start) return true;
+        return new Date(value) >= new Date(start);
+      },
+    ),
+  imageId: yup.string().nullable().optional(),
+  description: optionalString.nullable(),
+});
+
 export const courseDraftSchema = yup.object({
   title: yup.string().trim().required("Nazwa kursu jest wymagana"),
 });
@@ -73,7 +93,7 @@ export const coursePublishSchema = yup
     start_date: yup.string().required("Data początku jest wymagana"),
     end_date: yup.string().required("Data końca jest wymagana"),
     enrollment_closes: yup.string().nullable().optional(),
-    harmonogram: yup.string().nullable().optional(),
+    program: yup.array().of(programItemSchema).default([]),
     modules: yup
       .array()
       .of(moduleSchema)
@@ -220,6 +240,18 @@ function cleanNumber(value: unknown): number | null {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
+function cleanCourseProgram(items: CourseProgramItem[]): CourseProgramItem[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((item) => cleanString(item.start_date))
+    .map((item) => ({
+      start_date: cleanString(item.start_date)!,
+      end_date: cleanString(item.end_date),
+      imageId: cleanString(item.imageId),
+      description: cleanString(item.description),
+    }));
+}
+
 export function buildCertificationPayload(choice: CertificationChoice, name?: string | null) {
   if (choice === "none") return null;
   if (choice === "school") return { type: "school" as const, name: cleanString(name) ?? "" };
@@ -272,7 +304,7 @@ export function buildCoursePayload(values: CourseFormValues): CoursePayload {
     start_date: cleanString(values.start_date),
     end_date: cleanString(values.end_date),
     enrollment_closes: cleanString(values.enrollment_closes),
-    harmonogram: cleanString(values.harmonogram),
+    program: cleanCourseProgram(values.program ?? []),
     modules,
     instructor_ids: values.instructor_ids ?? [],
     certification: buildCertificationPayload(values.certificationChoice, values.certificationName),
@@ -305,7 +337,12 @@ export function formValuesFromCourse(course: CourseApiResponse): CourseFormValue
     start_date: toDateInputValue(course.start_date),
     end_date: toDateInputValue(course.end_date),
     enrollment_closes: toDateInputValue(course.enrollment_closes),
-    harmonogram: course.harmonogram ?? "",
+    program: (course.program ?? []).map((item) => ({
+      start_date: toDateInputValue(item.start_date),
+      end_date: item.end_date ? toDateInputValue(item.end_date) : "",
+      imageId: item.imageId ?? null,
+      description: item.description ?? "",
+    })),
     modules: course.modules ?? [],
     instructor_ids: instructors.map((instructor) => instructor.id),
     instructors,
@@ -341,7 +378,7 @@ export const emptyCourseFormValues: CourseFormValues = {
   start_date: "",
   end_date: "",
   enrollment_closes: "",
-  harmonogram: "",
+  program: [],
   modules: [],
   instructor_ids: [],
   instructors: [],

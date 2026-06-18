@@ -1,3 +1,5 @@
+import { format, parseISO } from "date-fns";
+import { pl } from "date-fns/locale";
 import {
   ArrowRight,
   Check,
@@ -47,6 +49,27 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+function formatProgramDateTitle(start?: string | null, end?: string | null): string {
+  if (!start) return "";
+  const startDate = parseISO(start);
+  if (Number.isNaN(startDate.getTime())) return "";
+
+  const endDate = end ? parseISO(end) : null;
+  if (!endDate || Number.isNaN(endDate.getTime()) || end === start) {
+    return format(startDate, "d MMMM yyyy", { locale: pl });
+  }
+
+  const sameYear = startDate.getFullYear() === endDate.getFullYear();
+  const sameMonth = sameYear && startDate.getMonth() === endDate.getMonth();
+  if (sameMonth) {
+    return `${format(startDate, "d", { locale: pl })}–${format(endDate, "d MMMM yyyy", { locale: pl })}`;
+  }
+  if (sameYear) {
+    return `${format(startDate, "d MMMM", { locale: pl })} – ${format(endDate, "d MMMM yyyy", { locale: pl })}`;
+  }
+  return `${format(startDate, "d MMMM yyyy", { locale: pl })} – ${format(endDate, "d MMMM yyyy", { locale: pl })}`;
+}
+
 const CERT_DESIGNATION_LABELS: Record<string, string> = {
   RYT_200: "RYT 200",
   RYT_300: "RYT 300",
@@ -72,7 +95,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
 
   const hasInstructors = event.instructors && event.instructors.length > 0;
   const hasDates = !!event.start_date;
-  const hasHarmonogram = !!event.harmonogram;
+  const hasProgram = !!event.program && event.program.length > 0;
   const hasGoals = event.goals && event.goals.length > 0;
   const hasModules = event.modules && event.modules.length > 0;
   const hasCertification = event.certification != null;
@@ -93,12 +116,12 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
       {(event.is_teacher_training || formatBadge || event.total_hours != null) && (
         <div className="flex flex-wrap gap-2 mt-3">
           {event.is_teacher_training && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-brand-blue/15 text-brand-blue">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
               Kurs nauczycielski
             </span>
           )}
           {formatBadge && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-brand-green/15 text-brand-green">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
               <formatBadge.Icon className="w-3.5 h-3.5" />
               {formatBadge.label}
             </span>
@@ -226,13 +249,39 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
       )}
 
       {/* Harmonogram */}
-      {hasHarmonogram && (
+      {hasProgram && (
         <>
           <hr className="mt-6" />
           <div className="pt-6">
-            <h2 className="text-xl font-semibold mb-3">Harmonogram</h2>
-            <div className="text-gray-600 leading-relaxed">
-              {formatMultiLineText(event.harmonogram!)}
+            <h2 className="text-xl font-semibold mb-4">Harmonogram</h2>
+            <div className="space-y-6">
+              {event.program!.map((block, index) => {
+                const title = formatProgramDateTitle(block.start_date, block.end_date);
+                return (
+                  <div key={index} className="flex items-start gap-4">
+                    {block.imageId && (
+                      <div className="relative w-20 h-20 md:w-28 md:h-28 shrink-0">
+                        <WyImage
+                          src={block.imageId}
+                          alt={title || `Blok ${index + 1}`}
+                          fill
+                          className="object-cover rounded-2xl"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-semibold text-gray-900">
+                        {title || `Blok ${index + 1}`}
+                      </h3>
+                      {block.description && (
+                        <div className="text-sm text-gray-600 mt-1 leading-relaxed">
+                          {formatMultiLineText(block.description)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>

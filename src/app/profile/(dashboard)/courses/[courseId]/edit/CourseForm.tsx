@@ -4,7 +4,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import {
   BadgeCheck,
   ExternalLink,
-  FileText,
   Laptop,
   Loader2,
   MapPin,
@@ -54,6 +53,7 @@ import {
 import { CourseInstructorsField } from "./CourseInstructorsField";
 import { CourseLocationField } from "./CourseLocationField";
 import { CourseModuleBuilder } from "./CourseModuleBuilder";
+import { CourseProgramBuilder } from "./CourseProgramBuilder";
 import { MoreDetailsBuilder } from "./MoreDetailsBuilder";
 import type {
   CertificationChoice,
@@ -134,7 +134,6 @@ export function CourseForm({ routeId }: CourseFormProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPaymentExpanded, setIsPaymentExpanded] = useState(false);
   const [isDepositEnabled, setIsDepositEnabled] = useState(false);
-  const [isHarmonogramEditing, setIsHarmonogramEditing] = useState(false);
   const [currentIsPublic, setCurrentIsPublic] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [directUploadError, setDirectUploadError] = useState<string | null>(null);
@@ -170,7 +169,6 @@ export function CourseForm({ routeId }: CourseFormProps) {
   const values = watch();
   const format = deriveCourseFormat(values);
   const hasRecognizedCertification = values.certificationChoice.startsWith("recognized:");
-  const hasHarmonogram = Boolean(values.harmonogram?.trim());
 
   const watchedImageIds = values.image_ids ?? [];
 
@@ -182,7 +180,6 @@ export function CourseForm({ routeId }: CourseFormProps) {
     setLoadError(null);
     setIsPaymentExpanded(false);
     setIsDepositEnabled(false);
-    setIsHarmonogramEditing(false);
     setCurrentIsPublic(false);
     setIsUploadingImage(false);
     setDirectUploadError(null);
@@ -207,7 +204,6 @@ export function CourseForm({ routeId }: CourseFormProps) {
           ),
         );
         setIsDepositEnabled(Boolean(response.data.deposit_amount));
-        setIsHarmonogramEditing(Boolean(response.data.harmonogram));
         reset(formValues);
       })
       .catch(() => {
@@ -491,60 +487,15 @@ export function CourseForm({ routeId }: CourseFormProps) {
                     error={errors.enrollment_closes?.message}
                     onChange={(value) => setDirtyValue("enrollment_closes", value, true)}
                   />
-
-                  {isHarmonogramEditing || hasHarmonogram ? (
-                    <div className="rounded-lg border p-4">
-                      {isHarmonogramEditing ? (
-                        <div className="space-y-3">
-                          <label className="block text-base font-semibold" htmlFor="harmonogram">
-                            Harmonogram zajęć
-                          </label>
-                          <Textarea
-                            id="harmonogram"
-                            {...register("harmonogram")}
-                            placeholder="Zjazdy stacjonarne co drugi weekend..."
-                            className="min-h-24 rounded-md text-base"
-                            spellCheck={false}
-                          />
-                          <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              className="bg-black text-white hover:bg-black/90"
-                              onClick={() => setIsHarmonogramEditing(false)}
-                            >
-                              Gotowe
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="flex w-full items-start gap-3 text-left"
-                          onClick={() => setIsHarmonogramEditing(true)}
-                        >
-                          <FileText className="mt-1 size-5 text-brand-green" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-base font-semibold">Harmonogram zajęć</p>
-                            <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                              {values.harmonogram}
-                            </p>
-                          </div>
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="flex min-h-10 items-center gap-3 text-left text-base font-medium text-brand-blue"
-                      onClick={() => setIsHarmonogramEditing(true)}
-                    >
-                      <Plus className="size-5 shrink-0" />
-                      <span className="min-w-0 flex-1">
-                        Dodaj harmonogram (jak rozłożone są zajęcia)
-                      </span>
-                    </button>
-                  )}
                 </div>
+              </Section>
+
+              <Section id="course-schedule-section" title="Harmonogram">
+                <CourseProgramBuilder
+                  program={values.program ?? []}
+                  errors={errors}
+                  onChange={(program) => setDirtyValue("program", program, true)}
+                />
               </Section>
 
               <Section id="course-program-section" title="Program kursu">

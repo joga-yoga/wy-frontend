@@ -29,7 +29,6 @@ export interface CourseEventDetail extends EventDetail {
   prerequisites?: string | null;
   certification?: CourseCertification | null;
   enrollment_closes?: string | null;
-  harmonogram?: string | null;
   goals?: string[] | null;
   tags?: string[] | null;
   total_hours?: number | null;

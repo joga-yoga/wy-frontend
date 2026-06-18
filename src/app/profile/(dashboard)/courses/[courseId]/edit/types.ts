@@ -22,6 +22,13 @@ export interface CourseModuleValue {
   description?: string | null;
 }
 
+export interface CourseProgramItem {
+  start_date: string;
+  end_date?: string | null;
+  imageId?: string | null;
+  description?: string | null;
+}
+
 export interface CourseInstructor {
   id: string;
   name: string;
@@ -58,7 +65,7 @@ export interface CourseFormValues {
   start_date?: string | null;
   end_date?: string | null;
   enrollment_closes?: string | null;
-  harmonogram?: string | null;
+  program: CourseProgramItem[];
   modules: CourseModuleValue[];
   instructor_ids: string[];
   instructors: CourseInstructor[];
@@ -105,7 +112,7 @@ export interface CourseApiResponse {
   prerequisites?: string | null;
   certification?: CourseCertification | null;
   enrollment_closes?: string | null;
-  harmonogram?: string | null;
+  program?: CourseProgramItem[] | null;
   important_info?: string | null;
   cancellation_policy?: string | null;
   location?: CourseLocation | null;
@@ -123,7 +130,6 @@ export type CoursePayload = Omit<
   | "start_date"
   | "end_date"
   | "enrollment_closes"
-  | "harmonogram"
   | "modules"
   | "certification"
   | "price"
@@ -141,7 +147,6 @@ export type CoursePayload = Omit<
   start_date: string | null;
   end_date: string | null;
   enrollment_closes: string | null;
-  harmonogram: string | null;
   modules: Array<{ title: string; hours?: number; description?: string }>;
   certification: CourseCertification | null;
   price: number | null;
