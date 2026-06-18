@@ -2,6 +2,7 @@ import { format, parseISO } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
   ArrowRight,
+  Calendar,
   Check,
   Clock,
   CreditCard,
@@ -93,6 +94,11 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
     return null;
   })();
 
+  const dateBadge = formatProgramDateTitle(event.start_date, event.end_date);
+  const locationBadge = event.location
+    ? event.location.city || event.location.title || null
+    : null;
+
   const hasInstructors = event.instructors && event.instructors.length > 0;
   const hasDates = !!event.start_date;
   const hasProgram = !!event.program && event.program.length > 0;
@@ -113,7 +119,11 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
   return (
     <div className="space-y-0 pb-24 lg:pb-0">
       {/* Tags */}
-      {(event.is_teacher_training || formatBadge || event.total_hours != null) && (
+      {(event.is_teacher_training ||
+        formatBadge ||
+        dateBadge ||
+        locationBadge ||
+        event.total_hours != null) && (
         <div className="flex flex-wrap gap-2 mt-3">
           {event.is_teacher_training && (
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
@@ -124,6 +134,18 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
               <formatBadge.Icon className="w-3.5 h-3.5" />
               {formatBadge.label}
+            </span>
+          )}
+          {dateBadge && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+              <Calendar className="w-3.5 h-3.5" />
+              {dateBadge}
+            </span>
+          )}
+          {locationBadge && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+              <MapPin className="w-3.5 h-3.5" />
+              {locationBadge}
             </span>
           )}
           {event.total_hours != null && event.total_hours > 0 && (
