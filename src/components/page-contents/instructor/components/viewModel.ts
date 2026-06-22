@@ -358,7 +358,6 @@ function buildClassPreviewItems(): StaticClassPreviewItem[] {
       timeLabel: "19:30-20:45",
       placeLabel: "Studio / online",
     },
-    { offset: 9, title: "Medytacja i relaks", timeLabel: "10:00-11:00", placeLabel: "Studio" },
   ];
 
   const today = new Date();

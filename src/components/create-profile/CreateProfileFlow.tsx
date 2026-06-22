@@ -23,9 +23,9 @@ type GenerateDraftErrorResponse = {
 
 const rotatingStatuses = [
   "Sprawdzamy źródła publiczne",
-  "Szukamy właściwego profilu nauczyciela jogi",
-  "Analizujemy opis, style i doświadczenie",
-  "Składamy stronę demonstracyjną",
+  "To może zająć około 2 min. 🙏",
+  "Szukamy zdjęć",
+  "Tworzymy przykładową stronę",
 ];
 
 export function CreateProfileFlow() {
