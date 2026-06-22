@@ -11,14 +11,12 @@ import type { InstructorEventCardViewModel } from "./viewModel";
 type InstructorEventSectionProps = {
   id: string;
   title: string;
-  description: string;
   items: InstructorEventCardViewModel[];
 };
 
 export function InstructorEventSection({
   id,
   title,
-  description,
   items,
 }: InstructorEventSectionProps) {
   const isDemo = items.every((item) => item.isDemo);
@@ -38,16 +36,7 @@ export function InstructorEventSection({
           )}
           <span>{title}</span>
         </h2>
-        <p className="text-[15px] leading-5 text-[#717171]">{description}</p>
       </div>
-
-      {isDemo && (
-        <p className="mt-4 rounded-xl bg-[#F7F7F7] px-4 py-3 text-[14px] leading-5 text-[#717171]">
-          To jest przykładowy podgląd. W tym miejscu pojawią się prawdziwe pozycje po dodaniu
-          oferty.
-        </p>
-      )}
-
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         {items.map((item) => (
           <InstructorEventCard key={item.id} item={item} />

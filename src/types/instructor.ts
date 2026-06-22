@@ -61,6 +61,7 @@ export interface InstructorPublic {
   short_bio: string | null;
   slug: string | null;
   image_id: string | null;
+  studio_name?: string | null;
   languages: string[] | null;
   cities: CityItem[] | null;
   photo_ids: string[] | null;
@@ -78,6 +79,19 @@ export interface InstructorDetails {
   past_workshops: import("@/components/page-contents/organizer/types").OrganizerEvent[];
   upcoming_courses: import("@/components/page-contents/organizer/types").OrganizerEvent[];
   past_courses: import("@/components/page-contents/organizer/types").OrganizerEvent[];
+}
+
+export interface GeneratedInstructorProfileDraft {
+  draft_id: string;
+  public_token: string;
+  public_url: string;
+  status: string;
+  profile: InstructorDetails;
+  sources: Array<Record<string, unknown>>;
+  confidence: Record<string, unknown>;
+  image_provenance: Record<string, unknown>;
+  error_message: string | null;
+  expires_at: string;
 }
 
 export interface InstructorUpdatePayload {

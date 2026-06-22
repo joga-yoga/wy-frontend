@@ -21,9 +21,9 @@ async function getCachedInstructor(slug: string): Promise<InstructorDetails> {
   cacheLife({ stale: 900, revalidate: 900, expire: 3600 });
   cacheTag("instructors", `instructor:${slug}`);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+  const baseUrl = process.env.API_ENDPOINT ?? process.env.NEXT_PUBLIC_API_ENDPOINT;
   if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
+    throw new Error("API_ENDPOINT or NEXT_PUBLIC_API_ENDPOINT is not configured");
   }
 
   const res = await fetch(`${baseUrl}/instructor/${slug}`);

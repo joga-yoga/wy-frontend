@@ -46,16 +46,27 @@ export type StaticCompletedItem = {
   imageId: string;
 };
 
+export type InstructorHighlightKind =
+  | "certificate"
+  | "studio"
+  | "location"
+  | "experience"
+  | "language";
+
+export type InstructorHighlightViewModel = {
+  id: string;
+  kind: InstructorHighlightKind;
+  label: string;
+};
+
 export type InstructorProfileViewModel = {
   hero: {
     name: string;
     roleLabel: "nauczyciel jogi";
     imageId: string | null;
     shortBio: string | null;
-    certificates: string[];
-    locations: string[];
-    yogaStyles: InstructorStyleViewModel[];
   };
+  highlights: InstructorHighlightViewModel[];
   bio: string;
   languages: { code: string; label: string }[];
   experienceItems: InstructorStyleViewModel[];
@@ -97,6 +108,13 @@ export function buildInstructorProfileViewModel(
   const { instructor } = data;
   const styles = normalizeYogaStyles(instructor.yoga_styles ?? []);
   const certificates = normalizeCertificates(instructor.certificates ?? []);
+  const languages = normalizeLanguages(instructor.languages);
+  const locations = (instructor.cities ?? [])
+    .map(formatCityLabel)
+    .filter((name): name is string => Boolean(name));
+  const experienceItems = styles.length > 0 ? styles : fallbackExperienceItems();
+  const studioName =
+    typeof instructor.studio_name === "string" ? cleanProfileLabel(instructor.studio_name) : "";
   const imageOffset = hashString(instructor.name);
 
   return {
@@ -104,16 +122,18 @@ export function buildInstructorProfileViewModel(
       name: instructor.name || "Nauczyciel jogi",
       roleLabel: "nauczyciel jogi",
       imageId: instructor.image_id,
-      shortBio: truncateText(cleanProfileText(instructor.short_bio) || DEFAULT_SHORT_BIO, 100),
-      certificates: certificates.map((certificate) => certificate.name),
-      locations: (instructor.cities ?? [])
-        .map((city) => city.name?.trim())
-        .filter((name): name is string => Boolean(name)),
-      yogaStyles: styles,
+      shortBio: cleanProfileText(instructor.short_bio) || DEFAULT_SHORT_BIO,
     },
+    highlights: buildHighlights({
+      certificates,
+      studioName,
+      locations,
+      experienceItems,
+      languages,
+    }),
     bio: cleanProfileText(instructor.description) || DEFAULT_BIO,
-    languages: normalizeLanguages(instructor.languages),
-    experienceItems: styles.length > 0 ? styles : fallbackExperienceItems(),
+    languages,
+    experienceItems,
     certificates,
     galleryImageIds: buildGalleryImageIds(instructor.photo_ids ?? [], imageOffset),
     retreats: mapEvents(data.upcoming_retreats ?? [], "retreat", imageOffset),
@@ -121,6 +141,54 @@ export function buildInstructorProfileViewModel(
     classesPreview: buildClassPreviewItems(),
     completedPreview: buildCompletedPreview(imageOffset + 14),
   };
+}
+
+function buildHighlights({
+  certificates,
+  studioName,
+  locations,
+  experienceItems,
+  languages,
+}: {
+  certificates: InstructorCertificateViewModel[];
+  studioName: string;
+  locations: string[];
+  experienceItems: InstructorStyleViewModel[];
+  languages: { code: string; label: string }[];
+}): InstructorHighlightViewModel[] {
+  const highlights: InstructorHighlightViewModel[] = [];
+  const primaryCertificate = certificates[0]?.name;
+  const primaryLocation = locations[0];
+  const experienceLabel = experienceItems
+    .slice(0, 2)
+    .map((item) => item.name)
+    .filter(Boolean)
+    .join(" · ");
+  const languageLabel = languages
+    .map((language) => language.label.toLocaleLowerCase("pl-PL"))
+    .join(", ");
+
+  if (primaryCertificate) {
+    highlights.push({ id: "certificate", kind: "certificate", label: primaryCertificate });
+  }
+
+  if (studioName) {
+    highlights.push({ id: "studio", kind: "studio", label: `Studio: ${studioName}` });
+  }
+
+  if (primaryLocation) {
+    highlights.push({ id: "location", kind: "location", label: primaryLocation });
+  }
+
+  if (experienceLabel) {
+    highlights.push({ id: "experience", kind: "experience", label: experienceLabel });
+  }
+
+  if (languageLabel) {
+    highlights.push({ id: "language", kind: "language", label: `${languageLabel}` });
+  }
+
+  return highlights;
 }
 
 function normalizeYogaStyles(styles: InstructorYogaStyle[]): InstructorStyleViewModel[] {
@@ -179,6 +247,18 @@ function normalizeLanguages(languages: string[] | null): { code: string; label: 
   }));
 }
 
+function formatCityLabel(city: { name?: string | null; country?: string | null }): string {
+  const name = city.name?.trim();
+  if (!name) return "";
+
+  const country = city.country?.trim();
+  if (!country || name.toLocaleLowerCase("pl-PL") === country.toLocaleLowerCase("pl-PL")) {
+    return name;
+  }
+
+  return `${name}, ${country}`;
+}
+
 function fallbackExperienceItems(): InstructorStyleViewModel[] {
   return [
     {
@@ -224,11 +304,11 @@ function buildDemoEvent(
     href: null,
     dateLabel: "Wkrótce",
     timeLabel: null,
-    title: isRetreat ? "Tu pojawią się Twoje wyjazdy" : "Tu pojawią się Twoje wydarzenia",
+    title: isRetreat ? "Tytuł wyjazdu" : "Temat wydarzenia",
     excerpt: isRetreat
-      ? "Po dodaniu oferty pokażemy tutaj wyjazdy, retreaty i praktyki prowadzone przez nauczyciela."
-      : "Po dodaniu oferty pokażemy tutaj warsztaty, spotkania i wydarzenia prowadzone przez nauczyciela.",
-    priceLabel: "Cena do ustalenia",
+      ? "Po dodaniu oferty pokażemy tutaj wyjazdy prowadzone przez nauczyciela."
+      : "Po dodaniu oferty pokażemy tutaj warsztaty i wydarzenia prowadzone przez nauczyciela.",
+    priceLabel: "Cena",
     imageId: fallbackImageId(imageOffset),
     isDemo: true,
   };

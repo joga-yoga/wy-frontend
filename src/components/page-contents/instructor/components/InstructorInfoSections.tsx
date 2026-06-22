@@ -1,6 +1,15 @@
 "use client";
 
-import { Award, ChevronLeft, ChevronRight, GraduationCap, Languages, X } from "lucide-react";
+import {
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  GraduationCap,
+  Home,
+  Languages,
+  MapPin,
+  X,
+} from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
@@ -10,9 +19,65 @@ import { cn } from "@/lib/utils";
 
 import type {
   InstructorCertificateViewModel,
+  InstructorHighlightViewModel,
   InstructorProfileViewModel,
   InstructorStyleViewModel,
 } from "./viewModel";
+
+export function InstructorHighlights({
+  highlights,
+}: {
+  highlights: InstructorHighlightViewModel[];
+}) {
+  if (highlights.length === 0) return null;
+
+  return (
+    <section
+      data-testid="instructor-highlights"
+      className="px-[18px] py-3 md:px-8 md:py-6"
+      aria-label="Najważniejsze informacje o nauczycielu jogi"
+    >
+      <div className="space-y-2 md:space-y-4">
+        {highlights.map((item) => (
+          <div
+            key={item.id}
+            data-testid={`instructor-highlight-${item.kind}`}
+            className="flex min-w-0 items-center gap-3 text-[#717171]"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[#5F5F69] md:h-8 md:w-8">
+              {highlightIcon(item.kind)}
+            </span>
+            <span
+              className="min-w-0 truncate text-[15px] font-medium leading-5 md:text-[28px] md:leading-[34px]"
+              title={item.label}
+            >
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function highlightIcon(kind: InstructorHighlightViewModel["kind"]) {
+  const className = "h-6 w-6 md:h-8 md:w-8";
+
+  switch (kind) {
+    case "certificate":
+      return <Award className={className} aria-hidden="true" />;
+    case "studio":
+      return <Home className={className} aria-hidden="true" />;
+    case "location":
+      return <MapPin className={className} aria-hidden="true" />;
+    case "experience":
+      return <TagYogaLotosIcon className={className} aria-hidden="true" />;
+    case "language":
+      return <Languages className={className} aria-hidden="true" />;
+    default:
+      return null;
+  }
+}
 
 export function AboutInstructor({ bio }: { bio: string }) {
   const bioRef = useRef<HTMLParagraphElement>(null);
@@ -47,7 +112,7 @@ export function AboutInstructor({ bio }: { bio: string }) {
       <p
         ref={bioRef}
         className={cn(
-          "mt-4 whitespace-pre-line text-[16px] leading-[26px] text-[#222222] md:max-w-[760px] md:text-[18px] md:leading-[30px]",
+          "mt-4 whitespace-pre-line text-[16px] leading-[22px] text-[#222222] md:max-w-[760px] md:text-[18px] md:leading-[30px]",
           !expanded && "line-clamp-5",
         )}
       >

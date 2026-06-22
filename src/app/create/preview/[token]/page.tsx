@@ -36,11 +36,10 @@ export default async function GeneratedInstructorProfileDraftPreviewPage({
       data={draft.profile}
       draftNotice={
         <div
-          className="rounded-xl border px-4 py-3 text-sm leading-5"
-          style={{ borderColor: "#EBEBEB", background: "#F7F7F7", color: "#717171" }}
+          className="rounded-xl border px-4 py-3 text-sm italic leading-5"
+          style={{ borderColor: "#EBEBEB", background: "#F7F7F7", color: "#52525B" }}
         >
-          Profil został przygotowany automatycznie na podstawie publicznych źródeł. Po założeniu
-          konta będzie można sprawdzić, edytować i opublikować stronę.
+          Profil utworzony automatycznie z publicznych informacji. Możesz założyć konto, poprawić dane i opublikować
         </div>
       }
       bottomPrimaryAction={{
