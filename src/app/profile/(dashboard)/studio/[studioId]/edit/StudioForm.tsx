@@ -1,15 +1,27 @@
 "use client";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Copy, CreditCard, ExternalLink, Loader2, MapPin, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
+import {
+  Copy,
+  CreditCard,
+  ExternalLink,
+  Loader2,
+  MapPin,
+  Pencil,
+  Plus,
+  Save,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { type Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
-import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -152,8 +164,15 @@ export function StudioForm({ routeId }: StudioFormProps) {
   const slugManuallyEditedRef = useRef(false);
 
   // Location autocomplete
-  const [locationSuggestions, setLocationSuggestions] = useState<Array<{ description: string; place_id: string; structured_formatting: { main_text: string; secondary_text: string } }>>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<
+    Array<{
+      description: string;
+      place_id: string;
+      structured_formatting: { main_text: string; secondary_text: string };
+    }>
+  >([]);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
   const [isFetchingLocationSuggestions, setIsFetchingLocationSuggestions] = useState(false);
   const locationDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -239,9 +258,20 @@ export function StudioForm({ routeId }: StudioFormProps) {
     setLoadError(null);
     axiosInstance
       .get<StudioApiResponse>(`/studios/${studioId}`)
-      .then((response) => {
+      .then(async (response) => {
         const formValues = formValuesFromStudio(response.data);
         setCurrentIsPublic(formValues.is_public);
+        if (formValues.location_id) {
+          try {
+            const { data: locations } = await axiosInstance.get<StudioLocation[]>("/locations");
+            const loc = locations.find((l) => l.id === formValues.location_id);
+            if (loc) {
+              formValues.location = loc;
+              setLocationQuery(loc.address_line1 || loc.title || "");
+              setIsSearchingLocation(false);
+            }
+          } catch {}
+        }
         reset(formValues);
       })
       .catch(() => {
@@ -249,23 +279,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
       })
       .finally(() => setIsLoading(false));
   }, [studioId, reset]);
-
-  // Load location data when studio has location_id
-  useEffect(() => {
-    if (!studioId) return;
-    axiosInstance.get<StudioLocation[]>("/locations")
-      .then(({ data }) => {
-        const current = values.location_id;
-        if (current) {
-          const loc = data.find(l => l.id === current);
-          if (loc) {
-            setValue("location", loc as any, { shouldDirty: false });
-            setLocationQuery(loc.address_line1 || loc.title || "");
-          }
-        }
-      })
-      .catch(() => {});
-  }, [studioId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Unsaved changes warning
   useEffect(() => {
@@ -504,6 +517,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
   async function handleLocationSelected(suggestion: { description: string; place_id: string }) {
     setIsSearchingLocation(false);
+    setIsEditingLocation(false);
     setLocationSuggestions([]);
     setLocationQuery(suggestion.description);
     try {
@@ -578,11 +592,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       {...register("name")}
                       className={fieldClass(Boolean(errors.name))}
                       onBlur={(e) => {
-                        if (
-                          isCreateRoute &&
-                          !slugManuallyEditedRef.current &&
-                          !values.slug
-                        ) {
+                        if (isCreateRoute && !slugManuallyEditedRef.current && !values.slug) {
                           const generated = slugify(e.target.value);
                           if (generated) {
                             setDirtyValue("slug", generated);
@@ -599,8 +609,8 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       Adres URL studia
                     </label>
                     <p className="mb-2 text-sm text-muted-foreground">
-                      Unikalny identyfikator studia, który jest częścią linku do
-                      Twojej strony publicznej.
+                      Unikalny identyfikator studia, który jest częścią linku do Twojej strony
+                      publicznej.
                     </p>
                     <Input
                       id="slug"
@@ -615,7 +625,8 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     />
                     <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2">
                       <span className="min-w-0 font-mono text-sm text-muted-foreground">
-                        https://joga.yoga/studio/{values.slug ? (
+                        https://joga.yoga/studio/
+                        {values.slug ? (
                           <span className="text-brand-green">{values.slug}</span>
                         ) : (
                           <span className="italic">...</span>
@@ -625,9 +636,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         type="button"
                         className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
                         onClick={() => {
-                          navigator.clipboard.writeText(
-                            `https://joga.yoga/studio/${values.slug}`,
-                          );
+                          navigator.clipboard.writeText(`https://joga.yoga/studio/${values.slug}`);
                           toast({ description: "Link skopiowany" });
                         }}
                       >
@@ -644,7 +653,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       id="description"
                       {...register("description")}
                       className={textAreaClass(Boolean(errors.description))}
-                      placeholder="Opis studia..."
+                      placeholder="Opis studia...."
                       spellCheck={false}
                     />
                     <FieldError message={errors.description?.message} />
@@ -657,61 +666,88 @@ export function StudioForm({ routeId }: StudioFormProps) {
                 <div className="space-y-4">
                   <div data-error-field="location_id" className="relative">
                     <label className="mb-2 block text-base font-semibold">Adres</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        value={locationQuery}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setLocationQuery(val);
-                          setIsSearchingLocation(true);
-                          if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
-                          locationDebounceRef.current = setTimeout(() => fetchLocationSuggestions(val), 300);
-                        }}
-                        className={cn(fieldClass(Boolean(errors.address)), "pl-9")}
-                        placeholder="Wpisz adres, aby wyszukać..."
-                        autoComplete="off"
-                      />
-                    </div>
-                    {isFetchingLocationSuggestions && (
-                      <p className="mt-1 text-xs text-muted-foreground">Szukanie...</p>
-                    )}
-                    {locationSuggestions.length > 0 && isSearchingLocation && (
-                      <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-[200px] overflow-y-auto">
-                        {locationSuggestions.map((suggestion) => (
-                          <button
-                            key={suggestion.place_id}
-                            type="button"
-                            className="flex w-full flex-col px-3 py-2 text-left hover:bg-accent transition-colors"
-                            onClick={() => handleLocationSelected(suggestion)}
-                          >
-                            <span className="text-sm font-medium">{suggestion.structured_formatting.main_text}</span>
-                            <span className="text-xs text-muted-foreground">{suggestion.structured_formatting.secondary_text}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {values.location && !isSearchingLocation && (
-                      <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-                        <MapPin className="size-4 shrink-0" />
-                        <span className="min-w-0 truncate">
+                    {values.location && !isEditingLocation ? (
+                      <div className="flex items-center gap-2 rounded-md border px-3 py-3">
+                        <MapPin className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1 text-sm">
                           {values.location.address_line1}
-                          {values.location.city ? `, ${values.location.city}` : ''}
+                          {values.location.city ? `, ${values.location.city}` : ""}
+                          {values.location.country ? `, ${values.location.country}` : ""}
                         </span>
                         <button
                           type="button"
-                          className="ml-auto text-xs text-brand-blue hover:underline shrink-0"
+                          className="shrink-0 text-xs text-brand-blue hover:underline"
                           onClick={() => {
-                            setLocationQuery("");
-                            setDirtyValue("location_id", null);
-                            setDirtyValue("location", null);
-                            setDirtyValue("address", "");
+                            setIsEditingLocation(true);
                             setIsSearchingLocation(true);
+                            setLocationQuery("");
+                            setLocationSuggestions([]);
                           }}
                         >
                           Zmień
                         </button>
                       </div>
+                    ) : (
+                      <>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            value={locationQuery}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setLocationQuery(val);
+                              setIsSearchingLocation(true);
+                              if (locationDebounceRef.current)
+                                clearTimeout(locationDebounceRef.current);
+                              locationDebounceRef.current = setTimeout(
+                                () => fetchLocationSuggestions(val),
+                                300,
+                              );
+                            }}
+                            className={cn(fieldClass(Boolean(errors.address)), "pl-9")}
+                            placeholder="Wpisz adres, aby wyszukać..."
+                            autoComplete="off"
+                          />
+                        </div>
+                        {isFetchingLocationSuggestions && (
+                          <p className="mt-1 text-xs text-muted-foreground">Szukanie...</p>
+                        )}
+                        {locationSuggestions.length > 0 && isSearchingLocation && (
+                          <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-[200px] overflow-y-auto">
+                            {locationSuggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.place_id}
+                                type="button"
+                                className="flex w-full flex-col px-3 py-2 text-left hover:bg-accent transition-colors"
+                                onClick={() => handleLocationSelected(suggestion)}
+                              >
+                                <span className="text-sm font-medium">
+                                  {suggestion.structured_formatting.main_text}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {suggestion.structured_formatting.secondary_text}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {isEditingLocation && (
+                          <button
+                            type="button"
+                            className="mt-2 text-sm text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              setIsEditingLocation(false);
+                              setIsSearchingLocation(false);
+                              setLocationSuggestions([]);
+                              setLocationQuery(
+                                values.location?.address_line1 || values.location?.title || "",
+                              );
+                            }}
+                          >
+                            Anuluj
+                          </button>
+                        )}
+                      </>
                     )}
                     <FieldError message={errors.address?.message} />
                   </div>
@@ -938,7 +974,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
                             <p className="text-xs text-muted-foreground">
                               {pass.duration_days ? `${pass.duration_days} dni` : "∞ bez limitu"}
                               {" · "}
-                              {pass.session_count ? `${pass.session_count} wejść` : "∞ bez limitu wejść"}
+                              {pass.session_count
+                                ? `${pass.session_count} wejść`
+                                : "∞ bez limitu wejść"}
                             </p>
                           </button>
                           <div className="flex items-center gap-2 shrink-0">
@@ -997,7 +1035,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Karty sportowe tri-state */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">Akceptujecie karty sportowe?</label>
+                    <label className="mb-2 block text-base font-semibold">
+                      Akceptujecie karty sportowe?
+                    </label>
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <button
                         type="button"
@@ -1039,7 +1079,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                                 setIsSportCardModalOpen(true);
                               }}
                             >
-                              {(sc.sport_card?.photo || sc.photo) ? (
+                              {sc.sport_card?.photo || sc.photo ? (
                                 <WyImage
                                   src={(sc.sport_card?.photo || sc.photo)!}
                                   alt={sc.sport_card?.name ?? sc.name ?? ""}
@@ -1058,7 +1098,8 @@ export function StudioForm({ routeId }: StudioFormProps) {
                                 </p>
                                 {sc.fee != null && sc.fee !== "" && Number(sc.fee) > 0 && (
                                   <p className="text-xs text-muted-foreground">
-                                    Dopłata: {sc.fee} {values.currency === 'PLN' ? 'PLN' : values.currency}
+                                    Dopłata: {sc.fee}{" "}
+                                    {values.currency === "PLN" ? "PLN" : values.currency}
                                   </p>
                                 )}
                               </div>
@@ -1114,7 +1155,10 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     {values.accepts_sport_cards === false && (
                       <div className="flex items-start gap-2 rounded-lg bg-muted/50 border px-3 py-2.5 text-sm text-muted-foreground">
                         <span className="shrink-0">ⓘ</span>
-                        <span>Na profilu studia pokażemy „Nie akceptujemy kart sportowych" — to ważna informacja dla uczestników.</span>
+                        <span>
+                          Na profilu studia pokażemy „Nie akceptujemy kart sportowych" — to ważna
+                          informacja dla uczestników.
+                        </span>
                       </div>
                     )}
                   </div>
