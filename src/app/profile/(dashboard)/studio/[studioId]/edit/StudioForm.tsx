@@ -1,7 +1,7 @@
 "use client";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Copy, CreditCard, ExternalLink, Link, Loader2, MapPin, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
+import { Copy, CreditCard, ExternalLink, Loader2, MapPin, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -613,26 +613,27 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       className={fieldClass()}
                       placeholder="np. moje-studio-jogi"
                     />
-                    {values.slug && (
-                      <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2">
-                        <Link className="size-4 shrink-0 text-muted-foreground" />
-                        <span className="min-w-0 truncate font-mono text-sm">
-                          joga.yoga/studio/{values.slug}
-                        </span>
-                        <button
-                          type="button"
-                          className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
-                          onClick={() => {
-                            navigator.clipboard.writeText(
-                              `https://joga.yoga/studio/${values.slug}`,
-                            );
-                            toast({ description: "Link skopiowany" });
-                          }}
-                        >
-                          <Copy className="size-4" />
-                        </button>
-                      </div>
-                    )}
+                    <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2">
+                      <span className="min-w-0 font-mono text-sm text-muted-foreground">
+                        https://joga.yoga/studio/{values.slug ? (
+                          <span className="text-brand-green">{values.slug}</span>
+                        ) : (
+                          <span className="italic">...</span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            `https://joga.yoga/studio/${values.slug}`,
+                          );
+                          toast({ description: "Link skopiowany" });
+                        }}
+                      >
+                        <Copy className="size-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div data-error-field="description">
