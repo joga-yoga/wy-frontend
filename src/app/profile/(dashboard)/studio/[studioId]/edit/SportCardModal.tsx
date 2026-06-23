@@ -247,15 +247,6 @@ export function SportCardModal({
           {/* Step 2a: Predefined card — fee toggle */}
           {step === "predefined" && selectedCard && (
             <div className="space-y-4">
-              <button
-                type="button"
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                onClick={() => setStep("pick")}
-              >
-                <ArrowLeft className="size-4" />
-                Wróć do listy
-              </button>
-
               <div className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3">
                 {selectedCard.photo ? (
                   <WyImage
@@ -342,15 +333,6 @@ export function SportCardModal({
           {/* Step 2b: Custom card */}
           {step === "custom" && (
             <div className="space-y-4">
-              <button
-                type="button"
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                onClick={() => setStep("pick")}
-              >
-                <ArrowLeft className="size-4" />
-                Wróć do listy
-              </button>
-
               <div>
                 <label className="mb-1 block text-sm font-semibold">Nazwa</label>
                 <Input
