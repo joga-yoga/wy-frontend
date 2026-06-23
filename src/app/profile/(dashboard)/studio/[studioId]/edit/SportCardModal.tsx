@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { getCurrencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
 import type { SportCard, StudioSportCard } from "./types";
@@ -82,7 +83,8 @@ export function SportCardModal({
       if (editCard.sport_card_id && editCard.sport_card) {
         setStep("predefined");
         setSelectedCard(editCard.sport_card);
-        const hasExistingFee = editCard.fee != null && editCard.fee !== "" && Number(editCard.fee) > 0;
+        const hasExistingFee =
+          editCard.fee != null && editCard.fee !== "" && Number(editCard.fee) > 0;
         setHasFee(hasExistingFee);
         setFee(hasExistingFee ? String(editCard.fee) : "");
       } else {
@@ -91,7 +93,8 @@ export function SportCardModal({
         setCustomDescription(editCard.description ?? "");
         setCustomPhoto(editCard.photo ?? null);
         setCustomPhotoPreviewUrl(null);
-        const hasExistingFee = editCard.fee != null && editCard.fee !== "" && Number(editCard.fee) > 0;
+        const hasExistingFee =
+          editCard.fee != null && editCard.fee !== "" && Number(editCard.fee) > 0;
         setCustomHasFee(hasExistingFee);
         setCustomFee(hasExistingFee ? String(editCard.fee) : "");
       }
@@ -340,7 +343,7 @@ export function SportCardModal({
                       placeholder="0.00"
                     />
                     <span className="text-sm text-muted-foreground shrink-0">
-                      {currency}/wejście
+                      {getCurrencySymbol(currency)}/wejście
                     </span>
                   </div>
                 )}
@@ -381,7 +384,10 @@ export function SportCardModal({
                   imagePreviewUrl={customPhotoPreviewUrl}
                   isUploading={isUploadingPhoto}
                   onFileSelect={handlePhotoFileSelect}
-                  onRemove={() => { setCustomPhoto(null); setCustomPhotoPreviewUrl(null); }}
+                  onRemove={() => {
+                    setCustomPhoto(null);
+                    setCustomPhotoPreviewUrl(null);
+                  }}
                 />
               </div>
 
@@ -430,7 +436,7 @@ export function SportCardModal({
                       placeholder="0.00"
                     />
                     <span className="text-sm text-muted-foreground shrink-0">
-                      {currency === "PLN" ? "zł" : currency} / wejście
+                      {getCurrencySymbol(currency)} / wejście
                     </span>
                   </div>
                 )}
@@ -444,12 +450,19 @@ export function SportCardModal({
         <DrawerFooter className={step === "pick" ? "" : "flex-row gap-2"}>
           {step === "pick" && (
             <DrawerClose asChild>
-              <Button variant="outline" className="w-full">Anuluj</Button>
+              <Button variant="outline" className="w-full">
+                Anuluj
+              </Button>
             </DrawerClose>
           )}
           {step === "predefined" && (
             <>
-              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setStep("pick")}>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={() => setStep("pick")}
+              >
                 <ArrowLeft className="size-5" />
               </Button>
               <Button onClick={handleSavePredefined} disabled={isSaving} className="flex-1">
@@ -459,7 +472,12 @@ export function SportCardModal({
           )}
           {step === "custom" && (
             <>
-              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setStep("pick")}>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={() => setStep("pick")}
+              >
                 <ArrowLeft className="size-5" />
               </Button>
               <Button onClick={handleSaveCustom} disabled={isSaving} className="flex-1">

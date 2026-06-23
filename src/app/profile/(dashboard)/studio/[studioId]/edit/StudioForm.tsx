@@ -36,6 +36,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { getCurrencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
 import { EventPhotosSection } from "../../../components/EventForm/components/EventPhotosSection";
@@ -979,10 +980,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                           </button>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-sm font-bold">
-                              {pass.price}{" "}
-                              {(pass.currency || values.currency || "PLN").toUpperCase() === "PLN"
-                                ? "zł"
-                                : pass.currency || values.currency}
+                              {pass.price} {getCurrencySymbol(pass.currency || values.currency)}
                             </span>
                             <Button
                               type="button"
@@ -1096,8 +1094,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                                 </p>
                                 {sc.fee != null && sc.fee !== "" && Number(sc.fee) > 0 && (
                                   <p className="text-xs text-muted-foreground">
-                                    Dopłata: {sc.fee}{" "}
-                                    {values.currency === "PLN" ? "PLN" : values.currency}
+                                    Dopłata: {sc.fee} {getCurrencySymbol(values.currency)}
                                   </p>
                                 )}
                               </div>
