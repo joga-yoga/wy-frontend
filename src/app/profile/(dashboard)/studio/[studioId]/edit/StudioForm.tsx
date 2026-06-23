@@ -787,7 +787,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         type="button"
                         variant="outline"
                         onClick={addRoom}
-                        className="shrink-0"
+                        className="h-12 shrink-0"
                       >
                         Dodaj
                       </Button>
