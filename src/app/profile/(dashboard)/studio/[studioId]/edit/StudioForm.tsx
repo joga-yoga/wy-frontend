@@ -14,6 +14,13 @@ import { DashboardFooter } from "@/components/layout/DashboardFooter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -718,12 +725,19 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         {...register("drop_in_price")}
                         className={fieldClass(Boolean(errors.drop_in_price))}
                       />
-                      <Input
+                      <Select
                         value={values.currency}
-                        onChange={(e) => setDirtyValue("currency", e.target.value)}
-                        className={fieldClass()}
-                        placeholder="PLN"
-                      />
+                        onValueChange={(value) => setDirtyValue("currency", value, true)}
+                      >
+                        <SelectTrigger className="h-12 rounded-md text-base">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PLN">zł</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <FieldError message={errors.drop_in_price?.message} />
                   </div>
