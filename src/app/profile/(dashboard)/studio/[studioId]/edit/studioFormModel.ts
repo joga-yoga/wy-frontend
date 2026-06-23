@@ -73,6 +73,7 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
 
   return {
     name: values.name.trim(),
+    slug: cleanString(values.slug),
     description: cleanString(values.description),
     image_id: cleanString(values.image_id) ?? null,
     image_ids: values.image_ids ?? [],
@@ -92,6 +93,7 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
 export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValues {
   return {
     name: studio.name ?? "",
+    slug: studio.slug ?? "",
     description: studio.description ?? "",
     image_id: studio.image_id ?? null,
     address: studio.address ?? "",
@@ -129,6 +131,7 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
 
 export const emptyStudioFormValues: StudioFormValues = {
   name: "",
+  slug: "",
   description: "",
   image_id: null,
   address: "",

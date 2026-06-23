@@ -49,6 +49,7 @@ export interface StudioInstructor {
 
 export interface StudioFormValues {
   name: string;
+  slug: string;
   description: string;
   image_id: string | null;
   address: string;
@@ -109,6 +110,7 @@ export interface StudioApiResponse {
 
 export interface StudioPayload {
   name: string;
+  slug?: string | null;
   description?: string | null;
   image_id?: string | null;
   image_ids?: string[];

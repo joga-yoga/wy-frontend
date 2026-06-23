@@ -1,7 +1,7 @@
 "use client";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { ExternalLink, Loader2, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
+import { Copy, ExternalLink, Link, Loader2, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -105,6 +105,16 @@ function blockInvalidNumberChars(event: KeyboardEvent<HTMLInputElement>) {
   }
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export function StudioForm({ routeId }: StudioFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -135,6 +145,8 @@ export function StudioForm({ routeId }: StudioFormProps) {
   const [editingPass, setEditingPass] = useState<StudioPass | null>(null);
   // Sport card modal
   const [isSportCardModalOpen, setIsSportCardModalOpen] = useState(false);
+  // Slug manual edit tracking
+  const slugManuallyEditedRef = useRef(false);
 
   const resolver = useMemo<Resolver<StudioFormValues>>(
     () => async (values, context, options) => {
@@ -505,8 +517,62 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       id="name"
                       {...register("name")}
                       className={fieldClass(Boolean(errors.name))}
+                      onBlur={(e) => {
+                        if (
+                          isCreateRoute &&
+                          !slugManuallyEditedRef.current &&
+                          !values.slug
+                        ) {
+                          const generated = slugify(e.target.value);
+                          if (generated) {
+                            setDirtyValue("slug", generated);
+                          }
+                        }
+                      }}
                     />
                     <FieldError message={errors.name?.message} />
+                  </div>
+
+                  {/* Slug */}
+                  <div>
+                    <label className="mb-1 block text-base font-semibold" htmlFor="slug">
+                      Adres URL studia
+                    </label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Unikalny identyfikator studia, który jest częścią linku do
+                      Twojej strony publicznej.
+                    </p>
+                    <Input
+                      id="slug"
+                      value={values.slug}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        slugManuallyEditedRef.current = true;
+                        const slugified = slugify(e.target.value);
+                        setDirtyValue("slug", slugified);
+                      }}
+                      className={fieldClass()}
+                      placeholder="np. moje-studio-jogi"
+                    />
+                    {values.slug && (
+                      <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2">
+                        <Link className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 truncate font-mono text-sm">
+                          joga.yoga/studio/{values.slug}
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              `https://joga.yoga/studio/${values.slug}`,
+                            );
+                            toast({ description: "Link skopiowany" });
+                          }}
+                        >
+                          <Copy className="size-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div data-error-field="description">
