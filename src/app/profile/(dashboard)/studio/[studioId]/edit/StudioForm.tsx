@@ -1188,7 +1188,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
         <DashboardFooter
           title={studioId ? "Edytuj studio" : "Nowe studio"}
-          viewPublicHref={studioId ? `/studio/${studioId}` : undefined}
+          viewPublicHref={values.slug ? `/studio/${values.slug}` : undefined}
           viewPublicLabel="Zobacz stronę publiczną"
           viewPublicLabelShort="Zobacz"
           viewPublicIcon={<ExternalLink className="size-4" />}
