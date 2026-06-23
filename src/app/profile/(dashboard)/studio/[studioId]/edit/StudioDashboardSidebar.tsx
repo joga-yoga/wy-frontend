@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Dumbbell, Home, MapPin, Users } from "lucide-react";
+import { Camera, DollarSign, Home, MapPin, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ export const studioNavItems = [
   { id: "studio-basics-section", icon: Home, label: "Podstawy" },
   { id: "studio-location-section", icon: MapPin, label: "Lokalizacja" },
   { id: "studio-instructors-section", icon: Users, label: "Instruktorzy" },
-  { id: "studio-oferta-section", icon: Dumbbell, label: "Oferta" },
+  { id: "studio-oferta-section", icon: DollarSign, label: "Oferta" },
   { id: "studio-photos-section", icon: Camera, label: "Zdjęcia" },
 ];
 

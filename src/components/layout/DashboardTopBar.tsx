@@ -30,6 +30,8 @@ function getPageTitle(pathname: string): string | undefined {
   if (pathname === "/profile/workshops/create") return "Nowe wydarzenie";
   if (pathname === "/profile/courses/create") return "Nowy kurs";
   if (pathname.startsWith("/profile/courses/") && pathname.endsWith("/edit")) return "Edytuj kurs";
+  if (pathname === "/profile/studio/create") return "Nowe studio";
+  if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit")) return "Edytuj studio";
   return undefined;
 }
 
