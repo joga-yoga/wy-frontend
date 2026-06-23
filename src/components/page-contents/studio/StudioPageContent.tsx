@@ -311,10 +311,13 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
   return (
     <section className="border-y bg-gray-50">
       <div className="mx-auto max-w-5xl px-4 py-9">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-1 flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-gray-700" />
           <h2 className="text-xl font-semibold text-gray-950">Karty sportowe</h2>
         </div>
+        <p className="mb-4 text-sm text-gray-500">
+          Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za wejście.
+        </p>
         {studio.accepts_sport_cards === false ? (
           <div className="border bg-white p-4 text-sm text-gray-600">
             Studio nie akceptuje kart sportowych.
@@ -324,17 +327,18 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
             {studio.sport_card_acceptances.map((item) => {
               const photo = sportCardPhoto(item);
               return (
-                <div key={item.id} className="flex items-center gap-3 border bg-white p-4">
-                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+                <div key={item.id} className="flex items-center gap-3 border bg-white p-4 rounded-lg">
+                  <div className="relative flex h-12 w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100">
                     {photo ? (
                       <WyImage
                         src={photo}
                         alt={sportCardName(item)}
-                        fill
-                        className="object-cover"
+                        width={76}
+                        height={48}
+                        className="h-12 w-[76px] object-contain"
                       />
                     ) : (
-                      <CreditCard className="h-5 w-5 text-gray-400" />
+                      <CreditCard className="h-6 w-6 text-gray-400" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">

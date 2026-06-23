@@ -241,13 +241,13 @@ export function SportCardModal({
                       <WyImage
                         src={card.photo}
                         alt={card.name}
-                        width={32}
-                        height={32}
-                        className="size-8 rounded object-contain"
+                        width={64}
+                        height={40}
+                        className="h-10 w-16 shrink-0 rounded object-contain"
                       />
                     ) : (
-                      <div className="flex size-8 items-center justify-center rounded bg-muted">
-                        <CreditCard className="size-4 text-muted-foreground" />
+                      <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded bg-muted">
+                        <CreditCard className="size-5 text-muted-foreground" />
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
@@ -273,26 +273,20 @@ export function SportCardModal({
           {/* Step 2a: Predefined card — fee toggle */}
           {step === "predefined" && selectedCard && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3">
+              <div className="overflow-hidden rounded-lg border bg-white">
                 {selectedCard.photo ? (
                   <WyImage
                     src={selectedCard.photo}
                     alt={selectedCard.name}
-                    width={40}
-                    height={40}
-                    className="size-10 rounded object-contain"
+                    width={400}
+                    height={252}
+                    className="w-full object-contain"
                   />
                 ) : (
-                  <div className="flex size-10 items-center justify-center rounded bg-muted">
-                    <CreditCard className="size-5 text-muted-foreground" />
+                  <div className="flex aspect-[1.586/1] w-full items-center justify-center bg-muted">
+                    <CreditCard className="size-10 text-muted-foreground" />
                   </div>
                 )}
-                <div>
-                  <p className="text-sm font-semibold">{selectedCard.name}</p>
-                  {selectedCard.description && (
-                    <p className="text-xs text-muted-foreground">{selectedCard.description}</p>
-                  )}
-                </div>
               </div>
 
               <div>

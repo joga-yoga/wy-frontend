@@ -1081,13 +1081,13 @@ export function StudioForm({ routeId }: StudioFormProps) {
                                 <WyImage
                                   src={(sc.sport_card?.photo || sc.photo)!}
                                   alt={sc.sport_card?.name ?? sc.name ?? ""}
-                                  width={32}
-                                  height={32}
-                                  className="size-8 shrink-0 rounded object-contain"
+                                  width={80}
+                                  height={50}
+                                  className="h-[50px] w-20 shrink-0 rounded object-contain"
                                 />
                               ) : (
-                                <div className="flex size-8 shrink-0 items-center justify-center rounded bg-muted">
-                                  <CreditCard className="size-4 text-muted-foreground" />
+                                <div className="flex h-[50px] w-20 shrink-0 items-center justify-center rounded bg-muted">
+                                  <CreditCard className="size-5 text-muted-foreground" />
                                 </div>
                               )}
                               <div className="min-w-0">
