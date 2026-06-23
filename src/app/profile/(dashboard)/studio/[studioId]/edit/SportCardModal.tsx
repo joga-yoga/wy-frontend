@@ -28,6 +28,7 @@ interface SportCardModalProps {
   onSaved: (sc: StudioSportCard) => void;
   studioId: string | null;
   currency: string;
+  editCard?: StudioSportCard | null;
 }
 
 function blockInvalidNumberChars(event: KeyboardEvent<HTMLInputElement>) {
@@ -48,6 +49,7 @@ export function SportCardModal({
   onSaved,
   studioId,
   currency,
+  editCard,
 }: SportCardModalProps) {
   const [step, setStep] = useState<Step>("pick");
   const [catalogue, setCatalogue] = useState<SportCard[]>([]);
@@ -72,24 +74,45 @@ export function SportCardModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setStep("pick");
-    setSearchQuery("");
-    setSelectedCard(null);
-    setHasFee(false);
-    setFee("");
-    setCustomName("");
-    setCustomDescription("");
-    setCustomPhoto(null);
-    setCustomPhotoPreviewUrl(null);
-    setCustomHasFee(false);
-    setCustomFee("");
     setError(null);
+
+    if (editCard) {
+      if (editCard.sport_card_id && editCard.sport_card) {
+        setStep("predefined");
+        setSelectedCard(editCard.sport_card);
+        const hasExistingFee = editCard.fee != null && editCard.fee !== "" && Number(editCard.fee) > 0;
+        setHasFee(hasExistingFee);
+        setFee(hasExistingFee ? String(editCard.fee) : "");
+      } else {
+        setStep("custom");
+        setCustomName(editCard.name ?? "");
+        setCustomDescription(editCard.description ?? "");
+        setCustomPhoto(editCard.photo ?? null);
+        setCustomPhotoPreviewUrl(null);
+        const hasExistingFee = editCard.fee != null && editCard.fee !== "" && Number(editCard.fee) > 0;
+        setCustomHasFee(hasExistingFee);
+        setCustomFee(hasExistingFee ? String(editCard.fee) : "");
+      }
+      setSearchQuery("");
+    } else {
+      setStep("pick");
+      setSearchQuery("");
+      setSelectedCard(null);
+      setHasFee(false);
+      setFee("");
+      setCustomName("");
+      setCustomDescription("");
+      setCustomPhoto(null);
+      setCustomPhotoPreviewUrl(null);
+      setCustomHasFee(false);
+      setCustomFee("");
+    }
 
     axiosInstance
       .get<SportCard[]>("/sport-cards")
       .then(({ data }) => setCatalogue(data))
       .catch(() => {});
-  }, [isOpen]);
+  }, [isOpen, editCard]);
 
   const filteredCards = searchQuery
     ? catalogue.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -186,7 +209,7 @@ export function SportCardModal({
           <DrawerTitle>
             {step === "pick" && "Dodaj kartę sportową"}
             {step === "predefined" && selectedCard?.name}
-            {step === "custom" && "Własna karta sportowa"}
+            {step === "custom" && (editCard ? "Edytuj kartę" : "Własna karta")}
           </DrawerTitle>
         </DrawerHeader>
 

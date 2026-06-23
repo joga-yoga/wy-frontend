@@ -46,6 +46,7 @@ import type {
   StudioLocation,
   StudioPass,
   StudioRoom,
+  StudioSportCard,
 } from "./types";
 
 interface StudioFormProps {
@@ -146,6 +147,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
   const [editingPass, setEditingPass] = useState<StudioPass | null>(null);
   // Sport card modal
   const [isSportCardModalOpen, setIsSportCardModalOpen] = useState(false);
+  const [editingSportCard, setEditingSportCard] = useState<StudioSportCard | null>(null);
   // Slug manual edit tracking
   const slugManuallyEditedRef = useRef(false);
 
@@ -1028,7 +1030,14 @@ export function StudioForm({ routeId }: StudioFormProps) {
                             key={index}
                             className="flex items-center justify-between rounded-lg border bg-white px-4 py-3"
                           >
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <button
+                              type="button"
+                              className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                              onClick={() => {
+                                setEditingSportCard(sc);
+                                setIsSportCardModalOpen(true);
+                              }}
+                            >
                               {(sc.sport_card?.photo || sc.photo) ? (
                                 <WyImage
                                   src={(sc.sport_card?.photo || sc.photo)!}
@@ -1052,7 +1061,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                                   </p>
                                 )}
                               </div>
-                            </div>
+                            </button>
                             <Button
                               type="button"
                               variant="ghost"
@@ -1067,22 +1076,37 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         <button
                           type="button"
                           className="flex min-h-10 items-center gap-3 text-base font-medium text-brand-blue"
-                          onClick={() => setIsSportCardModalOpen(true)}
+                          onClick={() => {
+                            setEditingSportCard(null);
+                            setIsSportCardModalOpen(true);
+                          }}
                         >
                           <Plus className="size-5" />
                           Dodaj kartę sportową
                         </button>
                         <SportCardModal
                           isOpen={isSportCardModalOpen}
-                          onClose={() => setIsSportCardModalOpen(false)}
+                          onClose={() => {
+                            setIsSportCardModalOpen(false);
+                            setEditingSportCard(null);
+                          }}
                           onSaved={(sc) => {
-                            setDirtyValue("sport_card_acceptances", [
-                              ...(values.sport_card_acceptances ?? []),
-                              sc,
-                            ]);
+                            const current = values.sport_card_acceptances ?? [];
+                            if (editingSportCard) {
+                              setDirtyValue(
+                                "sport_card_acceptances",
+                                current.map((existing) =>
+                                  existing === editingSportCard ? sc : existing,
+                                ),
+                              );
+                            } else {
+                              setDirtyValue("sport_card_acceptances", [...current, sc]);
+                            }
+                            setEditingSportCard(null);
                           }}
                           studioId={studioId}
                           currency={values.currency || "PLN"}
+                          editCard={editingSportCard}
                         />
                       </div>
                     )}
