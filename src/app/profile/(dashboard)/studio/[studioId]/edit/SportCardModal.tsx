@@ -280,13 +280,13 @@ export function SportCardModal({
 
               <div>
                 <label className="mb-1 block text-sm font-semibold">Dopłata za wejście</label>
-                <div className="flex gap-2 mb-2">
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
                     type="button"
                     className={cn(
-                      "min-h-9 rounded-full border px-3 text-sm font-medium",
+                      "min-h-10 rounded-full border text-sm",
                       !hasFee
-                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
                     )}
                     onClick={() => {
@@ -299,9 +299,9 @@ export function SportCardModal({
                   <button
                     type="button"
                     className={cn(
-                      "min-h-9 rounded-full border px-3 text-sm font-medium",
+                      "min-h-10 rounded-full border text-sm",
                       hasFee
-                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
                     )}
                     onClick={() => setHasFee(true)}
@@ -310,8 +310,8 @@ export function SportCardModal({
                   </button>
                 </div>
                 {!hasFee && (
-                  <div className="flex items-center gap-2 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-700">
-                    <Check className="size-4 shrink-0" />
+                  <div className="flex items-center gap-2 rounded-md bg-muted/50 border px-3 py-2 text-sm text-muted-foreground">
+                    <Check className="size-4 shrink-0 text-brand-green" />
                     Uczestnicy z {selectedCard.name} wchodzą bez dodatkowej opłaty.
                   </div>
                 )}
@@ -385,13 +385,13 @@ export function SportCardModal({
 
               <div>
                 <label className="mb-1 block text-sm font-semibold">Dopłata za wejście</label>
-                <div className="flex gap-2 mb-2">
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
                     type="button"
                     className={cn(
-                      "min-h-9 rounded-full border px-3 text-sm font-medium",
+                      "min-h-10 rounded-full border text-sm",
                       !customHasFee
-                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
                     )}
                     onClick={() => {
@@ -404,9 +404,9 @@ export function SportCardModal({
                   <button
                     type="button"
                     className={cn(
-                      "min-h-9 rounded-full border px-3 text-sm font-medium",
+                      "min-h-10 rounded-full border text-sm",
                       customHasFee
-                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
                     )}
                     onClick={() => setCustomHasFee(true)}

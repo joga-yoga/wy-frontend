@@ -190,13 +190,13 @@ export function PassModal({
           {/* Ważność */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Ważność</label>
-            <div className="flex gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-2 mb-2">
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm",
+                  "min-h-10 rounded-full border text-sm",
                   !durationUnlimited
-                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
                 )}
                 onClick={() => setDurationUnlimited(false)}
@@ -206,9 +206,9 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm",
+                  "min-h-10 rounded-full border text-sm",
                   durationUnlimited
-                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
                 )}
                 onClick={() => {
@@ -240,13 +240,13 @@ export function PassModal({
           {/* Liczba wejść */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Liczba wejść</label>
-            <div className="flex gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-2 mb-2">
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm",
+                  "min-h-10 rounded-full border text-sm",
                   !sessionUnlimited
-                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
                 )}
                 onClick={() => setSessionUnlimited(false)}
@@ -256,9 +256,9 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm",
+                  "min-h-10 rounded-full border text-sm",
                   sessionUnlimited
-                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
                 )}
                 onClick={() => {
@@ -317,7 +317,7 @@ export function PassModal({
             {suggestedPrice && !editPass && (
               <button
                 type="button"
-                className="mt-2 flex items-center gap-2 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-100 transition-colors w-full text-left"
+                className="mt-2 flex items-center gap-2 rounded-md bg-muted/50 border px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors w-full text-left"
                 onClick={() => setPrice(String(suggestedPrice))}
               >
                 <Lightbulb className="size-4 shrink-0" />

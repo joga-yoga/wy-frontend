@@ -995,13 +995,13 @@ export function StudioForm({ routeId }: StudioFormProps) {
                   {/* Karty sportowe tri-state */}
                   <div>
                     <label className="mb-2 block text-base font-semibold">Karty sportowe</label>
-                    <div className="flex gap-2 mb-3">
+                    <div className="grid grid-cols-2 gap-2 mb-3 max-w-[240px]">
                       <button
                         type="button"
                         className={cn(
-                          "min-h-9 rounded-full border px-4 text-sm font-medium",
+                          "min-h-10 rounded-full border text-sm",
                           values.accepts_sport_cards === false
-                            ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                            ? "border-brand-green font-semibold text-foreground"
                             : "border-border text-muted-foreground",
                         )}
                         onClick={() => setDirtyValue("accepts_sport_cards", false)}
@@ -1011,9 +1011,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       <button
                         type="button"
                         className={cn(
-                          "min-h-9 rounded-full border px-4 text-sm font-medium",
+                          "min-h-10 rounded-full border text-sm",
                           values.accepts_sport_cards === true
-                            ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                            ? "border-brand-green font-semibold text-foreground"
                             : "border-border text-muted-foreground",
                         )}
                         onClick={() => setDirtyValue("accepts_sport_cards", true)}
