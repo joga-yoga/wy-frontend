@@ -95,9 +95,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
   })();
 
   const dateBadge = formatProgramDateTitle(event.start_date, event.end_date);
-  const locationBadge = event.location
-    ? event.location.city || event.location.title || null
-    : null;
+  const locationBadge = event.location ? event.location.city || event.location.title || null : null;
 
   const hasInstructors = event.instructors && event.instructors.length > 0;
   const hasDates = !!event.start_date;

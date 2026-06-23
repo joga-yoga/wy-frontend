@@ -1,6 +1,14 @@
 "use client";
 
-import { Calendar, ExternalLink, ImageIcon, MoreVertical, Pencil, Plus } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  ExternalLink,
+  ImageIcon,
+  MoreVertical,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -47,6 +55,14 @@ import {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+interface StudioItem {
+  id: string;
+  name: string;
+  slug?: string | null;
+  image_id?: string | null;
+  status: string;
+}
+
 interface YogaStyle {
   id: string;
   description: string;
@@ -70,9 +86,12 @@ interface InstructorItem {
 
 interface InvitationItem {
   id: string;
-  instructor_id: string;
-  instructor_name: string;
-  event_title: string | null;
+  kind: "instructor_claim" | "studio_claim";
+  instructor_id?: string | null;
+  instructor_name?: string | null;
+  studio_id?: string | null;
+  studio_name?: string | null;
+  event_title?: string | null;
   expires_at: string;
   created_at: string;
 }
@@ -280,6 +299,8 @@ export default function OfertaPage() {
   const [classes, setClasses] = useState<DashboardItem[]>([]);
   const [courses, setCourses] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [studios, setStudios] = useState<StudioItem[]>([]);
+  const [loadingStudios, setLoadingStudios] = useState(true);
   const [instructors, setInstructors] = useState<InstructorItem[]>([]);
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loadingInstructors, setLoadingInstructors] = useState(true);
@@ -385,6 +406,15 @@ export default function OfertaPage() {
       .finally(() => setLoadingItems(false));
   }, [areClassesEnabled]);
 
+  // Fetch studios
+  useEffect(() => {
+    axiosInstance
+      .get<StudioItem[]>("/studios")
+      .then(({ data }) => setStudios(data))
+      .catch(() => setStudios([]))
+      .finally(() => setLoadingStudios(false));
+  }, []);
+
   const fetchInstructorSectionData = useCallback(async () => {
     try {
       const [{ data: owned }, rosterResult, invitationResult] = await Promise.all([
@@ -442,13 +472,18 @@ export default function OfertaPage() {
     }
   };
 
-  const handleAcceptInvitation = async (invitationId: string) => {
-    setAcceptingInvitationId(invitationId);
+  const handleAcceptInvitation = async (invitation: InvitationItem) => {
+    setAcceptingInvitationId(invitation.id);
     try {
-      await axiosInstance.post(`/users/me/invitations/${invitationId}/accept`);
-      setInvitations((prev) => prev.filter((item) => item.id !== invitationId));
+      await axiosInstance.post(`/users/me/invitations/${invitation.id}/accept`);
+      setInvitations((prev) => prev.filter((item) => item.id !== invitation.id));
       await fetchInstructorSectionData();
-      toast({ description: "Profil instruktora połączony z Twoim kontem." });
+      toast({
+        description:
+          invitation.kind === "studio_claim"
+            ? "Studio połączone z Twoim kontem."
+            : "Profil instruktora połączony z Twoim kontem.",
+      });
     } catch {
       toast({
         description: "Nie udało się zaakceptować zaproszenia.",
@@ -782,6 +817,75 @@ export default function OfertaPage() {
             />
           )}
 
+          {/* Studio */}
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Studio</h2>
+            {loadingStudios ? (
+              <div className="flex justify-center py-6">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : studios.length > 0 ? (
+              <div className="space-y-3">
+                <Link
+                  href={`/profile/studio/${studios[0].id}/edit`}
+                  className="rounded-xl border bg-white overflow-hidden hover:shadow-md transition-shadow block"
+                >
+                  <div className="flex items-center gap-3 px-4 py-4">
+                    {studios[0].image_id ? (
+                      <WyImage
+                        src={studios[0].image_id}
+                        alt={studios[0].name}
+                        width={48}
+                        height={48}
+                        className="rounded-lg object-cover shrink-0 h-12 w-12"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 shrink-0 rounded-lg bg-emerald-100 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-emerald-600">
+                          {studios[0].name.slice(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {studios[0].name}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">Sale, dane, profil publiczny</p>
+                    </div>
+                    <Pencil size={16} className="text-gray-400 shrink-0" />
+                  </div>
+                </Link>
+                <div className="rounded-xl border bg-white overflow-hidden opacity-60">
+                  <div className="flex items-center gap-3 px-4 py-4">
+                    <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-gray-900">Szablony zajęć</p>
+                        <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                          Wkrótce
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">Zarządzaj grafikiem zajęć</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed bg-gray-50 py-5 px-4 text-center">
+                <p className="text-sm text-gray-500 mb-2">Masz studio z grafikiem zajęć?</p>
+                <Link
+                  href="/profile/studio/create"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-brand-blue hover:underline"
+                >
+                  <Plus size={14} />
+                  Utwórz studio
+                </Link>
+              </div>
+            )}
+          </section>
+
           {/* Instruktorzy */}
           <section className="space-y-2">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
@@ -800,7 +904,12 @@ export default function OfertaPage() {
                 ) : (
                   <>
                     {invitations.map((invitation) => {
-                      const initials = invitation.instructor_name
+                      const isStudioInvitation = invitation.kind === "studio_claim";
+                      const displayName =
+                        (isStudioInvitation
+                          ? invitation.studio_name
+                          : invitation.instructor_name) ?? "Zaproszenie";
+                      const initials = displayName
                         .split(" ")
                         .slice(0, 2)
                         .map((word) => word[0])
@@ -818,23 +927,29 @@ export default function OfertaPage() {
                         >
                           <div className="flex items-center gap-3 px-4 py-4">
                             <div className="h-12 w-12 shrink-0 rounded-full bg-green-100 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-green-700">
-                                {initials}
-                              </span>
+                              {isStudioInvitation ? (
+                                <Building2 className="h-5 w-5 text-green-700" />
+                              ) : (
+                                <span className="text-sm font-semibold text-green-700">
+                                  {initials}
+                                </span>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">
-                                  {invitation.instructor_name}
+                                  {displayName}
                                 </p>
                                 <span className="shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
-                                  Zaproszenie
+                                  {isStudioInvitation ? "Studio" : "Zaproszenie"}
                                 </span>
                               </div>
                               <p className="text-xs text-gray-500 mt-0.5 truncate">
-                                {invitation.event_title
-                                  ? `Wydarzenie: ${invitation.event_title}`
-                                  : "Profil instruktora oczekuje na decyzję"}
+                                {isStudioInvitation
+                                  ? "Studio oczekuje na przejęcie przez Twoje konto"
+                                  : invitation.event_title
+                                    ? `Wydarzenie: ${invitation.event_title}`
+                                    : "Profil instruktora oczekuje na decyzję"}
                               </p>
                               {expiresLabel && (
                                 <p className="text-xs text-gray-400 mt-0.5">
@@ -846,7 +961,7 @@ export default function OfertaPage() {
                           <div className="flex border-t divide-x">
                             <button
                               type="button"
-                              onClick={() => handleAcceptInvitation(invitation.id)}
+                              onClick={() => handleAcceptInvitation(invitation)}
                               disabled={isBusy}
                               className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                             >

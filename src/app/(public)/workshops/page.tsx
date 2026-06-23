@@ -8,8 +8,8 @@ import { getCourses } from "@/lib/api/getCourses";
 import { getWorkshops } from "@/lib/api/workshops";
 import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
 
-import Filters from "./components/Filters";
 import CombinedEventsList from "./components/CombinedEventsList";
+import Filters from "./components/Filters";
 
 const pageTitle = "joga.yoga – kalendarz wydarzeń jogowych";
 const pageDescription =

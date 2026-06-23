@@ -41,7 +41,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({ event, className }) => {
         </div>
         <div className="flex-grow" />
         <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 md:py-1.5 rounded-[4px]">
-          <img src="/images/logo/logo-courses.png" className="w-5 h-5 md:w-6 md:h-6" alt="" aria-hidden="true" />
+          <img
+            src="/images/logo/logo-courses.png"
+            className="w-5 h-5 md:w-6 md:h-6"
+            alt=""
+            aria-hidden="true"
+          />
           <span className="text-sm md:text-base font-medium text-black">Kurs</span>
         </div>
       </div>

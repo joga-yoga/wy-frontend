@@ -46,6 +46,7 @@ import { CertificatesField } from "./components/CertificatesField";
 import { CitySearchField } from "./components/CitySearchField";
 import { InstructorPhotoGallery } from "./components/InstructorPhotoGallery";
 import { LanguageMultiSelect } from "./components/LanguageMultiSelect";
+import { StudioLinkSection } from "./components/StudioLinkSection";
 import { YogaStyleSelector } from "./components/YogaStyleSelector";
 
 const schema = z.object({
@@ -510,6 +511,10 @@ export default function InstructorProfileEditPage() {
               </FormItem>
             )}
           />
+
+          <Separator />
+
+          <StudioLinkSection instructorId={params.instructorId} />
 
           {/* Strefa niebezpieczna */}
           <Separator />

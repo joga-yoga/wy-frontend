@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
 import type { OrganizerInfo } from "@/components/page-contents/organizer/types";
 import type { InstructorPublic } from "@/types/instructor";
+import type { StudioPublic } from "@/types/studio";
 
 export type SeoProject = "retreats" | "workshops";
 
@@ -188,6 +189,26 @@ export function buildInstructorJsonLd({
     knowsAbout: instructor.yoga_styles
       .map((ys) => ys.yoga_style?.name ?? ys.custom_name)
       .filter(Boolean),
+  });
+}
+
+export function buildStudioJsonLd({
+  path,
+  studio,
+  imageUrl,
+}: {
+  path: string;
+  studio: StudioPublic;
+  imageUrl?: string;
+}) {
+  return compactRecord({
+    "@context": "https://schema.org",
+    "@type": "HealthAndBeautyBusiness",
+    name: studio.name,
+    description: stripHtml(studio.description),
+    image: imageUrl,
+    url: absoluteUrl("workshops", path),
+    address: studio.address,
   });
 }
 

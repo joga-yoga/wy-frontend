@@ -53,7 +53,8 @@ function EventSubGroup({ group }: { group: EventGroup }) {
   const hiddenCount = group.events.length - 2;
 
   const hrefFor = (event: OrganizerEvent) => {
-    if (group.key === "retreats") return `/wyjazdy/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    if (group.key === "retreats")
+      return `/wyjazdy/${event.slug}?from=${encodeURIComponent(pathname)}`;
     if (group.key === "courses") return `/kursy/${event.slug}?from=${encodeURIComponent(pathname)}`;
     return `/wydarzenia/${event.slug}?from=${encodeURIComponent(pathname)}`;
   };
@@ -169,7 +170,8 @@ function PastEventsSection({
   const displayed = all.slice(0, 3);
 
   const hrefFor = (event: PastEvent) => {
-    if (event.kind === "retreat") return `/wyjazdy/${event.slug}?from=${encodeURIComponent(pathname)}`;
+    if (event.kind === "retreat")
+      return `/wyjazdy/${event.slug}?from=${encodeURIComponent(pathname)}`;
     if (event.kind === "course") return `/kursy/${event.slug}?from=${encodeURIComponent(pathname)}`;
     return `/wydarzenia/${event.slug}?from=${encodeURIComponent(pathname)}`;
   };
