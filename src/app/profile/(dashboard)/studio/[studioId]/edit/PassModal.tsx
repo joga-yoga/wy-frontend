@@ -1,7 +1,7 @@
 "use client";
 
-import { AlertTriangle, Loader2 } from "lucide-react";
-import type { ChangeEvent, KeyboardEvent } from "react";
+import { AlertTriangle, Lightbulb, X } from "lucide-react";
+import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ export function PassModal({
   const [price, setPrice] = useState<string>("");
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,15 +77,17 @@ export function PassModal({
       setPrice(editPass.price != null ? String(editPass.price) : "");
       setDescription(editPass.description ?? "");
       setPhoto(editPass.photo ?? null);
+      setPhotoPreviewUrl(null);
     } else {
       setName("");
-      setDurationUnlimited(true);
+      setDurationUnlimited(false);
       setDurationDays("");
-      setSessionUnlimited(true);
+      setSessionUnlimited(false);
       setSessionCount("");
       setPrice("");
       setDescription("");
       setPhoto(null);
+      setPhotoPreviewUrl(null);
     }
     setError(null);
   }, [isOpen, editPass]);
@@ -102,9 +106,8 @@ export function PassModal({
 
   const bothUnlimited = durationUnlimited && sessionUnlimited;
 
-  async function handlePhotoUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  async function handlePhotoFileSelect(file: File) {
+    setPhotoPreviewUrl(URL.createObjectURL(file));
     setIsUploadingPhoto(true);
     try {
       const formData = new FormData();
@@ -117,9 +120,9 @@ export function PassModal({
       setPhoto(response.data.image_id);
     } catch {
       setError("Nie udało się przesłać zdjęcia.");
+      setPhotoPreviewUrl(null);
     } finally {
       setIsUploadingPhoto(false);
-      event.target.value = "";
     }
   }
 
@@ -191,8 +194,10 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm font-medium",
-                  !durationUnlimited && "border-brand-green bg-muted text-black",
+                  "min-h-9 rounded-full border px-3 text-sm",
+                  !durationUnlimited
+                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    : "border-border text-muted-foreground",
                 )}
                 onClick={() => setDurationUnlimited(false)}
               >
@@ -201,8 +206,10 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm font-medium",
-                  durationUnlimited && "border-brand-green bg-muted text-black",
+                  "min-h-9 rounded-full border px-3 text-sm",
+                  durationUnlimited
+                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    : "border-border text-muted-foreground",
                 )}
                 onClick={() => {
                   setDurationUnlimited(true);
@@ -212,6 +219,11 @@ export function PassModal({
                 ∞ Bez limitu
               </button>
             </div>
+            {durationUnlimited && (
+              <p className="text-sm text-muted-foreground mb-2">
+                ∞ Karnet nie wygasa — ważny do wykorzystania wejść.
+              </p>
+            )}
             {!durationUnlimited && (
               <Input
                 type="number"
@@ -232,8 +244,10 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm font-medium",
-                  !sessionUnlimited && "border-brand-green bg-muted text-black",
+                  "min-h-9 rounded-full border px-3 text-sm",
+                  !sessionUnlimited
+                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    : "border-border text-muted-foreground",
                 )}
                 onClick={() => setSessionUnlimited(false)}
               >
@@ -242,8 +256,10 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-9 rounded-full border px-3 text-sm font-medium",
-                  sessionUnlimited && "border-brand-green bg-muted text-black",
+                  "min-h-9 rounded-full border px-3 text-sm",
+                  sessionUnlimited
+                    ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                    : "border-border text-muted-foreground",
                 )}
                 onClick={() => {
                   setSessionUnlimited(true);
@@ -277,29 +293,35 @@ export function PassModal({
           {/* Cena */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Cena</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              onKeyDown={blockInvalidNumberChars}
-              className={fieldClass()}
-              placeholder={`Cena w ${currency}`}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                onKeyDown={blockInvalidNumberChars}
+                className={fieldClass()}
+                placeholder={`Cena w ${currency}`}
+              />
+              <span className="text-sm font-medium text-muted-foreground shrink-0">
+                {currency.toLowerCase() === "pln" ? "zł" : currency}
+              </span>
+            </div>
             {perEntry && (
               <p className="mt-1 text-sm text-muted-foreground">
-                = {perEntry} {currency}/wejście
+                = <strong>{perEntry} {currency.toLowerCase() === "pln" ? "zł" : currency}/wejście</strong>
               </p>
             )}
             {suggestedPrice && !editPass && (
               <button
                 type="button"
-                className="mt-2 rounded-md border border-brand-green bg-emerald-50 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-100 transition-colors w-full text-left"
+                className="mt-2 flex items-center gap-2 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-100 transition-colors w-full text-left"
                 onClick={() => setPrice(String(suggestedPrice))}
               >
-                Sugestia: {suggestedPrice} {currency} (10% taniej niż jednorazowe wejścia)
+                <Lightbulb className="size-4 shrink-0" />
+                <span>Sugerowana: <strong>{suggestedPrice} {currency.toLowerCase() === "pln" ? "zł" : currency}</strong> (−10% vs cena za wejście). Stuknij, aby użyć.</span>
               </button>
             )}
           </div>
@@ -318,51 +340,34 @@ export function PassModal({
 
           {/* Zdjęcie */}
           <div>
-            <label className="mb-1 block text-sm font-semibold">Zdjęcie (opcjonalnie)</label>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="pass-photo-upload"
-                className="cursor-pointer text-sm text-brand-blue hover:underline"
-              >
-                {isUploadingPhoto ? (
-                  <Loader2 className="size-4 animate-spin inline mr-1" />
-                ) : photo ? (
-                  "Zmień zdjęcie"
-                ) : (
-                  "Dodaj zdjęcie"
-                )}
-              </label>
-              <Input
-                id="pass-photo-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoUpload}
-                disabled={isUploadingPhoto}
-              />
-              {photo && (
-                <button
-                  type="button"
-                  className="text-sm text-destructive hover:underline"
-                  onClick={() => setPhoto(null)}
-                >
-                  Usuń
-                </button>
-              )}
-            </div>
+            <label className="mb-1 block text-sm font-semibold">Zdjęcie · opcjonalnie</label>
+            <SingleImageUpload
+              existingImageId={photo}
+              imagePreviewUrl={photoPreviewUrl}
+              isUploading={isUploadingPhoto}
+              onFileSelect={handlePhotoFileSelect}
+              onRemove={() => {
+                setPhoto(null);
+                setPhotoPreviewUrl(null);
+              }}
+            />
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <DrawerFooter>
-          <Button onClick={handleSave} disabled={isSaving} className="w-full">
-            {isSaving ? "Zapisuję..." : editPass ? "Zapisz zmiany" : "Dodaj karnet"}
-          </Button>
+        <DrawerFooter className="flex-row gap-2">
           <DrawerClose asChild>
-            <Button variant="outline" className="w-full">
-              Anuluj
+            <Button variant="outline" size="icon" className="shrink-0">
+              <X className="size-5" />
             </Button>
           </DrawerClose>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white"
+          >
+            {isSaving ? "Zapisuję..." : <>{"✓"} Zapisz karnet</>}
+          </Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

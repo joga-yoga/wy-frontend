@@ -815,7 +815,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       {(values.passes ?? []).map((pass, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between rounded-lg border bg-white px-4 py-3"
+                          className="flex items-start justify-between rounded-lg border bg-white px-4 py-3"
                         >
                           <button
                             type="button"
@@ -827,20 +827,28 @@ export function StudioForm({ routeId }: StudioFormProps) {
                           >
                             <p className="text-sm font-semibold">{pass.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {pass.price} {pass.currency || values.currency}
-                              {pass.duration_days ? ` · ${pass.duration_days} dni` : ""}
-                              {pass.session_count ? ` · ${pass.session_count} wejść` : ""}
+                              {pass.duration_days ? `${pass.duration_days} dni` : "∞ bez limitu"}
+                              {" · "}
+                              {pass.session_count ? `${pass.session_count} wejść` : "∞ bez limitu wejść"}
                             </p>
                           </button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground"
-                            onClick={() => removePass(index)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-bold">
+                              {pass.price}{" "}
+                              {(pass.currency || values.currency || "PLN").toUpperCase() === "PLN"
+                                ? "zł"
+                                : pass.currency || values.currency}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-muted-foreground"
+                              onClick={() => removePass(index)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
