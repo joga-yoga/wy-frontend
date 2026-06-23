@@ -994,12 +994,12 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Karty sportowe tri-state */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">Karty sportowe</label>
-                    <div className="grid grid-cols-2 gap-2 mb-3 max-w-[240px]">
+                    <label className="mb-2 block text-base font-semibold">Akceptujecie karty sportowe?</label>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
                       <button
                         type="button"
                         className={cn(
-                          "min-h-10 rounded-full border text-sm",
+                          "min-h-10 rounded-lg border text-sm",
                           values.accepts_sport_cards === false
                             ? "border-brand-green font-semibold text-foreground"
                             : "border-border text-muted-foreground",
@@ -1011,7 +1011,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       <button
                         type="button"
                         className={cn(
-                          "min-h-10 rounded-full border text-sm",
+                          "min-h-10 rounded-lg border text-sm",
                           values.accepts_sport_cards === true
                             ? "border-brand-green font-semibold text-foreground"
                             : "border-border text-muted-foreground",
@@ -1087,10 +1087,10 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       </div>
                     )}
                     {values.accepts_sport_cards === false && (
-                      <p className="text-sm text-muted-foreground">
-                        Na stronie publicznej wyświetlimy informację, że studio nie akceptuje kart
-                        sportowych.
-                      </p>
+                      <div className="flex items-start gap-2 rounded-lg bg-muted/50 border px-3 py-2.5 text-sm text-muted-foreground">
+                        <span className="shrink-0">ⓘ</span>
+                        <span>Na profilu studia pokażemy „Nie akceptujemy kart sportowych" — to ważna informacja dla uczestników.</span>
+                      </div>
                     )}
                   </div>
                 </div>

@@ -194,7 +194,7 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-10 rounded-full border text-sm",
+                  "min-h-10 rounded-lg border text-sm",
                   !durationUnlimited
                     ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
@@ -206,7 +206,7 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-10 rounded-full border text-sm",
+                  "min-h-10 rounded-lg border text-sm",
                   durationUnlimited
                     ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
@@ -244,7 +244,7 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-10 rounded-full border text-sm",
+                  "min-h-10 rounded-lg border text-sm",
                   !sessionUnlimited
                     ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
@@ -256,7 +256,7 @@ export function PassModal({
               <button
                 type="button"
                 className={cn(
-                  "min-h-10 rounded-full border text-sm",
+                  "min-h-10 rounded-lg border text-sm",
                   sessionUnlimited
                     ? "border-brand-green font-semibold text-foreground"
                     : "border-border text-muted-foreground",
@@ -364,9 +364,9 @@ export function PassModal({
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white"
+            className="flex-1"
           >
-            {isSaving ? "Zapisuję..." : <>{"✓"} Zapisz karnet</>}
+            {isSaving ? "Zapisuję..." : "Zapisz karnet"}
           </Button>
         </DrawerFooter>
       </DrawerContent>

@@ -284,7 +284,7 @@ export function SportCardModal({
                   <button
                     type="button"
                     className={cn(
-                      "min-h-10 rounded-full border text-sm",
+                      "min-h-10 rounded-lg border text-sm",
                       !hasFee
                         ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
@@ -299,7 +299,7 @@ export function SportCardModal({
                   <button
                     type="button"
                     className={cn(
-                      "min-h-10 rounded-full border text-sm",
+                      "min-h-10 rounded-lg border text-sm",
                       hasFee
                         ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
@@ -389,7 +389,7 @@ export function SportCardModal({
                   <button
                     type="button"
                     className={cn(
-                      "min-h-10 rounded-full border text-sm",
+                      "min-h-10 rounded-lg border text-sm",
                       !customHasFee
                         ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
@@ -404,7 +404,7 @@ export function SportCardModal({
                   <button
                     type="button"
                     className={cn(
-                      "min-h-10 rounded-full border text-sm",
+                      "min-h-10 rounded-lg border text-sm",
                       customHasFee
                         ? "border-brand-green font-semibold text-foreground"
                         : "border-border text-muted-foreground",
@@ -450,8 +450,8 @@ export function SportCardModal({
               <Button variant="outline" size="icon" className="shrink-0" onClick={() => setStep("pick")}>
                 <ArrowLeft className="size-5" />
               </Button>
-              <Button onClick={handleSavePredefined} disabled={isSaving} className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white">
-                {isSaving ? "Zapisuję..." : "✓ Dodaj kartę"}
+              <Button onClick={handleSavePredefined} disabled={isSaving} className="flex-1">
+                {isSaving ? "Zapisuję..." : "Dodaj kartę"}
               </Button>
             </>
           )}
@@ -460,8 +460,8 @@ export function SportCardModal({
               <Button variant="outline" size="icon" className="shrink-0" onClick={() => setStep("pick")}>
                 <ArrowLeft className="size-5" />
               </Button>
-              <Button onClick={handleSaveCustom} disabled={isSaving} className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white">
-                {isSaving ? "Zapisuję..." : "✓ Zapisz kartę"}
+              <Button onClick={handleSaveCustom} disabled={isSaving} className="flex-1">
+                {isSaving ? "Zapisuję..." : "Zapisz kartę"}
               </Button>
             </>
           )}
