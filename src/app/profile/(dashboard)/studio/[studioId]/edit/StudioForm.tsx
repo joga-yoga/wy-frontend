@@ -671,8 +671,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         <MapPin className="size-4 shrink-0 text-muted-foreground" />
                         <span className="min-w-0 flex-1 text-sm">
                           {values.location.address_line1}
-                          {values.location.city ? `, ${values.location.city}` : ""}
-                          {values.location.country ? `, ${values.location.country}` : ""}
                         </span>
                         <button
                           type="button"
