@@ -1,7 +1,7 @@
 "use client";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Copy, ExternalLink, Link, Loader2, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
+import { Copy, CreditCard, ExternalLink, Link, Loader2, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -894,8 +894,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         type="button"
                         className={cn(
                           "min-h-9 rounded-full border px-4 text-sm font-medium",
-                          values.accepts_sport_cards === false &&
-                            "border-brand-green bg-muted text-black",
+                          values.accepts_sport_cards === false
+                            ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                            : "border-border text-muted-foreground",
                         )}
                         onClick={() => setDirtyValue("accepts_sport_cards", false)}
                       >
@@ -905,8 +906,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         type="button"
                         className={cn(
                           "min-h-9 rounded-full border px-4 text-sm font-medium",
-                          values.accepts_sport_cards === true &&
-                            "border-brand-green bg-muted text-black",
+                          values.accepts_sport_cards === true
+                            ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                            : "border-border text-muted-foreground",
                         )}
                         onClick={() => setDirtyValue("accepts_sport_cards", true)}
                       >
@@ -920,21 +922,36 @@ export function StudioForm({ routeId }: StudioFormProps) {
                             key={index}
                             className="flex items-center justify-between rounded-lg border bg-white px-4 py-3"
                           >
-                            <div>
-                              <p className="text-sm font-semibold">
-                                {sc.sport_card?.name ?? sc.name ?? "Karta sportowa"}
-                              </p>
-                              {sc.fee != null && sc.fee !== "" && Number(sc.fee) > 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                  Dopłata: {sc.fee} {values.currency}
-                                </p>
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {(sc.sport_card?.photo || sc.photo) ? (
+                                <WyImage
+                                  src={(sc.sport_card?.photo || sc.photo)!}
+                                  alt={sc.sport_card?.name ?? sc.name ?? ""}
+                                  width={32}
+                                  height={32}
+                                  className="size-8 shrink-0 rounded object-contain"
+                                />
+                              ) : (
+                                <div className="flex size-8 shrink-0 items-center justify-center rounded bg-muted">
+                                  <CreditCard className="size-4 text-muted-foreground" />
+                                </div>
                               )}
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold">
+                                  {sc.sport_card?.name ?? sc.name ?? "Karta sportowa"}
+                                </p>
+                                {sc.fee != null && sc.fee !== "" && Number(sc.fee) > 0 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Dopłata: {sc.fee} {values.currency === 'PLN' ? 'PLN' : values.currency}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="size-8 text-muted-foreground"
+                              className="size-8 text-muted-foreground shrink-0"
                               onClick={() => removeSportCard(index)}
                             >
                               <Trash2 className="size-4" />

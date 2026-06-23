@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, Loader2, Plus, Search } from "lucide-react";
-import type { ChangeEvent, KeyboardEvent } from "react";
+import { ArrowLeft, Check, CreditCard, Plus, Search } from "lucide-react";
+import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,7 @@ export function SportCardModal({
   const [customName, setCustomName] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
+  const [customPhotoPreviewUrl, setCustomPhotoPreviewUrl] = useState<string | null>(null);
   const [customHasFee, setCustomHasFee] = useState(false);
   const [customFee, setCustomFee] = useState<string>("");
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -78,6 +80,7 @@ export function SportCardModal({
     setCustomName("");
     setCustomDescription("");
     setCustomPhoto(null);
+    setCustomPhotoPreviewUrl(null);
     setCustomHasFee(false);
     setCustomFee("");
     setError(null);
@@ -97,9 +100,9 @@ export function SportCardModal({
     setStep("predefined");
   }
 
-  async function handlePhotoUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  async function handlePhotoFileSelect(file: File) {
+    const previewUrl = URL.createObjectURL(file);
+    setCustomPhotoPreviewUrl(previewUrl);
     setIsUploadingPhoto(true);
     try {
       const formData = new FormData();
@@ -112,9 +115,10 @@ export function SportCardModal({
       setCustomPhoto(response.data.image_id);
     } catch {
       setError("Nie udało się przesłać zdjęcia.");
+      setCustomPhotoPreviewUrl(null);
+      URL.revokeObjectURL(previewUrl);
     } finally {
       setIsUploadingPhoto(false);
-      event.target.value = "";
     }
   }
 
@@ -216,7 +220,9 @@ export function SportCardModal({
                         className="size-8 rounded object-contain"
                       />
                     ) : (
-                      <div className="size-8 rounded bg-gray-100" />
+                      <div className="flex size-8 items-center justify-center rounded bg-muted">
+                        <CreditCard className="size-4 text-muted-foreground" />
+                      </div>
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{card.name}</p>
@@ -260,7 +266,9 @@ export function SportCardModal({
                     className="size-10 rounded object-contain"
                   />
                 ) : (
-                  <div className="size-10 rounded bg-gray-100" />
+                  <div className="flex size-10 items-center justify-center rounded bg-muted">
+                    <CreditCard className="size-5 text-muted-foreground" />
+                  </div>
                 )}
                 <div>
                   <p className="text-sm font-semibold">{selectedCard.name}</p>
@@ -277,7 +285,9 @@ export function SportCardModal({
                     type="button"
                     className={cn(
                       "min-h-9 rounded-full border px-3 text-sm font-medium",
-                      !hasFee && "border-brand-green bg-muted text-black",
+                      !hasFee
+                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        : "border-border text-muted-foreground",
                     )}
                     onClick={() => {
                       setHasFee(false);
@@ -290,13 +300,21 @@ export function SportCardModal({
                     type="button"
                     className={cn(
                       "min-h-9 rounded-full border px-3 text-sm font-medium",
-                      hasFee && "border-brand-green bg-muted text-black",
+                      hasFee
+                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        : "border-border text-muted-foreground",
                     )}
                     onClick={() => setHasFee(true)}
                   >
                     Dopłata
                   </button>
                 </div>
+                {!hasFee && (
+                  <div className="flex items-center gap-2 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-700">
+                    <Check className="size-4 shrink-0" />
+                    Uczestnicy z {selectedCard.name} wchodzą bez dodatkowej opłaty.
+                  </div>
+                )}
                 {hasFee && (
                   <div className="flex items-center gap-2">
                     <Input
@@ -339,51 +357,30 @@ export function SportCardModal({
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   className={fieldClass()}
-                  placeholder="np. Karta firmowa XYZ"
+                  placeholder="np. OK System"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-semibold">Opis (opcjonalnie)</label>
+                <label className="mb-1 block text-sm font-semibold">Opis · opcjonalnie</label>
                 <Textarea
                   value={customDescription}
                   onChange={(e) => setCustomDescription(e.target.value)}
                   rows={2}
                   className="text-sm"
+                  placeholder="Krótki opis karty"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-semibold">Zdjęcie (opcjonalnie)</label>
-                <label
-                  htmlFor="custom-sc-photo"
-                  className="cursor-pointer text-sm text-brand-blue hover:underline"
-                >
-                  {isUploadingPhoto ? (
-                    <Loader2 className="size-4 animate-spin inline mr-1" />
-                  ) : customPhoto ? (
-                    "Zmień zdjęcie"
-                  ) : (
-                    "Dodaj zdjęcie"
-                  )}
-                </label>
-                <Input
-                  id="custom-sc-photo"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handlePhotoUpload}
-                  disabled={isUploadingPhoto}
+                <label className="mb-1 block text-sm font-semibold">Zdjęcie · opcjonalnie</label>
+                <SingleImageUpload
+                  existingImageId={customPhoto}
+                  imagePreviewUrl={customPhotoPreviewUrl}
+                  isUploading={isUploadingPhoto}
+                  onFileSelect={handlePhotoFileSelect}
+                  onRemove={() => { setCustomPhoto(null); setCustomPhotoPreviewUrl(null); }}
                 />
-                {customPhoto && (
-                  <button
-                    type="button"
-                    className="ml-2 text-sm text-destructive hover:underline"
-                    onClick={() => setCustomPhoto(null)}
-                  >
-                    Usuń
-                  </button>
-                )}
               </div>
 
               <div>
@@ -393,7 +390,9 @@ export function SportCardModal({
                     type="button"
                     className={cn(
                       "min-h-9 rounded-full border px-3 text-sm font-medium",
-                      !customHasFee && "border-brand-green bg-muted text-black",
+                      !customHasFee
+                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        : "border-border text-muted-foreground",
                     )}
                     onClick={() => {
                       setCustomHasFee(false);
@@ -406,7 +405,9 @@ export function SportCardModal({
                     type="button"
                     className={cn(
                       "min-h-9 rounded-full border px-3 text-sm font-medium",
-                      customHasFee && "border-brand-green bg-muted text-black",
+                      customHasFee
+                        ? "border-brand-green bg-brand-green/10 text-brand-green font-semibold"
+                        : "border-border text-muted-foreground",
                     )}
                     onClick={() => setCustomHasFee(true)}
                   >
@@ -427,7 +428,7 @@ export function SportCardModal({
                       placeholder="0.00"
                     />
                     <span className="text-sm text-muted-foreground shrink-0">
-                      {currency}/wejście
+                      {currency === "PLN" ? "zł" : currency} / wejście
                     </span>
                   </div>
                 )}
@@ -438,22 +439,32 @@ export function SportCardModal({
           )}
         </div>
 
-        <DrawerFooter>
+        <DrawerFooter className={step === "pick" ? "" : "flex-row gap-2"}>
+          {step === "pick" && (
+            <DrawerClose asChild>
+              <Button variant="outline" className="w-full">Anuluj</Button>
+            </DrawerClose>
+          )}
           {step === "predefined" && (
-            <Button onClick={handleSavePredefined} disabled={isSaving} className="w-full">
-              {isSaving ? "Zapisuję..." : "Dodaj kartę"}
-            </Button>
+            <>
+              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setStep("pick")}>
+                <ArrowLeft className="size-5" />
+              </Button>
+              <Button onClick={handleSavePredefined} disabled={isSaving} className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white">
+                {isSaving ? "Zapisuję..." : "✓ Dodaj kartę"}
+              </Button>
+            </>
           )}
           {step === "custom" && (
-            <Button onClick={handleSaveCustom} disabled={isSaving} className="w-full">
-              {isSaving ? "Zapisuję..." : "Dodaj kartę"}
-            </Button>
+            <>
+              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setStep("pick")}>
+                <ArrowLeft className="size-5" />
+              </Button>
+              <Button onClick={handleSaveCustom} disabled={isSaving} className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white">
+                {isSaving ? "Zapisuję..." : "✓ Zapisz kartę"}
+              </Button>
+            </>
           )}
-          <DrawerClose asChild>
-            <Button variant="outline" className="w-full">
-              Anuluj
-            </Button>
-          </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
