@@ -1,6 +1,6 @@
 import * as yup from "yup";
 
-import type { StudioApiResponse, StudioFormValues, StudioPayload } from "./types";
+import type { StudioApiResponse, StudioFormValues, StudioLocation, StudioPayload } from "./types";
 
 const emptyToNull = <T>(value: T, originalValue: unknown) =>
   originalValue === "" || originalValue == null ? null : value;
@@ -78,6 +78,7 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     image_id: cleanString(values.image_id) ?? null,
     image_ids: values.image_ids ?? [],
     address: cleanString(values.address),
+    location_id: values.location_id ?? null,
     drop_in_price: cleanNumber(values.drop_in_price),
     currency: values.currency || "PLN",
     accepts_sport_cards: values.accepts_sport_cards,
@@ -97,6 +98,8 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
     description: studio.description ?? "",
     image_id: studio.image_id ?? null,
     address: studio.address ?? "",
+    location_id: studio.location_id ?? null,
+    location: null, // will be loaded separately
     rooms: (studio.rooms ?? []).map((r) => ({ id: r.id, name: r.name })),
     amenity_ids: studio.amenity_ids ?? [],
     instructor_ids: (studio.instructor_links ?? []).map((l) => l.instructor_id),
@@ -135,6 +138,8 @@ export const emptyStudioFormValues: StudioFormValues = {
   description: "",
   image_id: null,
   address: "",
+  location_id: null,
+  location: null,
   rooms: [],
   amenity_ids: [],
   instructor_ids: [],

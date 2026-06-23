@@ -1,7 +1,7 @@
 "use client";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Copy, CreditCard, ExternalLink, Link, Loader2, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
+import { Copy, CreditCard, ExternalLink, Link, Loader2, MapPin, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -43,6 +43,7 @@ import type {
   StudioApiResponse,
   StudioFormValues,
   StudioInstructor,
+  StudioLocation,
   StudioPass,
   StudioRoom,
 } from "./types";
@@ -148,6 +149,13 @@ export function StudioForm({ routeId }: StudioFormProps) {
   // Slug manual edit tracking
   const slugManuallyEditedRef = useRef(false);
 
+  // Location autocomplete
+  const [locationSuggestions, setLocationSuggestions] = useState<Array<{ description: string; place_id: string; structured_formatting: { main_text: string; secondary_text: string } }>>([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
+  const [isFetchingLocationSuggestions, setIsFetchingLocationSuggestions] = useState(false);
+  const locationDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
   const resolver = useMemo<Resolver<StudioFormValues>>(
     () => async (values, context, options) => {
       const activeSchema =
@@ -217,6 +225,8 @@ export function StudioForm({ routeId }: StudioFormProps) {
     setLogoPreviewUrl(null);
     setDirectUploadError(null);
     setPendingImages([]);
+    setLocationQuery("");
+    setLocationSuggestions([]);
     reset(emptyStudioFormValues);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -237,6 +247,23 @@ export function StudioForm({ routeId }: StudioFormProps) {
       })
       .finally(() => setIsLoading(false));
   }, [studioId, reset]);
+
+  // Load location data when studio has location_id
+  useEffect(() => {
+    if (!studioId) return;
+    axiosInstance.get<StudioLocation[]>("/locations")
+      .then(({ data }) => {
+        const current = values.location_id;
+        if (current) {
+          const loc = data.find(l => l.id === current);
+          if (loc) {
+            setValue("location", loc as any, { shouldDirty: false });
+            setLocationQuery(loc.address_line1 || loc.title || "");
+          }
+        }
+      })
+      .catch(() => {});
+  }, [studioId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Unsaved changes warning
   useEffect(() => {
@@ -458,6 +485,37 @@ export function StudioForm({ routeId }: StudioFormProps) {
     );
   }
 
+  // ── Location autocomplete helpers ──────────────────────────────────────
+
+  function fetchLocationSuggestions(query: string) {
+    if (query.trim().length < 3) {
+      setLocationSuggestions([]);
+      return;
+    }
+    setIsFetchingLocationSuggestions(true);
+    axiosInstance
+      .get("/locations/autocomplete", { params: { input_text: query } })
+      .then(({ data }) => setLocationSuggestions(data || []))
+      .catch(() => setLocationSuggestions([]))
+      .finally(() => setIsFetchingLocationSuggestions(false));
+  }
+
+  async function handleLocationSelected(suggestion: { description: string; place_id: string }) {
+    setIsSearchingLocation(false);
+    setLocationSuggestions([]);
+    setLocationQuery(suggestion.description);
+    try {
+      const { data: location } = await axiosInstance.post<StudioLocation>("/locations", {
+        google_place_id: suggestion.place_id,
+      });
+      setDirtyValue("location_id", location.id);
+      setDirtyValue("location", location as any);
+      setDirtyValue("address", location.address_line1 || suggestion.description);
+    } catch {
+      toast({ description: "Nie udało się zapisać lokalizacji.", variant: "destructive" });
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────────────
 
   if (isLoading) {
@@ -594,16 +652,64 @@ export function StudioForm({ routeId }: StudioFormProps) {
               {/* ── Section 2: Lokalizacja ── */}
               <Section id="studio-location-section" title="Lokalizacja">
                 <div className="space-y-4">
-                  <div data-error-field="address">
-                    <label className="mb-2 block text-base font-semibold" htmlFor="address">
-                      Adres
-                    </label>
-                    <Input
-                      id="address"
-                      {...register("address")}
-                      className={fieldClass(Boolean(errors.address))}
-                      placeholder="np. ul. Marszałkowska 1, Warszawa"
-                    />
+                  <div data-error-field="location_id" className="relative">
+                    <label className="mb-2 block text-base font-semibold">Adres</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={locationQuery}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLocationQuery(val);
+                          setIsSearchingLocation(true);
+                          if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
+                          locationDebounceRef.current = setTimeout(() => fetchLocationSuggestions(val), 300);
+                        }}
+                        className={cn(fieldClass(Boolean(errors.address)), "pl-9")}
+                        placeholder="Wpisz adres, aby wyszukać..."
+                        autoComplete="off"
+                      />
+                    </div>
+                    {isFetchingLocationSuggestions && (
+                      <p className="mt-1 text-xs text-muted-foreground">Szukanie...</p>
+                    )}
+                    {locationSuggestions.length > 0 && isSearchingLocation && (
+                      <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-[200px] overflow-y-auto">
+                        {locationSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.place_id}
+                            type="button"
+                            className="flex w-full flex-col px-3 py-2 text-left hover:bg-accent transition-colors"
+                            onClick={() => handleLocationSelected(suggestion)}
+                          >
+                            <span className="text-sm font-medium">{suggestion.structured_formatting.main_text}</span>
+                            <span className="text-xs text-muted-foreground">{suggestion.structured_formatting.secondary_text}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {values.location && !isSearchingLocation && (
+                      <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                        <MapPin className="size-4 shrink-0" />
+                        <span className="min-w-0 truncate">
+                          {values.location.address_line1}
+                          {values.location.city ? `, ${values.location.city}` : ''}
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-auto text-xs text-brand-blue hover:underline shrink-0"
+                          onClick={() => {
+                            setLocationQuery("");
+                            setDirtyValue("location_id", null);
+                            setDirtyValue("location", null);
+                            setDirtyValue("address", "");
+                            setIsSearchingLocation(true);
+                          }}
+                        >
+                          Zmień
+                        </button>
+                      </div>
+                    )}
                     <FieldError message={errors.address?.message} />
                   </div>
 

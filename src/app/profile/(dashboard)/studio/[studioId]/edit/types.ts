@@ -47,12 +47,25 @@ export interface StudioInstructor {
   is_foreign?: boolean;
 }
 
+export interface StudioLocation {
+  id: string;
+  title?: string | null;
+  address_line1?: string | null;
+  city?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  google_place_id?: string | null;
+}
+
 export interface StudioFormValues {
   name: string;
   slug: string;
   description: string;
   image_id: string | null;
   address: string;
+  location_id: string | null;
+  location: StudioLocation | null;
   rooms: StudioRoom[];
   amenity_ids: string[];
   instructor_ids: string[];
@@ -73,6 +86,7 @@ export interface StudioApiResponse {
   slug?: string | null;
   description?: string | null;
   address?: string | null;
+  location_id?: string | null;
   image_id?: string | null;
   image_ids?: string[] | null;
   drop_in_price?: number | null;
@@ -115,6 +129,7 @@ export interface StudioPayload {
   image_id?: string | null;
   image_ids?: string[];
   address?: string | null;
+  location_id?: string | null;
   drop_in_price?: number | null;
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
