@@ -29,6 +29,7 @@ interface SportCardModalProps {
   studioId: string | null;
   currency: string;
   editCard?: StudioSportCard | null;
+  existingCardIds?: string[];
 }
 
 function blockInvalidNumberChars(event: KeyboardEvent<HTMLInputElement>) {
@@ -50,6 +51,7 @@ export function SportCardModal({
   studioId,
   currency,
   editCard,
+  existingCardIds = [],
 }: SportCardModalProps) {
   const [step, setStep] = useState<Step>("pick");
   const [catalogue, setCatalogue] = useState<SportCard[]>([]);
@@ -114,9 +116,10 @@ export function SportCardModal({
       .catch(() => {});
   }, [isOpen, editCard]);
 
+  const availableCards = catalogue.filter((c) => !existingCardIds.includes(c.id));
   const filteredCards = searchQuery
-    ? catalogue.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : catalogue;
+    ? availableCards.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : availableCards;
 
   function handlePickCard(card: SportCard) {
     setSelectedCard(card);

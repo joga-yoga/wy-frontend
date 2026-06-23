@@ -1147,6 +1147,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                           studioId={studioId}
                           currency={values.currency || "PLN"}
                           editCard={editingSportCard}
+                          existingCardIds={(values.sport_card_acceptances ?? []).filter((sc) => sc.sport_card_id).map((sc) => sc.sport_card_id!)}
                         />
                       </div>
                     )}
