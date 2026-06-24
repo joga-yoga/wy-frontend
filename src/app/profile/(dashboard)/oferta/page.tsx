@@ -837,7 +837,7 @@ export default function OfertaPage() {
                         alt={studios[0].name}
                         width={48}
                         height={48}
-                        className="rounded-lg object-cover shrink-0 h-12 w-12"
+                        className="rounded-lg object-contain shrink-0 h-12 w-12"
                       />
                     ) : (
                       <div className="h-12 w-12 shrink-0 rounded-lg bg-emerald-100 flex items-center justify-center">

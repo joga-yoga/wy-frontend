@@ -26,15 +26,19 @@ export async function generateMetadata(
   const description = studio.description ?? studio.address ?? "Profil studia jogi na joga.yoga";
   const imageUrl = getOgImageUrl(studio.image_ids?.[0] ?? studio.image_id ?? null);
 
-  return {
-    ...buildPageMetadata({
-      project: "workshops",
-      title,
-      description,
-      path: `/studio/${slug}`,
-      image: imageUrl || undefined,
-    }),
-  };
+  const metadata = buildPageMetadata({
+    project: "workshops",
+    title,
+    description,
+    path: `/studio/${slug}`,
+    image: imageUrl || undefined,
+  });
+
+  if (studio.is_listed === false) {
+    return { ...metadata, robots: { index: false, follow: false } };
+  }
+
+  return metadata;
 }
 
 export default async function StudioPage({ params }: StudioPageProps) {

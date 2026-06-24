@@ -4,6 +4,7 @@ import { Building2, Check, Loader2, Plus, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ interface StudioAutocomplete {
   name: string;
   slug?: string | null;
   image_id?: string | null;
+  address?: string | null;
   status: string;
 }
 
@@ -171,9 +173,24 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
           key={studio.id}
           className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3"
         >
-          <Building2 className="size-5 text-muted-foreground shrink-0" />
+          <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+            {studio.image_id ? (
+              <WyImage
+                src={studio.image_id}
+                alt={studio.name}
+                width={36}
+                height={36}
+                className="size-9 rounded-lg object-contain"
+              />
+            ) : (
+              <Building2 className="size-5 text-muted-foreground" />
+            )}
+          </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold truncate">{studio.name}</p>
+            {studio.address && (
+              <p className="truncate text-xs text-muted-foreground">{studio.address}</p>
+            )}
             {studio.status === "stub" && (
               <span className="text-xs text-amber-600">zaproszenie wysłane · oczekuje</span>
             )}
@@ -228,8 +245,25 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
                   onClick={() => linkStudio(studio)}
                   className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-muted transition-colors"
                 >
-                  <Building2 className="size-4 text-muted-foreground" />
-                  <span className="text-sm">{studio.name}</span>
+                  <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                    {studio.image_id ? (
+                      <WyImage
+                        src={studio.image_id}
+                        alt={studio.name}
+                        width={32}
+                        height={32}
+                        className="size-8 rounded-lg object-contain"
+                      />
+                    ) : (
+                      <Building2 className="size-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm">{studio.name}</span>
+                    {studio.address && (
+                      <p className="truncate text-xs text-muted-foreground">{studio.address}</p>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>

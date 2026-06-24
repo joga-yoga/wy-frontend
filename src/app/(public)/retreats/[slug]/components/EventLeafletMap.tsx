@@ -47,14 +47,19 @@ const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletM
         dragging,
         scrollWheelZoom,
         zoom: 13,
+        attributionControl: false,
       });
+
+      L.control.attribution({ prefix: false }).addTo(map);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">OpenStreetMap</a>',
       }).addTo(map);
 
       L.marker([latitude, longitude]).addTo(map);
+
+      setTimeout(() => map?.invalidateSize(), 0);
     };
 
     initMap();
@@ -66,7 +71,12 @@ const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletM
     };
   }, [dragging, latitude, longitude, scrollWheelZoom]);
 
-  return <div ref={containerRef} className="h-full w-full md:rounded-lg z-0" />;
+  return (
+    <div
+      ref={containerRef}
+      className="h-full w-full md:rounded-lg z-0 [&_.leaflet-control-attribution]:!bg-white [&_.leaflet-control-attribution]:!pr-[10px] [&_.leaflet-control-attribution]:!pl-[3px] [&_.leaflet-control-attribution]:!rounded-tl-[6px]"
+    />
+  );
 };
 
 const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) => {
@@ -88,7 +98,7 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
 
   return (
     <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-      <div className="relative h-[440px] w-full">
+      <div className="relative h-full w-full">
         <LeafletMap
           dragging={!isMobile}
           latitude={latitude}

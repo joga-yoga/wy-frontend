@@ -92,6 +92,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to fetch instructor slugs for sitemap", error);
   }
 
+  let studioRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const res = await fetch(`${API_URL}/public/studios/slugs`);
+    if (res.ok) {
+      const slugs: string[] = await res.json();
+      studioRoutes = slugs.map((slug) => ({
+        url: `${BASE_URL}/studio/${slug}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }));
+    }
+  } catch (error) {
+    console.error("Failed to fetch studio slugs for sitemap", error);
+  }
+
   return [
     ...staticRoutes,
     ...staticWorkshopRoutes,
@@ -100,5 +115,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...retreatRoutes,
     ...courseRoutes,
     ...instructorRoutes,
+    ...studioRoutes,
   ];
 }

@@ -57,6 +57,14 @@ export interface StudioInstructor {
   short_bio?: string | null;
 }
 
+export interface StudioPublicLocation {
+  title?: string | null;
+  address_line1?: string | null;
+  city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
 export interface StudioPublic {
   id: string;
   name: string;
@@ -68,6 +76,7 @@ export interface StudioPublic {
   drop_in_price?: number | null;
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
+  is_listed: boolean;
   status: string;
   rooms: StudioRoom[];
   passes: StudioPass[];
@@ -75,6 +84,7 @@ export interface StudioPublic {
   amenities: StudioAmenity[];
   yoga_styles: StudioYogaStyle[];
   instructors: StudioInstructor[];
+  location?: StudioPublicLocation | null;
   created_at: string;
   updated_at: string;
 }

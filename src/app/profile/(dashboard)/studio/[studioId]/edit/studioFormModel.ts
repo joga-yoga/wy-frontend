@@ -32,6 +32,7 @@ export const studioPublishSchema = yup.object({
   currency: yup.string().trim().optional(),
   accepts_sport_cards: yup.boolean().nullable().optional(),
   is_public: yup.boolean().default(false),
+  is_listed: yup.boolean().default(true),
 });
 
 function cleanString(value: unknown): string | null {
@@ -82,6 +83,7 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     drop_in_price: cleanNumber(values.drop_in_price),
     currency: values.currency || "PLN",
     accepts_sport_cards: values.accepts_sport_cards,
+    is_listed: values.is_listed,
     rooms,
     passes,
     sport_card_acceptances: sportCardAcceptances,
@@ -129,6 +131,7 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
     })),
     image_ids: studio.image_ids ?? [],
     is_public: studio.status === "claimed",
+    is_listed: studio.is_listed !== false,
   };
 }
 
@@ -152,4 +155,5 @@ export const emptyStudioFormValues: StudioFormValues = {
   sport_card_acceptances: [],
   image_ids: [],
   is_public: false,
+  is_listed: true,
 };

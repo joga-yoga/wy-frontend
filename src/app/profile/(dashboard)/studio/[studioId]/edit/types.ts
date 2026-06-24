@@ -78,6 +78,7 @@ export interface StudioFormValues {
   sport_card_acceptances: StudioSportCard[];
   image_ids: string[];
   is_public: boolean;
+  is_listed: boolean;
 }
 
 export interface StudioApiResponse {
@@ -92,6 +93,7 @@ export interface StudioApiResponse {
   drop_in_price?: number | null;
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
+  is_listed?: boolean;
   status: string;
   rooms: Array<{ id: string; studio_id: string; name: string }>;
   passes: Array<{
@@ -133,6 +135,7 @@ export interface StudioPayload {
   drop_in_price?: number | null;
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
+  is_listed?: boolean;
   rooms?: Array<{ name: string }>;
   passes?: Array<{
     name: string;

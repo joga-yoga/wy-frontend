@@ -4,6 +4,7 @@ import { Control, useController } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 import { WyImage } from "../custom/WyImage";
 
@@ -15,6 +16,7 @@ interface SingleImageUploadBaseProps {
   disabled?: boolean;
   isRemoved?: boolean;
   onFileSelect?: (file: File) => void;
+  previewClassName?: string;
 }
 
 interface ControlledSingleImageUploadProps extends SingleImageUploadBaseProps {
@@ -100,6 +102,7 @@ export const SingleImageUpload = ({
   disabled,
   isRemoved,
   onFileSelect,
+  previewClassName,
 }: SingleImageUploadProps) => {
   const existingImageUrl =
     !isRemoved && existingImageId
@@ -115,14 +118,14 @@ export const SingleImageUpload = ({
       {currentPreviewUrl ? (
         <>
           <label htmlFor={inputId} className="cursor-pointer">
-            <div className="relative w-24 h-24 md:w-32 md:h-32 border rounded-md overflow-hidden">
+            <div className="relative w-24 h-24 md:w-32 md:h-32 border rounded-md overflow-hidden justify-center items-center flex">
               <WyImage
                 src={currentPreviewUrl}
                 alt="Preview"
-                className="object-cover"
+                className={cn("object-cover", previewClassName)}
                 height="128"
                 width="128"
-                crop="fill"
+                // crop="fill"
               />
               {isUploading && (
                 <div className="absolute inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-10">

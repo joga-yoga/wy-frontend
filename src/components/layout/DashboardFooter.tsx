@@ -88,20 +88,15 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           )}
           {/* Render View Public button if href exists */}
           {isPublished && viewPublicHref && (
-            <Link
-              href={viewPublicHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full md:w-auto md:flex-none"
-            >
-              <Button variant="outline" className="w-full">
+            <Button variant="outline" asChild className="w-full md:w-auto md:flex-none">
+              <a href={viewPublicHref} target="_blank" rel="noopener noreferrer">
                 <span className="inline-flex items-center">
                   {viewPublicIcon}
                   <span className="ml-2 hidden md:block">{viewPublicLabel}</span>
                   <span className="ml-2 block md:hidden">{viewPublicLabelShort}</span>
                 </span>
-              </Button>
-            </Link>
+              </a>
+            </Button>
           )}
           {/* Render Publish button only if not published */}
           {showPublishButton && onPublishToggle && !isPublished && (

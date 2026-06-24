@@ -283,7 +283,10 @@ export function PassModal({
             </div>
             {perEntry && (
               <p className="mt-1 text-sm text-muted-foreground">
-                = <strong>{perEntry} {getCurrencySymbol(currency)}/wejście</strong>
+                ={" "}
+                <strong>
+                  {perEntry} {getCurrencySymbol(currency)}/wejście
+                </strong>
               </p>
             )}
             {suggestedPrice && !editPass && (
@@ -293,7 +296,13 @@ export function PassModal({
                 onClick={() => setPrice(String(suggestedPrice))}
               >
                 <Lightbulb className="size-4 shrink-0" />
-                <span>Sugerowana: <strong>{suggestedPrice} {getCurrencySymbol(currency)}</strong> (−10% vs cena za wejście). Stuknij, aby użyć.</span>
+                <span>
+                  Sugerowana:{" "}
+                  <strong>
+                    {suggestedPrice} {getCurrencySymbol(currency)}
+                  </strong>{" "}
+                  (−10% vs cena za wejście). Stuknij, aby użyć.
+                </span>
               </button>
             )}
           </div>
@@ -318,11 +327,7 @@ export function PassModal({
               <X className="size-5" />
             </Button>
           </DrawerClose>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex-1"
-          >
+          <Button onClick={handleSave} disabled={isSaving} className="flex-1">
             {isSaving ? "Zapisuję..." : "Zapisz karnet"}
           </Button>
         </DrawerFooter>

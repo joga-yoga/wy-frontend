@@ -93,6 +93,7 @@ export const PublicHeader = () => {
     pathname.startsWith("/kursy/");
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const isPartnersPage = pathname === "/partners";
+  const isStudioPage = pathname.startsWith("/studio/");
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -107,7 +108,7 @@ export const PublicHeader = () => {
 
   const fromPath = searchParams.get("from");
   const logoHref = isWyjazdy ? "/wyjazdy" : "/";
-  if (isPartnersPage) {
+  if (isPartnersPage || isStudioPage) {
     return null;
   }
 

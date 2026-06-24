@@ -225,16 +225,36 @@ export function StudioForm({ routeId }: StudioFormProps) {
       const merged = new Map<string, Instructor>();
       try {
         const owned = await axiosInstance.get<Instructor[]>("/instructors");
+        console.log("🚀 ~ loadInstructors ~ owned:", owned);
         owned.data.forEach((i) => merged.set(i.id, { ...i, is_owned: true, is_foreign: false }));
       } catch {}
       try {
         const roster = await axiosInstance.get<Instructor[]>("/instructor-roster");
         roster.data.forEach((i) => merged.set(i.id, { ...i, is_foreign: i.is_owned === false }));
       } catch {}
+      console.log("🚀 ~ loadInstructors ~ merged:", merged);
       setAvailableInstructors([...merged.values()]);
     }
     loadInstructors();
   }, []);
+
+  // Hydrate instructor objects once both the form data and the available list are ready
+  const watchedInstructorIds = values.instructor_ids ?? [];
+  const watchedInstructors = values.instructors ?? [];
+  useEffect(() => {
+    if (
+      watchedInstructorIds.length === 0 ||
+      watchedInstructors.length > 0 ||
+      availableInstructors.length === 0
+    )
+      return;
+    const hydrated = watchedInstructorIds
+      .map((id) => availableInstructors.find((i) => i.id === id))
+      .filter(Boolean) as StudioInstructor[];
+    if (hydrated.length > 0) {
+      setValue("instructors", hydrated);
+    }
+  }, [watchedInstructorIds, watchedInstructors, availableInstructors, setValue]);
 
   // Reset on create mount
   useEffect(() => {
@@ -585,6 +605,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       isUploading={isUploadingLogo}
                       onFileSelect={handleLogoFileSelect}
                       onRemove={() => setDirtyValue("image_id", null)}
+                      previewClassName="object-contain"
                     />
                   </div>
 
@@ -633,14 +654,14 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       placeholder="np. moje-studio-jogi"
                     />
                     <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2">
-                      <span className="min-w-0 font-mono text-sm text-muted-foreground">
+                      <p className="min-w-0 break-all font-mono text-sm text-muted-foreground">
                         https://joga.yoga/studio/
                         {values.slug ? (
                           <span className="text-brand-green">{values.slug}</span>
                         ) : (
                           <span className="italic">...</span>
                         )}
-                      </span>
+                      </p>
                       <button
                         type="button"
                         className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
@@ -1201,8 +1222,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       <div className="flex items-start gap-2 rounded-lg bg-muted/50 border px-3 py-2.5 text-sm text-muted-foreground">
                         <span className="shrink-0">ⓘ</span>
                         <span>
-                          Na profilu studia pokażemy „Nie akceptujemy kart sportowych" — to ważna
-                          informacja dla uczestników.
+                          {`Na profilu studia pokażemy „Nie akceptujemy kart sportowych" — to ważna informacja dla uczestników.`}
                         </span>
                       </div>
                     )}
@@ -1227,6 +1247,35 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     showHeader={false}
                   />
                 </EventHelpBarProvider>
+              </Section>
+
+              {/* ── Widoczność ── */}
+              <Section id="studio-visibility-section" title="Widoczność">
+                <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {values.is_listed ? "Strona publiczna" : "Strona ukryta"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {values.is_listed
+                        ? "Studio jest widoczne w wynikach wyszukiwania Google"
+                        : "Studio nie jest indeksowane przez wyszukiwarki"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDirtyValue("is_listed", !values.is_listed)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                      values.is_listed ? "bg-emerald-500" : "bg-gray-200"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                        values.is_listed ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
               </Section>
             </div>
           </div>
