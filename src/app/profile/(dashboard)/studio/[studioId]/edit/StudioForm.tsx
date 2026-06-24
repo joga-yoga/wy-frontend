@@ -19,6 +19,7 @@ import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
+import { PassTile } from "@/components/common/PassTile";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { type Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
@@ -574,7 +575,10 @@ export function StudioForm({ routeId }: StudioFormProps) {
                 <div className="space-y-4">
                   {/* Logo */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">Logo</label>
+                    <label className="mb-1 block text-base font-semibold">Logo</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Wyświetlane na stronie studia, w wynikach wyszukiwania i na listach zajęć
+                    </p>
                     <SingleImageUpload
                       existingImageId={values.image_id}
                       imagePreviewUrl={logoPreviewUrl}
@@ -585,12 +589,16 @@ export function StudioForm({ routeId }: StudioFormProps) {
                   </div>
 
                   <div data-error-field="name">
-                    <label className="mb-2 block text-base font-semibold" htmlFor="name">
+                    <label className="mb-1 block text-base font-semibold" htmlFor="name">
                       Nazwa studia
                     </label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Oficjalna nazwa studia widoczna na stronie publicznej i w wyszukiwaniu
+                    </p>
                     <Input
                       id="name"
                       {...register("name")}
+                      placeholder="np. Studio Jogi Harmonia"
                       className={fieldClass(Boolean(errors.name))}
                       onBlur={(e) => {
                         if (isCreateRoute && !slugManuallyEditedRef.current && !values.slug) {
@@ -647,14 +655,18 @@ export function StudioForm({ routeId }: StudioFormProps) {
                   </div>
 
                   <div data-error-field="description">
-                    <label className="mb-2 block text-base font-semibold" htmlFor="description">
+                    <label className="mb-1 block text-base font-semibold" htmlFor="description">
                       Opis
                     </label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Opisz swoje studio — czym się wyróżniacie, jaka jest Wasza filozofia i co
+                      uczestnicy mogą u Was znaleźć
+                    </p>
                     <Textarea
                       id="description"
                       {...register("description")}
                       className={textAreaClass(Boolean(errors.description))}
-                      placeholder="Opis studia...."
+                      placeholder="np. Nasze studio powstało z pasji do jogi i ruchu..."
                       spellCheck={false}
                     />
                     <FieldError message={errors.description?.message} />
@@ -666,7 +678,10 @@ export function StudioForm({ routeId }: StudioFormProps) {
               <Section id="studio-location-section" title="Lokalizacja">
                 <div className="space-y-4">
                   <div data-error-field="location_id" className="relative">
-                    <label className="mb-2 block text-base font-semibold">Adres</label>
+                    <label className="mb-1 block text-base font-semibold">Adres</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Adres studia wyświetlany na profilu z mapą — pomaga uczestnikom Was znaleźć
+                    </p>
                     {values.location && !isEditingLocation ? (
                       <div className="flex items-center gap-2 rounded-md border px-3 py-3">
                         <MapPin className="size-4 shrink-0 text-muted-foreground" />
@@ -753,7 +768,12 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Sale (rooms) tag input */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">Sale</label>
+                    <label className="mb-1 block text-base font-semibold">Sale</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Opcjonalne — wypełnij tylko jeśli studio ma więcej niż jedną salę. Nazwy sal
+                      będą widoczne w grafiku, żeby uczestnicy wiedzieli, gdzie odbywają się
+                      zajęcia.
+                    </p>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {(values.rooms ?? []).map((room, index) => (
                         <span
@@ -781,7 +801,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                             addRoom();
                           }
                         }}
-                        placeholder="Wpisz nazwę sali i naciśnij Enter"
+                        placeholder="np. Sala Główna, Sala Zen..."
                         className={fieldClass()}
                       />
                       <Button
@@ -797,7 +817,11 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Udogodnienia (amenities) toggle chips */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">Udogodnienia</label>
+                    <label className="mb-1 block text-base font-semibold">Udogodnienia</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Zaznacz co oferuje Twoje studio — te informacje pomagają uczestnikom przy
+                      wyborze
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {allAmenities.map((amenity) => (
                         <Badge
@@ -898,7 +922,10 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Style jogi */}
                   <div className="pt-2">
-                    <label className="mb-2 block text-base font-semibold">Style jogi</label>
+                    <label className="mb-1 block text-base font-semibold">Style jogi</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Widoczne na profilu studia i w filtrach wyszukiwania
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {allYogaStyles.map((style) => (
                         <Badge
@@ -922,15 +949,19 @@ export function StudioForm({ routeId }: StudioFormProps) {
                 <div className="space-y-6">
                   {/* Drop-in price */}
                   <div data-error-field="drop_in_price">
-                    <label className="mb-2 block text-base font-semibold">
+                    <label className="mb-1 block text-base font-semibold">
                       Cena za jedno wejście
                     </label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Cena jednorazowego wejścia dla osób bez karnetu i karty sportowej
+                    </p>
                     <div className="grid grid-cols-[1fr_88px] gap-3">
                       <Input
                         type="number"
                         min="0"
                         step="0.01"
                         inputMode="decimal"
+                        placeholder="np. 50"
                         onKeyDown={blockInvalidNumberChars}
                         {...register("drop_in_price")}
                         className={fieldClass(Boolean(errors.drop_in_price))}
@@ -954,13 +985,34 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Karnety list */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">Karnety</label>
+                    <label className="mb-1 block text-base font-semibold">Karnety</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Dodaj dostępne karnety z cenami — uczestnicy zobaczą je na profilu studia
+                    </p>
                     <div className="space-y-2">
                       {(values.passes ?? []).map((pass, index) => (
                         <div
                           key={index}
-                          className="flex items-start justify-between rounded-lg border bg-white px-4 py-3"
+                          className="flex items-center gap-3 rounded-lg border bg-white px-3 py-2.5"
                         >
+                          <button
+                            type="button"
+                            className="shrink-0"
+                            onClick={() => {
+                              setEditingPass(pass);
+                              setIsPassModalOpen(true);
+                            }}
+                          >
+                            <PassTile
+                              sessionCount={
+                                pass.session_count != null ? Number(pass.session_count) : null
+                              }
+                              durationDays={
+                                pass.duration_days != null ? Number(pass.duration_days) : null
+                              }
+                              size="sm"
+                            />
+                          </button>
                           <button
                             type="button"
                             className="text-left flex-1 min-w-0"
@@ -971,27 +1023,18 @@ export function StudioForm({ routeId }: StudioFormProps) {
                           >
                             <p className="text-sm font-semibold">{pass.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {pass.duration_days ? `${pass.duration_days} dni` : "∞ bez limitu"}
-                              {" · "}
-                              {pass.session_count
-                                ? `${pass.session_count} wejść`
-                                : "∞ bez limitu wejść"}
+                              {pass.price} {getCurrencySymbol(pass.currency || values.currency)}
                             </p>
                           </button>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-sm font-bold">
-                              {pass.price} {getCurrencySymbol(pass.currency || values.currency)}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-muted-foreground"
-                              onClick={() => removePass(index)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 shrink-0 text-muted-foreground"
+                            onClick={() => removePass(index)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -1031,9 +1074,13 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
                   {/* Karty sportowe tri-state */}
                   <div>
-                    <label className="mb-2 block text-base font-semibold">
+                    <label className="mb-1 block text-base font-semibold">
                       Akceptujecie karty sportowe?
                     </label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Informacja widoczna na profilu studia — uczestnicy często szukają studiów
+                      akceptujących ich kartę
+                    </p>
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <button
                         type="button"
@@ -1144,7 +1191,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
                           studioId={studioId}
                           currency={values.currency || "PLN"}
                           editCard={editingSportCard}
-                          existingCardIds={(values.sport_card_acceptances ?? []).filter((sc) => sc.sport_card_id).map((sc) => sc.sport_card_id!)}
+                          existingCardIds={(values.sport_card_acceptances ?? [])
+                            .filter((sc) => sc.sport_card_id)
+                            .map((sc) => sc.sport_card_id!)}
                         />
                       </div>
                     )}

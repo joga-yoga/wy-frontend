@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { PassTile } from "@/components/common/PassTile";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { getCurrencySymbol } from "@/lib/currency";
@@ -225,15 +226,6 @@ function ScheduleShell() {
   );
 }
 
-function RuleTile({ main, subtitle }: { main: string; subtitle?: string }) {
-  return (
-    <div className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-lg bg-gray-950 text-white">
-      <span className="text-4xl font-semibold leading-none">{main}</span>
-      {subtitle && <span className="mt-1 text-xs font-medium text-white/70">{subtitle}</span>}
-    </div>
-  );
-}
-
 function PricingSection({ studio }: { studio: StudioPublic }) {
   const currency = studio.currency || "PLN";
   const hasDropIn = studio.drop_in_price != null;
@@ -249,7 +241,7 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
       <div className="grid gap-3 md:grid-cols-2">
         {hasDropIn && (
           <div className="flex gap-4 border bg-white p-4">
-            <RuleTile main="1" />
+            <PassTile sessionCount={1} durationDays={null} />
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-gray-950">Jednorazowe wejście</h3>
               <p className="mt-1 text-sm text-gray-500">Pojedyncze zajęcia bez karnetu.</p>
@@ -264,10 +256,7 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
           const discount = discountPercent(pass, studio.drop_in_price);
           return (
             <div key={pass.id} className="flex gap-4 border bg-white p-4">
-              <RuleTile
-                main={pass.session_count == null ? "∞" : String(pass.session_count)}
-                subtitle={pass.duration_days == null ? "∞" : `${pass.duration_days} dni`}
-              />
+              <PassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-gray-950">{pass.name}</h3>
@@ -327,7 +316,10 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
             {studio.sport_card_acceptances.map((item) => {
               const photo = sportCardPhoto(item);
               return (
-                <div key={item.id} className="flex items-center gap-3 border bg-white p-4 rounded-lg">
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 border bg-white p-4 rounded-lg"
+                >
                   <div className="relative flex h-12 w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100">
                     {photo ? (
                       <WyImage

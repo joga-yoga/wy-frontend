@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -61,9 +60,6 @@ export function PassModal({
   const [sessionCount, setSessionCount] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [description, setDescription] = useState("");
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,8 +73,6 @@ export function PassModal({
       setSessionCount(editPass.session_count != null ? String(editPass.session_count) : "");
       setPrice(editPass.price != null ? String(editPass.price) : "");
       setDescription(editPass.description ?? "");
-      setPhoto(editPass.photo ?? null);
-      setPhotoPreviewUrl(null);
     } else {
       setName("");
       setDurationUnlimited(false);
@@ -87,8 +81,6 @@ export function PassModal({
       setSessionCount("");
       setPrice("");
       setDescription("");
-      setPhoto(null);
-      setPhotoPreviewUrl(null);
     }
     setError(null);
   }, [isOpen, editPass]);
@@ -107,26 +99,6 @@ export function PassModal({
 
   const bothUnlimited = durationUnlimited && sessionUnlimited;
 
-  async function handlePhotoFileSelect(file: File) {
-    setPhotoPreviewUrl(URL.createObjectURL(file));
-    setIsUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const response = await axiosInstance.post<{ image_id: string }>(
-        "/events/image-upload",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      );
-      setPhoto(response.data.image_id);
-    } catch {
-      setError("Nie udało się przesłać zdjęcia.");
-      setPhotoPreviewUrl(null);
-    } finally {
-      setIsUploadingPhoto(false);
-    }
-  }
-
   async function handleSave() {
     if (!name.trim()) {
       setError("Nazwa karnetu jest wymagana.");
@@ -144,7 +116,6 @@ export function PassModal({
       price: Number(price),
       currency: currency || "PLN",
       description: description.trim() || undefined,
-      photo: photo ?? undefined,
       duration_days: durationUnlimited ? null : Number(durationDays) || null,
       session_count: sessionUnlimited ? null : Number(sessionCount) || null,
     };
@@ -336,21 +307,6 @@ export function PassModal({
               rows={2}
               className="text-sm"
               placeholder="Dodatkowe informacje..."
-            />
-          </div>
-
-          {/* Zdjęcie */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Zdjęcie · opcjonalnie</label>
-            <SingleImageUpload
-              existingImageId={photo}
-              imagePreviewUrl={photoPreviewUrl}
-              isUploading={isUploadingPhoto}
-              onFileSelect={handlePhotoFileSelect}
-              onRemove={() => {
-                setPhoto(null);
-                setPhotoPreviewUrl(null);
-              }}
             />
           </div>
 
