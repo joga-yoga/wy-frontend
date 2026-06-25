@@ -1,9 +1,8 @@
 "use client";
 
-import { Calendar, MapPin, MessageCircle, User } from "lucide-react";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { CalendarDays, MapPin, MessageCircle, User } from "lucide-react";
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
-import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,84 +16,36 @@ import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
 import type { InstructorDetails } from "@/types/instructor";
 
-import { AboutSection } from "./components/AboutSection";
-import { CalendarSection } from "./components/CalendarSection";
-import { getInitials } from "./components/helpers";
+import { CompletedItemsPreview } from "./components/CompletedItemsPreview";
+import { InstructorClassesPreview } from "./components/InstructorClassesPreview";
+import { InstructorEventSection } from "./components/InstructorEventSection";
+import { InstructorHero } from "./components/InstructorHero";
+import {
+  AboutInstructor,
+  InstructorCertificates,
+  InstructorExperience,
+  InstructorGallery,
+  InstructorHighlights,
+} from "./components/InstructorInfoSections";
+import { buildInstructorProfileViewModel } from "./components/viewModel";
 
 interface Props {
   data: InstructorDetails;
+  draftNotice?: ReactNode;
+  bottomPrimaryAction?: {
+    label: string;
+    href: string;
+    hideIcon?: boolean;
+  };
 }
 
 function Divider() {
-  return <div style={{ height: "1px", background: "#EBEBEB" }} />;
+  return <div className="mx-4 h-px bg-[#EBEBEB] md:mx-8" />;
 }
 
-function StylePills({ yogaStyles }: { yogaStyles: Props["data"]["instructor"]["yoga_styles"] }) {
-  return (
-    <>
-      {yogaStyles.slice(0, 4).map((style) => {
-        const name = style.yoga_style?.name ?? style.custom_name ?? "";
-        if (!name) return null;
-        return (
-          <span
-            key={style.id}
-            className="text-[13px] font-medium px-3 py-1 rounded-full"
-            style={{ background: "#F7F7F7", border: "1px solid #D9D9D9", color: "#444444" }}
-          >
-            {name}
-          </span>
-        );
-      })}
-      {yogaStyles.length > 4 && (
-        <span
-          className="text-[13px] font-medium px-3 py-1 rounded-full"
-          style={{ background: "#F7F7F7", border: "1px solid #D9D9D9", color: "#B0B0B0" }}
-        >
-          +{yogaStyles.length - 4}
-        </span>
-      )}
-    </>
-  );
-}
+export function InstructorPageContent({ data, draftNotice, bottomPrimaryAction }: Props) {
+  const profile = useMemo(() => buildInstructorProfileViewModel(data), [data]);
 
-function CitiesRow({
-  cities,
-  displayCities,
-  hiddenCitiesCount,
-  citiesExpanded,
-  onExpand,
-}: {
-  cities: { place_id: string; name: string }[];
-  displayCities: { place_id: string; name: string }[];
-  hiddenCitiesCount: number;
-  citiesExpanded: boolean;
-  onExpand: () => void;
-}) {
-  if (cities.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "#B0B0B0" }} />
-      {displayCities.map((city, i) => (
-        <span key={city.place_id} className="text-sm" style={{ color: "#717171" }}>
-          {city.name}
-          {i < displayCities.length - 1 ? " ·" : ""}
-        </span>
-      ))}
-      {!citiesExpanded && hiddenCitiesCount > 0 && (
-        <button
-          onClick={onExpand}
-          className="text-sm font-medium underline underline-offset-2"
-          style={{ color: "#222222" }}
-        >
-          +{hiddenCitiesCount} więcej
-        </button>
-      )}
-    </div>
-  );
-}
-
-export function InstructorPageContent({ data }: Props) {
-  console.log("🚀 ~ InstructorPageContent ~ data:", data);
   const {
     instructor,
     upcoming_retreats,
@@ -105,13 +56,13 @@ export function InstructorPageContent({ data }: Props) {
     past_courses,
   } = data;
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
+  const classesRef = useRef<HTMLDivElement>(null);
   const aboutSentinelRef = useRef<HTMLDivElement>(null);
 
-  const [isHeroVisible, setIsHeroVisible] = useState(true);
-  const [leftButtonMode, setLeftButtonMode] = useState<"about" | "calendar">("about");
-  const [citiesExpanded, setCitiesExpanded] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  const [leftButtonMode, setLeftButtonMode] = useState<"about" | "classes">("about");
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -121,46 +72,28 @@ export function InstructorPageContent({ data }: Props) {
 
   const hasAbout = !!instructor.description;
   const totalUpcoming =
-    upcoming_workshops.length + upcoming_retreats.length + upcoming_courses.length;
+    upcoming_workshops?.length + upcoming_retreats?.length + upcoming_courses?.length;
   const hasUpcoming = totalUpcoming > 0;
 
   useEffect(() => {
-    const el = heroRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([entry]) => setIsHeroVisible(entry.isIntersecting), {
-      threshold: 0,
-    });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+    const sentinel = aboutSentinelRef.current;
+    if (!sentinel) return;
 
-  // Observe zero-height sentinel at top of About section so "leaving upward" correctly
-  // resets to "O mnie" even when the section is taller than the viewport.
-  useEffect(() => {
-    if (!hasAbout || !aboutSentinelRef.current) return;
-    const obs = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       ([entry]) => {
-        if (hasUpcoming) {
-          setLeftButtonMode(entry.isIntersecting ? "calendar" : "about");
-        }
+        setLeftButtonMode(entry.isIntersecting ? "classes" : "about");
       },
-      // Shrink root bottom by ~72px so the sentinel must clear the fixed bottom bar
       { threshold: 0, rootMargin: "0px 0px -72px 0px" },
     );
-    obs.observe(aboutSentinelRef.current);
-    return () => obs.disconnect();
-  }, [hasAbout, hasUpcoming]);
 
-  const cities = instructor.cities ?? [];
-  const yogaStyles = instructor.yoga_styles ?? [];
-  const displayCities = citiesExpanded ? cities : cities.slice(0, 2);
-  const hiddenCitiesCount = cities.length - 2;
-  const initials = getInitials(instructor.name);
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   const scrollToAbout = () =>
     aboutSentinelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const scrollToCalendar = () =>
-    calendarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollToClasses = () =>
+    classesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const resetContactModalState = () => {
     setModalState("default");
@@ -181,12 +114,21 @@ export function InstructorPageContent({ data }: Props) {
     if (leftButtonMode === "about") {
       scrollToAbout();
     } else {
-      scrollToCalendar();
+      scrollToClasses();
     }
   };
 
-  const handleContactSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handlePrimaryAction = () => {
+    if (bottomPrimaryAction?.href) {
+      window.location.href = bottomPrimaryAction.href;
+      return;
+    }
+
+    setIsContactModalOpen(true);
+  };
+
+  const handleContactSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     if (!email.trim() || !message.trim()) return;
 
     setIsSubmitting(true);
@@ -211,123 +153,87 @@ export function InstructorPageContent({ data }: Props) {
   };
 
   return (
-    <div style={{ backgroundColor: "#FFFFFF", color: "#222222" }} className="min-h-screen">
+    <div className="min-h-screen bg-white text-[#222222]">
       <div className="container-wy mx-auto">
-        {/* Hero */}
-        <div ref={heroRef} className="px-4 pt-4 pb-6 space-y-4">
-          {/* Avatar + name row */}
-          <div className="flex items-center gap-4">
-            <div
-              className="relative h-16 w-16 rounded-full overflow-hidden flex-shrink-0"
-              style={{ background: "#FEF3C7" }}
-            >
-              {instructor.image_id ? (
-                <WyImage
-                  src={instructor.image_id}
-                  alt={instructor.name}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                />
-              ) : (
-                <span
-                  className="absolute inset-0 flex items-center justify-center text-xl font-bold"
-                  style={{ color: "#92400E" }}
-                >
-                  {initials}
-                </span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-2xl font-bold leading-tight" style={{ color: "#222222" }}>
-                {instructor.name}
-              </h1>
-              {instructor.short_bio && (
-                <p className="text-sm mt-1 leading-snug" style={{ color: "#717171" }}>
-                  {instructor.short_bio}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Styles + cities — full width below */}
-          {yogaStyles.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              <StylePills yogaStyles={yogaStyles} />
-            </div>
-          )}
-          <CitiesRow
-            cities={cities}
-            displayCities={displayCities}
-            hiddenCitiesCount={hiddenCitiesCount}
-            citiesExpanded={citiesExpanded}
-            onExpand={() => setCitiesExpanded(true)}
-          />
-        </div>
-
+        <InstructorHero hero={profile.hero} />
+        <InstructorHighlights highlights={profile.highlights} />
         <Divider />
 
-        <div ref={calendarRef} className="scroll-mt-14">
-          <CalendarSection
-            upcomingWorkshops={upcoming_workshops}
-            upcomingRetreats={upcoming_retreats}
-            pastWorkshops={past_workshops}
-            pastRetreats={past_retreats}
-            upcomingCourses={upcoming_courses}
-            pastCourses={past_courses}
-          />
-        </div>
-
-        {hasAbout && (
+        {draftNotice && (
           <>
+            <div className="px-4 py-4 md:px-8">{draftNotice}</div>
             <Divider />
-            <div ref={aboutSentinelRef} className="scroll-mt-14" />
-            <AboutSection instructor={instructor} />
           </>
         )}
+
+        <div ref={classesRef} className="scroll-mt-16">
+          <InstructorClassesPreview items={profile.classesPreview} />
+        </div>
+        <Divider />
+
+        <InstructorEventSection
+          id="instructor-retreats-title"
+          title="Wyjazdy"
+          items={profile.retreats}
+        />
+        <Divider />
+
+        <InstructorEventSection
+          id="instructor-workshops-title"
+          title="Wydarzenia"
+          items={profile.workshops}
+        />
+        <Divider />
+
+        <CompletedItemsPreview items={profile.completedPreview} />
+        <Divider />
+
+        <div ref={aboutSentinelRef} className="scroll-mt-16" />
+        <AboutInstructor bio={profile.bio} />
+        <Divider />
+
+        <InstructorExperience items={profile.experienceItems} />
+        <Divider />
+
+        <InstructorCertificates certificates={profile.certificates} />
+        <Divider />
+
+        <InstructorGallery imageIds={profile.galleryImageIds} />
 
         <div className="h-24" />
       </div>
 
-      {/* Fixed bottom bar */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t"
-        style={{ borderColor: "#EBEBEB" }}
-      >
-        <div className="container-wy mx-auto px-4 py-3 flex gap-3">
-          {hasAbout && (
-            <button
-              onClick={handleLeftButton}
-              className="relative flex-1 h-12 rounded-xl text-sm font-semibold border overflow-hidden"
-              style={{ borderColor: "#222222", color: "#222222", background: "#FFFFFF" }}
-              aria-label={
-                leftButtonMode === "about" ? "Przejdź do O mnie" : "Przejdź do Kalendarza"
-              }
-            >
-              <span
-                className="absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150"
-                style={{ opacity: leftButtonMode === "about" ? 1 : 0 }}
-              >
-                <User className="h-4 w-4" />O mnie
-              </span>
-              <span
-                className="absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150"
-                style={{ opacity: leftButtonMode === "calendar" ? 1 : 0 }}
-              >
-                <Calendar className="h-4 w-4" />
-                Kalendarz
-              </span>
-            </button>
-          )}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#EBEBEB] bg-white">
+        <div className="container-wy mx-auto flex gap-3 px-4 py-3">
           <button
             type="button"
-            onClick={() => setIsContactModalOpen(true)}
-            aria-label={`Napisz do: ${instructor.name}`}
-            className={`${hasAbout ? "flex-1" : "w-full"} h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold`}
-            style={{ background: "#222222", color: "#FFFFFF" }}
+            onClick={handleLeftButton}
+            className="relative h-12 flex-1 overflow-hidden rounded-xl border border-[#222222] bg-white text-sm font-semibold text-[#222222]"
+            aria-label={leftButtonMode === "about" ? "Przejdź do O mnie" : "Przejdź do Zajęć"}
           >
-            <MessageCircle className="h-4 w-4" />
-            Napisz do mnie
+            <span
+              className="absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150"
+              style={{ opacity: leftButtonMode === "about" ? 1 : 0 }}
+            >
+              <User className="h-4 w-4" />O mnie
+            </span>
+            <span
+              className="absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150"
+              style={{ opacity: leftButtonMode === "classes" ? 1 : 0 }}
+            >
+              <CalendarDays className="h-4 w-4" />
+              Zajęcia
+            </span>
+          </button>
+
+          <button
+            type="button"
+            aria-label={bottomPrimaryAction?.label ?? `Napisz do: ${instructor.name}`}
+            onClick={handlePrimaryAction}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#222222] text-sm font-semibold text-white"
+          >
+            {!bottomPrimaryAction?.hideIcon && <MessageCircle className="h-4 w-4" />}
+            {bottomPrimaryAction?.label ?? "Napisz do mnie"}
           </button>
         </div>
       </div>
@@ -339,7 +245,7 @@ export function InstructorPageContent({ data }: Props) {
               <DialogHeader>
                 <DialogTitle>Napisz do: {instructor.name}</DialogTitle>
                 <DialogDescription>
-                  Wyślij wiadomość, aby dowiedzieć się więcej o współpracy z instruktorem.
+                  Wyślij wiadomość, aby dowiedzieć się więcej o współpracy z nauczycielem jogi.
                 </DialogDescription>
               </DialogHeader>
 
@@ -348,19 +254,19 @@ export function InstructorPageContent({ data }: Props) {
                   type="email"
                   placeholder="Adres e-mail*"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                 />
                 <Input
                   type="tel"
                   placeholder="Telefon (opcjonalnie)"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(event) => setPhone(event.target.value)}
                 />
                 <Textarea
                   placeholder="Twoja wiadomość*"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(event) => setMessage(event.target.value)}
                   rows={5}
                   required
                 />
@@ -398,7 +304,7 @@ export function InstructorPageContent({ data }: Props) {
               <DialogHeader>
                 <DialogTitle>Wiadomość została wysłana</DialogTitle>
                 <DialogDescription>
-                  Dziękujemy. Organizator otrzyma Twoją wiadomość.
+                  Dziękujemy. Nauczyciel otrzyma Twoją wiadomość.
                 </DialogDescription>
               </DialogHeader>
 

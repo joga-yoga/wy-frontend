@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -80,7 +80,9 @@ function validateVerificationCode(value?: string) {
 
 export default function BecomePartnerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const next = searchParams.get("next") || "/profile";
 
   const [step, setStep] = useState<Step>("details");
   const [isSendingCode, setIsSendingCode] = useState(false);
@@ -120,7 +122,7 @@ export default function BecomePartnerPage() {
       .get("/partner/me")
       .then(() => {
         toast({ description: "Masz już profil partnera.", variant: "default" });
-        router.push("/profile");
+        router.push(next);
       })
       .catch((err) => {
         if (err.response?.status !== 404) {
@@ -131,7 +133,7 @@ export default function BecomePartnerPage() {
           });
         }
       });
-  }, [router, toast]);
+  }, [next, router, toast]);
 
   const handleImageUpload = useCallback(
     async (file: File) => {
@@ -337,7 +339,7 @@ export default function BecomePartnerPage() {
       });
 
       toast({ description: "Twój profil partnera został utworzony. Przekierowywanie..." });
-      router.replace("/profile");
+      router.replace(next);
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.detail ||
