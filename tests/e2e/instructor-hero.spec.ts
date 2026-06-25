@@ -29,7 +29,7 @@ test.describe("instructor profile hero", () => {
     await expect(studio).toContainText("Studio: Bodhi Yoga Shala");
     await expect(location).toContainText("Łódź");
     await expect(experience).toContainText("Hatha");
-    await expect(language).toContainText("język: polski");
+    await expect(language).toContainText("Polski");
 
     const heroCardBox = await heroCard.boundingBox();
     const avatarBox = await avatar.boundingBox();

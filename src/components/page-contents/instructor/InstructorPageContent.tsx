@@ -35,13 +35,13 @@ interface Props {
   bottomPrimaryAction?: {
     label: string;
     href: string;
+    hideIcon?: boolean;
   };
 }
 
 function Divider() {
   return <div className="mx-4 h-px bg-[#EBEBEB] md:mx-8" />;
 }
-
 
 export function InstructorPageContent({ data, draftNotice, bottomPrimaryAction }: Props) {
   const profile = useMemo(() => buildInstructorProfileViewModel(data), [data]);
@@ -232,7 +232,7 @@ export function InstructorPageContent({ data, draftNotice, bottomPrimaryAction }
             onClick={handlePrimaryAction}
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#222222] text-sm font-semibold text-white"
           >
-            <MessageCircle className="h-4 w-4" />
+            {!bottomPrimaryAction?.hideIcon && <MessageCircle className="h-4 w-4" />}
             {bottomPrimaryAction?.label ?? "Napisz do mnie"}
           </button>
         </div>

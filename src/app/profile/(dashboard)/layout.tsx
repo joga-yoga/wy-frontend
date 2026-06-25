@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
@@ -25,6 +25,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const isBecomePartner = pathname === BECOME_PARTNER_PATH;
 
@@ -57,7 +58,9 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
         if (err.response?.status === 404) {
           setHasPartner(false);
           if (!isBecomePartner) {
-            router.replace(BECOME_PARTNER_PATH);
+            const query = searchParams.toString();
+            const currentPath = query ? `${pathname}?${query}` : pathname;
+            router.replace(`${BECOME_PARTNER_PATH}?next=${encodeURIComponent(currentPath)}`);
           }
         } else {
           // Don't lock the user out of the dashboard on transient/unexpected errors.
@@ -68,7 +71,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [loading, user, isBecomePartner, router]);
+  }, [loading, user, isBecomePartner, pathname, router, searchParams]);
 
   // First-login redirect: new partners land on Oferta, not Aktywność
   useEffect(() => {

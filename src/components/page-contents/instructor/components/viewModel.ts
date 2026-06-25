@@ -47,10 +47,10 @@ export type StaticCompletedItem = {
 };
 
 export type InstructorHighlightKind =
+  | "experience"
   | "certificate"
   | "studio"
   | "location"
-  | "experience"
   | "language";
 
 export type InstructorHighlightViewModel = {

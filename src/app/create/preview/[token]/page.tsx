@@ -27,9 +27,7 @@ export default async function GeneratedInstructorProfileDraftPreviewPage({
     notFound();
   }
 
-  const claimHref = `/profile/auth/login?next=${encodeURIComponent(
-    `/create/preview/${draft.public_token}`,
-  )}`;
+  const claimHref = `/create/claim/${draft.public_token}`;
 
   return (
     <InstructorPageContent
@@ -39,12 +37,14 @@ export default async function GeneratedInstructorProfileDraftPreviewPage({
           className="rounded-xl border px-4 py-3 text-sm italic leading-5"
           style={{ borderColor: "#EBEBEB", background: "#F7F7F7", color: "#52525B" }}
         >
-          Profil utworzony automatycznie z publicznych informacji. Możesz założyć konto, poprawić dane i opublikować
+          Profil utworzony automatycznie z publicznych informacji. Możesz założyć konto, poprawić
+          dane i opublikować
         </div>
       }
       bottomPrimaryAction={{
-        label: "Załóż konto i opublikuj profil",
+        label: "Załóż konto i opublikuj",
         href: claimHref,
+        hideIcon: true,
       }}
     />
   );
