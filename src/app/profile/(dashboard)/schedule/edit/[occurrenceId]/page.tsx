@@ -35,7 +35,6 @@ export default function EditSessionPage() {
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
   const [instructors, setInstructors] = useState<{ id: string; name: string }[]>([]);
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
