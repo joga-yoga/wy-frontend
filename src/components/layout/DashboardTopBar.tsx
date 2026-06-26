@@ -63,6 +63,7 @@ function getBackHref(pathname: string): string | undefined {
     pathname.endsWith("/edit")
   )
     return "/profile/offer";
+  if (pathname === "/profile/instructors") return "/profile/offer";
   if (pathname === "/profile/instructors/create") return "/profile/instructors";
   if (
     pathname.startsWith("/profile/instructors/") &&
