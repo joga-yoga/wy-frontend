@@ -10,7 +10,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 
 import { NavigationBlockerProvider } from "./components/EventForm/block-navigation/navigation-block";
 
-const MAIN_TAB_PATHS = ["/profile", "/profile/oferta", "/profile/konto"];
+const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"];
 const BECOME_PARTNER_PATH = "/profile/become-partner";
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
@@ -76,7 +76,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
       const shown = localStorage.getItem("wy_onboarding_shown");
       if (!shown) {
         localStorage.setItem("wy_onboarding_shown", "true");
-        router.replace("/profile/oferta");
+        router.replace("/profile/offer");
       }
     }
   }, [loading, user, hasPartner, pathname, router]);
@@ -104,7 +104,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="md:flex">
         <BottomTabBar />
         <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
-          {children}
+          <React.Fragment key={pathname}>{children}</React.Fragment>
         </main>
       </div>
     </NavigationBlockerProvider>

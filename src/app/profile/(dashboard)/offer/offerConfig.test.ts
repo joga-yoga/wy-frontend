@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 
 import {
   type DashboardItem,
-  getOfertaFilterPills,
-  getOfertaSingleTypeViewConfig,
-} from "./ofertaConfig";
+  getOfferFilterPills,
+  getOfferSingleTypeViewConfig,
+} from "./offerConfig";
 
 const classItem: DashboardItem = {
   id: "class-1",
@@ -25,12 +25,12 @@ const courseItem: DashboardItem = {
 };
 
 assert.deepEqual(
-  getOfertaFilterPills(false).map((pill) => pill.key),
+  getOfferFilterPills(false).map((pill) => pill.key),
   ["all", "wyjazdy", "wydarzenia", "kursy"],
 );
 
 assert.deepEqual(
-  getOfertaFilterPills(true).map(({ key, label }) => ({ key, label })),
+  getOfferFilterPills(true).map(({ key, label }) => ({ key, label })),
   [
     { key: "all", label: "Wszystkie" },
     { key: "wyjazdy", label: "Wyjazdy" },
@@ -41,7 +41,7 @@ assert.deepEqual(
 );
 
 assert.equal(
-  getOfertaSingleTypeViewConfig(
+  getOfferSingleTypeViewConfig(
     "zajecia",
     { retreats: [], workshops: [], classes: [classItem], courses: [] },
     false,
@@ -50,7 +50,7 @@ assert.equal(
 );
 
 assert.deepEqual(
-  getOfertaSingleTypeViewConfig(
+  getOfferSingleTypeViewConfig(
     "zajecia",
     { retreats: [], workshops: [], classes: [classItem], courses: [] },
     true,
@@ -64,7 +64,7 @@ assert.deepEqual(
 );
 
 assert.deepEqual(
-  getOfertaSingleTypeViewConfig(
+  getOfferSingleTypeViewConfig(
     "kursy",
     { retreats: [], workshops: [], classes: [], courses: [courseItem] },
     false,
@@ -78,7 +78,7 @@ assert.deepEqual(
 );
 
 assert.deepEqual(
-  getOfertaSingleTypeViewConfig(
+  getOfferSingleTypeViewConfig(
     "kursy",
     { retreats: [], workshops: [], classes: [], courses: [] },
     false,

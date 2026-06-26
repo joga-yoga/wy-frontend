@@ -42,6 +42,13 @@ const nextConfig = {
     const appJoga = { type: "host", value: "app.joga.yoga" };
 
     return [
+      // Polish → English dashboard route redirects (safety net for bookmarks)
+      { source: "/profile/grafik", destination: "/profile/schedule", permanent: false },
+      { source: "/profile/grafik/:path*", destination: "/profile/schedule/:path*", permanent: false },
+      { source: "/profile/oferta", destination: "/profile/offer", permanent: false },
+      { source: "/profile/oferta/:path*", destination: "/profile/offer/:path*", permanent: false },
+      { source: "/profile/konto", destination: "/profile/account", permanent: false },
+
       // ── Old domain → joga.yoga redirects (host-conditional, processed first) ──
 
       // wyjazdy.yoga

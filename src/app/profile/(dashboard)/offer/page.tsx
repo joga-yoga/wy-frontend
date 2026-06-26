@@ -48,10 +48,10 @@ import {
   BaseEvent,
   DashboardItem,
   FilterType,
-  getOfertaFilterPills,
-  getOfertaSingleTypeViewConfig,
-  isOfertaFilterEnabled,
-} from "./ofertaConfig";
+  getOfferFilterPills,
+  getOfferSingleTypeViewConfig,
+  isOfferFilterEnabled,
+} from "./offerConfig";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -317,7 +317,7 @@ export default function OfertaPage() {
   const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
 
   const requestedFilter = searchParams.get("filter") ?? "all";
-  const activeFilter: FilterType = isOfertaFilterEnabled(requestedFilter, areClassesEnabled)
+  const activeFilter: FilterType = isOfferFilterEnabled(requestedFilter, areClassesEnabled)
     ? requestedFilter
     : "all";
 
@@ -328,7 +328,7 @@ export default function OfertaPage() {
     } else {
       params.set("filter", f);
     }
-    router.replace(`/profile/oferta?${params.toString()}`, { scroll: false });
+    router.replace(`/profile/offer?${params.toString()}`, { scroll: false });
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
@@ -371,7 +371,7 @@ export default function OfertaPage() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("create");
       const qs = params.toString();
-      router.replace(`/profile/oferta${qs ? `?${qs}` : ""}`, { scroll: false });
+      router.replace(`/profile/offer${qs ? `?${qs}` : ""}`, { scroll: false });
     }
   }, [searchParams, router]);
 
@@ -655,7 +655,7 @@ export default function OfertaPage() {
   // ── Filtered single-type views ────────────────────────────────────────────
 
   if (!isLoading && activeFilter !== "all") {
-    const viewConfig = getOfertaSingleTypeViewConfig(
+    const viewConfig = getOfferSingleTypeViewConfig(
       activeFilter,
       { retreats, workshops, classes, courses },
       areClassesEnabled,
@@ -855,22 +855,21 @@ export default function OfertaPage() {
                     <Pencil size={16} className="text-gray-400 shrink-0" />
                   </div>
                 </Link>
-                <div className="rounded-xl border bg-white overflow-hidden opacity-60">
+                <Link
+                  href="/profile/class-templates"
+                  className="rounded-xl border bg-white overflow-hidden hover:bg-gray-50 transition-colors block"
+                >
                   <div className="flex items-center gap-3 px-4 py-4">
                     <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100 flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-gray-900">Szablony zajęć</p>
-                        <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                          Wkrótce
-                        </span>
-                      </div>
+                      <p className="text-sm font-semibold text-gray-900">Szablony zajęć</p>
                       <p className="text-xs text-gray-500 mt-0.5">Zarządzaj grafikiem zajęć</p>
                     </div>
+                    <Pencil size={16} className="text-gray-400 shrink-0" />
                   </div>
-                </div>
+                </Link>
               </div>
             ) : (
               <div className="rounded-xl border border-dashed bg-gray-50 py-5 px-4 text-center">
@@ -1132,7 +1131,7 @@ function FilterBar({
   return (
     <div className="sticky top-16 md:top-20 z-20 bg-background border-b">
       <div className="flex gap-2 px-4 py-2.5 overflow-x-auto scrollbar-none">
-        {getOfertaFilterPills(includeClasses).map(({ key, label, logo }) => (
+        {getOfferFilterPills(includeClasses).map(({ key, label, logo }) => (
           <button
             key={key}
             onClick={() => onSelect(key)}

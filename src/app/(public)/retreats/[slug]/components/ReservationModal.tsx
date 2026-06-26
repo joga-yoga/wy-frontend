@@ -98,7 +98,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
         {submitState === "success" && (
           <div className="rounded-lg bg-green-50 border border-green-200 p-4">
             <p className="text-green-800 font-medium text-center">
-              ✓ Dziękujemy! Twoja rezerwacja została przyjęta. Niedługo się do Ciebie odezwiemy!
+              Dziękujemy! Twoja rezerwacja została przyjęta. Niedługo się do Ciebie odezwiemy!
             </p>
           </div>
         )}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { ScheduleBlock } from "./components/ScheduleBlock";
 
 interface OrderListItem {
   id: string;
@@ -147,6 +148,9 @@ export default function AktywnoscPage() {
       <h1 className="text-xl font-semibold text-gray-900">
         {getGreeting(user?.name, user?.email)}
       </h1>
+
+      {/* Schedule / Aktywność */}
+      <ScheduleBlock />
 
       {/* Zaproszenia — only shown when there are pending invitations */}
       {invitations.length > 0 && (

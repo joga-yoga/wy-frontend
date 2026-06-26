@@ -13,7 +13,7 @@ export type DashboardItem = BaseEvent & { kind: "retreat" | "workshop" | "class"
 
 export type FilterType = "all" | "wyjazdy" | "wydarzenia" | "zajecia" | "kursy";
 
-export const getOfertaFilterPills = (
+export const getOfferFilterPills = (
   includeClasses: boolean,
 ): { key: FilterType; label: string; logo?: string }[] => [
   { key: "all", label: "Wszystkie" },
@@ -23,12 +23,12 @@ export const getOfertaFilterPills = (
   ...(includeClasses ? [{ key: "zajecia" as const, label: "Zajęcia" }] : []),
 ];
 
-export const isOfertaFilterEnabled = (
+export const isOfferFilterEnabled = (
   filter: string,
   includeClasses: boolean,
-): filter is FilterType => getOfertaFilterPills(includeClasses).some(({ key }) => key === filter);
+): filter is FilterType => getOfferFilterPills(includeClasses).some(({ key }) => key === filter);
 
-export const getOfertaCreatePath = (filter: string | null, includeClasses: boolean) => {
+export const getOfferCreatePath = (filter: string | null, includeClasses: boolean) => {
   if (filter === "wyjazdy") {
     return "/profile/retreats/create";
   }
@@ -52,7 +52,7 @@ function plPlural(n: number, one: string, few: string, many: string): string {
   return many;
 }
 
-export const getOfertaSingleTypeViewConfig = (
+export const getOfferSingleTypeViewConfig = (
   filter: FilterType,
   items: {
     retreats: DashboardItem[];
