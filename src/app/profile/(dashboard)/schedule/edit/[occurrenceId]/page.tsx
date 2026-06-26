@@ -1,21 +1,15 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import { ScheduleRecurrenceForm } from "../../../class-schedules/components/ScheduleRecurrenceForm";
+import type { RoomOption } from "../../../class-schedules/types";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { SessionChangesPreview } from "../../components/SessionChangesPreview";
 import type {
@@ -26,6 +20,8 @@ import type {
 
 type Scope = "single" | "this_and_future" | "whole_series";
 type Step = "scope" | "form" | "preview";
+
+const WEEKDAY_KEYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
 
 export default function EditSessionPage() {
   const params = useParams<{ occurrenceId: string }>();
@@ -53,7 +49,13 @@ export default function EditSessionPage() {
   const [initialInstructorId, setInitialInstructorId] = useState("");
 
   const [instructors, setInstructors] = useState<{ id: string; name: string }[]>([]);
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
+  const [rooms, setRooms] = useState<RoomOption[]>([]);
+
+  // Form-parity state (not sent to backend yet — UX only)
+  const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
 
   const [previewItems, setPreviewItems] = useState<SessionEditPreviewItem[]>([]);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -78,6 +80,11 @@ export default function EditSessionPage() {
         setInitialRoomId(room);
         setInitialCapacity(cap);
         setInitialInstructorId(instr);
+
+        // Derive fromDate and initial selectedDay from calendar_date
+        const sessionDate = new Date(r.data.calendar_date + "T00:00:00");
+        setFromDate(sessionDate);
+        setSelectedDays([WEEKDAY_KEYS[sessionDate.getDay()]]);
       })
       .catch(() => toast({ description: "Nie udało się załadować sesji.", variant: "destructive" }))
       .finally(() => setIsLoadingDetail(false));
@@ -91,10 +98,16 @@ export default function EditSessionPage() {
   useEffect(() => {
     if (!sessionDetail?.studio_id) return;
     axiosInstance
-      .get<{ id: string; name: string }[]>(`/studios/${sessionDetail.studio_id}/rooms`)
+      .get<RoomOption[]>(`/studios/${sessionDetail.studio_id}/rooms`)
       .then((r) => setRooms(r.data ?? []))
       .catch(() => {});
   }, [sessionDetail?.studio_id]);
+
+  const toggleDay = (day: string) => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+    );
+  };
 
   const buildPayload = () => ({
     occurrence_id: params.occurrenceId,
@@ -177,95 +190,44 @@ export default function EditSessionPage() {
 
       {step === "form" && sessionDetail && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-gray-50">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900">{sessionDetail.template_title}</p>
-              <p className="text-xs text-gray-500">
-                {new Date(sessionDetail.calendar_date + "T00:00:00").toLocaleDateString("pl-PL", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                })}
-                {" · "}
-                {sessionDetail.studio_name}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <Label>Godzina</Label>
-            <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-          </div>
-
-          <div>
-            <Label>Prowadzący</Label>
-            <div className="flex gap-1.5">
-              <Select value={instructorId || undefined} onValueChange={setInstructorId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Wybierz prowadzącego" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {instructorId && (
-                <button
-                  type="button"
-                  onClick={() => setInstructorId("")}
-                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                >
-                  <span className="text-xs">✕</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {rooms.length > 0 && (
-            <div>
-              <Label>Sala</Label>
-              <div className="flex gap-1.5">
-                <Select value={roomId || undefined} onValueChange={setRoomId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Wybierz salę" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {roomId && (
-                  <button
-                    type="button"
-                    onClick={() => setRoomId("")}
-                    className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                  >
-                    <span className="text-xs">✕</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <Label>Limit</Label>
-            <Input
-              type="number"
-              min={1}
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              placeholder="Bez limitu"
-            />
-          </div>
-
+          <ScheduleRecurrenceForm
+            templateTitle={sessionDetail.template_title}
+            templateSubtitle={
+              new Date(sessionDetail.calendar_date + "T00:00:00").toLocaleDateString("pl-PL", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              }) +
+              " · " +
+              sessionDetail.studio_name
+            }
+            // no onChangeTemplate → hides the "Zmień" button
+            studios={[]}
+            studioId={sessionDetail.studio_id ?? ""}
+            onStudioChange={() => {}}
+            rooms={rooms}
+            roomId={roomId}
+            onRoomChange={setRoomId}
+            instructors={instructors}
+            instructorId={instructorId}
+            onInstructorChange={setInstructorId}
+            capacity={capacity}
+            onCapacityChange={setCapacity}
+            frequency={frequency}
+            onFrequencyChange={setFrequency}
+            selectedDays={selectedDays}
+            onToggleDay={toggleDay}
+            fromDate={fromDate}
+            onFromDateChange={() => {}}
+            disableFromDate
+            toDate={toDate}
+            onToDateChange={setToDate}
+            startTime={startTime}
+            onStartTimeChange={setStartTime}
+          />
           <div className="flex gap-3 pt-4">
             <Button variant="outline" onClick={() => setStep("scope")}>
+              <ArrowLeft size={14} className="mr-1" />
               Wstecz
             </Button>
             <Button className="flex-1" onClick={goToPreview} disabled={isLoadingPreview}>

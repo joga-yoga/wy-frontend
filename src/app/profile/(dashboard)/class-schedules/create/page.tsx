@@ -1,26 +1,17 @@
 "use client";
 
-import { ArrowLeft, Check, ChevronRight, Plus, Search, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
 import type { ClassTemplate, ClassTemplateCreate } from "../../class-templates/types";
+import { ScheduleRecurrenceForm } from "../components/ScheduleRecurrenceForm";
 import type {
   PreviewOccurrence,
   RoomOption,
@@ -28,16 +19,6 @@ import type {
   SchedulePreviewResponse,
   StudioOption,
 } from "../types";
-
-const DAYS = [
-  { key: "MO", label: "Pn" },
-  { key: "TU", label: "Wt" },
-  { key: "WE", label: "Śr" },
-  { key: "TH", label: "Cz" },
-  { key: "FR", label: "Pt" },
-  { key: "SA", label: "So" },
-  { key: "SU", label: "Nd" },
-] as const;
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -330,201 +311,34 @@ export default function CreateScheduleWizard() {
       {/* Step 2: Recurrence */}
       {step === "recurrence" && selectedTemplate && (
         <div className="space-y-5">
-          {/* Pinned template */}
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-gray-50">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900">{selectedTemplate.title}</p>
-              <p className="text-xs text-gray-500">
-                {selectedTemplate.duration_minutes} min
-                {selectedTemplate.level ? ` · ${selectedTemplate.level}` : ""}
-              </p>
-            </div>
-            <button onClick={() => setStep("select")} className="text-xs text-blue-600 font-medium">
-              Zmień
-            </button>
-          </div>
-
-          {/* Studio */}
-          {studios.length > 1 && (
-            <div>
-              <Label>Studio</Label>
-              <Select value={studioId} onValueChange={setStudioId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Wybierz studio" />
-                </SelectTrigger>
-                <SelectContent>
-                  {studios.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Instructor */}
-          <div>
-            <Label>
-              Prowadzący
-              {selectedTemplate.default_instructor_id &&
-                instructorId === selectedTemplate.default_instructor_id && (
-                  <span className="text-xs text-gray-400 ml-1">· z szablonu</span>
-                )}
-            </Label>
-            <div className="flex gap-1.5">
-              <Select value={instructorId || undefined} onValueChange={setInstructorId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Wybierz prowadzącego" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {instructorId && (
-                <button
-                  type="button"
-                  onClick={() => setInstructorId("")}
-                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Room */}
-          {rooms.length > 0 && (
-            <div>
-              <Label>Sala</Label>
-              <div className="flex gap-1.5">
-                <Select value={roomId || undefined} onValueChange={setRoomId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Wybierz salę" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {roomId && (
-                  <button
-                    type="button"
-                    onClick={() => setRoomId("")}
-                    className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Capacity */}
-          <div>
-            <Label>
-              Limit
-              {selectedTemplate.default_capacity != null &&
-                capacity === String(selectedTemplate.default_capacity) && (
-                  <span className="text-xs text-gray-400 ml-1">· z szablonu</span>
-                )}
-            </Label>
-            <Input
-              type="number"
-              min={1}
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              placeholder="Bez limitu"
-            />
-          </div>
-
-          {/* Frequency toggle */}
-          <div>
-            <Label>Częstotliwość</Label>
-            <div className="flex gap-0 mt-1 rounded-lg border overflow-hidden">
-              {(["once", "weekly"] as const).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFrequency(f)}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                    frequency === f
-                      ? "bg-white border border-gray-900 rounded-lg text-gray-900 -m-px z-10"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {f === "once" ? "Raz" : "Co tydzień"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Days (weekly only) */}
-          {frequency === "weekly" && (
-            <div>
-              <Label>Dni</Label>
-              <div className="flex gap-1.5 mt-1">
-                {DAYS.map((d) => (
-                  <button
-                    key={d.key}
-                    onClick={() => toggleDay(d.key)}
-                    className={`w-10 h-10 rounded-full text-xs font-medium transition-colors ${
-                      selectedDays.includes(d.key)
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Date pickers */}
-          <div className={frequency === "once" ? "" : "grid grid-cols-2 gap-3"}>
-            <div>
-              <Label>{frequency === "once" ? "Data" : "Od dnia"}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start font-normal">
-                    {fromDate ? fromDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={fromDate} onSelect={setFromDate} />
-                </PopoverContent>
-              </Popover>
-            </div>
-            {frequency === "weekly" && (
-              <div>
-                <Label>Do dnia</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start font-normal">
-                      {toDate ? toDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={toDate} onSelect={setToDate} />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-          </div>
-
-          {/* Time */}
-          <div>
-            <Label>Godzina</Label>
-            <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-          </div>
-
+          <ScheduleRecurrenceForm
+            templateTitle={selectedTemplate.title}
+            templateSubtitle={`${selectedTemplate.duration_minutes} min${selectedTemplate.level ? ` · ${selectedTemplate.level}` : ""}`}
+            onChangeTemplate={() => setStep("select")}
+            studios={studios}
+            studioId={studioId}
+            onStudioChange={setStudioId}
+            rooms={rooms}
+            roomId={roomId}
+            onRoomChange={setRoomId}
+            instructors={instructors}
+            instructorId={instructorId}
+            onInstructorChange={setInstructorId}
+            defaultInstructorId={selectedTemplate.default_instructor_id}
+            capacity={capacity}
+            onCapacityChange={setCapacity}
+            defaultCapacity={selectedTemplate.default_capacity}
+            frequency={frequency}
+            onFrequencyChange={setFrequency}
+            selectedDays={selectedDays}
+            onToggleDay={toggleDay}
+            fromDate={fromDate}
+            onFromDateChange={setFromDate}
+            toDate={toDate}
+            onToDateChange={setToDate}
+            startTime={startTime}
+            onStartTimeChange={setStartTime}
+          />
           {/* Footer */}
           <div className="flex gap-3 pt-4">
             <Button variant="outline" onClick={() => setStep("select")}>
