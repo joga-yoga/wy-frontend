@@ -60,7 +60,7 @@ function formatDayHeader(dateStr: string): string {
   return d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "short" });
 }
 
-export default function GrafikPage() {
+export default function SchedulePage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
 

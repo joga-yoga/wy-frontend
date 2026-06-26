@@ -293,7 +293,7 @@ function EventCard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function OfertaPage() {
+export default function OfferPage() {
   const [retreats, setRetreats] = useState<DashboardItem[]>([]);
   const [workshops, setWorkshops] = useState<DashboardItem[]>([]);
   const [classes, setClasses] = useState<DashboardItem[]>([]);
