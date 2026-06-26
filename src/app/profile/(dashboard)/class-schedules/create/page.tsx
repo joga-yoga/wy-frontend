@@ -624,7 +624,6 @@ export default function CreateScheduleWizard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

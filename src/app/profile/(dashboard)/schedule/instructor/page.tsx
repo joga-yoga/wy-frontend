@@ -5,14 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import { DayStrip } from "../components/DayStrip";
 import type { ScheduleOccurrence } from "../types";
 
@@ -67,11 +63,15 @@ export default function InstructorSchedulePage() {
         params: { week_start: formatDate(weekStart) },
       })
       .then((r) => setOccurrences(r.data ?? []))
-      .catch(() => toast({ description: "Nie udało się załadować grafiku.", variant: "destructive" }))
+      .catch(() =>
+        toast({ description: "Nie udało się załadować grafiku.", variant: "destructive" }),
+      )
       .finally(() => setIsLoading(false));
   }, [weekStart, toast]);
 
-  useEffect(() => { fetchWeek(); }, [fetchWeek]);
+  useEffect(() => {
+    fetchWeek();
+  }, [fetchWeek]);
 
   const sessionCounts = useMemo(() => {
     const counts = Array(7).fill(0);
@@ -92,17 +92,31 @@ export default function InstructorSchedulePage() {
 
   const dayOccurrences = useMemo(
     () => occurrences.filter((o) => o.calendar_date === selectedDate),
-    [occurrences, selectedDate]
+    [occurrences, selectedDate],
   );
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
       <div className="flex items-center justify-center gap-4 mb-4">
-        <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d); }} className="p-1 rounded hover:bg-gray-100">
+        <button
+          onClick={() => {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() - 7);
+            setWeekStart(d);
+          }}
+          className="p-1 rounded hover:bg-gray-100"
+        >
           <ChevronLeft size={18} />
         </button>
         <span className="text-sm font-medium">{formatWeekRange(weekStart)}</span>
-        <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d); }} className="p-1 rounded hover:bg-gray-100">
+        <button
+          onClick={() => {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + 7);
+            setWeekStart(d);
+          }}
+          className="p-1 rounded hover:bg-gray-100"
+        >
           <ChevronRight size={18} />
         </button>
       </div>
@@ -137,7 +151,9 @@ export default function InstructorSchedulePage() {
                   {formatTime(occ.start_time)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{occ.template_title}</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">
+                    {occ.template_title}
+                  </p>
                   <p className="text-xs text-gray-500 mt-0.5 truncate">
                     {occ.studio_name && `${occ.studio_name} · `}
                     {[occ.room_name].filter(Boolean).join(" · ")}
@@ -169,7 +185,9 @@ export default function InstructorSchedulePage() {
               <div className="space-y-3 mt-2">
                 <div className="flex items-center gap-3 text-sm">
                   <Clock size={14} className="text-gray-400" />
-                  <span>{formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}</span>
+                  <span>
+                    {formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}
+                  </span>
                 </div>
                 {panelOcc.room_name && (
                   <div className="flex items-center gap-3 text-sm">

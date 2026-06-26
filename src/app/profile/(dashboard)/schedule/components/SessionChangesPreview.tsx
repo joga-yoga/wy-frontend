@@ -1,10 +1,11 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+
 import type { SessionDetailResponse, SessionEditPreviewItem } from "../types";
 
 interface InitialValues {
-  startTime: string;    // HH:MM
+  startTime: string; // HH:MM
   instructorId: string;
   roomId: string;
   capacityStr: string;
@@ -94,9 +95,7 @@ function buildDiff(
       oldValue: initialValues.instructorId
         ? (instructorMap.get(initialValues.instructorId) ?? "Nieznany")
         : "Brak",
-      newValue: newInstructorId
-        ? (instructorMap.get(newInstructorId) ?? "Nieznany")
-        : "Brak",
+      newValue: newInstructorId ? (instructorMap.get(newInstructorId) ?? "Nieznany") : "Brak",
     });
   }
 
@@ -105,12 +104,8 @@ function buildDiff(
   if (newRoomId !== initialValues.roomId) {
     diffs.push({
       label: "Sala",
-      oldValue: initialValues.roomId
-        ? (roomMap.get(initialValues.roomId) ?? "Nieznana")
-        : "Brak",
-      newValue: newRoomId
-        ? (roomMap.get(newRoomId) ?? "Nieznana")
-        : "Brak",
+      oldValue: initialValues.roomId ? (roomMap.get(initialValues.roomId) ?? "Nieznana") : "Brak",
+      newValue: newRoomId ? (roomMap.get(newRoomId) ?? "Nieznana") : "Brak",
     });
   }
 
@@ -141,9 +136,7 @@ export function SessionChangesPreview({
   );
 
   if (sorted.length === 0) {
-    return (
-      <p className="text-sm text-gray-500 py-4 text-center">Brak zmian do zastosowania.</p>
-    );
+    return <p className="text-sm text-gray-500 py-4 text-center">Brak zmian do zastosowania.</p>;
   }
 
   return (
@@ -158,9 +151,7 @@ export function SessionChangesPreview({
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-gray-900">
                   {formatDatePL(item.calendar_date)}
-                  {timeStr && (
-                    <span className="text-gray-500 font-normal"> · {timeStr}</span>
-                  )}
+                  {timeStr && <span className="text-gray-500 font-normal"> · {timeStr}</span>}
                 </p>
                 {actionBadge(item.action)}
               </div>

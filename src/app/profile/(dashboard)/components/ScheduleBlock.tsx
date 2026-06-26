@@ -34,7 +34,9 @@ function formatTime(iso: string): string {
 }
 
 function todayLabel(): string {
-  return new Date().toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" }).toUpperCase();
+  return new Date()
+    .toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" })
+    .toUpperCase();
 }
 
 export function ScheduleBlock() {
@@ -81,7 +83,9 @@ export function ScheduleBlock() {
         {data.today_sessions.length === 0 && sessions.length === 0 ? (
           <div className="rounded-xl border border-dashed bg-gray-50 py-6 px-4 text-center space-y-2">
             <p className="text-sm font-semibold text-gray-900">Grafik jest pusty</p>
-            <p className="text-xs text-gray-500">Dodaj zajęcia, żeby zbudować cotygodniowy grafik.</p>
+            <p className="text-xs text-gray-500">
+              Dodaj zajęcia, żeby zbudować cotygodniowy grafik.
+            </p>
             <Link href="/profile/class-schedules/create">
               <Button variant="outline" size="sm" className="mt-1">
                 <Plus size={14} className="mr-1" />

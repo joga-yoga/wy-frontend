@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import { TemplateEditor } from "../../components/TemplateEditor";
 import type { ClassTemplate, ClassTemplateCreate } from "../../types";
 

@@ -34,7 +34,8 @@ function getPageTitle(pathname: string): string | undefined {
   if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit")) return "Edytuj studio";
   if (pathname === "/profile/class-templates") return "Szablony zajęć";
   if (pathname === "/profile/class-templates/create") return "Nowy szablon";
-  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit")) return "Edytuj szablon";
+  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit"))
+    return "Edytuj szablon";
   if (pathname === "/profile/class-schedules/create") return "Dodaj zajęcia";
   if (pathname === "/profile/schedule") return "Grafik";
   if (pathname === "/profile/schedule/instructor") return "Mój grafik";

@@ -78,12 +78,8 @@ export default function ClassTemplatesPage() {
               className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-white hover:bg-gray-50 transition-colors"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {t.title}
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5 truncate">
-                  {templateSubtitle(t)}
-                </p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">{templateSubtitle(t)}</p>
               </div>
               <ChevronRight size={16} className="text-gray-400 shrink-0" />
             </Link>

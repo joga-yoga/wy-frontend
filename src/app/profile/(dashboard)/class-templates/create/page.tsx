@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import { TemplateEditor } from "../components/TemplateEditor";
 import type { ClassTemplateCreate } from "../types";
 
