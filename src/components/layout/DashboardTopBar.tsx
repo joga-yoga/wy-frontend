@@ -52,23 +52,14 @@ function getBackHref(pathname: string): string | undefined {
   if (pathname === "/profile/class-schedules/create") return "/profile/schedule";
   if (pathname === "/profile/class-templates") return "/profile/offer";
   if (pathname === "/profile/class-templates/create") return "/profile/class-templates";
-  if (
-    pathname.startsWith("/profile/class-templates/") &&
-    pathname.endsWith("/edit")
-  )
+  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit"))
     return "/profile/class-templates";
   if (pathname === "/profile/studio/create") return "/profile/offer";
-  if (
-    pathname.startsWith("/profile/studio/") &&
-    pathname.endsWith("/edit")
-  )
+  if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit"))
     return "/profile/offer";
   if (pathname === "/profile/instructors") return "/profile/offer";
   if (pathname === "/profile/instructors/create") return "/profile/instructors";
-  if (
-    pathname.startsWith("/profile/instructors/") &&
-    pathname.endsWith("/edit")
-  )
+  if (pathname.startsWith("/profile/instructors/") && pathname.endsWith("/edit"))
     return "/profile/instructors";
   return undefined;
 }
@@ -80,7 +71,9 @@ function BackButton() {
 
   const handleBack = () => {
     const href = getBackHref(pathname);
-    const navigate = href ? () => startTransition(() => router.push(href)) : () => startTransition(() => router.back());
+    const navigate = href
+      ? () => startTransition(() => router.push(href))
+      : () => startTransition(() => router.back());
     if (isBlocked) {
       openModal(navigate);
     } else {

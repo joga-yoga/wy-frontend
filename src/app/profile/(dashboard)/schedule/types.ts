@@ -49,21 +49,37 @@ export interface SessionDetailResponse {
   studio_id: string;
   studio_name: string;
   schedule_id: string;
+  is_recurring: boolean;
+  series_to_date?: string | null;
+}
+
+export interface FieldDiffItem {
+  label: string;
+  old: string;
+  new: string;
 }
 
 export interface SessionEditPreviewItem {
   occurrence_id?: string | null;
   calendar_date: string;
-  action: "update" | "create" | "cancel" | "delete" | "unchanged";
+  status: "new" | "modified" | "cancelled" | "deleted";
   start_time?: string | null;
   end_time?: string | null;
   instructor_id?: string | null;
   room_id?: string | null;
   capacity?: number | null;
+  diffs: FieldDiffItem[];
+  booked_count: number;
+}
+
+export interface NotificationSummary {
+  total_recipients: number;
+  total_booked_seats: number;
 }
 
 export interface SessionEditPreviewResponse {
   scope: string;
   items: SessionEditPreviewItem[];
   total_affected: number;
+  notification_summary: NotificationSummary;
 }

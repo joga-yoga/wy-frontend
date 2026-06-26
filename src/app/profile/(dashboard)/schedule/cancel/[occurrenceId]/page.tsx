@@ -6,9 +6,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import type { SessionEditPreviewItem, SessionEditPreviewResponse } from "../../types";
+
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { SessionChangesPreview } from "../../components/SessionChangesPreview";
+import type { SessionEditPreviewResponse } from "../../types";
 
 type CancelScope = "single" | "end_series_from_date";
 type Step = "scope" | "preview";
@@ -20,7 +21,7 @@ export default function CancelSessionPage() {
 
   const [scope, setScope] = useState<CancelScope>("single");
   const [step, setStep] = useState<Step>("scope");
-  const [previewItems, setPreviewItems] = useState<SessionEditPreviewItem[]>([]);
+  const [previewResponse, setPreviewResponse] = useState<SessionEditPreviewResponse | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,7 +32,7 @@ export default function CancelSessionPage() {
         "/class-sessions/cancel/preview",
         { occurrence_id: params.occurrenceId, scope },
       );
-      setPreviewItems(r.data.items);
+      setPreviewResponse(r.data);
       setStep("preview");
     } catch {
       toast({ description: "Nie udało się wygenerować podglądu.", variant: "destructive" });
@@ -80,30 +81,27 @@ export default function CancelSessionPage() {
             <Button variant="outline" onClick={() => router.push("/profile/schedule")}>
               Anuluj
             </Button>
-            <Button
-              className="flex-1"
-              onClick={goToPreview}
-              disabled={isLoadingPreview}
-            >
+            <Button className="flex-1" onClick={goToPreview} disabled={isLoadingPreview}>
               {isLoadingPreview ? "Generowanie..." : "Podgląd →"}
             </Button>
           </div>
         </>
       )}
 
-      {step === "preview" && (
+      {step === "preview" && previewResponse && (
         <div className="space-y-4">
           <div>
             <h2 className="text-sm font-semibold text-gray-900">
-              {previewItems.length === 1 ? "1 sesja" : `${previewItems.length} sesji`} zostanie odwołana
+              {previewResponse.total_affected === 1
+                ? "1 sesja"
+                : `${previewResponse.total_affected} sesji`}{" "}
+              zostanie odwołana
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">Sprawdź zanim potwierdzisz.</p>
           </div>
 
           <SessionChangesPreview
-            items={previewItems}
-            instructors={[]}
-            rooms={[]}
+            items={previewResponse.items}
+            notificationSummary={previewResponse.notification_summary}
           />
 
           <div className="flex gap-3 pt-2">
