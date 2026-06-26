@@ -2,6 +2,8 @@
 
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import type { ClassTemplate, ClassTemplateCreate } from "../types";
 
 interface InstructorOption {
@@ -50,23 +53,26 @@ export function TemplateEditor({
   isSubmitting = false,
 }: TemplateEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [durationMinutes, setDurationMinutes] = useState(
-    String(initial?.duration_minutes ?? 60)
-  );
+  const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
   const [level, setLevel] = useState(initial?.level ?? "");
   const [style, setStyle] = useState(initial?.style ?? "");
   const [defaultInstructorId, setDefaultInstructorId] = useState(
-    initial?.default_instructor_id ?? ""
+    initial?.default_instructor_id ?? "",
   );
   const [defaultCapacity, setDefaultCapacity] = useState(
-    initial?.default_capacity != null ? String(initial.default_capacity) : ""
+    initial?.default_capacity != null ? String(initial.default_capacity) : "",
   );
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
+  const [yogaStyles, setYogaStyles] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     axiosInstance
       .get<InstructorOption[]>("/instructors")
-      .then((r) => setInstructors(r.data))
+      .then((r) => setInstructors(r.data ?? []))
+      .catch(() => {});
+    axiosInstance
+      .get<{ id: string; name: string }[]>("/yoga-styles")
+      .then((r) => setYogaStyles(r.data ?? []))
       .catch(() => {});
   }, []);
 
@@ -90,9 +96,7 @@ export function TemplateEditor({
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Czym są te zajęcia
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Stałe cechy — takie same za każdym razem.
-          </p>
+          <p className="text-xs text-gray-400 mt-0.5">Stałe cechy — takie same za każdym razem.</p>
         </div>
 
         <div className="space-y-3">
@@ -150,12 +154,39 @@ export function TemplateEditor({
             <Label htmlFor="style">
               Styl <span className="text-gray-400">· opcjonalnie</span>
             </Label>
-            <Input
-              id="style"
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              placeholder="np. Hatha, Ashtanga"
-            />
+            {yogaStyles.length > 0 ? (
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {yogaStyles.map((s) => (
+                  <Badge
+                    key={s.id}
+                    variant={style === s.name ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => setStyle(style === s.name ? "" : s.name)}
+                  >
+                    {s.name}
+                  </Badge>
+                ))}
+                {style && !yogaStyles.some((s) => s.name === style) && (
+                  <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm bg-gray-50 text-gray-600">
+                    {style}
+                    <button
+                      type="button"
+                      onClick={() => setStyle("")}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                )}
+              </div>
+            ) : (
+              <Input
+                id="style"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                placeholder="np. Hatha, Ashtanga"
+              />
+            )}
           </div>
         </div>
       </section>
@@ -214,11 +245,7 @@ export function TemplateEditor({
         </div>
       </section>
 
-      <Button
-        className="w-full"
-        onClick={handleSubmit}
-        disabled={!title.trim() || isSubmitting}
-      >
+      <Button className="w-full" onClick={handleSubmit} disabled={!title.trim() || isSubmitting}>
         {isSubmitting ? "Zapisywanie..." : submitLabel}
       </Button>
     </div>
