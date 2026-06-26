@@ -15,13 +15,14 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
+import { ScopeOptionCard } from "../../components/ScopeOptionCard";
+import { SessionChangesPreview } from "../../components/SessionChangesPreview";
 import type {
   SessionDetailResponse,
   SessionEditPreviewItem,
   SessionEditPreviewResponse,
 } from "../../types";
-import { ScopeOptionCard } from "../../components/ScopeOptionCard";
-import { SessionChangesPreview } from "../../components/SessionChangesPreview";
 
 type Scope = "single" | "this_and_future" | "whole_series";
 type Step = "scope" | "form" | "preview";
@@ -78,16 +79,14 @@ export default function EditSessionPage() {
         setInitialCapacity(cap);
         setInitialInstructorId(instr);
       })
-      .catch(() =>
-        toast({ description: "Nie udało się załadować sesji.", variant: "destructive" }),
-      )
+      .catch(() => toast({ description: "Nie udało się załadować sesji.", variant: "destructive" }))
       .finally(() => setIsLoadingDetail(false));
 
     axiosInstance
       .get<{ id: string; name: string }[]>("/instructors")
       .then((r) => setInstructors(r.data ?? []))
       .catch(() => {});
-  }, [params.occurrenceId]);
+  }, [params.occurrenceId, toast]);
 
   useEffect(() => {
     if (!sessionDetail?.studio_id) return;
@@ -207,7 +206,9 @@ export default function EditSessionPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {instructors.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -233,7 +234,9 @@ export default function EditSessionPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {rooms.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -265,11 +268,7 @@ export default function EditSessionPage() {
             <Button variant="outline" onClick={() => setStep("scope")}>
               Wstecz
             </Button>
-            <Button
-              className="flex-1"
-              onClick={goToPreview}
-              disabled={isLoadingPreview}
-            >
+            <Button className="flex-1" onClick={goToPreview} disabled={isLoadingPreview}>
               {isLoadingPreview ? "Generowanie..." : "Podgląd →"}
             </Button>
           </div>
@@ -282,9 +281,7 @@ export default function EditSessionPage() {
             <h2 className="text-sm font-semibold text-gray-900">
               Zmiany w {previewItems.filter((i) => i.action !== "unchanged").length} sesjach
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Sprawdź co się zmieni przed zapisaniem.
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Sprawdź co się zmieni przed zapisaniem.</p>
           </div>
 
           <SessionChangesPreview

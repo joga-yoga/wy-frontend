@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import type { ClassTemplate } from "./types";
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -56,12 +57,10 @@ export default function ClassTemplatesPage() {
           <div className="mx-auto h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
             <Plus size={20} className="text-gray-400" />
           </div>
-          <p className="text-sm font-semibold text-gray-900">
-            Brak szablonów zajęć
-          </p>
+          <p className="text-sm font-semibold text-gray-900">Brak szablonów zajęć</p>
           <p className="text-xs text-gray-500 max-w-xs mx-auto">
-            Szablon to definicja zajęć (np. „Vinyasa Flow", 60 min). Tworzysz
-            go raz, potem szybko dodajesz do grafiku.
+            Szablon to definicja zajęć (np. &ldquo;Vinyasa Flow&rdquo;, 60 min). Tworzysz go raz,
+            potem szybko dodajesz do grafiku.
           </p>
           <Link href="/profile/class-templates/create">
             <Button variant="outline" size="sm" className="mt-2">
