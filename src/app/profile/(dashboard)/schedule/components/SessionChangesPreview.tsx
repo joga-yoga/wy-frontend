@@ -146,7 +146,9 @@ export function SessionChangesPreview({
 
         return (
           <div
-            key={item.occurrence_id ?? `${item.calendar_date}-${item.action}`}
+            key={
+              item.occurrence_id ?? `${item.calendar_date}-${item.action}-${item.start_time ?? ""}`
+            }
             className="flex items-start gap-3 px-4 py-3 rounded-xl border bg-white"
           >
             <div className="flex-1 min-w-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Clock, Plus } from "lucide-react";
+import { Calendar, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 

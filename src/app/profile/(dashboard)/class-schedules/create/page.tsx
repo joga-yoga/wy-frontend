@@ -603,7 +603,7 @@ export default function CreateScheduleWizard() {
             tygodnia.
           </p>
           <div className="space-y-2 pt-4">
-            <Button className="w-full" onClick={() => router.push("/profile")}>
+            <Button className="w-full" onClick={() => router.push("/profile/schedule")}>
               Zobacz grafik
             </Button>
             <Button
