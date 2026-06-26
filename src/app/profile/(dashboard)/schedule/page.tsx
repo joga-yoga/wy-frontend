@@ -13,19 +13,15 @@ import {
   X as XIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import { DayStrip } from "./components/DayStrip";
 import type { ScheduleDaySummary, ScheduleOccurrence, ScheduleWeekResponse } from "./types";
 
@@ -49,8 +45,7 @@ function formatMonthTitle(weekStart: Date): string {
   const endMonth = end.toLocaleDateString("pl-PL", { month: "long" });
   const startYear = weekStart.getFullYear();
   const endYear = end.getFullYear();
-  if (startYear !== endYear)
-    return `${startMonth} ${startYear} – ${endMonth} ${endYear}`;
+  if (startYear !== endYear) return `${startMonth} ${startYear} – ${endMonth} ${endYear}`;
   if (startMonth !== endMonth) return `${startMonth}–${endMonth} ${startYear}`;
   return `${startMonth} ${startYear}`;
 }
@@ -66,13 +61,11 @@ function formatDayHeader(dateStr: string): string {
 }
 
 export default function GrafikPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const studioParam = searchParams.get("studio_id") ?? "";
   const [studioId, setStudioId] = useState(studioParam);
-  const [studios, setStudios] = useState<{ id: string; name: string }[]>([]);
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
   const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
     const today = new Date().getDay();
@@ -83,10 +76,12 @@ export default function GrafikPage() {
   const [panelOcc, setPanelOcc] = useState<ScheduleOccurrence | null>(null);
 
   useEffect(() => {
-    axiosInstance.get<{ id: string; name: string }[]>("/studios").then((r) => {
-      setStudios(r.data ?? []);
-      if (!studioId && r.data?.length) setStudioId(r.data[0].id);
-    }).catch(() => {});
+    axiosInstance
+      .get<{ id: string; name: string }[]>("/studios")
+      .then((r) => {
+        if (!studioId && r.data?.length) setStudioId(r.data[0].id);
+      })
+      .catch(() => {});
   }, [studioId]);
 
   const fetchWeek = useCallback(() => {
@@ -97,11 +92,15 @@ export default function GrafikPage() {
         params: { studio_id: studioId, week_start: formatDate(weekStart) },
       })
       .then((r) => setDays(r.data.days))
-      .catch(() => toast({ description: "Nie udało się załadować grafiku.", variant: "destructive" }))
+      .catch(() =>
+        toast({ description: "Nie udało się załadować grafiku.", variant: "destructive" }),
+      )
       .finally(() => setIsLoading(false));
   }, [studioId, weekStart, toast]);
 
-  useEffect(() => { fetchWeek(); }, [fetchWeek]);
+  useEffect(() => {
+    fetchWeek();
+  }, [fetchWeek]);
 
   const sessionCounts = useMemo(() => days.map((d) => d.session_count), [days]);
   const selectedDay = days[selectedDayIndex];
@@ -176,9 +175,7 @@ export default function GrafikPage() {
           <div className="rounded-xl border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
             <Calendar size={20} className="mx-auto text-gray-400" />
             {selectedDay.date < formatDate(new Date()) ? (
-              <p className="text-sm text-gray-500">
-                Nie było zajęć w ten dzień
-              </p>
+              <p className="text-sm text-gray-500">Nie było zajęć w ten dzień</p>
             ) : (
               <>
                 <p className="text-sm text-gray-500">
@@ -227,7 +224,9 @@ export default function GrafikPage() {
                     {formatTime(occ.start_time)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold text-gray-900 truncate ${isCancelled ? "line-through" : ""}`}>
+                    <p
+                      className={`text-sm font-semibold text-gray-900 truncate ${isCancelled ? "line-through" : ""}`}
+                    >
                       {occ.template_title}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5 truncate">
@@ -242,7 +241,9 @@ export default function GrafikPage() {
                       </span>
                     )}
                     {isCancelled ? (
-                      <Badge variant="destructive" className="text-[10px]">odwołane</Badge>
+                      <Badge variant="destructive" className="text-[10px]">
+                        odwołane
+                      </Badge>
                     ) : occ.capacity ? (
                       <Badge className={`text-[10px] ${fillColor}`}>
                         {occ.fill_count}/{occ.capacity}
@@ -274,7 +275,8 @@ export default function GrafikPage() {
               <DrawerHeader className="px-0">
                 <DrawerTitle>{panelOcc.template_title}</DrawerTitle>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {formatDayHeader(panelOcc.calendar_date)} · {formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}
+                  {formatDayHeader(panelOcc.calendar_date)} · {formatTime(panelOcc.start_time)} –{" "}
+                  {formatTime(panelOcc.end_time)}
                 </p>
                 {panelOcc.status !== "cancelled" && (
                   <Badge variant="secondary" className="mt-2 text-[10px]">
@@ -286,7 +288,9 @@ export default function GrafikPage() {
               <div className="space-y-3 mt-2">
                 <div className="flex items-center gap-3 text-sm">
                   <Clock size={14} className="text-gray-400" />
-                  <span>{formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}</span>
+                  <span>
+                    {formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}
+                  </span>
                 </div>
                 {panelOcc.room_name && (
                   <div className="flex items-center gap-3 text-sm">
@@ -323,7 +327,11 @@ export default function GrafikPage() {
                       Zmień prowadzącego
                     </Link>
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700" asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-red-600 hover:text-red-700"
+                    asChild
+                  >
                     <Link href={`/profile/schedule/cancel/${panelOcc.id}`}>
                       <XIcon size={14} className="mr-2" />
                       Odwołaj

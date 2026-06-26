@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 
 type Scope = "single" | "this_and_future" | "whole_series";
@@ -31,14 +32,16 @@ export default function EditSessionPage() {
   const [step, setStep] = useState<Step>("scope");
   const [scope, setScope] = useState<Scope>("single");
   const [startTime, setStartTime] = useState("");
-  const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
   const [instructors, setInstructors] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    axiosInstance.get<{ id: string; name: string }[]>("/instructors").then((r) => setInstructors(r.data ?? [])).catch(() => {});
+    axiosInstance
+      .get<{ id: string; name: string }[]>("/instructors")
+      .then((r) => setInstructors(r.data ?? []))
+      .catch(() => {});
   }, []);
 
   const handleCommit = async () => {
@@ -49,7 +52,6 @@ export default function EditSessionPage() {
         scope,
       };
       if (startTime) payload.start_time = startTime + ":00";
-      if (roomId) payload.room_id = roomId;
       if (capacity) payload.capacity = parseInt(capacity, 10);
       if (instructorId) payload.instructor_id = instructorId;
 
@@ -102,10 +104,14 @@ export default function EditSessionPage() {
             <div>
               <Label>Prowadzący</Label>
               <Select value={instructorId} onValueChange={setInstructorId}>
-                <SelectTrigger><SelectValue placeholder="Wybierz prowadzącego" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Wybierz prowadzącego" />
+                </SelectTrigger>
                 <SelectContent>
                   {instructors.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -114,15 +120,23 @@ export default function EditSessionPage() {
             <>
               <div>
                 <Label>Godzina</Label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
               </div>
               <div>
                 <Label>Prowadzący</Label>
                 <Select value={instructorId || undefined} onValueChange={setInstructorId}>
-                  <SelectTrigger><SelectValue placeholder="Wybierz prowadzącego" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Wybierz prowadzącego" />
+                  </SelectTrigger>
                   <SelectContent>
                     {instructors.map((i) => (
-                      <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                      <SelectItem key={i.id} value={i.id}>
+                        {i.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
