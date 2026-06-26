@@ -169,7 +169,7 @@ export default function EditSessionPage() {
               onSelect={() => setScope("whole_series")}
             />
           </div>
-          <Button className="w-full" onClick={() => setStep("form")}>
+          <Button className="w-full" onClick={() => setStep("form")} disabled={!sessionDetail}>
             Dalej →
           </Button>
         </div>
@@ -285,8 +285,7 @@ export default function EditSessionPage() {
           </div>
 
           <SessionChangesPreview
-            items={previewItems}
-            currentOccurrence={sessionDetail}
+            items={previewItems.filter((i) => i.action !== "unchanged")}
             initialValues={{
               startTime: initialStartTime,
               instructorId: initialInstructorId,

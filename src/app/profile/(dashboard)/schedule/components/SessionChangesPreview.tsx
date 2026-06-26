@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 
-import type { SessionDetailResponse, SessionEditPreviewItem } from "../types";
+import type { SessionEditPreviewItem } from "../types";
 
 interface InitialValues {
   startTime: string; // HH:MM
@@ -13,7 +13,6 @@ interface InitialValues {
 
 interface SessionChangesPreviewProps {
   items: SessionEditPreviewItem[];
-  currentOccurrence: SessionDetailResponse | null;
   initialValues?: InitialValues;
   instructors: { id: string; name: string }[];
   rooms: { id: string; name: string }[];
@@ -141,12 +140,15 @@ export function SessionChangesPreview({
 
   return (
     <div className="space-y-2">
-      {sorted.map((item, idx) => {
+      {sorted.map((item) => {
         const diffs = buildDiff(item, initialValues, instructorMap, roomMap);
         const timeStr = extractTime(item.start_time);
 
         return (
-          <div key={idx} className="flex items-start gap-3 px-4 py-3 rounded-xl border bg-white">
+          <div
+            key={item.occurrence_id ?? `${item.calendar_date}-${item.action}`}
+            className="flex items-start gap-3 px-4 py-3 rounded-xl border bg-white"
+          >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-gray-900">
