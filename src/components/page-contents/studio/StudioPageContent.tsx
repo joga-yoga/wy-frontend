@@ -10,10 +10,15 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
+import type {
+  PublicOccurrence,
+  PublicScheduleWeekResponse,
+} from "@/app/(public)/studio/[slug]/grafik/types";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
+import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
 
@@ -49,6 +54,120 @@ function initials(name: string) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+function formatTimePL(iso: string): string {
+  const m = iso.match(/T(\d{2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : iso;
+}
+
+function formatDateShort(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getMondayOf(d: Date): Date {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function todayLabelPL(d: Date): string {
+  return d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studioSlug: string }) {
+  const [days, setDays] = useState<PublicScheduleWeekResponse["days"] | null>(null);
+
+  useEffect(() => {
+    const weekStart = formatDateShort(getMondayOf(new Date()));
+    axiosInstance
+      .get<PublicScheduleWeekResponse>(`/public/studios/${studioId}/schedule`, {
+        params: { week_start: weekStart },
+      })
+      .then((r) => setDays(r.data.days))
+      .catch(() => setDays([]));
+  }, [studioId]);
+
+  if (days === null) return null;
+
+  const todayStr = formatDateShort(new Date());
+  const todayDay = days.find((d) => d.date === todayStr);
+  const todaySessions = todayDay?.occurrences ?? [];
+  const todayEmpty = todaySessions.length === 0;
+
+  const nextDay = days.find((d) => d.date > todayStr && d.session_count > 0) ?? null;
+  const nextSessions = nextDay?.occurrences.slice(0, 3) ?? [];
+
+  const wholeWeekEmpty = days.every((d) => d.session_count === 0);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = formatDateShort(tomorrow);
+
+  const sessionRow = (occ: PublicOccurrence) => (
+    <div key={occ.id} className="flex items-center gap-3 px-4 py-3">
+      <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
+        {formatTimePL(occ.start_time)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-gray-900">{occ.template_title}</p>
+        {(occ.room_name || occ.instructor_name) && (
+          <p className="mt-0.5 truncate text-xs text-gray-500">
+            {[occ.room_name, occ.instructor_name].filter(Boolean).join(" · ")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-5">
+      <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Grafik zajęć</h2>
+
+      {wholeWeekEmpty ? (
+        <p className="text-sm text-[#717171]">Brak zajęć w tym tygodniu.</p>
+      ) : (
+        <div className="overflow-hidden divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+          {todayEmpty ? (
+            <div className="px-4 py-3">
+              <p className="text-xs text-[#717171]">
+                Dziś · {todayLabelPL(new Date())} · brak zajęć
+              </p>
+            </div>
+          ) : null}
+
+          {todayEmpty && nextDay ? (
+            <>
+              <div className="px-4 pb-1 pt-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#717171]">
+                  {nextDay.date === tomorrowStr
+                    ? "Jutro"
+                    : new Date(nextDay.date + "T00:00:00").toLocaleDateString("pl-PL", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "short",
+                      })}
+                </p>
+              </div>
+              {nextSessions.map(sessionRow)}
+            </>
+          ) : null}
+
+          {!todayEmpty ? todaySessions.slice(0, 3).map(sessionRow) : null}
+        </div>
+      )}
+
+      <Link
+        href={`/studio/${studioSlug}/grafik`}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
+      >
+        Zobacz pełny grafik
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </section>
+  );
 }
 
 function GalleryLightbox({
@@ -820,6 +939,7 @@ export function StudioPageContent({ studio }: StudioPageContentProps) {
   return (
     <main className="min-h-screen bg-white text-gray-950">
       <HeroSection studio={studio} />
+      {studio.slug && <StudioScheduleSneak studioId={studio.id} studioSlug={studio.slug} />}
       <InstructorsSection studio={studio} />
       <PricingSection studio={studio} />
       <SportCardsSection studio={studio} />
