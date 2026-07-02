@@ -41,6 +41,13 @@ function cleanString(value: unknown): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+// The backend serializes time fields as "HH:MM:SS"; <input type="time"> (no `step`) expects
+// "HH:MM" and may fail to display a value with seconds in some browsers.
+function toTimeInputValue(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.slice(0, 5);
+}
+
 function cleanNumber(value: unknown): number | null {
   if (value === "" || value == null) return null;
   const numberValue = Number(value);
@@ -84,6 +91,12 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     currency: values.currency || "PLN",
     accepts_sport_cards: values.accepts_sport_cards,
     is_listed: values.is_listed,
+    accepts_cash: values.accepts_cash,
+    accepts_stripe: values.accepts_stripe,
+    accepts_bank_transfer: values.accepts_bank_transfer,
+    cancellation_policy_mode: values.cancellation_policy_mode,
+    cancellation_morning_deadline_time: cleanString(values.cancellation_morning_deadline_time),
+    cancellation_afternoon_hours_before: cleanNumber(values.cancellation_afternoon_hours_before),
     rooms,
     passes,
     sport_card_acceptances: sportCardAcceptances,
@@ -132,6 +145,12 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
     image_ids: studio.image_ids ?? [],
     is_public: studio.status === "claimed",
     is_listed: studio.is_listed !== false,
+    accepts_cash: studio.accepts_cash !== false,
+    accepts_stripe: studio.accepts_stripe ?? false,
+    accepts_bank_transfer: studio.accepts_bank_transfer ?? false,
+    cancellation_policy_mode: studio.cancellation_policy_mode ?? "by_time_of_day",
+    cancellation_morning_deadline_time: toTimeInputValue(studio.cancellation_morning_deadline_time),
+    cancellation_afternoon_hours_before: studio.cancellation_afternoon_hours_before ?? null,
   };
 }
 
@@ -156,4 +175,10 @@ export const emptyStudioFormValues: StudioFormValues = {
   image_ids: [],
   is_public: false,
   is_listed: true,
+  accepts_cash: true,
+  accepts_stripe: false,
+  accepts_bank_transfer: false,
+  cancellation_policy_mode: "by_time_of_day",
+  cancellation_morning_deadline_time: "22:00",
+  cancellation_afternoon_hours_before: "",
 };

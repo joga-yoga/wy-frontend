@@ -9,6 +9,8 @@ export interface PublicOccurrence {
   instructor_image_id?: string | null;
   room_name?: string | null;
   capacity?: number | null;
+  important_info?: string | null;
+  free_cancellation_deadline?: string | null;
 }
 
 export interface PublicScheduleDaySummary {

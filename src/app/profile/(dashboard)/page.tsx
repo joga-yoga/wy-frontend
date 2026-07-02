@@ -273,16 +273,6 @@ export default function AktywnoscPage() {
           </div>
         )}
       </section>
-
-      {/* Dziś w kalendarzu */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-          Dziś w kalendarzu
-        </h2>
-        <div className="rounded-xl border border-dashed bg-gray-50 py-8 text-center">
-          <p className="text-sm text-gray-400">Kalendarz — wkrótce</p>
-        </div>
-      </section>
     </div>
   );
 }

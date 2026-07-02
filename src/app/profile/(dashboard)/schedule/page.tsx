@@ -4,6 +4,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   Clock,
   Pencil,
   Plus,
@@ -327,6 +328,16 @@ export default function SchedulePage() {
                       Zmień prowadzącego
                     </Link>
                   </Button>
+                  {panelOcc.studio_id && (
+                    <Button variant="outline" className="w-full justify-start" asChild>
+                      <Link
+                        href={`/profile/studio/${panelOcc.studio_id}/front-desk/${panelOcc.id}`}
+                      >
+                        <ClipboardList size={14} className="mr-2" />
+                        Lista obecności
+                      </Link>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="w-full justify-start text-red-600 hover:text-red-700"

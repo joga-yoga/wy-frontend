@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Plus } from "lucide-react";
+import { Calendar, ClipboardList, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -137,6 +137,14 @@ export function ScheduleBlock() {
             Zarządzaj grafikiem
           </Button>
         </Link>
+        {data.studio_ids[0] && (
+          <Link href={`/profile/studio/${data.studio_ids[0]}/front-desk`} className="block">
+            <Button variant="outline" className="w-full text-sm">
+              <ClipboardList size={14} className="mr-2" />
+              Recepcja
+            </Button>
+          </Link>
+        )}
       </section>
     );
   }

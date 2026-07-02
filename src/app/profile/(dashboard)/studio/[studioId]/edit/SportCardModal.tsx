@@ -4,6 +4,7 @@ import { ArrowLeft, Check, CreditCard, Plus, Search } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 
+import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
-import { cn } from "@/lib/utils";
 
 import type { SportCard, StudioSportCard } from "./types";
 
@@ -294,35 +294,17 @@ export function SportCardModal({
 
               <div>
                 <label className="mb-1 block text-sm font-semibold">Dopłata za wejście</label>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <button
-                    type="button"
-                    className={cn(
-                      "min-h-10 rounded-lg border text-sm",
-                      !hasFee
-                        ? "border-brand-green font-semibold text-foreground"
-                        : "border-border text-muted-foreground",
-                    )}
-                    onClick={() => {
-                      setHasFee(false);
-                      setFee("");
-                    }}
-                  >
-                    Bez dopłaty
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(
-                      "min-h-10 rounded-lg border text-sm",
-                      hasFee
-                        ? "border-brand-green font-semibold text-foreground"
-                        : "border-border text-muted-foreground",
-                    )}
-                    onClick={() => setHasFee(true)}
-                  >
-                    Dopłata
-                  </button>
-                </div>
+                <SegmentedToggle
+                  value={hasFee}
+                  onChange={(next) => {
+                    setHasFee(next);
+                    if (!next) setFee("");
+                  }}
+                  options={[
+                    { label: "Bez dopłaty", value: false },
+                    { label: "Dopłata", value: true },
+                  ]}
+                />
                 {!hasFee && (
                   <div className="flex items-center gap-2 rounded-md bg-muted/50 border px-3 py-2 text-sm text-muted-foreground">
                     <Check className="size-4 shrink-0 text-brand-green" />
@@ -393,35 +375,17 @@ export function SportCardModal({
 
               <div>
                 <label className="mb-1 block text-sm font-semibold">Dopłata za wejście</label>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <button
-                    type="button"
-                    className={cn(
-                      "min-h-10 rounded-lg border text-sm",
-                      !customHasFee
-                        ? "border-brand-green font-semibold text-foreground"
-                        : "border-border text-muted-foreground",
-                    )}
-                    onClick={() => {
-                      setCustomHasFee(false);
-                      setCustomFee("");
-                    }}
-                  >
-                    Bez dopłaty
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(
-                      "min-h-10 rounded-lg border text-sm",
-                      customHasFee
-                        ? "border-brand-green font-semibold text-foreground"
-                        : "border-border text-muted-foreground",
-                    )}
-                    onClick={() => setCustomHasFee(true)}
-                  >
-                    Dopłata
-                  </button>
-                </div>
+                <SegmentedToggle
+                  value={customHasFee}
+                  onChange={(next) => {
+                    setCustomHasFee(next);
+                    if (!next) setCustomFee("");
+                  }}
+                  options={[
+                    { label: "Bez dopłaty", value: false },
+                    { label: "Dopłata", value: true },
+                  ]}
+                />
                 {customHasFee && (
                   <div className="flex items-center gap-2">
                     <Input

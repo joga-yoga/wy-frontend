@@ -1,15 +1,15 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, MapPin, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DayStrip } from "@/app/profile/(dashboard)/schedule/components/DayStrip";
 import { WyImage } from "@/components/custom/WyImage";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { axiosInstance } from "@/lib/axiosInstance";
 import type { StudioPublic } from "@/types/studio";
 
+import { SessionDetailModal } from "./SessionDetailModal";
 import type { PublicOccurrence, PublicScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -54,21 +54,6 @@ function initials(name: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-}
-
-function InstructorAvatar({ name, imageId }: { name: string; imageId?: string | null }) {
-  if (imageId) {
-    return (
-      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
-        <WyImage src={imageId} alt={name} fill className="object-cover" />
-      </div>
-    );
-  }
-  return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-sm font-semibold text-amber-800">
-      {initials(name)}
-    </div>
-  );
 }
 
 function StudioCompactHeader({ studio }: { studio: StudioPublic }) {
@@ -128,64 +113,6 @@ function StudioCompactHeader({ studio }: { studio: StudioPublic }) {
         </div>
       )}
     </div>
-  );
-}
-
-function SessionDrawer({ occ, onClose }: { occ: PublicOccurrence | null; onClose: () => void }) {
-  return (
-    <Drawer open={occ != null} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent>
-        {occ && (
-          <div className="flex flex-col">
-            <div className="px-4 pb-4">
-              <DrawerHeader className="px-0 pb-2">
-                <DrawerTitle>{occ.template_title}</DrawerTitle>
-                <p className="text-xs text-gray-500">
-                  {formatDayHeader(occ.calendar_date)} · {formatTime(occ.start_time)} –{" "}
-                  {formatTime(occ.end_time)}
-                </p>
-              </DrawerHeader>
-
-              <div className="mt-1 space-y-3">
-                {occ.instructor_name && (
-                  <div className="flex items-center gap-3">
-                    <InstructorAvatar
-                      name={occ.instructor_name}
-                      imageId={occ.instructor_image_id}
-                    />
-                    <span className="text-sm font-medium text-gray-900">{occ.instructor_name}</span>
-                  </div>
-                )}
-
-                {occ.room_name && (
-                  <div className="flex items-center gap-3 text-sm text-gray-700">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-                      <div className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                    </div>
-                    {occ.room_name}
-                  </div>
-                )}
-
-                {occ.capacity != null && (
-                  <div className="flex items-center gap-3 text-sm text-gray-700">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-                      <Users className="h-4 w-4 text-gray-400" />
-                    </div>
-                    Limit: {occ.capacity} miejsc
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 bg-white px-4 pb-6 pt-2">
-              <div className="rounded-xl bg-teal-50 px-4 py-3 text-center text-sm font-medium text-teal-700">
-                Rezerwacja online wkrótce
-              </div>
-            </div>
-          </div>
-        )}
-      </DrawerContent>
-    </Drawer>
   );
 }
 
@@ -300,7 +227,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
         </div>
       </div>
 
-      <SessionDrawer occ={selectedOcc} onClose={() => setSelectedOcc(null)} />
+      <SessionDetailModal occ={selectedOcc} onClose={() => setSelectedOcc(null)} />
     </div>
   );
 }

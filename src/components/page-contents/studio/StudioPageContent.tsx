@@ -10,6 +10,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
+import { SessionDetailModal } from "@/app/(public)/studio/[slug]/grafik/SessionDetailModal";
 import type {
   PublicOccurrence,
   PublicScheduleWeekResponse,
@@ -80,6 +81,7 @@ function todayLabelPL(d: Date): string {
 
 function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studioSlug: string }) {
   const [days, setDays] = useState<PublicScheduleWeekResponse["days"] | null>(null);
+  const [selectedOcc, setSelectedOcc] = useState<PublicOccurrence | null>(null);
 
   useEffect(() => {
     const weekStart = formatDateShort(getMondayOf(new Date()));
@@ -107,7 +109,12 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
   const tomorrowStr = formatDateShort(tomorrow);
 
   const sessionRow = (occ: PublicOccurrence) => (
-    <div key={occ.id} className="flex items-center gap-3 px-4 py-3">
+    <button
+      key={occ.id}
+      type="button"
+      onClick={() => setSelectedOcc(occ)}
+      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+    >
       <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
         {formatTimePL(occ.start_time)}
       </div>
@@ -119,7 +126,7 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
           </p>
         )}
       </div>
-    </div>
+    </button>
   );
 
   return (
@@ -166,6 +173,8 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
         Zobacz pełny grafik
         <ArrowRight className="h-4 w-4" />
       </Link>
+
+      <SessionDetailModal occ={selectedOcc} onClose={() => setSelectedOcc(null)} />
     </section>
   );
 }
