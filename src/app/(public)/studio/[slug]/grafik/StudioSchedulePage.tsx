@@ -199,29 +199,31 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
           ) : !selectedDay || selectedDay.session_count === 0 ? (
             <p className="py-8 text-center text-sm text-gray-400">Brak zajęć w ten dzień.</p>
           ) : (
-            <div className="space-y-2">
+            <div>
               <p className="mb-3 text-sm font-semibold capitalize text-gray-700">
                 {formatDayHeader(selectedDay.date)}
               </p>
-              {selectedDay.occurrences.map((occ) => (
-                <button
-                  key={occ.id}
-                  onClick={() => setSelectedOcc(occ)}
-                  className="flex w-full items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50"
-                >
-                  <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
-                    {formatTime(occ.start_time)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-gray-900">
-                      {occ.template_title}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-gray-500">
-                      {[occ.room_name, occ.instructor_name].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              <div className="divide-y divide-gray-100">
+                {selectedDay.occurrences.map((occ) => (
+                  <button
+                    key={occ.id}
+                    onClick={() => setSelectedOcc(occ)}
+                    className="flex w-full items-center gap-3 py-3 text-left"
+                  >
+                    <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
+                      {formatTime(occ.start_time)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">
+                        {occ.template_title}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-gray-500">
+                        {[occ.room_name, occ.instructor_name].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

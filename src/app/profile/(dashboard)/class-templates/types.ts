@@ -24,7 +24,7 @@ export interface ClassTemplateCreate {
   important_info?: string;
   default_instructor_id?: string;
   default_capacity?: number;
-  image_ids?: string[];
+  image_ids?: string[] | null;
 }
 
 export interface ClassTemplateUpdate extends Partial<ClassTemplateCreate> {}

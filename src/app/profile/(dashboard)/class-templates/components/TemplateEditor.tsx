@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import type { ClassTemplate, ClassTemplateCreate } from "../types";
@@ -53,6 +56,7 @@ export function TemplateEditor({
   isSubmitting = false,
 }: TemplateEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
   const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
   const [level, setLevel] = useState(initial?.level ?? "");
   const [style, setStyle] = useState(initial?.style ?? "");
@@ -65,6 +69,12 @@ export function TemplateEditor({
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
   const [yogaStyles, setYogaStyles] = useState<{ id: string; name: string }[]>([]);
 
+  const [imageId, setImageId] = useState(initial?.image_ids?.[0] ?? "");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const { toast } = useToast();
+
   useEffect(() => {
     axiosInstance
       .get<InstructorOption[]>("/instructors")
@@ -76,21 +86,66 @@ export function TemplateEditor({
       .catch(() => {});
   }, []);
 
+  const handleImageFileSelect = async (file: File) => {
+    setIsUploadingImage(true);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviewUrl(previewUrl);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const response = await axiosInstance.post<{ image_id: string }>(
+        "/events/image-upload",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setImageId(response.data.image_id);
+      setIsImageRemoved(false);
+    } catch {
+      URL.revokeObjectURL(previewUrl);
+      setImagePreviewUrl(null);
+      toast({ description: "Nie udało się przesłać zdjęcia.", variant: "destructive" });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleImageRemove = () => {
+    setImageId("");
+    setImagePreviewUrl(null);
+    setIsImageRemoved(true);
+  };
+
   const handleSubmit = async () => {
     if (!title.trim()) return;
     const data: ClassTemplateCreate = {
       title: title.trim(),
       duration_minutes: parseInt(durationMinutes, 10),
     };
+    if (description.trim()) data.description = description.trim();
     if (level) data.level = level;
     if (style.trim()) data.style = style.trim();
     if (defaultInstructorId) data.default_instructor_id = defaultInstructorId;
     if (defaultCapacity) data.default_capacity = parseInt(defaultCapacity, 10);
+    data.image_ids = isImageRemoved ? null : imageId ? [imageId] : undefined;
     await onSubmit(data);
   };
 
   return (
     <div className="space-y-6">
+      <div>
+        <Label>Zdjęcie</Label>
+        <div className="mt-1.5">
+          <SingleImageUpload
+            existingImageId={imageId || null}
+            imagePreviewUrl={imagePreviewUrl}
+            isUploading={isUploadingImage}
+            isRemoved={isImageRemoved}
+            onFileSelect={handleImageFileSelect}
+            onRemove={handleImageRemove}
+          />
+        </div>
+      </div>
+
       <section className="space-y-4">
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -107,6 +162,18 @@ export function TemplateEditor({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="np. Vinyasa Flow"
+            />
+          </div>
+          <div>
+            <Label htmlFor="description">
+              Opis <span className="text-gray-400">· opcjonalnie</span>
+            </Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Opisz te zajęcia — pojawi się na publicznej stronie klasy."
+              rows={4}
             />
           </div>
           <div>

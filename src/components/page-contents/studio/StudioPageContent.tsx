@@ -2,7 +2,15 @@
 
 import "swiper/css";
 
-import { ArrowRight, ChevronLeft, CreditCard, ImageIcon, MapPin, Navigation } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  ChevronLeft,
+  CreditCard,
+  ImageIcon,
+  MapPin,
+  Navigation,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoInfinite as InfiniteIcon, IoPersonOutline } from "react-icons/io5";
@@ -10,6 +18,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
+import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
+import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
 import { SessionDetailModal } from "@/app/(public)/studio/[slug]/grafik/SessionDetailModal";
 import type {
   PublicOccurrence,
@@ -113,7 +123,7 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
       key={occ.id}
       type="button"
       onClick={() => setSelectedOcc(occ)}
-      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+      className="flex w-full items-center gap-3 py-3 text-left"
     >
       <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
         {formatTimePL(occ.start_time)}
@@ -136,9 +146,9 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
       {wholeWeekEmpty ? (
         <p className="text-sm text-[#717171]">Brak zajęć w tym tygodniu.</p>
       ) : (
-        <div className="overflow-hidden divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+        <div className="divide-y divide-gray-100">
           {todayEmpty ? (
-            <div className="px-4 py-3">
+            <div className="py-3">
               <p className="text-xs text-[#717171]">
                 Dziś · {todayLabelPL(new Date())} · brak zajęć
               </p>
@@ -147,7 +157,7 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
 
           {todayEmpty && nextDay ? (
             <>
-              <div className="px-4 pb-1 pt-3">
+              <div className="pb-1 pt-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-[#717171]">
                   {nextDay.date === tomorrowStr
                     ? "Jutro"
@@ -175,6 +185,49 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
       </Link>
 
       <SessionDetailModal occ={selectedOcc} onClose={() => setSelectedOcc(null)} />
+    </section>
+  );
+}
+
+function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
+  const [templates, setTemplates] = useState<ClassTemplateListResponse | null>(null);
+
+  useEffect(() => {
+    axiosInstance
+      .get<ClassTemplateListResponse>(`/public/studios/${studioSlug}/class-templates`)
+      .then((r) => setTemplates(r.data))
+      .catch(() => setTemplates({ total: 0, items: [] }));
+  }, [studioSlug]);
+
+  if (!templates || templates.items.length === 0) return null;
+
+  const preview = templates.items.slice(0, 3);
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-5">
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="text-[18px] font-semibold text-[#222222]">Zajęcia</h2>
+        <span className="text-sm text-[#717171]">{templates.total} rodzaje</span>
+      </div>
+
+      <div className="divide-y divide-gray-100">
+        {preview.map((item) => (
+          <ClassCard
+            key={item.id}
+            studioSlug={studioSlug}
+            item={item}
+            variant="compact"
+            backTo="studio"
+          />
+        ))}
+      </div>
+
+      <Link
+        href={`/studio/${studioSlug}/classes`}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
+      >
+        Zobacz wszystkie zajęcia ({templates.total})
+      </Link>
     </section>
   );
 }
@@ -547,14 +600,14 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
   const hiddenPassCount = studio.passes.length - passLimit;
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-5">
+    <section id="pricing-section" className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Cennik</h2>
-      <div className="space-y-3">
+      <div className="divide-y divide-gray-100">
         {hasDropIn && (
           <button
             type="button"
             onClick={() => setShowDropIn(true)}
-            className="flex w-full items-center gap-4 rounded-xl border border-gray-200 bg-white p-2 pr-4 text-left"
+            className="flex w-full items-center gap-4 py-3 text-left"
           >
             <LightPassTile sessionCount={1} durationDays={0} />
             <div className="min-w-0 flex-1">
@@ -582,7 +635,7 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
               key={pass.id}
               type="button"
               onClick={() => setSelectedPass(pass)}
-              className="flex w-full items-center gap-4 rounded-xl border border-gray-200 bg-white p-2 pr-4 text-left"
+              className="flex w-full items-center gap-4 py-3 text-left"
             >
               <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
               <div className="min-w-0 flex-1">
@@ -602,16 +655,16 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
             </button>
           );
         })}
-        {!showAllPasses && hiddenPassCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowAllPasses(true)}
-            className="w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222]"
-          >
-            Pokaż wszystkie karnety (+{hiddenPassCount})
-          </button>
-        )}
       </div>
+      {!showAllPasses && hiddenPassCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowAllPasses(true)}
+          className="mt-3 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222]"
+        >
+          Pokaż wszystkie karnety (+{hiddenPassCount})
+        </button>
+      )}
 
       <Drawer open={selectedPass != null} onOpenChange={(o) => !o && setSelectedPass(null)}>
         <DrawerContent>
@@ -720,7 +773,7 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
     selectedCard?.description || selectedCard?.sport_card?.description || null;
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-5">
+    <section id="sport-cards-section" className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-1 text-[18px] font-semibold text-[#222222]">Karty sportowe</h2>
       <p className="mb-4 text-sm text-[#717171]">
         Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za wejście.
@@ -944,16 +997,66 @@ function AmenitiesSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
+function StudioBottomBar({ studio }: { studio: StudioPublic }) {
+  const hasPricing = studio.drop_in_price != null || studio.passes.length > 0;
+  const hasSportCards = studio.accepts_sport_cards != null;
+  const showCennikButton = hasPricing || hasSportCards;
+  const showGrafikButton = Boolean(studio.slug);
+
+  if (!showCennikButton && !showGrafikButton) return null;
+
+  const scrollToCennik = () => {
+    const targetId = hasPricing ? "pricing-section" : "sport-cards-section";
+    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t"
+      style={{ borderColor: "#EBEBEB" }}
+    >
+      <div className="mx-auto max-w-5xl px-4 py-3 flex gap-3">
+        {showCennikButton && (
+          <button
+            type="button"
+            onClick={scrollToCennik}
+            aria-label="Przejdź do cennika"
+            className={`${showGrafikButton ? "flex-1" : "w-full"} flex h-12 items-center justify-center gap-2 rounded-xl border text-sm font-semibold`}
+            style={{ borderColor: "#222222", color: "#222222", background: "#FFFFFF" }}
+          >
+            <CreditCard className="h-4 w-4" />
+            Cennik
+          </button>
+        )}
+        {showGrafikButton && (
+          <Link
+            href={`/studio/${studio.slug}/grafik`}
+            aria-label="Zobacz grafik studia"
+            className={`${showCennikButton ? "flex-1" : "w-full"} flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-semibold`}
+            style={{ background: "#222222", color: "#FFFFFF" }}
+          >
+            <Calendar className="h-4 w-4" />
+            Grafik
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function StudioPageContent({ studio }: StudioPageContentProps) {
   return (
     <main className="min-h-screen bg-white text-gray-950">
       <HeroSection studio={studio} />
       {studio.slug && <StudioScheduleSneak studioId={studio.id} studioSlug={studio.slug} />}
+      {studio.slug && <ZajeciaPreviewSection studioSlug={studio.slug} />}
       <InstructorsSection studio={studio} />
       <PricingSection studio={studio} />
       <SportCardsSection studio={studio} />
       <AmenitiesSection studio={studio} />
       <LocationSection studio={studio} />
+      <div className="h-24" />
+      <StudioBottomBar studio={studio} />
     </main>
   );
 }
