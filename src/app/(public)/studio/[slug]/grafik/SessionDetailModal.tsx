@@ -1,10 +1,12 @@
 "use client";
 
-import { Clock, Info, MapPin, Users, X } from "lucide-react";
+import { Check, Clock, Info, MapPin, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
+import { axiosInstance } from "@/lib/axiosInstance";
 
 import type { PublicOccurrence } from "./types";
 
@@ -49,15 +51,78 @@ function InstructorAvatar({ name, imageId }: { name: string; imageId?: string | 
   );
 }
 
+function CancelBookingAction({
+  bookingId,
+  onCancelled,
+}: {
+  bookingId: string;
+  onCancelled: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleCancel() {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await axiosInstance.post(`/bookings/${bookingId}/cancel`);
+      onCancelled();
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || "Nie udało się odwołać rezerwacji.");
+      setIsSubmitting(false);
+    }
+  }
+
+  if (confirming) {
+    return (
+      <div className="space-y-2">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="cta"
+            className="flex-1"
+            disabled={isSubmitting}
+            onClick={() => setConfirming(false)}
+          >
+            Nie
+          </Button>
+          <Button
+            variant="destructive"
+            size="cta"
+            className="flex-1"
+            disabled={isSubmitting}
+            onClick={handleCancel}
+          >
+            {isSubmitting ? "Odwołuję..." : "Tak, odwołaj"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Button variant="outline" size="cta" className="w-full" onClick={() => setConfirming(true)}>
+      Odwołaj rezerwację
+    </Button>
+  );
+}
+
 interface SessionDetailModalProps {
   occ: PublicOccurrence | null;
   onClose: () => void;
+  /** Called after a successful in-modal cancellation so the parent can refetch the week. */
+  onBookingCancelled?: () => void;
 }
 
-export function SessionDetailModal({ occ, onClose }: SessionDetailModalProps) {
+export function SessionDetailModal({ occ, onClose, onBookingCancelled }: SessionDetailModalProps) {
   const router = useRouter();
 
   if (!occ) return null;
+
+  const isCancelled = occ.status === "cancelled";
+  const isFull = occ.spots_remaining === 0;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
@@ -112,22 +177,54 @@ export function SessionDetailModal({ occ, onClose }: SessionDetailModalProps) {
           </div>
         )}
 
-        <div className="rounded-lg border bg-gray-50 px-3 py-3 text-sm text-gray-600">
-          {occ.free_cancellation_deadline
-            ? `Bezpłatne odwołanie do ${formatCancellationDeadline(occ.free_cancellation_deadline)}.`
-            : "Bezpłatne odwołanie w dowolnym momencie."}
-        </div>
+        {isCancelled && occ.viewer_has_booking && (
+          <div className="rounded-lg border bg-gray-50 px-3 py-3 text-sm text-gray-600">
+            Twoja rezerwacja na te zajęcia została anulowana.
+          </div>
+        )}
+
+        {!isCancelled && (
+          <div className="rounded-lg border bg-gray-50 px-3 py-3 text-sm text-gray-600">
+            {occ.free_cancellation_deadline
+              ? `Bezpłatne odwołanie do ${formatCancellationDeadline(occ.free_cancellation_deadline)}.`
+              : "Bezpłatne odwołanie w dowolnym momencie."}
+          </div>
+        )}
       </div>
 
       <div className="border-t bg-white px-4 py-3 pb-6 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
-        <Button
-          variant="cta"
-          size="cta"
-          className="w-full"
-          onClick={() => router.push(`/book/class/${occ.id}`)}
-        >
-          Zarezerwuj
-        </Button>
+        {isCancelled ? (
+          <p className="text-center text-sm font-medium text-destructive">
+            Te zajęcia zostały odwołane.
+          </p>
+        ) : occ.viewer_has_booking && occ.viewer_booking_id ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 rounded-lg bg-[#4F8A62]/10 px-3 py-2 text-sm font-medium text-[#4F8A62]">
+              <Check className="h-4 w-4" />
+              Masz rezerwację na te zajęcia
+            </div>
+            <CancelBookingAction
+              bookingId={occ.viewer_booking_id}
+              onCancelled={() => {
+                onBookingCancelled?.();
+                onClose();
+              }}
+            />
+          </div>
+        ) : isFull ? (
+          <Button variant="cta" size="cta" className="w-full" disabled>
+            Brak wolnych miejsc
+          </Button>
+        ) : (
+          <Button
+            variant="cta"
+            size="cta"
+            className="w-full"
+            onClick={() => router.push(`/book/class/${occ.id}`)}
+          >
+            Zarezerwuj
+          </Button>
+        )}
       </div>
     </div>
   );

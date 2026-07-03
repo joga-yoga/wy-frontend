@@ -3,7 +3,7 @@
 const nextConfig = {
   cacheComponents: true,
   reactStrictMode: false,
-  allowedDevOrigins: ["172.20.10.4"],
+  allowedDevOrigins: ["172.20.10.4", "192.168.8.188"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
