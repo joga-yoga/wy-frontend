@@ -34,7 +34,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
 
-import { formatSneakDayHeader } from "./scheduleSneakUtils";
+import { formatSneakDayHeader, isSessionOver } from "./scheduleSneakUtils";
 
 interface StudioPageContentProps {
   studio: StudioPublic;
@@ -103,9 +103,10 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
 
   if (days === null) return null;
 
-  const todayStr = formatDateShort(new Date());
+  const now = new Date();
+  const todayStr = formatDateShort(now);
   const todayDay = days.find((d) => d.date === todayStr);
-  const todaySessions = todayDay?.occurrences ?? [];
+  const todaySessions = (todayDay?.occurrences ?? []).filter((occ) => !isSessionOver(occ.end_time, now));
   const todayEmpty = todaySessions.length === 0;
 
   const nextDay = days.find((d) => d.date > todayStr && d.session_count > 0) ?? null;

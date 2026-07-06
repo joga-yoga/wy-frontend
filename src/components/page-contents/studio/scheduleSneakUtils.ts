@@ -16,3 +16,8 @@ export function formatSneakDayHeader(dateStr: string, todayStr: string): string 
   const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
   return `${capitalizedWeekday}, ${formatDayMonthPL(dateStr)}`;
 }
+
+/** A session counts as over once its end time has passed, regardless of status. */
+export function isSessionOver(endTimeIso: string, now: Date): boolean {
+  return new Date(endTimeIso).getTime() <= now.getTime();
+}
