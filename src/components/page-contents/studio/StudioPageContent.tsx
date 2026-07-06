@@ -20,6 +20,7 @@ import type { Swiper as SwiperType } from "swiper/types";
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
+import { SessionCard } from "@/app/(public)/studio/[slug]/grafik/components/SessionCard";
 import { SessionDetailModal } from "@/app/(public)/studio/[slug]/grafik/SessionDetailModal";
 import type {
   PublicOccurrence,
@@ -32,6 +33,8 @@ import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
+
+import { formatSneakDayHeader } from "./scheduleSneakUtils";
 
 interface StudioPageContentProps {
   studio: StudioPublic;
@@ -65,11 +68,6 @@ function initials(name: string) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-}
-
-function formatTimePL(iso: string): string {
-  const m = iso.match(/T(\d{2}):(\d{2})/);
-  return m ? `${m[1]}:${m[2]}` : iso;
 }
 
 function formatDateShort(d: Date): string {
@@ -114,30 +112,6 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
   const nextSessions = nextDay?.occurrences.slice(0, 3) ?? [];
 
   const wholeWeekEmpty = days.every((d) => d.session_count === 0);
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = formatDateShort(tomorrow);
-
-  const sessionRow = (occ: PublicOccurrence) => (
-    <button
-      key={occ.id}
-      type="button"
-      onClick={() => setSelectedOcc(occ)}
-      className="flex w-full items-center gap-3 py-3 text-left"
-    >
-      <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
-        {formatTimePL(occ.start_time)}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-gray-900">{occ.template_title}</p>
-        {(occ.room_name || occ.instructor_name) && (
-          <p className="mt-0.5 truncate text-xs text-gray-500">
-            {[occ.room_name, occ.instructor_name].filter(Boolean).join(" · ")}
-          </p>
-        )}
-      </div>
-    </button>
-  );
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
@@ -146,33 +120,34 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
       {wholeWeekEmpty ? (
         <p className="text-sm text-[#717171]">Brak zajęć w tym tygodniu.</p>
       ) : (
-        <div className="divide-y divide-gray-100">
+        <div className="space-y-2">
           {todayEmpty ? (
-            <div className="py-3">
-              <p className="text-xs text-[#717171]">
-                Dziś · {todayLabelPL(new Date())} · brak zajęć
-              </p>
-            </div>
+            <p className="pb-1 text-xs text-[#717171]">
+              Dziś · {todayLabelPL(new Date())} · brak zajęć
+            </p>
           ) : null}
 
           {todayEmpty && nextDay ? (
             <>
-              <div className="pb-1 pt-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#717171]">
-                  {nextDay.date === tomorrowStr
-                    ? "Jutro"
-                    : new Date(nextDay.date + "T00:00:00").toLocaleDateString("pl-PL", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "short",
-                      })}
-                </p>
-              </div>
-              {nextSessions.map(sessionRow)}
+              <p className="pb-1 text-xs font-medium uppercase tracking-wide text-[#717171]">
+                {formatSneakDayHeader(nextDay.date, todayStr)}
+              </p>
+              {nextSessions.map((occ) => (
+                <SessionCard key={occ.id} occ={occ} onClick={setSelectedOcc} />
+              ))}
             </>
           ) : null}
 
-          {!todayEmpty ? todaySessions.slice(0, 3).map(sessionRow) : null}
+          {!todayEmpty ? (
+            <>
+              <p className="pb-1 text-xs font-medium uppercase tracking-wide text-[#717171]">
+                {formatSneakDayHeader(todayStr, todayStr)}
+              </p>
+              {todaySessions.slice(0, 3).map((occ) => (
+                <SessionCard key={occ.id} occ={occ} onClick={setSelectedOcc} />
+              ))}
+            </>
+          ) : null}
         </div>
       )}
 
