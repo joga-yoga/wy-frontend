@@ -344,7 +344,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
           </div>
         </div>
 
-        <div className="px-4 py-3">
+        <div className="px-4 pt-3 pb-[5px]">
           <DayStrip
             ref={dayStripRef}
             weekStart={weekStart}
@@ -370,7 +370,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
             >
               <div
                 className={cn(
-                  "sticky z-20 border-b bg-white px-4 py-3 text-center text-lg font-bold capitalize",
+                  "sticky z-20 border-b bg-white px-4 py-2 text-center text-lg font-bold capitalize",
                   day.date < todayStr ? "text-gray-400" : "text-gray-900",
                 )}
                 style={{ top: headerHeight }}
