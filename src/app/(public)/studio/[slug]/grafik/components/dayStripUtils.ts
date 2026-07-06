@@ -1,4 +1,4 @@
-const DAY_LABELS = ["PN", "WT", "ŚR", "CZ", "PT", "SO", "ND"];
+const DAY_LABELS = ["P", "W", "Ś", "C", "P", "S", "N"];
 const WEEKEND_INDICES = new Set([5, 6]); // SO, ND
 
 export interface DayInfo {
@@ -64,6 +64,10 @@ export function getNumberColorClass(day: DayInfo, isSelected: boolean): string {
 
 export function getCircleBackgroundClass(day: DayInfo): string {
   return day.isToday ? "bg-brand-green-700" : "bg-gray-900";
+}
+
+export function getNumberWeightClass(day: DayInfo, isSelected: boolean): string {
+  return isSelected || day.isToday ? "font-semibold" : "font-normal";
 }
 
 export function shouldCommitSwipe(offsetX: number, velocityX: number, width: number): boolean {

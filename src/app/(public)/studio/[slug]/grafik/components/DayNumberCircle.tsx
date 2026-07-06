@@ -4,7 +4,12 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
-import { type DayInfo, getCircleBackgroundClass, getNumberColorClass } from "./dayStripUtils";
+import {
+  type DayInfo,
+  getCircleBackgroundClass,
+  getNumberColorClass,
+  getNumberWeightClass,
+} from "./dayStripUtils";
 
 interface DayNumberCircleProps {
   day: DayInfo;
@@ -21,9 +26,10 @@ export function DayNumberCircle({ day, isSelected, onClick }: DayNumberCirclePro
     >
       <span
         className={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-full text-base font-semibold transition-colors duration-150",
+          "relative flex h-10 w-10 items-center justify-center rounded-full text-lg leading-none transition-colors duration-150",
           day.isToday && "shadow-[inset_0_0_0_2px_var(--brand-green-700)]",
           getNumberColorClass(day, isSelected),
+          getNumberWeightClass(day, isSelected),
         )}
       >
         <AnimatePresence initial={false}>
@@ -37,7 +43,7 @@ export function DayNumberCircle({ day, isSelected, onClick }: DayNumberCirclePro
             />
           )}
         </AnimatePresence>
-        <span className="relative z-10">{day.dayNumber}</span>
+        <span className="relative z-10 leading-none">{day.dayNumber}</span>
       </span>
     </button>
   );

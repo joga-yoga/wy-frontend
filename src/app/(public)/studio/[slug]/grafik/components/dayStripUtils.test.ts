@@ -6,6 +6,7 @@ import {
   getCircleBackgroundClass,
   getLabelColorClass,
   getNumberColorClass,
+  getNumberWeightClass,
   shouldCommitSwipe,
   toDateStr,
 } from "./dayStripUtils";
@@ -37,7 +38,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   days.map((d) => d.dayLabel),
-  ["PN", "WT", "ŚR", "CZ", "PT", "SO", "ND"],
+  ["P", "W", "Ś", "C", "P", "S", "N"],
 );
 assert.deepEqual(
   days.map((d) => d.isWeekend),
@@ -111,6 +112,11 @@ assert.equal(
   getNumberColorClass({ ...days[0], isToday: false, isMuted: false }, false),
   "text-gray-900",
 );
+
+// getNumberWeightClass
+assert.equal(getNumberWeightClass({ ...days[0], isToday: false }, true), "font-semibold");
+assert.equal(getNumberWeightClass({ ...days[0], isToday: true }, false), "font-semibold");
+assert.equal(getNumberWeightClass({ ...days[0], isToday: false }, false), "font-normal");
 
 // getCircleBackgroundClass
 assert.equal(getCircleBackgroundClass({ ...days[0], isToday: true }), "bg-brand-green-700");
