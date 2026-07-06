@@ -5,7 +5,7 @@ export interface DayInfo {
   date: string;
   dayNumber: number;
   dayLabel: string;
-  hasSessions: boolean;
+  isMuted: boolean;
   isWeekend: boolean;
   isToday: boolean;
   isPast: boolean;
@@ -21,28 +21,36 @@ export function addDays(d: Date, days: number): Date {
   return result;
 }
 
+/**
+ * `sessionsKnown` gates whether a day with no sessions should be muted. Preview weeks in the
+ * swipeable track don't have real session data yet, so they pass `false` to avoid muting every
+ * day based on data we don't actually have.
+ */
 export function buildWeekDays(
   weekStart: Date,
   sessionCounts: number[],
   todayStr: string,
+  sessionsKnown = true,
 ): DayInfo[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = addDays(weekStart, i);
     const dateStr = toDateStr(d);
+    const isPast = dateStr < todayStr;
+    const hasSessions = (sessionCounts[i] ?? 0) > 0;
     return {
       date: dateStr,
       dayNumber: d.getDate(),
       dayLabel: DAY_LABELS[i],
-      hasSessions: (sessionCounts[i] ?? 0) > 0,
+      isMuted: isPast || (sessionsKnown && !hasSessions),
       isWeekend: WEEKEND_INDICES.has(i),
       isToday: dateStr === todayStr,
-      isPast: dateStr < todayStr,
+      isPast,
     };
   });
 }
 
 export function getLabelColorClass(day: DayInfo): string {
-  if (day.isPast) return "text-gray-300";
+  if (day.isMuted) return "text-gray-300";
   if (day.isWeekend) return "text-brand-red";
   return "text-gray-500";
 }
@@ -50,7 +58,7 @@ export function getLabelColorClass(day: DayInfo): string {
 export function getNumberColorClass(day: DayInfo, isSelected: boolean): string {
   if (day.isToday) return isSelected ? "text-white" : "text-brand-green-700";
   if (isSelected) return "text-white";
-  if (day.isPast) return "text-gray-300";
+  if (day.isMuted) return "text-gray-300";
   return "text-gray-900";
 }
 

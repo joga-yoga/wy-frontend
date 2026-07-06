@@ -7,10 +7,12 @@ import { buildWeekDays, getLabelColorClass } from "./dayStripUtils";
 interface LabelRowProps {
   weekStart: Date;
   todayStr: string;
+  sessionCounts: number[];
+  isLoading: boolean;
 }
 
-export function LabelRow({ weekStart, todayStr }: LabelRowProps) {
-  const days = buildWeekDays(weekStart, [], todayStr);
+export function LabelRow({ weekStart, todayStr, sessionCounts, isLoading }: LabelRowProps) {
+  const days = buildWeekDays(weekStart, sessionCounts, todayStr, !isLoading);
 
   return (
     <div className="flex justify-between gap-1">

@@ -40,10 +40,6 @@ assert.deepEqual(
   ["PN", "WT", "ŚR", "CZ", "PT", "SO", "ND"],
 );
 assert.deepEqual(
-  days.map((d) => d.hasSessions),
-  [true, false, true, false, false, false, true],
-);
-assert.deepEqual(
   days.map((d) => d.isWeekend),
   [false, false, false, false, false, true, true],
 );
@@ -54,6 +50,12 @@ assert.deepEqual(
 assert.deepEqual(
   days.map((d) => d.isToday),
   [false, false, true, false, false, false, false],
+);
+// isMuted: past days are always muted; future/today days are muted only when they have no
+// sessions. counts [2, 0, 1, 0, 0, 0, 3] -> hasSessions [true, false, true, false, false, false, true]
+assert.deepEqual(
+  days.map((d) => d.isMuted),
+  [true, true, false, true, true, true, false],
 );
 
 // buildWeekDays crossing a month boundary
@@ -75,28 +77,38 @@ assert.deepEqual(
   ],
 );
 
-// buildWeekDays: sessionCounts shorter than 7 entries defaults missing days to no sessions
-const sparse = buildWeekDays(monday, [1], "2026-07-08");
+// buildWeekDays: sessionCounts shorter than 7 entries defaults missing days to no sessions.
+// Uses a week entirely in the future (relative to todayStr) to isolate the hasSessions effect
+// from isPast.
+const futureMonday = new Date(2026, 6, 13);
+const sparse = buildWeekDays(futureMonday, [1], "2026-07-08");
 assert.deepEqual(
-  sparse.map((d) => d.hasSessions),
-  [true, false, false, false, false, false, false],
+  sparse.map((d) => d.isMuted),
+  [false, true, true, true, true, true, true],
+);
+
+// buildWeekDays: sessionsKnown=false never mutes for lack of sessions, only for isPast
+const unknown = buildWeekDays(monday, [], "2026-07-08", false);
+assert.deepEqual(
+  unknown.map((d) => d.isMuted),
+  [true, true, false, false, false, false, false],
 );
 
 // getLabelColorClass
-assert.equal(getLabelColorClass({ ...days[0], isPast: true, isWeekend: false }), "text-gray-300");
-assert.equal(getLabelColorClass({ ...days[0], isPast: false, isWeekend: true }), "text-brand-red");
-assert.equal(getLabelColorClass({ ...days[0], isPast: false, isWeekend: false }), "text-gray-500");
+assert.equal(getLabelColorClass({ ...days[0], isMuted: true, isWeekend: false }), "text-gray-300");
+assert.equal(getLabelColorClass({ ...days[0], isMuted: false, isWeekend: true }), "text-brand-red");
+assert.equal(getLabelColorClass({ ...days[0], isMuted: false, isWeekend: false }), "text-gray-500");
 
 // getNumberColorClass
 assert.equal(getNumberColorClass({ ...days[0], isToday: true }, true), "text-white");
 assert.equal(getNumberColorClass({ ...days[0], isToday: true }, false), "text-brand-green-700");
 assert.equal(getNumberColorClass({ ...days[0], isToday: false }, true), "text-white");
 assert.equal(
-  getNumberColorClass({ ...days[0], isToday: false, isPast: true }, false),
+  getNumberColorClass({ ...days[0], isToday: false, isMuted: true }, false),
   "text-gray-300",
 );
 assert.equal(
-  getNumberColorClass({ ...days[0], isToday: false, isPast: false }, false),
+  getNumberColorClass({ ...days[0], isToday: false, isMuted: false }, false),
   "text-gray-900",
 );
 

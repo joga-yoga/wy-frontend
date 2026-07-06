@@ -88,9 +88,9 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
   }));
 
   const todayStr = toDateStr(new Date());
-  const currentDays = buildWeekDays(weekStart, sessionCounts, todayStr);
-  const prevDays = buildWeekDays(addDays(weekStart, -7), [], todayStr);
-  const nextDays = buildWeekDays(addDays(weekStart, 7), [], todayStr);
+  const currentDays = buildWeekDays(weekStart, sessionCounts, todayStr, !isLoading);
+  const prevDays = buildWeekDays(addDays(weekStart, -7), [], todayStr, false);
+  const nextDays = buildWeekDays(addDays(weekStart, 7), [], todayStr, false);
 
   return (
     <div ref={containerRef} className="relative w-full overflow-hidden">
@@ -108,27 +108,14 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
           }
         }}
       >
-        <WeekPanel
-          days={prevDays}
-          width={width}
-          selectedIndex={-1}
-          showDots={false}
-          onSelectDay={() => {}}
-        />
+        <WeekPanel days={prevDays} width={width} selectedIndex={-1} onSelectDay={() => {}} />
         <WeekPanel
           days={currentDays}
           width={width}
           selectedIndex={selectedIndex}
-          showDots={!isLoading}
           onSelectDay={onSelectDay}
         />
-        <WeekPanel
-          days={nextDays}
-          width={width}
-          selectedIndex={-1}
-          showDots={false}
-          onSelectDay={() => {}}
-        />
+        <WeekPanel days={nextDays} width={width} selectedIndex={-1} onSelectDay={() => {}} />
       </motion.div>
     </div>
   );
@@ -138,13 +125,11 @@ function WeekPanel({
   days,
   width,
   selectedIndex,
-  showDots,
   onSelectDay,
 }: {
   days: DayInfo[];
   width: number;
   selectedIndex: number;
-  showDots: boolean;
   onSelectDay: (index: number) => void;
 }) {
   return (
@@ -154,7 +139,6 @@ function WeekPanel({
           key={day.date}
           day={day}
           isSelected={i === selectedIndex}
-          showDot={showDots}
           onClick={() => onSelectDay(i)}
         />
       ))}

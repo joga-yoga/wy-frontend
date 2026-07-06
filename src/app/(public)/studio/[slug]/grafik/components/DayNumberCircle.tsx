@@ -9,11 +9,10 @@ import { type DayInfo, getCircleBackgroundClass, getNumberColorClass } from "./d
 interface DayNumberCircleProps {
   day: DayInfo;
   isSelected: boolean;
-  showDot: boolean;
   onClick: () => void;
 }
 
-export function DayNumberCircle({ day, isSelected, showDot, onClick }: DayNumberCircleProps) {
+export function DayNumberCircle({ day, isSelected, onClick }: DayNumberCircleProps) {
   return (
     <button
       type="button"
@@ -40,12 +39,6 @@ export function DayNumberCircle({ day, isSelected, showDot, onClick }: DayNumber
         </AnimatePresence>
         <span className="relative z-10">{day.dayNumber}</span>
       </span>
-      <span
-        className={cn(
-          "h-1 w-1 rounded-full",
-          showDot && day.hasSessions ? "bg-gray-400" : "bg-transparent",
-        )}
-      />
     </button>
   );
 }
