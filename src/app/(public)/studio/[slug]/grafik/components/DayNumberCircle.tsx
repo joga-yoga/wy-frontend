@@ -18,7 +18,7 @@ export function DayNumberCircle({ day, isSelected, showDot, onClick }: DayNumber
     <button
       type="button"
       onClick={onClick}
-      className="flex min-w-[40px] flex-col items-center gap-1 px-1.5 py-1"
+      className="flex w-[40px] flex-col items-center gap-1 px-1.5 py-1"
     >
       <span
         className={cn(

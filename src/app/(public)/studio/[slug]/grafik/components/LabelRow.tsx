@@ -18,7 +18,7 @@ export function LabelRow({ weekStart, todayStr }: LabelRowProps) {
         <span
           key={day.date}
           className={cn(
-            "min-w-[40px] px-1.5 text-center text-xs font-medium uppercase",
+            "w-[40px] px-1.5 text-center text-xs font-medium uppercase",
             getLabelColorClass(day),
           )}
         >

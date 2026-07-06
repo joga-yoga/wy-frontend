@@ -309,8 +309,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
   function shiftWeek(deltaDays: number) {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + deltaDays);
-    setSelectedIndex(0);
-    pendingScrollIndex.current = 0;
+    pendingScrollIndex.current = selectedIndex;
     setWeekStart(d);
   }
 
