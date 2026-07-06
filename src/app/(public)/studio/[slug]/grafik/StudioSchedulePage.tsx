@@ -321,29 +321,6 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
       <div ref={headerRef} className="sticky top-0 z-30 border-b bg-white">
         <ScheduleHeaderIdentity studio={studio} />
 
-        <div className="flex items-center px-4 pt-3">
-          <button
-            onClick={goToToday}
-            className="shrink-0 rounded-md border bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Dziś
-          </button>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <button
-              onClick={() => dayStripRef.current?.goToPreviousWeek()}
-              className="rounded p-1 hover:bg-gray-100"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={() => dayStripRef.current?.goToNextWeek()}
-              className="rounded p-1 hover:bg-gray-100"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
-        </div>
-
         <div className="px-4 pt-3 pb-[5px]">
           <DayStrip
             ref={dayStripRef}
@@ -360,7 +337,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
       {isLoading && days.length === 0 ? (
         <p className="py-8 text-center text-sm text-gray-400">Ładowanie...</p>
       ) : (
-        <div className="pb-8">
+        <div className="pb-24">
           {days.map((day, i) => (
             <div
               key={day.date}
@@ -390,6 +367,32 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
           ))}
         </div>
       )}
+
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between px-4"
+        style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
+      >
+        <button
+          onClick={goToToday}
+          className="flex h-11 shrink-0 items-center justify-center rounded-full bg-white px-5 text-base font-medium text-gray-900 shadow-[0_4px_24px_rgba(0,0,0,0.12)]"
+        >
+          Dzisiaj
+        </button>
+        <div className="flex h-11 items-center gap-1 rounded-full bg-white px-1 shadow-[0_4px_24px_rgba(0,0,0,0.12)]">
+          <button
+            onClick={() => dayStripRef.current?.goToPreviousWeek()}
+            className="rounded-full p-2.5 hover:bg-gray-100"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={() => dayStripRef.current?.goToNextWeek()}
+            className="rounded-full p-2.5 hover:bg-gray-100"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
+      </div>
 
       <SessionDetailModal
         occ={selectedOcc}
