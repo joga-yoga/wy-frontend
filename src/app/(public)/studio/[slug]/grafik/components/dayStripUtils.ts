@@ -21,7 +21,11 @@ export function addDays(d: Date, days: number): Date {
   return result;
 }
 
-export function buildWeekDays(weekStart: Date, sessionCounts: number[], todayStr: string): DayInfo[] {
+export function buildWeekDays(
+  weekStart: Date,
+  sessionCounts: number[],
+  todayStr: string,
+): DayInfo[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = addDays(weekStart, i);
     const dateStr = toDateStr(d);

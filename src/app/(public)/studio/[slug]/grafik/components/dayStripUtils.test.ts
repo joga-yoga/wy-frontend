@@ -25,7 +25,15 @@ const days = buildWeekDays(monday, [2, 0, 1, 0, 0, 0, 3], "2026-07-08");
 assert.equal(days.length, 7);
 assert.deepEqual(
   days.map((d) => d.date),
-  ["2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12"],
+  [
+    "2026-07-06",
+    "2026-07-07",
+    "2026-07-08",
+    "2026-07-09",
+    "2026-07-10",
+    "2026-07-11",
+    "2026-07-12",
+  ],
 );
 assert.deepEqual(
   days.map((d) => d.dayLabel),
@@ -56,7 +64,15 @@ assert.deepEqual(
 );
 assert.deepEqual(
   daysAcrossMonth.map((d) => d.date),
-  ["2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-01", "2026-08-02"],
+  [
+    "2026-07-27",
+    "2026-07-28",
+    "2026-07-29",
+    "2026-07-30",
+    "2026-07-31",
+    "2026-08-01",
+    "2026-08-02",
+  ],
 );
 
 // buildWeekDays: sessionCounts shorter than 7 entries defaults missing days to no sessions
@@ -75,8 +91,14 @@ assert.equal(getLabelColorClass({ ...days[0], isPast: false, isWeekend: false })
 assert.equal(getNumberColorClass({ ...days[0], isToday: true }, true), "text-white");
 assert.equal(getNumberColorClass({ ...days[0], isToday: true }, false), "text-brand-green-700");
 assert.equal(getNumberColorClass({ ...days[0], isToday: false }, true), "text-white");
-assert.equal(getNumberColorClass({ ...days[0], isToday: false, isPast: true }, false), "text-gray-300");
-assert.equal(getNumberColorClass({ ...days[0], isToday: false, isPast: false }, false), "text-gray-900");
+assert.equal(
+  getNumberColorClass({ ...days[0], isToday: false, isPast: true }, false),
+  "text-gray-300",
+);
+assert.equal(
+  getNumberColorClass({ ...days[0], isToday: false, isPast: false }, false),
+  "text-gray-900",
+);
 
 // getCircleBackgroundClass
 assert.equal(getCircleBackgroundClass({ ...days[0], isToday: true }), "bg-brand-green-700");

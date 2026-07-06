@@ -10,6 +10,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 import type { StudioPublic } from "@/types/studio";
 
+import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { SessionCard } from "./components/SessionCard";
 import { SessionDetailModal } from "./SessionDetailModal";
@@ -113,6 +114,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
   const [selectedIndex, setSelectedIndex] = useState(() => todayDayIndex());
   const [headerHeight, setHeaderHeight] = useState(0);
 
+  const dayStripRef = useRef<DayStripHandle>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pendingScrollIndex = useRef<number | null>(null);
@@ -328,10 +330,16 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
             Dziś
           </button>
           <div className="flex flex-1 items-center justify-end gap-1">
-            <button onClick={() => shiftWeek(-7)} className="rounded p-1 hover:bg-gray-100">
+            <button
+              onClick={() => dayStripRef.current?.goToPreviousWeek()}
+              className="rounded p-1 hover:bg-gray-100"
+            >
               <ChevronLeft size={24} />
             </button>
-            <button onClick={() => shiftWeek(7)} className="rounded p-1 hover:bg-gray-100">
+            <button
+              onClick={() => dayStripRef.current?.goToNextWeek()}
+              className="rounded p-1 hover:bg-gray-100"
+            >
               <ChevronRight size={24} />
             </button>
           </div>
@@ -339,10 +347,13 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
 
         <div className="px-4 py-3">
           <DayStrip
+            ref={dayStripRef}
             weekStart={weekStart}
             sessionCounts={sessionCounts}
             selectedIndex={selectedIndex}
+            isLoading={isLoading}
             onSelectDay={handleSelectDay}
+            onShiftWeek={shiftWeek}
           />
         </div>
       </div>

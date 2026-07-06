@@ -1,10 +1,23 @@
 "use client";
 
-import { animate, motion, useMotionValue, type PanInfo } from "motion/react";
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import { animate, motion, type PanInfo, useMotionValue } from "motion/react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
-import { addDays, buildWeekDays, shouldCommitSwipe, toDateStr, type DayInfo } from "./dayStripUtils";
 import { DayNumberCircle } from "./DayNumberCircle";
+import {
+  addDays,
+  buildWeekDays,
+  type DayInfo,
+  shouldCommitSwipe,
+  toDateStr,
+} from "./dayStripUtils";
 
 export interface DayStripHandle {
   goToPreviousWeek: () => void;
@@ -95,7 +108,13 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
           }
         }}
       >
-        <WeekPanel days={prevDays} width={width} selectedIndex={-1} showDots={false} onSelectDay={() => {}} />
+        <WeekPanel
+          days={prevDays}
+          width={width}
+          selectedIndex={-1}
+          showDots={false}
+          onSelectDay={() => {}}
+        />
         <WeekPanel
           days={currentDays}
           width={width}
@@ -103,7 +122,13 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
           showDots={!isLoading}
           onSelectDay={onSelectDay}
         />
-        <WeekPanel days={nextDays} width={width} selectedIndex={-1} showDots={false} onSelectDay={() => {}} />
+        <WeekPanel
+          days={nextDays}
+          width={width}
+          selectedIndex={-1}
+          showDots={false}
+          onSelectDay={() => {}}
+        />
       </motion.div>
     </div>
   );
