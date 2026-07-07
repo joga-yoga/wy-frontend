@@ -49,6 +49,12 @@ const LEVEL_OPTIONS = [
   { value: "all_levels", label: "Wszystkie poziomy" },
 ];
 
+const LANGUAGE_OPTIONS = [
+  { value: "polski", label: "Polski" },
+  { value: "angielski", label: "Angielski" },
+  { value: "ukraiński", label: "Ukraiński" },
+];
+
 export function TemplateEditor({
   initial,
   onSubmit,
@@ -60,6 +66,7 @@ export function TemplateEditor({
   const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
   const [level, setLevel] = useState(initial?.level ?? "");
   const [style, setStyle] = useState(initial?.style ?? "");
+  const [language, setLanguage] = useState(initial?.language ?? "polski");
   const [defaultInstructorId, setDefaultInstructorId] = useState(
     initial?.default_instructor_id ?? "",
   );
@@ -124,6 +131,7 @@ export function TemplateEditor({
     if (description.trim()) data.description = description.trim();
     if (level) data.level = level;
     if (style.trim()) data.style = style.trim();
+    if (language) data.language = language;
     if (defaultInstructorId) data.default_instructor_id = defaultInstructorId;
     if (defaultCapacity) data.default_capacity = parseInt(defaultCapacity, 10);
     data.image_ids = isImageRemoved ? null : imageId ? [imageId] : undefined;
@@ -254,6 +262,21 @@ export function TemplateEditor({
                 placeholder="np. Hatha, Ashtanga"
               />
             )}
+          </div>
+          <div>
+            <Label htmlFor="language">Język prowadzenia</Label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger id="language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </section>

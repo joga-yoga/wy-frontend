@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 
 import type { ClassColor, PublicOccurrence } from "../types";
 
-const NEARLY_FULL_THRESHOLD = 3;
-const BOOKED_GREEN = "#4F8A62";
+export const NEARLY_FULL_THRESHOLD = 3;
+export const BOOKED_GREEN = "#4F8A62";
 
-const COLOR_BORDER_MAP: Record<ClassColor, string> = {
+export const COLOR_BORDER_MAP: Record<ClassColor, string> = {
   rose: "border-rose-300",
   amber: "border-amber-300",
   lime: "border-lime-400",
@@ -20,7 +20,7 @@ const COLOR_BORDER_MAP: Record<ClassColor, string> = {
   violet: "border-violet-300",
   slate: "border-slate-300",
 };
-const DEFAULT_BORDER = "border-gray-200";
+export const DEFAULT_BORDER = "border-gray-200";
 
 type PrimaryState = "cancelled" | "past" | "full" | "nearly-full" | "default";
 

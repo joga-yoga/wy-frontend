@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IoInfinite as InfiniteIcon, IoPersonOutline } from "react-icons/io5";
+import { IoPersonOutline } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
@@ -22,43 +22,31 @@ import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/Class
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
 import { SessionCard } from "@/app/(public)/studio/[slug]/grafik/components/SessionCard";
 import { SessionDetailModal } from "@/app/(public)/studio/[slug]/grafik/SessionDetailModal";
-import type {
-  PublicOccurrence,
-  PublicScheduleWeekResponse,
-} from "@/app/(public)/studio/[slug]/grafik/types";
+import type { PublicScheduleWeekResponse } from "@/app/(public)/studio/[slug]/grafik/types";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { getCurrencySymbol } from "@/lib/currency";
 import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
 
+import {
+  discountPercent,
+  formatMoney,
+  LightPassTile,
+  perEntry,
+  sportCardName,
+  sportCardPhoto,
+} from "./pricingHelpers";
 import { formatSneakDayHeader, isSessionOver } from "./scheduleSneakUtils";
 
 interface StudioPageContentProps {
   studio: StudioPublic;
 }
 
-function formatMoney(value: number | null | undefined, currency?: string | null) {
-  if (value == null) return "";
-  return `${value.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(currency || "PLN")}`;
-}
-
 function googleMapsUrl(address?: string | null) {
   if (!address) return "https://www.google.com/maps";
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-}
-
-function perEntry(pass: StudioPass) {
-  if (!pass.session_count || pass.session_count <= 0) return null;
-  return pass.price / pass.session_count;
-}
-
-function discountPercent(pass: StudioPass, dropInPrice?: number | null) {
-  const entry = perEntry(pass);
-  if (!entry || !dropInPrice || dropInPrice <= 0 || entry >= dropInPrice) return null;
-  return Math.round((1 - entry / dropInPrice) * 100);
 }
 
 function initials(name: string) {
@@ -89,7 +77,7 @@ function todayLabelPL(d: Date): string {
 
 function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studioSlug: string }) {
   const [days, setDays] = useState<PublicScheduleWeekResponse["days"] | null>(null);
-  const [selectedOcc, setSelectedOcc] = useState<PublicOccurrence | null>(null);
+  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
 
   useEffect(() => {
     const weekStart = formatDateShort(getMondayOf(new Date()));
@@ -106,7 +94,9 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
   const now = new Date();
   const todayStr = formatDateShort(now);
   const todayDay = days.find((d) => d.date === todayStr);
-  const todaySessions = (todayDay?.occurrences ?? []).filter((occ) => !isSessionOver(occ.end_time, now));
+  const todaySessions = (todayDay?.occurrences ?? []).filter(
+    (occ) => !isSessionOver(occ.end_time, now),
+  );
   const todayEmpty = todaySessions.length === 0;
 
   const nextDay = days.find((d) => d.date > todayStr && d.session_count > 0) ?? null;
@@ -134,7 +124,11 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
                 {formatSneakDayHeader(nextDay.date, todayStr)}
               </p>
               {nextSessions.map((occ) => (
-                <SessionCard key={occ.id} occ={occ} onClick={setSelectedOcc} />
+                <SessionCard
+                  key={occ.id}
+                  occ={occ}
+                  onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                />
               ))}
             </>
           ) : null}
@@ -145,7 +139,11 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
                 {formatSneakDayHeader(todayStr, todayStr)}
               </p>
               {todaySessions.slice(0, 3).map((occ) => (
-                <SessionCard key={occ.id} occ={occ} onClick={setSelectedOcc} />
+                <SessionCard
+                  key={occ.id}
+                  occ={occ}
+                  onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                />
               ))}
             </>
           ) : null}
@@ -160,7 +158,10 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
         <ArrowRight className="h-4 w-4" />
       </Link>
 
-      <SessionDetailModal occ={selectedOcc} onClose={() => setSelectedOcc(null)} />
+      <SessionDetailModal
+        occurrenceId={selectedOccurrenceId}
+        onClose={() => setSelectedOccurrenceId(null)}
+      />
     </section>
   );
 }
@@ -497,39 +498,6 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
-function LightPassTile({
-  sessionCount,
-  durationDays,
-}: {
-  sessionCount?: number | null;
-  durationDays?: number | null;
-}) {
-  const isUnlimitedSessions = sessionCount == null;
-  const isUnlimitedDays = durationDays == null;
-  const hideDuration = durationDays === 0;
-
-  return (
-    <div className="flex h-[72px] w-[72px] shrink-0 flex-col items-center justify-center rounded-[10px] bg-[#F5F3EE]">
-      {isUnlimitedSessions ? (
-        <InfiniteIcon className="size-7 text-[#222222]" />
-      ) : (
-        <span className="text-2xl font-semibold leading-none text-[#222222]">{sessionCount}</span>
-      )}
-      {!hideDuration && (
-        <span className="mt-0.5 flex items-center text-[14px] font-medium text-[#888888]">
-          {isUnlimitedDays ? (
-            <>
-              <InfiniteIcon className="mr-0.5 size-3" /> dni
-            </>
-          ) : (
-            <>{durationDays} dni</>
-          )}
-        </span>
-      )}
-    </div>
-  );
-}
-
 function passDetailLines(
   pass: StudioPass,
   currency: string,
@@ -728,14 +696,6 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
       </Drawer>
     </section>
   );
-}
-
-function sportCardName(item: StudioSportCardAcceptance) {
-  return item.sport_card?.name ?? item.name ?? "Karta sportowa";
-}
-
-function sportCardPhoto(item: StudioSportCardAcceptance) {
-  return item.sport_card?.photo ?? item.photo ?? null;
 }
 
 function SportCardsSection({ studio }: { studio: StudioPublic }) {

@@ -10,6 +10,7 @@ export interface ClassTemplate {
   default_instructor_id?: string | null;
   default_capacity?: number | null;
   image_ids?: string[] | null;
+  language?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,7 @@ export interface ClassTemplateCreate {
   default_instructor_id?: string;
   default_capacity?: number;
   image_ids?: string[] | null;
+  language?: string;
 }
 
 export interface ClassTemplateUpdate extends Partial<ClassTemplateCreate> {}

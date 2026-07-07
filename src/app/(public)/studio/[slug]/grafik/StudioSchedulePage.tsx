@@ -14,11 +14,7 @@ import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { SessionCard } from "./components/SessionCard";
 import { SessionDetailModal } from "./SessionDetailModal";
-import type {
-  PublicOccurrence,
-  PublicScheduleDaySummary,
-  PublicScheduleWeekResponse,
-} from "./types";
+import type { PublicScheduleDaySummary, PublicScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
   const date = new Date(d);
@@ -110,7 +106,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
   const [days, setDays] = useState<PublicScheduleDaySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedOcc, setSelectedOcc] = useState<PublicOccurrence | null>(null);
+  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(() => todayDayIndex());
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -359,7 +355,11 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
                   <p className="py-4 text-center text-sm text-gray-400">Brak zajęć</p>
                 ) : (
                   day.occurrences.map((occ) => (
-                    <SessionCard key={occ.id} occ={occ} onClick={setSelectedOcc} />
+                    <SessionCard
+                      key={occ.id}
+                      occ={occ}
+                      onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                    />
                   ))
                 )}
               </div>
@@ -395,8 +395,8 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
       </div>
 
       <SessionDetailModal
-        occ={selectedOcc}
-        onClose={() => setSelectedOcc(null)}
+        occurrenceId={selectedOccurrenceId}
+        onClose={() => setSelectedOccurrenceId(null)}
         onBookingCancelled={fetchWeek}
       />
     </div>
