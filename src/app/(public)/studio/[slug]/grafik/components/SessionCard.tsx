@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronRight, Clock } from "lucide-react";
+import { IoChevronForward } from "react-icons/io5";
 
 import { WyImage } from "@/components/custom/WyImage";
 import { cn } from "@/lib/utils";
@@ -120,14 +121,14 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
           )}
           <span
             className={cn(
-              "text-lg font-semibold",
+              "text-xl font-semibold",
               isCancelled || isPast ? "text-gray-400" : "text-gray-900",
               isCancelled && "line-through",
             )}
           >
             {formatTime(occ.start_time)}
           </span>
-          <span className="text-xs text-gray-400">
+          <span className="text-sm text-gray-400">
             {formatDurationMinutes(occ.start_time, occ.end_time)}
           </span>
         </div>
@@ -135,7 +136,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
         <div className="min-w-0 flex-1 py-0.5">
           <p
             className={cn(
-              "truncate text-sm font-semibold",
+              "truncate text-md font-semibold",
               isCancelled || isPast ? "text-gray-400" : "text-gray-900",
               isCancelled && "line-through",
             )}
@@ -145,7 +146,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
 
           {!isCancelled && occ.instructor_name && (
             <div className="mt-1 flex items-center gap-1.5">
-              <div className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-gray-100">
+              <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-gray-100">
                 {occ.instructor_image_id ? (
                   <WyImage
                     src={occ.instructor_image_id}
@@ -159,7 +160,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
                   </span>
                 )}
               </div>
-              <span className="truncate text-xs text-gray-500">{occ.instructor_name}</span>
+              <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
             </div>
           )}
 
@@ -169,35 +170,41 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
             </p>
           )}
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {isCancelled && (
-              <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
-                Odwołane
-              </span>
-            )}
-            {isPast && <span className="text-[11px] text-gray-400">Zakończone</span>}
-            {isFull && (
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                Brak wolnych miejsc
-              </span>
-            )}
-            {isNearlyFull && occ.spots_remaining != null && (
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                {formatSpotsRemainingLabel(occ.spots_remaining)}
-              </span>
-            )}
-            {showTimeChange && (
-              <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                <Clock className="h-3 w-3" />
-                Nowa godzina
-              </span>
-            )}
-          </div>
+          {isCancelled ||
+          isPast ||
+          isFull ||
+          (isNearlyFull && occ.spots_remaining != null) ||
+          showTimeChange ? (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {isCancelled && (
+                <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                  Odwołane
+                </span>
+              )}
+              {isPast && <span className="text-[11px] text-gray-400">Zakończone</span>}
+              {isFull && (
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                  Brak wolnych miejsc
+                </span>
+              )}
+              {isNearlyFull && occ.spots_remaining != null && (
+                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                  {formatSpotsRemainingLabel(occ.spots_remaining)}
+                </span>
+              )}
+              {showTimeChange && (
+                <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                  <Clock className="h-3 w-3" />
+                  Nowa godzina
+                </span>
+              )}
+            </div>
+          ) : null}
         </div>
 
         {showChevron && (
-          <div className="flex shrink-0 items-center text-gray-400">
-            <ChevronRight className="h-4 w-4" />
+          <div className="flex shrink-0 items-center text-gray-500">
+            <IoChevronForward className="h-5 w-5" />
           </div>
         )}
       </div>

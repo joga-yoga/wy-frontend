@@ -27,7 +27,7 @@ export const DayStrip = forwardRef<DayStripHandle, DayStripProps>(function DaySt
   ref,
 ) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0">
       <LabelRow
         weekStart={weekStart}
         todayStr={toDateStr(new Date())}

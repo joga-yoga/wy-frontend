@@ -85,8 +85,8 @@ function ScheduleHeaderIdentity({ studio }: { studio: StudioPublic }) {
   const city = getCityLabel(studio);
 
   return (
-    <Link href={`/studio/${studio.slug}`} className="flex items-center gap-3 px-4 pt-4">
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+    <Link href={`/studio/${studio.slug}`} className="flex items-start gap-3 px-4 pt-4">
+      <div className="relative h-15 w-15 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
         {studio.image_id ? (
           <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
         ) : (
@@ -95,9 +95,9 @@ function ScheduleHeaderIdentity({ studio }: { studio: StudioPublic }) {
           </div>
         )}
       </div>
-      <div className="min-w-0">
-        <p className="truncate font-bold leading-tight text-gray-900">{studio.name}</p>
-        {city && <p className="mt-0.5 truncate text-xs text-gray-500">{city}</p>}
+      <div className="min-w-0 pt-[6px]">
+        <p className=" font-bold leading-tight text-gray-900 text-lg">{studio.name}</p>
+        {city && <p className="mt-0.5 truncate text-sm text-gray-500">{city}</p>}
       </div>
     </Link>
   );
@@ -321,7 +321,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
       <div ref={headerRef} className="sticky top-0 z-30 border-b bg-white">
         <ScheduleHeaderIdentity studio={studio} />
 
-        <div className="px-4 pt-3 pb-[5px]">
+        <div className="px-4 pt-4 pb-[5px]">
           <DayStrip
             ref={dayStripRef}
             weekStart={weekStart}
@@ -374,20 +374,20 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
       >
         <button
           onClick={goToToday}
-          className="flex h-11 shrink-0 items-center justify-center rounded-full bg-white px-5 text-base font-medium text-gray-900 shadow-[0_4px_24px_rgba(0,0,0,0.12)]"
+          className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-white px-5 text-base font-medium text-gray-900 shadow-[0_4px_24px_rgba(0,0,0,0.12)]"
         >
           Dzisiaj
         </button>
-        <div className="flex h-11 items-center gap-1 rounded-full bg-white px-1 shadow-[0_4px_24px_rgba(0,0,0,0.12)]">
+        <div className="flex h-11 items-center gap-1 rounded-[16px] bg-white px-1 shadow-[0_4px_24px_rgba(0,0,0,0.12)]">
           <button
             onClick={() => dayStripRef.current?.goToPreviousWeek()}
-            className="rounded-full p-2.5 hover:bg-gray-100"
+            className="rounded-[16px] p-2.5 hover:bg-gray-100"
           >
             <ChevronLeft size={24} />
           </button>
           <button
             onClick={() => dayStripRef.current?.goToNextWeek()}
-            className="rounded-full p-2.5 hover:bg-gray-100"
+            className="rounded-[16px] p-2.5 hover:bg-gray-100"
           >
             <ChevronRight size={24} />
           </button>
