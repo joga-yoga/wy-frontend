@@ -1108,7 +1108,7 @@ export function SessionDetailDrawer({
 
           {isReady && detail ? (
             <>
-              <div className="flex min-h-0 flex-1 flex-col pt-12˝">
+              <div className="flex min-h-0 flex-1 flex-col pt-12">
                 {isCancelled && <CancelledBanner />}
                 {isBooked && !isCancelled && <BookedBanner booking={detail.viewer_booking} />}
                 {isBooked && !isCancelled && changeVisible && (
