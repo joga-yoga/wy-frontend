@@ -13,7 +13,7 @@ import type { StudioPublic } from "@/types/studio";
 import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { SessionCard } from "./components/SessionCard";
-import { SessionDetailModal } from "./SessionDetailModal";
+import { SessionDetailDrawer } from "./SessionDetailDrawer";
 import type { PublicScheduleDaySummary, PublicScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -394,7 +394,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
         </div>
       </div>
 
-      <SessionDetailModal
+      <SessionDetailDrawer
         occurrenceId={selectedOccurrenceId}
         onClose={() => setSelectedOccurrenceId(null)}
         onBookingCancelled={fetchWeek}

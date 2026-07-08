@@ -5,6 +5,7 @@ import { IoChevronForward } from "react-icons/io5";
 
 import { WyImage } from "@/components/custom/WyImage";
 import { cn } from "@/lib/utils";
+import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
 import type { ClassColor, PublicOccurrence } from "../types";
 
@@ -26,7 +27,7 @@ type PrimaryState = "cancelled" | "past" | "full" | "nearly-full" | "default";
 
 function computePrimaryState(occ: PublicOccurrence, now: Date): PrimaryState {
   if (occ.status === "cancelled") return "cancelled";
-  if (new Date(occ.start_time) < now) return "past";
+  if (isPastWarsawWallClock(occ.start_time, now)) return "past";
   if (occ.spots_remaining === 0) return "full";
   if (occ.spots_remaining != null && occ.spots_remaining <= NEARLY_FULL_THRESHOLD)
     return "nearly-full";

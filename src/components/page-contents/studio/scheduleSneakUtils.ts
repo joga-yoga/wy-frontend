@@ -1,3 +1,5 @@
+import { isAtOrPastWarsawWallClock } from "@/lib/warsawWallClock";
+
 function formatDayMonthPL(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
@@ -19,5 +21,5 @@ export function formatSneakDayHeader(dateStr: string, todayStr: string): string 
 
 /** A session counts as over once its end time has passed, regardless of status. */
 export function isSessionOver(endTimeIso: string, now: Date): boolean {
-  return new Date(endTimeIso).getTime() <= now.getTime();
+  return isAtOrPastWarsawWallClock(endTimeIso, now);
 }

@@ -18,3 +18,9 @@ assert.equal(formatSneakDayHeader("2026-08-01", "2026-07-30"), "Sobota, 1 sierpn
 assert.equal(isSessionOver("2026-07-06T10:00:00", new Date("2026-07-06T09:00:00")), false);
 assert.equal(isSessionOver("2026-07-06T10:00:00", new Date("2026-07-06T10:00:00")), true);
 assert.equal(isSessionOver("2026-07-06T10:00:00", new Date("2026-07-06T11:00:00")), true);
+
+// isSessionOver: the API serializes end_time with a "Z" suffix even though the digits are
+// Europe/Warsaw wall-clock time, not real UTC (the app has no timezone support). A session
+// ending at 13:00 Warsaw time must read as over at 13:31 Warsaw time.
+assert.equal(isSessionOver("2026-07-08T13:00:00Z", new Date("2026-07-08T13:31:00")), true);
+assert.equal(isSessionOver("2026-07-08T13:00:00Z", new Date("2026-07-08T12:59:00")), false);

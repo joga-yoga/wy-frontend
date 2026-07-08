@@ -21,7 +21,7 @@ import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLo
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
-import { SessionDetailModal } from "@/app/(public)/studio/[slug]/schedule/SessionDetailModal";
+import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
 import type { PublicScheduleWeekResponse } from "@/app/(public)/studio/[slug]/schedule/types";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
@@ -158,7 +158,7 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
         <ArrowRight className="h-4 w-4" />
       </Link>
 
-      <SessionDetailModal
+      <SessionDetailDrawer
         occurrenceId={selectedOccurrenceId}
         onClose={() => setSelectedOccurrenceId(null)}
       />

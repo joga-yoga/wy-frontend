@@ -567,7 +567,7 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
           <DrawerTitle className="text-lg font-semibold text-gray-900">Cennik i dostęp</DrawerTitle>
           <DrawerClose
             aria-label="Zamknij"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
           >
             <X className="h-5 w-5" />
           </DrawerClose>
@@ -946,7 +946,7 @@ function CtaZone({
 }) {
   if (isCancelled) {
     return (
-      <Button disabled className="w-full" variant="cta" size="cta">
+      <Button disabled className="w-full" variant="green" size="cta">
         Zajęcia odwołane
       </Button>
     );
@@ -970,7 +970,7 @@ function CtaZone({
   if (isFull) {
     return (
       <div className="space-y-1">
-        <Button disabled className="w-full" variant="cta" size="cta">
+        <Button disabled className="w-full" variant="green" size="cta">
           Brak miejsc
         </Button>
         <p className="text-center text-sm text-gray-500">Zajęcia są w pełni obłożone</p>
@@ -985,12 +985,7 @@ function CtaZone({
           ? `Bezpłatne odwołanie do ${formatDeadline(detail.free_cancellation_deadline)}`
           : "Bezpłatne odwołanie w dowolnym momencie"}
       </p>
-      <Button
-        className="w-full text-white"
-        style={{ background: BRAND_GREEN }}
-        size="cta"
-        onClick={onBook}
-      >
+      <Button className="w-full" size="cta" variant="green" onClick={onBook}>
         Zarezerwuj
       </Button>
     </div>
@@ -1010,18 +1005,18 @@ function isChangeVisible(detail: OccurrenceDetail, isBooked: boolean, now: Date)
 
 // ── Root component ─────────────────────────────────────────────────────
 
-interface SessionDetailModalProps {
+interface SessionDetailDrawerProps {
   occurrenceId: string | null;
   onClose: () => void;
-  /** Called after a successful in-modal cancellation so the parent can refetch the week. */
+  /** Called after a successful in-drawer cancellation so the parent can refetch the week. */
   onBookingCancelled?: () => void;
 }
 
-export function SessionDetailModal({
+export function SessionDetailDrawer({
   occurrenceId,
   onClose,
   onBookingCancelled,
-}: SessionDetailModalProps) {
+}: SessionDetailDrawerProps) {
   const router = useRouter();
   const [detail, setDetail] = useState<OccurrenceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -1048,39 +1043,22 @@ export function SessionDetailModal({
     }
   };
 
-  if (!occurrenceId) return null;
-
-  if (isLoading || !detail) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-white">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Zamknij"
-          className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <div className="flex-1" />
-      </div>
-    );
-  }
-
-  const isCancelled = detail.status === "cancelled";
-  const isBooked = !!detail.viewer_booking && detail.viewer_booking.status === "booked";
-  const isFull = !isBooked && !isCancelled && detail.spots_remaining === 0;
+  const isReady = !isLoading && !!detail;
+  const isCancelled = detail?.status === "cancelled";
+  const isBooked = !!detail?.viewer_booking && detail.viewer_booking.status === "booked";
+  const isFull = isReady && !isBooked && !isCancelled && detail.spots_remaining === 0;
   const now = new Date();
   const withinWindow =
-    !detail.free_cancellation_deadline ||
+    !detail?.free_cancellation_deadline ||
     now.getTime() <= new Date(detail.free_cancellation_deadline).getTime();
-  const changeVisible = !isCancelled && isChangeVisible(detail, isBooked, now);
-  const showTimeChange = changeVisible && !!detail.previous_start_time;
-  const showInstructorChange = changeVisible && !!detail.previous_instructor_name;
+  const changeVisible = isReady && !isCancelled && isChangeVisible(detail, isBooked, now);
+  const showTimeChange = changeVisible && !!detail?.previous_start_time;
+  const showInstructorChange = changeVisible && !!detail?.previous_instructor_name;
 
   const borderClass =
-    isCancelled || !detail.color ? DEFAULT_BORDER : COLOR_BORDER_MAP[detail.color];
+    !detail || isCancelled || !detail.color ? DEFAULT_BORDER : COLOR_BORDER_MAP[detail.color];
 
-  const cancelCopy = detail.viewer_booking
+  const cancelCopy = detail?.viewer_booking
     ? buildCancelCopy(detail.viewer_booking, withinWindow, detail.studio.drop_in_price)
     : null;
 
@@ -1091,79 +1069,93 @@ export function SessionDetailModal({
   }
 
   return (
-    <div
-      className={cn(
-        "fixed inset-0 z-50 flex flex-col overflow-hidden border-2 bg-white",
-        borderClass,
-      )}
+    <Drawer
+      open={!!occurrenceId}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      snapPoints={[1]}
+      showSwipeHandle
     >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Zamknij"
-        className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
-      >
-        <X className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        onClick={handleShare}
-        aria-label="Udostępnij"
-        className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
-      >
-        <Share2 className="h-5 w-5" />
-      </button>
+      <DrawerContent className={cn("border-2", borderClass)}>
+        <DrawerTitle className="sr-only">{detail?.template_title ?? "Szczegóły zajęć"}</DrawerTitle>
 
-      <div className="flex min-h-0 flex-1 flex-col pt-14">
-        {isCancelled && <CancelledBanner />}
-        {isBooked && !isCancelled && <BookedBanner booking={detail.viewer_booking} />}
-        {isBooked && !isCancelled && changeVisible && (
-          <ChangedNoticeBanner
-            showTimeChange={showTimeChange}
-            showInstructorChange={showInstructorChange}
-          />
-        )}
-
-        <div className="flex-1 overflow-y-auto">
-          <ModalHeader
-            detail={detail}
-            isBooked={isBooked}
-            showTimeChange={showTimeChange}
-            showInstructorChange={showInstructorChange}
-            isCancelled={isCancelled}
-            withinWindow={withinWindow}
-          />
-
-          <div className="mt-2 divide-y divide-gray-100 border-t border-gray-100">
-            <InstructorSection detail={detail} />
-            <AboutClassSection detail={detail} />
-            <StudioSection studio={detail.studio} />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-3">
+            <DrawerClose
+              aria-label="Zamknij"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+            >
+              <X className="h-5 w-5" />
+            </DrawerClose>
+            <button
+              type="button"
+              onClick={handleShare}
+              aria-label="Udostępnij"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
           </div>
-          <LocationSection detail={detail} />
+
+          {isReady && detail ? (
+            <>
+              <div className="flex min-h-0 flex-1 flex-col pt-2">
+                {isCancelled && <CancelledBanner />}
+                {isBooked && !isCancelled && <BookedBanner booking={detail.viewer_booking} />}
+                {isBooked && !isCancelled && changeVisible && (
+                  <ChangedNoticeBanner
+                    showTimeChange={showTimeChange}
+                    showInstructorChange={showInstructorChange}
+                  />
+                )}
+
+                <div className="min-h-0 flex-1 overflow-y-auto pt-12">
+                  <ModalHeader
+                    detail={detail}
+                    isBooked={isBooked}
+                    showTimeChange={showTimeChange}
+                    showInstructorChange={showInstructorChange}
+                    isCancelled={isCancelled}
+                    withinWindow={withinWindow}
+                  />
+
+                  <div className="mt-2 divide-y divide-gray-100 border-t border-gray-100">
+                    <InstructorSection detail={detail} />
+                    <AboutClassSection detail={detail} />
+                    <StudioSection studio={detail.studio} />
+                  </div>
+                  <LocationSection detail={detail} />
+                </div>
+              </div>
+
+              <div className="shrink-0 border-t bg-white p-4 pt-3 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
+                <CtaZone
+                  detail={detail}
+                  isCancelled={isCancelled}
+                  isFull={isFull}
+                  isBooked={isBooked}
+                  withinWindow={withinWindow}
+                  onBook={() => router.push(`/book/class/${detail.id}`)}
+                  onOpenCancelSheet={() => setIsCancelSheetOpen(true)}
+                />
+              </div>
+
+              {detail.viewer_booking && cancelCopy && (
+                <CancelSheet
+                  open={isCancelSheetOpen}
+                  onOpenChange={setIsCancelSheetOpen}
+                  bookingId={detail.viewer_booking.id}
+                  copy={cancelCopy}
+                  onCancelled={refetchAfterCancel}
+                />
+              )}
+            </>
+          ) : (
+            <div className="min-h-0 flex-1" />
+          )}
         </div>
-      </div>
-
-      <div className="border-t bg-white px-4 py-3 pb-6 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
-        <CtaZone
-          detail={detail}
-          isCancelled={isCancelled}
-          isFull={isFull}
-          isBooked={isBooked}
-          withinWindow={withinWindow}
-          onBook={() => router.push(`/book/class/${detail.id}`)}
-          onOpenCancelSheet={() => setIsCancelSheetOpen(true)}
-        />
-      </div>
-
-      {detail.viewer_booking && cancelCopy && (
-        <CancelSheet
-          open={isCancelSheetOpen}
-          onOpenChange={setIsCancelSheetOpen}
-          bookingId={detail.viewer_booking.id}
-          copy={cancelCopy}
-          onCancelled={refetchAfterCancel}
-        />
-      )}
-    </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
