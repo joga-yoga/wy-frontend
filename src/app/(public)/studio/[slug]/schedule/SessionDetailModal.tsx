@@ -31,7 +31,14 @@ import {
   perEntry,
 } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 
@@ -520,7 +527,6 @@ function AboutClassSection({ detail }: { detail: OccurrenceDetail }) {
 // ── Pricing row + drawer (T07) ─────────────────────────────────
 
 function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [showAllPasses, setShowAllPasses] = useState(false);
   const hasDropIn = studio.drop_in_price != null;
   const hasPricing = hasDropIn || studio.passes.length > 0;
@@ -532,168 +538,154 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
   const hiddenPassCount = studio.passes.length - passLimit;
 
   return (
-    <>
-      <div className="">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="flex w-full items-center gap-3 text-left"
+    <Drawer showSwipeHandle>
+      <DrawerTrigger className="flex w-full items-center gap-3 text-left">
+        <div
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
+            TILE_TONE_CLASSES.neutral,
+          )}
         >
-          <div
-            className={cn(
-              "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
-              TILE_TONE_CLASSES.neutral,
+          <Wallet className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-gray-900">
+            Cennik
+            {hasDropIn && (
+              <span className="ml-1 text-sm font-normal text-gray-500">
+                · od {formatMoney(studio.drop_in_price, studio.currency)}
+              </span>
             )}
+          </p>
+          <p className="text-base text-gray-500">Sprawdź karnety i karty sportowe</p>
+        </div>
+        <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />
+      </DrawerTrigger>
+
+      <DrawerContent>
+        <div className="flex items-center justify-between px-4 pb-3 pt-2">
+          <DrawerTitle className="text-lg font-semibold text-gray-900">Cennik i dostęp</DrawerTitle>
+          <DrawerClose
+            aria-label="Zamknij"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
           >
-            <Wallet className="h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-gray-900">
-              Cennik
-              {hasDropIn && (
-                <span className="ml-1 text-sm font-normal text-gray-500">
-                  · od {formatMoney(studio.drop_in_price, studio.currency)}
-                </span>
-              )}
-            </p>
-            <p className="text-base text-gray-500">Sprawdź karnety i karty sportowe</p>
-          </div>
-          <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />
-        </button>
-      </div>
+            <X className="h-5 w-5" />
+          </DrawerClose>
+        </div>
 
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent>
-          <div className="flex items-center justify-between px-4 pb-3 pt-2">
-            <DrawerTitle className="text-lg font-semibold text-gray-900">
-              Cennik i dostęp
-            </DrawerTitle>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Zamknij"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="overflow-y-auto px-4 pb-6">
-            <div className="space-y-4">
-              {hasPricing && (
-                <div className="divide-y divide-gray-100">
-                  {hasDropIn && (
-                    <div className="flex items-center gap-4 py-3">
-                      <LightPassTile sessionCount={1} durationDays={0} />
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900">Pojedyncze wejście</h3>
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          Bez karnetu i karty sportowej
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-base font-semibold text-gray-900">
-                        {formatMoney(studio.drop_in_price, studio.currency)}
-                      </span>
+        <div className="overflow-y-auto px-4 pb-6">
+          <div className="space-y-4">
+            {hasPricing && (
+              <div className="divide-y divide-gray-100">
+                {hasDropIn && (
+                  <div className="flex items-center gap-4 py-3">
+                    <LightPassTile sessionCount={1} durationDays={0} />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-gray-900">Pojedyncze wejście</h3>
+                      <p className="mt-0.5 text-xs text-gray-500">Bez karnetu i karty sportowej</p>
                     </div>
-                  )}
-                  {visiblePasses.map((pass: OccurrenceDetailStudioPass) => {
-                    const entry = perEntry(pass);
-                    const discount = discountPercent(pass, studio.drop_in_price);
-                    return (
-                      <div key={pass.id} className="flex items-center gap-4 py-3">
-                        <LightPassTile
-                          sessionCount={pass.session_count}
-                          durationDays={pass.duration_days}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-semibold text-gray-900">{pass.name}</h3>
-                            {discount != null && (
-                              <span className="text-xs font-semibold text-emerald-600">
-                                −{discount}%
-                              </span>
-                            )}
-                          </div>
-                          {entry != null && (
-                            <p className="mt-0.5 text-xs text-gray-500">
-                              {formatMoney(entry, pass.currency || studio.currency)}/wejście
-                            </p>
+                    <span className="shrink-0 text-base font-semibold text-gray-900">
+                      {formatMoney(studio.drop_in_price, studio.currency)}
+                    </span>
+                  </div>
+                )}
+                {visiblePasses.map((pass: OccurrenceDetailStudioPass) => {
+                  const entry = perEntry(pass);
+                  const discount = discountPercent(pass, studio.drop_in_price);
+                  return (
+                    <div key={pass.id} className="flex items-center gap-4 py-3">
+                      <LightPassTile
+                        sessionCount={pass.session_count}
+                        durationDays={pass.duration_days}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-gray-900">{pass.name}</h3>
+                          {discount != null && (
+                            <span className="text-xs font-semibold text-emerald-600">
+                              −{discount}%
+                            </span>
                           )}
                         </div>
-                        <span className="shrink-0 text-base font-semibold text-gray-900">
-                          {formatMoney(pass.price, pass.currency || studio.currency)}
+                        {entry != null && (
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            {formatMoney(entry, pass.currency || studio.currency)}/wejście
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-base font-semibold text-gray-900">
+                        {formatMoney(pass.price, pass.currency || studio.currency)}
+                      </span>
+                    </div>
+                  );
+                })}
+                {!showAllPasses && hiddenPassCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllPasses(true)}
+                    className="w-full py-3 text-center text-sm font-medium text-gray-900"
+                  >
+                    Pokaż wszystkie karnety (+{hiddenPassCount})
+                  </button>
+                )}
+              </div>
+            )}
+
+            {hasSportCards && (
+              <div>
+                <p className="mb-2 text-xs text-gray-500">
+                  Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za
+                  wejście.
+                </p>
+                {studio.sport_card_acceptances.map(
+                  (item: OccurrenceDetailStudioSportCardAcceptance, i: number) => {
+                    const name = item.sport_card?.name ?? item.name ?? "Karta sportowa";
+                    const photo = item.sport_card?.photo ?? item.photo ?? null;
+                    const hasFee = item.fee != null && item.fee > 0;
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "flex items-center gap-3 py-2.5",
+                          i > 0 && "border-t border-gray-100",
+                        )}
+                      >
+                        <div className="relative flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded bg-[#F5F3EE]">
+                          {photo ? (
+                            <WyImage
+                              src={photo}
+                              alt={name}
+                              width={44}
+                              height={32}
+                              className="h-8 w-11 object-fill"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-semibold text-gray-400">Karta</span>
+                          )}
+                        </div>
+                        <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">
+                          {name}
+                        </p>
+                        <span
+                          className={cn(
+                            "shrink-0 text-xs",
+                            hasFee ? "text-gray-500" : "font-medium text-emerald-600",
+                          )}
+                        >
+                          {hasFee
+                            ? `dopłata ${formatMoney(item.fee, studio.currency)}`
+                            : "bez dopłaty"}
                         </span>
                       </div>
                     );
-                  })}
-                  {!showAllPasses && hiddenPassCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllPasses(true)}
-                      className="w-full py-3 text-center text-sm font-medium text-gray-900"
-                    >
-                      Pokaż wszystkie karnety (+{hiddenPassCount})
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {hasSportCards && (
-                <div>
-                  <p className="mb-2 text-xs text-gray-500">
-                    Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za
-                    wejście.
-                  </p>
-                  {studio.sport_card_acceptances.map(
-                    (item: OccurrenceDetailStudioSportCardAcceptance, i: number) => {
-                      const name = item.sport_card?.name ?? item.name ?? "Karta sportowa";
-                      const photo = item.sport_card?.photo ?? item.photo ?? null;
-                      const hasFee = item.fee != null && item.fee > 0;
-                      return (
-                        <div
-                          key={item.id}
-                          className={cn(
-                            "flex items-center gap-3 py-2.5",
-                            i > 0 && "border-t border-gray-100",
-                          )}
-                        >
-                          <div className="relative flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded bg-[#F5F3EE]">
-                            {photo ? (
-                              <WyImage
-                                src={photo}
-                                alt={name}
-                                width={44}
-                                height={32}
-                                className="h-8 w-11 object-fill"
-                              />
-                            ) : (
-                              <span className="text-[10px] font-semibold text-gray-400">Karta</span>
-                            )}
-                          </div>
-                          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">
-                            {name}
-                          </p>
-                          <span
-                            className={cn(
-                              "shrink-0 text-xs",
-                              hasFee ? "text-gray-500" : "font-medium text-emerald-600",
-                            )}
-                          >
-                            {hasFee
-                              ? `dopłata ${formatMoney(item.fee, studio.currency)}`
-                              : "bez dopłaty"}
-                          </span>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              )}
-            </div>
+                  },
+                )}
+              </div>
+            )}
           </div>
-        </DrawerContent>
-      </Drawer>
-    </>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -887,7 +879,7 @@ function CancelSheet({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
       <DrawerContent>
         <div className="px-4 pb-6 pt-2">
           {copy.showPositiveIcon && (
@@ -898,10 +890,12 @@ function CancelSheet({
           <p className="text-center text-sm font-medium uppercase tracking-wide text-gray-400">
             {copy.stateLabel}
           </p>
-          <h3 className="mt-1 text-center text-xl font-semibold text-gray-900">
+          <DrawerTitle className="mt-1 text-center text-xl font-semibold text-gray-900">
             Odwołać rezerwację?
-          </h3>
-          <p className="mt-2 text-center text-base text-gray-600">{copy.body}</p>
+          </DrawerTitle>
+          <DrawerDescription className="mt-2 text-center text-base text-gray-600">
+            {copy.body}
+          </DrawerDescription>
           {error && <p className="mt-2 text-center text-sm text-destructive">{error}</p>}
           <div className="mt-5 space-y-2">
             <Button
@@ -918,15 +912,12 @@ function CancelSheet({
             >
               {isSubmitting ? "Odwołuję..." : copy.primaryLabel}
             </Button>
-            <Button
-              variant="secondary"
-              className="w-full"
-              size="cta"
+            <DrawerClose
+              render={<Button variant="secondary" className="w-full" size="cta" />}
               disabled={isSubmitting}
-              onClick={() => onOpenChange(false)}
             >
               Zostaw rezerwację
-            </Button>
+            </DrawerClose>
           </div>
         </div>
       </DrawerContent>

@@ -287,10 +287,8 @@ export function PassModal({
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <DrawerFooter className="flex-row gap-2">
-          <DrawerClose asChild>
-            <Button variant="outline" size="icon" className="shrink-0">
-              <X className="size-5" />
-            </Button>
+          <DrawerClose render={<Button variant="outline" size="icon" className="shrink-0" />}>
+            <X className="size-5" />
           </DrawerClose>
           <Button onClick={handleSave} disabled={isSaving} className="flex-1">
             {isSaving ? "Zapisuję..." : "Zapisz karnet"}
