@@ -16,7 +16,7 @@ export const studioNavItems = [
   { id: "studio-oferta-section", icon: DollarSign, label: "Oferta" },
   { id: "studio-photos-section", icon: Camera, label: "Zdjęcia" },
   { id: "studio-payments-section", icon: CreditCard, label: "Płatności" },
-  { id: "studio-cancellation-section", icon: Ban, label: "Anulowanie" },
+  // { id: "studio-cancellation-section", icon: Ban, label: "Anulowanie" },
 ];
 
 const MOBILE_HEADER_HEIGHT = 64;

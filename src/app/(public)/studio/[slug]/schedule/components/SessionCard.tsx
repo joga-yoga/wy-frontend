@@ -4,24 +4,16 @@ import { Check, ChevronRight, Clock } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { WyImage } from "@/components/custom/WyImage";
+import { COLOR_BORDER_MAP, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
-import type { ClassColor, PublicOccurrence } from "../types";
+import type { PublicOccurrence } from "../types";
 
 export const NEARLY_FULL_THRESHOLD = 3;
 export const BOOKED_GREEN = "#4F8A62";
 
-export const COLOR_BORDER_MAP: Record<ClassColor, string> = {
-  rose: "border-rose-300",
-  amber: "border-amber-300",
-  lime: "border-lime-400",
-  teal: "border-teal-300",
-  sky: "border-sky-300",
-  violet: "border-violet-300",
-  slate: "border-slate-300",
-};
-export const DEFAULT_BORDER = "border-gray-200";
+export { COLOR_BORDER_MAP, DEFAULT_BORDER };
 
 type PrimaryState = "cancelled" | "past" | "full" | "nearly-full" | "default";
 
@@ -96,7 +88,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border bg-white transition-colors",
+        "overflow-hidden rounded-xl border-2 bg-white transition-colors",
         borderClass,
         isDimmed && "opacity-60",
       )}

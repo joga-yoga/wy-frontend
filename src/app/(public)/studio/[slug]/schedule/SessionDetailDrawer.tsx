@@ -213,14 +213,12 @@ function ModalHeader({
   detail,
   isBooked,
   showTimeChange,
-  showInstructorChange,
   isCancelled,
   withinWindow,
 }: {
   detail: OccurrenceDetail;
   isBooked: boolean;
   showTimeChange: boolean;
-  showInstructorChange: boolean;
   isCancelled: boolean;
   withinWindow: boolean;
 }) {
@@ -279,12 +277,6 @@ function ModalHeader({
           hint={fillTone === "amber" ? "zostały ostatnie miejsca" : undefined}
           tone={fillTone}
         />
-      )}
-
-      {showInstructorChange && detail.previous_instructor_name && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-800">
-          <span>Zastępstwo na tych zajęciach</span>
-        </div>
       )}
 
       <PricingRow studio={detail.studio} />
@@ -405,7 +397,13 @@ function CancellationStrip({
 
 // ── Instructor section (T06) ───────────────────────────────────────────
 
-function InstructorSection({ detail }: { detail: OccurrenceDetail }) {
+function InstructorSection({
+  detail,
+  showInstructorChange,
+}: {
+  detail: OccurrenceDetail;
+  showInstructorChange: boolean;
+}) {
   const instructor = detail.instructor;
   if (!instructor) return null;
   const languageLines = buildLanguageLines(detail.language, instructor);
@@ -423,6 +421,11 @@ function InstructorSection({ detail }: { detail: OccurrenceDetail }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
+        {showInstructorChange && detail.previous_instructor_name && (
+          <p className="truncate text-sm text-gray-400 line-through">
+            {detail.previous_instructor_name}
+          </p>
+        )}
         <p className="truncate text-base font-semibold text-gray-900">{instructor.name}</p>
         {instructor.short_bio && (
           <p className="truncate text-sm text-gray-500">{instructor.short_bio}</p>
@@ -435,6 +438,11 @@ function InstructorSection({ detail }: { detail: OccurrenceDetail }) {
   return (
     <section className="flex flex-col gap-3 px-4 py-4">
       <p className="text-[18px] font-semibold text-[#222222]">Instruktor</p>
+      {showInstructorChange && detail.previous_instructor_name && (
+        <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-800">
+          <span>Zastępstwo na tych zajęciach</span>
+        </div>
+      )}
       {href ? <Link href={href}>{row}</Link> : row}
       {languageLines && (
         <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm leading-relaxed text-gray-600">
@@ -1077,11 +1085,11 @@ export function SessionDetailDrawer({
       snapPoints={[1]}
       showSwipeHandle
     >
-      <DrawerContent className={cn("border-2", borderClass)}>
+      <DrawerContent className={cn("border-4", borderClass)}>
         <DrawerTitle className="sr-only">{detail?.template_title ?? "Szczegóły zajęć"}</DrawerTitle>
 
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-3">
+          <div className="absolute left-[16px] right-[16px] top-0 z-20 flex items-center justify-between ">
             <DrawerClose
               aria-label="Zamknij"
               className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
@@ -1110,18 +1118,20 @@ export function SessionDetailDrawer({
                   />
                 )}
 
-                <div className="min-h-0 flex-1 overflow-y-auto pt-12">
+                <div className="min-h-0 flex-1 overflow-y-auto pt-8">
                   <ModalHeader
                     detail={detail}
                     isBooked={isBooked}
                     showTimeChange={showTimeChange}
-                    showInstructorChange={showInstructorChange}
                     isCancelled={isCancelled}
                     withinWindow={withinWindow}
                   />
 
                   <div className="mt-2 divide-y divide-gray-100 border-t border-gray-100">
-                    <InstructorSection detail={detail} />
+                    <InstructorSection
+                      detail={detail}
+                      showInstructorChange={showInstructorChange}
+                    />
                     <AboutClassSection detail={detail} />
                     <StudioSection studio={detail.studio} />
                   </div>

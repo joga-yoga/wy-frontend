@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Ban, Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
@@ -18,6 +18,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { CLASS_COLORS, type ClassColor, COLOR_LABELS, COLOR_SWATCH_MAP } from "@/lib/classColors";
+import { cn } from "@/lib/utils";
 
 import type { ClassTemplate, ClassTemplateCreate } from "../types";
 
@@ -67,6 +69,7 @@ export function TemplateEditor({
   const [level, setLevel] = useState(initial?.level ?? "");
   const [style, setStyle] = useState(initial?.style ?? "");
   const [language, setLanguage] = useState(initial?.language ?? "polski");
+  const [color, setColor] = useState<ClassColor | null>(initial?.color ?? null);
   const [defaultInstructorId, setDefaultInstructorId] = useState(
     initial?.default_instructor_id ?? "",
   );
@@ -132,6 +135,7 @@ export function TemplateEditor({
     if (level) data.level = level;
     if (style.trim()) data.style = style.trim();
     if (language) data.language = language;
+    data.color = color;
     if (defaultInstructorId) data.default_instructor_id = defaultInstructorId;
     if (defaultCapacity) data.default_capacity = parseInt(defaultCapacity, 10);
     data.image_ids = isImageRemoved ? null : imageId ? [imageId] : undefined;
@@ -277,6 +281,41 @@ export function TemplateEditor({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label>Kolor</Label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {CLASS_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-label={COLOR_LABELS[c]}
+                  aria-pressed={color === c}
+                  onClick={() => setColor(color === c ? null : c)}
+                  className={cn(
+                    "relative h-8 w-8 rounded-full",
+                    COLOR_SWATCH_MAP[c],
+                    color === c && "ring-2 ring-gray-900 ring-offset-2",
+                  )}
+                >
+                  {color === c && (
+                    <Check size={14} className="absolute inset-0 m-auto text-white" />
+                  )}
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-label="Brak koloru"
+                aria-pressed={color === null}
+                onClick={() => setColor(null)}
+                className={cn(
+                  "relative h-8 w-8 rounded-full border border-dashed border-gray-300 bg-white",
+                  color === null && "ring-2 ring-gray-900 ring-offset-2",
+                )}
+              >
+                <Ban size={14} className="absolute inset-0 m-auto text-gray-400" />
+              </button>
+            </div>
           </div>
         </div>
       </section>

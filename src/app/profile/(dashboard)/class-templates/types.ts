@@ -1,3 +1,5 @@
+import type { ClassColor } from "@/lib/classColors";
+
 export interface ClassTemplate {
   id: string;
   title: string;
@@ -7,6 +9,7 @@ export interface ClassTemplate {
   intensity?: number | null;
   style?: string | null;
   important_info?: string | null;
+  color?: ClassColor | null;
   default_instructor_id?: string | null;
   default_capacity?: number | null;
   image_ids?: string[] | null;
@@ -23,6 +26,7 @@ export interface ClassTemplateCreate {
   intensity?: number;
   style?: string;
   important_info?: string;
+  color?: ClassColor | null;
   default_instructor_id?: string;
   default_capacity?: number;
   image_ids?: string[] | null;

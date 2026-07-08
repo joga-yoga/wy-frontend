@@ -1,4 +1,6 @@
-export type ClassColor = "rose" | "amber" | "lime" | "teal" | "sky" | "violet" | "slate";
+import type { ClassColor } from "@/lib/classColors";
+
+export type { ClassColor };
 
 export interface PublicOccurrence {
   id: string;
