@@ -188,16 +188,18 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
             </button>
           ))}
         </div>
-        <DialogTrigger asChild>
-          <Button
-            className="absolute md:bottom-4 md:right-4 bottom-2 right-2 rounded-full"
-            variant="secondary"
-            size="icon"
-            onClick={openGrid}
-          >
-            <CustomGalleryIcon className="h-4 w-4" />
-          </Button>
-        </DialogTrigger>
+        <DialogTrigger
+          render={
+            <Button
+              className="absolute md:bottom-4 md:right-4 bottom-2 right-2 rounded-full"
+              variant="secondary"
+              size="icon"
+              onClick={openGrid}
+            >
+              <CustomGalleryIcon className="h-4 w-4" />
+            </Button>
+          }
+        />
       </div>
 
       <DialogContent
@@ -205,7 +207,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ image_ids, title }) 
           "h-full md:h-[calc(100dvh-40px)] w-full max-w-full md:max-w-[calc(100dvw-40px)] rounded-none md:rounded-lg flex flex-col",
           viewMode === "single" ? "overflow-hidden p-0 md:p-4" : "overflow-y-scroll p-4 pb-10",
         )}
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        initialFocus={false}
       >
         <div
           className={cn(
