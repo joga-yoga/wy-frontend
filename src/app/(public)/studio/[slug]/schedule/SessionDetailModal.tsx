@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Building2,
   Calendar,
   Check,
   ChevronDown,
@@ -10,13 +11,15 @@ import {
   ClockAlert,
   DoorOpen,
   Flower2,
+  Languages,
   Share2,
   ShieldCheck,
   Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import type { LocationDetail } from "@/app/(public)/retreats/[slug]/types";
@@ -78,8 +81,25 @@ const LANGUAGE_INSTRUMENTAL: Record<string, string> = {
   włoski: "włosku",
 };
 
+// Older events store ISO 639-1 codes rather than the full Polish word.
+const LANGUAGE_CODE_TO_NAME: Record<string, string> = {
+  pl: "polski",
+  en: "angielski",
+  uk: "ukraiński",
+  de: "niemiecki",
+  fr: "francuski",
+  es: "hiszpański",
+  ru: "rosyjski",
+  it: "włoski",
+};
+
+function languageName(language: string): string {
+  return LANGUAGE_CODE_TO_NAME[language.toLowerCase()] ?? language;
+}
+
 function instrumental(language: string): string {
-  return LANGUAGE_INSTRUMENTAL[language.toLowerCase()] ?? language;
+  const name = languageName(language);
+  return LANGUAGE_INSTRUMENTAL[name.toLowerCase()] ?? name;
 }
 
 function joinPolish(items: string[]): string {
@@ -90,17 +110,20 @@ function joinPolish(items: string[]): string {
 function buildLanguageLines(
   sessionLanguage: string | null | undefined,
   instructor: OccurrenceDetailInstructor | null | undefined,
-): { base: string; extra: string | null } | null {
+): { sessionLanguageInstrumental: string; extra: string | null } | null {
   if (!sessionLanguage) return null;
-  const base = `Zajęcia prowadzone po ${instrumental(sessionLanguage)}.`;
+  const sessionLanguageInstrumental = instrumental(sessionLanguage);
+  const sessionLanguageName = languageName(sessionLanguage).toLowerCase();
   const extraLanguages = (instructor?.languages ?? []).filter(
-    (l) => l.toLowerCase() !== sessionLanguage.toLowerCase(),
+    (l) => languageName(l).toLowerCase() !== sessionLanguageName,
   );
-  if (extraLanguages.length === 0 || !instructor) return { base, extra: null };
+  if (extraLanguages.length === 0 || !instructor) {
+    return { sessionLanguageInstrumental, extra: null };
+  }
   const firstName = instructor.name.split(" ")[0];
   const joined = joinPolish(extraLanguages.map(instrumental));
   return {
-    base,
+    sessionLanguageInstrumental,
     extra: `${firstName} mówi także po ${joined} — możesz zwrócić się w swoim języku.`,
   };
 }
@@ -152,15 +175,15 @@ function IconRow({
     <div className="flex items-center gap-3">
       <div
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
           TILE_TONE_CLASSES[tone],
         )}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className={cn("text-sm font-semibold", VALUE_TONE_CLASSES[tone])}>
+        <p className="text-sm text-gray-500">{label}</p>
+        <p className={cn("text-base font-semibold", VALUE_TONE_CLASSES[tone])}>
           {value}
           {hint && <span className="ml-1 font-normal">· {hint}</span>}
         </p>
@@ -200,7 +223,7 @@ function ModalHeader({
     <div className="space-y-4 px-4 pt-4">
       <h1
         className={cn(
-          "text-xl font-bold text-gray-900",
+          "text-2xl font-bold text-gray-900",
           isCancelled && "text-gray-400 line-through",
         )}
       >
@@ -208,14 +231,14 @@ function ModalHeader({
       </h1>
 
       <IconRow
-        icon={<Calendar className="h-4 w-4" />}
+        icon={<Calendar className="h-5 w-5" />}
         label="Termin"
         value={<span className="capitalize">{formatDayHeader(detail.calendar_date)}</span>}
         tone={isCancelled ? "neutral" : "neutral"}
       />
 
       <IconRow
-        icon={<Clock className="h-4 w-4" />}
+        icon={<Clock className="h-5 w-5" />}
         label={showTimeChange ? "Godzina · zmieniona" : "Godzina"}
         value={
           <>
@@ -231,12 +254,12 @@ function ModalHeader({
       />
 
       {showRoom && (
-        <IconRow icon={<DoorOpen className="h-4 w-4" />} label="Sala" value={detail.room_name} />
+        <IconRow icon={<DoorOpen className="h-5 w-5" />} label="Sala" value={detail.room_name} />
       )}
 
       {detail.capacity != null && (
         <IconRow
-          icon={<Users className="h-4 w-4" />}
+          icon={<Users className="h-5 w-5" />}
           label="Wolne miejsca"
           value={
             fillTone === "red" && !isBooked
@@ -249,7 +272,7 @@ function ModalHeader({
       )}
 
       {showInstructorChange && detail.previous_instructor_name && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+        <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-800">
           <span>Zastępstwo na tych zajęciach</span>
         </div>
       )}
@@ -335,17 +358,24 @@ function CancellationStrip({
 }) {
   if (withinWindow) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2 text-xs text-gray-500">
-        <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-        {deadline
-          ? `Bezpłatne odwołanie do ${formatDeadline(deadline)}`
-          : "Bezpłatne odwołanie w dowolnym momencie"}
+      <div className="flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
+        <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-emerald-600" />
+        <span>
+          {deadline ? (
+            <>
+              Bezpłatne odwołanie do{" "}
+              <strong className="font-semibold">{formatDeadline(deadline)}</strong>
+            </>
+          ) : (
+            "Bezpłatne odwołanie w dowolnym momencie"
+          )}
+        </span>
       </div>
     );
   }
   return (
-    <div className="flex items-start gap-2 px-4 py-2 text-xs text-gray-500">
-      <ClockAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" />
+    <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
+      <ClockAlert className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gray-400" />
       <span>
         Bezpłatny termin odwołania minął{deadline ? ` o ${formatDeadline(deadline)}` : ""}. Możesz
         nadal odwołać, ale {lateCancelCostClause(booking)}.
@@ -354,65 +384,84 @@ function CancellationStrip({
   );
 }
 
-// ── Prowadzi section (T06) ────────────────────────────────────────────
+// ── Instructor section (T06) ───────────────────────────────────────────
 
-function ProwadziSection({ detail }: { detail: OccurrenceDetail }) {
+function InstructorSection({ detail }: { detail: OccurrenceDetail }) {
   const instructor = detail.instructor;
   if (!instructor) return null;
   const languageLines = buildLanguageLines(detail.language, instructor);
+  const href = instructor.slug ? `/instruktor/${instructor.slug}` : null;
+
+  const row = (
+    <div className="flex items-center gap-3">
+      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-amber-50">
+        {instructor.image_id ? (
+          <WyImage src={instructor.image_id} alt={instructor.name} fill className="object-cover" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-base font-semibold text-amber-800">
+            {initials(instructor.name)}
+          </span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-base font-semibold text-gray-900">{instructor.name}</p>
+        {instructor.short_bio && (
+          <p className="truncate text-sm text-gray-500">{instructor.short_bio}</p>
+        )}
+      </div>
+      {href && <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" />}
+    </div>
+  );
 
   return (
     <section className="space-y-3 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Prowadzi</p>
-      <div className="flex items-center gap-3">
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-amber-50">
-          {instructor.image_id ? (
-            <WyImage
-              src={instructor.image_id}
-              alt={instructor.name}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-amber-800">
-              {initials(instructor.name)}
-            </span>
-          )}
-        </div>
-        <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">
-          {instructor.name}
-        </p>
-        {instructor.slug && <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />}
-      </div>
+      <p className="text-[18px] font-semibold text-[#222222]">Instruktor</p>
+      {href ? <Link href={href}>{row}</Link> : row}
       {languageLines && (
-        <p className="text-xs leading-relaxed text-gray-500">
-          {languageLines.base}
-          {languageLines.extra && <> {languageLines.extra}</>}
-        </p>
+        <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm leading-relaxed text-gray-600">
+          <Languages className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gray-400" />
+          <span>
+            Zajęcia prowadzone po{" "}
+            <strong className="font-semibold text-gray-900">
+              {languageLines.sessionLanguageInstrumental}
+            </strong>
+            .{languageLines.extra && <> {languageLines.extra}</>}
+          </span>
+        </div>
       )}
     </section>
   );
 }
 
-// ── O zajęciach section (T06) ─────────────────────────────────────────
+// ── About-class section (T06) ─────────────────────────────────────────
 
 function ExpandableDescription({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    setIsClamped(el.scrollHeight > el.clientHeight);
+  }, [text]);
+
   return (
     <div>
       <p
+        ref={ref}
         className={cn(
-          "whitespace-pre-line text-sm leading-relaxed text-gray-700",
+          "whitespace-pre-line text-base leading-[1.65] text-gray-700",
           !expanded && "line-clamp-3",
         )}
       >
         {text}
       </p>
-      {!expanded && (
+      {!expanded && isClamped && (
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mt-1 text-sm font-medium text-gray-500 underline underline-offset-2"
+          className="mt-2 text-sm font-medium text-gray-500 underline underline-offset-2"
         >
           Pokaż więcej
         </button>
@@ -421,7 +470,7 @@ function ExpandableDescription({ text }: { text: string }) {
   );
 }
 
-function OZajeciachSection({ detail }: { detail: OccurrenceDetail }) {
+function AboutClassSection({ detail }: { detail: OccurrenceDetail }) {
   const level = levelLabel(detail.level);
   const chips: { icon: React.ReactNode; label: string }[] = [];
   if (level) chips.push({ icon: <BarChart3 className="h-3.5 w-3.5" />, label: level });
@@ -437,7 +486,7 @@ function OZajeciachSection({ detail }: { detail: OccurrenceDetail }) {
 
   return (
     <section className="space-y-3 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">O zajęciach</p>
+      <p className="text-[18px] font-semibold text-[#222222]">O zajęciach</p>
       {chips.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {chips.map((chip) => (
@@ -456,7 +505,7 @@ function OZajeciachSection({ detail }: { detail: OccurrenceDetail }) {
   );
 }
 
-// ── Cennik i dostęp section (T07) ─────────────────────────────────────
+// ── Pricing section (T07) ─────────────────────────────────────
 
 function minPrice(studio: OccurrenceDetail["studio"]): number | null {
   const values = [studio.drop_in_price ?? null, ...studio.passes.map((p) => p.price)].filter(
@@ -466,7 +515,7 @@ function minPrice(studio: OccurrenceDetail["studio"]): number | null {
   return Math.min(...values);
 }
 
-function CennikSection({ detail }: { detail: OccurrenceDetail }) {
+function PricingSection({ detail }: { detail: OccurrenceDetail }) {
   const { studio } = detail;
   const [isOpen, setIsOpen] = useState(false);
   const [showAllPasses, setShowAllPasses] = useState(false);
@@ -490,17 +539,18 @@ function CennikSection({ detail }: { detail: OccurrenceDetail }) {
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
-        className="flex w-full items-center justify-between"
+        className="flex w-full items-center justify-between gap-3"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-          Cennik i dostęp
-        </p>
+        <span className="text-[18px] font-semibold text-[#222222]">Cennik i dostęp</span>
         <ChevronDown
-          className={cn("h-4 w-4 text-gray-400 transition-transform", isOpen && "rotate-180")}
+          className={cn(
+            "h-5 w-5 shrink-0 text-gray-400 transition-transform",
+            isOpen && "rotate-180",
+          )}
         />
       </button>
       {!isOpen && (
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-base text-gray-600">
           {min != null ? `od ${formatMoney(min, studio.currency)}` : "Sprawdź cennik"}
           {hintParts.length > 0 ? ` · ${hintParts.join(" · ")}` : ""}
         </p>
@@ -621,9 +671,43 @@ function CennikSection({ detail }: { detail: OccurrenceDetail }) {
   );
 }
 
-// ── Lokalizacja section (T07) ─────────────────────────────────────────
+// ── Studio section (T07) ───────────────────────────────────────────────
 
-function LokalizacjaSection({ detail }: { detail: OccurrenceDetail }) {
+function StudioSection({ studio }: { studio: OccurrenceDetail["studio"] }) {
+  const href = studio.slug ? `/studio/${studio.slug}` : null;
+
+  const row = (
+    <div className="flex items-center gap-3">
+      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white">
+        {studio.image_id ? (
+          <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gray-100">
+            <Building2 className="h-5 w-5 text-gray-400" />
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-semibold text-[#222222]">{studio.name}</p>
+        {studio.address && (
+          <p className="mt-0.5 truncate text-xs text-[#717171]">{studio.address}</p>
+        )}
+      </div>
+      {href && <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />}
+    </div>
+  );
+
+  return (
+    <section className="space-y-3 px-4 py-4">
+      <p className="text-[18px] font-semibold text-[#222222]">Studio</p>
+      {href ? <Link href={href}>{row}</Link> : row}
+    </section>
+  );
+}
+
+// ── Location section (T07) ─────────────────────────────────────────
+
+function LocationSection({ detail }: { detail: OccurrenceDetail }) {
   const { studio } = detail;
   const location = studio.location;
   const hasLatLng = location?.latitude != null && location?.longitude != null;
@@ -632,23 +716,7 @@ function LokalizacjaSection({ detail }: { detail: OccurrenceDetail }) {
   const mapsHref = googleMapsUrl(studio.address);
 
   return (
-    <section className="border-t border-gray-100 px-4 py-4">
-      <div className="mb-3 flex items-center gap-3">
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white">
-          {studio.image_id ? (
-            <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs font-bold text-gray-500">
-              {initials(studio.name)}
-            </div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">{studio.name}</p>
-          {studio.address && <p className="truncate text-xs text-gray-500">{studio.address}</p>}
-        </div>
-      </div>
-
+    <section className="border-t border-gray-100 px-4 pt-4 pb-8">
       {hasLatLng ? (
         <EventLocation
           location={
@@ -801,13 +869,13 @@ function CancelSheet({
               <Check className="h-6 w-6" style={{ color: BRAND_GREEN }} />
             </div>
           )}
-          <p className="text-center text-xs font-medium uppercase tracking-wide text-gray-400">
+          <p className="text-center text-sm font-medium uppercase tracking-wide text-gray-400">
             {copy.stateLabel}
           </p>
-          <h3 className="mt-1 text-center text-lg font-semibold text-gray-900">
+          <h3 className="mt-1 text-center text-xl font-semibold text-gray-900">
             Odwołać rezerwację?
           </h3>
-          <p className="mt-2 text-center text-sm text-gray-600">{copy.body}</p>
+          <p className="mt-2 text-center text-base text-gray-600">{copy.body}</p>
           {error && <p className="mt-2 text-center text-sm text-destructive">{error}</p>}
           <div className="mt-5 space-y-2">
             <Button
@@ -888,14 +956,14 @@ function CtaZone({
         <Button disabled className="w-full" variant="cta" size="cta">
           Brak miejsc
         </Button>
-        <p className="text-center text-xs text-gray-500">Zajęcia są w pełni obłożone</p>
+        <p className="text-center text-sm text-gray-500">Zajęcia są w pełni obłożone</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <p className="text-center text-xs text-gray-500">
+      <p className="text-center text-sm text-gray-500">
         {detail.free_cancellation_deadline
           ? `Bezpłatne odwołanie do ${formatDeadline(detail.free_cancellation_deadline)}`
           : "Bezpłatne odwołanie w dowolnym momencie"}
@@ -968,17 +1036,14 @@ export function SessionDetailModal({
   if (isLoading || !detail) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-white">
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <div className="h-5 w-32 animate-pulse rounded bg-gray-100" />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Zamknij"
-            className="rounded-full p-1.5 hover:bg-gray-100"
-          >
-            <X className="h-5 w-5 text-gray-500" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Zamknij"
+          className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+        >
+          <X className="h-5 w-5" />
+        </button>
         <div className="flex-1" />
       </div>
     );
@@ -1015,59 +1080,60 @@ export function SessionDetailModal({
         borderClass,
       )}
     >
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Zamknij"
-          className="shrink-0 rounded-full p-1.5 hover:bg-gray-100"
-        >
-          <X className="h-5 w-5 text-gray-500" />
-        </button>
-        <button
-          type="button"
-          onClick={handleShare}
-          aria-label="Udostępnij"
-          className="shrink-0 rounded-full p-1.5 hover:bg-gray-100"
-        >
-          <Share2 className="h-5 w-5 text-gray-500" />
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Zamknij"
+        className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={handleShare}
+        aria-label="Udostępnij"
+        className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+      >
+        <Share2 className="h-5 w-5" />
+      </button>
 
-      {isCancelled && <CancelledBanner />}
-      {isBooked && !isCancelled && <BookedBanner booking={detail.viewer_booking} />}
-      {isBooked && !isCancelled && changeVisible && (
-        <ChangedNoticeBanner
-          showTimeChange={showTimeChange}
-          showInstructorChange={showInstructorChange}
-        />
-      )}
-
-      <div className="flex-1 overflow-y-auto">
-        <ModalHeader
-          detail={detail}
-          isBooked={isBooked}
-          showTimeChange={showTimeChange}
-          showInstructorChange={showInstructorChange}
-          isCancelled={isCancelled}
-        />
-
-        {!isBooked && !isCancelled && (
-          <div className="px-2">
-            <CancellationStrip
-              deadline={detail.free_cancellation_deadline}
-              withinWindow={withinWindow}
-              booking={null}
-            />
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col pt-14">
+        {isCancelled && <CancelledBanner />}
+        {isBooked && !isCancelled && <BookedBanner booking={detail.viewer_booking} />}
+        {isBooked && !isCancelled && changeVisible && (
+          <ChangedNoticeBanner
+            showTimeChange={showTimeChange}
+            showInstructorChange={showInstructorChange}
+          />
         )}
 
-        <div className="mt-2 divide-y divide-gray-100 border-t border-gray-100">
-          <ProwadziSection detail={detail} />
-          <OZajeciachSection detail={detail} />
-          <CennikSection detail={detail} />
+        <div className="flex-1 overflow-y-auto">
+          <ModalHeader
+            detail={detail}
+            isBooked={isBooked}
+            showTimeChange={showTimeChange}
+            showInstructorChange={showInstructorChange}
+            isCancelled={isCancelled}
+          />
+
+          {!isBooked && !isCancelled && (
+            <div className="px-4 pt-1">
+              <CancellationStrip
+                deadline={detail.free_cancellation_deadline}
+                withinWindow={withinWindow}
+                booking={null}
+              />
+            </div>
+          )}
+
+          <div className="mt-2 divide-y divide-gray-100 border-t border-gray-100">
+            <InstructorSection detail={detail} />
+            <AboutClassSection detail={detail} />
+            <PricingSection detail={detail} />
+            <StudioSection studio={detail.studio} />
+          </div>
+          <LocationSection detail={detail} />
         </div>
-        <LokalizacjaSection detail={detail} />
       </div>
 
       <div className="border-t bg-white px-4 py-3 pb-6 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">

@@ -20,9 +20,9 @@ import type { Swiper as SwiperType } from "swiper/types";
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
-import { SessionCard } from "@/app/(public)/studio/[slug]/grafik/components/SessionCard";
-import { SessionDetailModal } from "@/app/(public)/studio/[slug]/grafik/SessionDetailModal";
-import type { PublicScheduleWeekResponse } from "@/app/(public)/studio/[slug]/grafik/types";
+import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
+import { SessionDetailModal } from "@/app/(public)/studio/[slug]/schedule/SessionDetailModal";
+import type { PublicScheduleWeekResponse } from "@/app/(public)/studio/[slug]/schedule/types";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -151,7 +151,7 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
       )}
 
       <Link
-        href={`/studio/${studioSlug}/grafik`}
+        href={`/studio/${studioSlug}/schedule`}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
       >
         Zobacz pełny grafik
@@ -948,7 +948,7 @@ function StudioBottomBar({ studio }: { studio: StudioPublic }) {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t"
+      className="fixed bottom-0 left-0 right-0 z-15 bg-white border-t"
       style={{ borderColor: "#EBEBEB" }}
     >
       <div className="mx-auto max-w-5xl px-4 py-3 flex gap-3">
@@ -966,7 +966,7 @@ function StudioBottomBar({ studio }: { studio: StudioPublic }) {
         )}
         {showGrafikButton && (
           <Link
-            href={`/studio/${studio.slug}/grafik`}
+            href={`/studio/${studio.slug}/schedule`}
             aria-label="Zobacz grafik studia"
             className={`${showCennikButton ? "flex-1" : "w-full"} flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-semibold`}
             style={{ background: "#222222", color: "#FFFFFF" }}

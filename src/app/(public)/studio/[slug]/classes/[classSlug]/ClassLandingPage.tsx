@@ -278,7 +278,7 @@ export function ClassLandingPage({ studio, classTemplate }: ClassLandingPageProp
             {classTemplate.duration_minutes} min
           </div>
           <Button asChild variant="cta" size="cta" className="shrink-0">
-            <Link href={`/studio/${studio.slug}/grafik?class=${classTemplate.slug}`}>
+            <Link href={`/studio/${studio.slug}/schedule?class=${classTemplate.slug}`}>
               Zapisz się na zajęcia
             </Link>
           </Button>

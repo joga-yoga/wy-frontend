@@ -45,6 +45,8 @@ const nextConfig = {
       // Polish → English dashboard route redirects (safety net for bookmarks)
       { source: "/profile/grafik", destination: "/profile/schedule", permanent: false },
       { source: "/profile/grafik/:path*", destination: "/profile/schedule/:path*", permanent: false },
+      // Public studio schedule route rename (grafik → schedule)
+      { source: "/studio/:slug/grafik", destination: "/studio/:slug/schedule", permanent: false },
       { source: "/profile/oferta", destination: "/profile/offer", permanent: false },
       { source: "/profile/oferta/:path*", destination: "/profile/offer/:path*", permanent: false },
       { source: "/profile/konto", destination: "/profile/account", permanent: false },

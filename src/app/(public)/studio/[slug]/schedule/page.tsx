@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props) {
   return { title: `Grafik · ${studio.name} | joga.yoga` };
 }
 
-export default async function GrafikPage({ params }: Props) {
+export default async function SchedulePage({ params }: Props) {
   const { slug } = await params;
   const studio = await getStudio(slug);
   if (!studio) notFound();

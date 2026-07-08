@@ -3574,7 +3574,7 @@ __metadata:
     eslint-plugin-simple-import-sort: "npm:^12.1.1"
     jwt-decode: "npm:^4.0.0"
     leaflet: "npm:^1.9.4"
-    lucide-react: "npm:^0.535.0"
+    lucide-react: "npm:1.23.0"
     mixpanel-browser: "npm:^2.70.0"
     motion: "npm:^12.40.0"
     next: "npm:16.2.4"
@@ -6523,12 +6523,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-react@npm:^0.535.0":
-  version: 0.535.0
-  resolution: "lucide-react@npm:0.535.0"
+"lucide-react@npm:1.23.0":
+  version: 1.23.0
+  resolution: "lucide-react@npm:1.23.0"
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/688439e202b36866ee40479b9f1093a144cc249690c2710b463cdd6c5b00006b439d763840d8d1f4cfe91d51e036c30024ccff5290cd7842dd20ebe5c9e4a8b2
+  checksum: 10c0/1cb2108d81c9713e20dd1beb7b6ac5bfc17307d5f38388f84921cf6a124efb4b933c73929bede42f00bd08aa2df340b0904acdf4fb90206ccd52971e943e775b
   languageName: node
   linkType: hard
 
