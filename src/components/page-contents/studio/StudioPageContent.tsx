@@ -151,7 +151,7 @@ function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studi
       )}
 
       <Link
-        href={`/studio/${studioSlug}/schedule`}
+        href={`/studio/${studioSlug}/grafik`}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
       >
         Zobacz pełny grafik
@@ -200,7 +200,7 @@ function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
       </div>
 
       <Link
-        href={`/studio/${studioSlug}/classes`}
+        href={`/studio/${studioSlug}/zajecia`}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
       >
         Zobacz wszystkie zajęcia ({templates.total})
@@ -966,7 +966,7 @@ function StudioBottomBar({ studio }: { studio: StudioPublic }) {
         )}
         {showGrafikButton && (
           <Link
-            href={`/studio/${studio.slug}/schedule`}
+            href={`/studio/${studio.slug}/grafik`}
             aria-label="Zobacz grafik studia"
             className={`${showCennikButton ? "flex-1" : "w-full"} flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-semibold`}
             style={{ background: "#222222", color: "#FFFFFF" }}

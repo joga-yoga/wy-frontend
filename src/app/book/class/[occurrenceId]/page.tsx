@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ function OptionRow({
   );
 }
 
-export default function BookClassPage() {
+function BookClassContent() {
   const { occurrenceId } = useParams<{ occurrenceId: string }>();
   const pathname = usePathname();
   const router = useRouter();
@@ -309,5 +309,19 @@ export default function BookClassPage() {
         {isSubmitting ? "Rezerwuję..." : "Zarezerwuj"}
       </Button>
     </div>
+  );
+}
+
+export default function BookClassPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-sm text-gray-400">
+          Ładowanie...
+        </div>
+      }
+    >
+      <BookClassContent />
+    </Suspense>
   );
 }

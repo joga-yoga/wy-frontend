@@ -29,7 +29,7 @@ export function ClassCard({
 
   return (
     <Link
-      href={`/studio/${studioSlug}/classes/${item.slug}${backTo ? `?back=${backTo}` : ""}`}
+      href={`/studio/${studioSlug}/zajecia/${item.slug}${backTo ? `?back=${backTo}` : ""}`}
       className={cn("flex items-center gap-3 py-3 text-left", className)}
     >
       <div className={cn("relative shrink-0 overflow-hidden rounded-lg", thumbSize)}>

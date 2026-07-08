@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
       project: "workshops",
       title: `${classTemplate.title} · ${classTemplate.studio.name} | joga.yoga`,
       description: classTemplate.description || "Zobacz szczegóły zajęć na joga.yoga",
-      path: `/studio/${slug}/classes/${classSlug}`,
+      path: `/studio/${slug}/zajecia/${classSlug}`,
       image: imageUrl,
     }),
   };
