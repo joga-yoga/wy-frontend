@@ -5,7 +5,6 @@ import {
   Building2,
   Calendar,
   Check,
-  ChevronRight,
   Clock,
   ClockAlert,
   DoorOpen,
@@ -20,6 +19,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5";
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import type { LocationDetail } from "@/app/(public)/retreats/[slug]/types";
@@ -147,7 +147,7 @@ function googleMapsUrl(address?: string | null) {
 type Tone = "neutral" | "amber" | "red";
 
 const TILE_TONE_CLASSES: Record<Tone, string> = {
-  neutral: "bg-gray-100 text-gray-500",
+  neutral: "bg-gray-100 text-gray-700",
   amber: "bg-amber-50 text-amber-700",
   red: "bg-red-50 text-red-600",
 };
@@ -185,7 +185,7 @@ function IconRow({
         <p className="text-sm text-gray-500">{label}</p>
         <p className={cn("text-base font-semibold", VALUE_TONE_CLASSES[tone])}>
           {value}
-          {hint && <span className="ml-1 font-normal">· {hint}</span>}
+          {hint && <span className="ml-1 font-normal text-gray-500">· {hint}</span>}
         </p>
       </div>
     </div>
@@ -208,12 +208,14 @@ function ModalHeader({
   showTimeChange,
   showInstructorChange,
   isCancelled,
+  withinWindow,
 }: {
   detail: OccurrenceDetail;
   isBooked: boolean;
   showTimeChange: boolean;
   showInstructorChange: boolean;
   isCancelled: boolean;
+  withinWindow: boolean;
 }) {
   const fillTone = computeFillTone(detail.spots_remaining, isBooked);
   const showRoom = detail.studio.room_count >= 2 && !!detail.room_name;
@@ -247,9 +249,10 @@ function ModalHeader({
                 {formatTime(detail.previous_start_time)}
               </span>
             )}
-            {formatTime(detail.start_time)} – {formatTime(detail.end_time)} · {duration} min
+            {formatTime(detail.start_time)} – {formatTime(detail.end_time)}
           </>
         }
+        hint={`${duration} min`}
         tone={showTimeChange ? "amber" : "neutral"}
       />
 
@@ -278,6 +281,13 @@ function ModalHeader({
       )}
 
       <PricingRow studio={detail.studio} />
+      {!isBooked && !isCancelled && (
+        <CancellationStrip
+          deadline={detail.free_cancellation_deadline}
+          withinWindow={withinWindow}
+          booking={null}
+        />
+      )}
     </div>
   );
 }
@@ -411,17 +421,17 @@ function InstructorSection({ detail }: { detail: OccurrenceDetail }) {
           <p className="truncate text-sm text-gray-500">{instructor.short_bio}</p>
         )}
       </div>
-      {href && <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" />}
+      {href && <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />}
     </div>
   );
 
   return (
-    <section className="space-y-3 px-4 py-4">
+    <section className="flex flex-col gap-3 px-4 py-4">
       <p className="text-[18px] font-semibold text-[#222222]">Instruktor</p>
       {href ? <Link href={href}>{row}</Link> : row}
       {languageLines && (
         <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm leading-relaxed text-gray-600">
-          <Languages className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gray-400" />
+          <IoLanguage className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gray-500" />
           <span>
             Zajęcia prowadzone po{" "}
             <strong className="font-semibold text-gray-900">
@@ -523,17 +533,22 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
 
   return (
     <>
-      <div className="border-t border-gray-100 pt-3">
+      <div className="">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
           className="flex w-full items-center gap-3 text-left"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-gray-500">
+          <div
+            className={cn(
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
+              TILE_TONE_CLASSES.neutral,
+            )}
+          >
             <Wallet className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-gray-900">
               Cennik
               {hasDropIn && (
                 <span className="ml-1 text-sm font-normal text-gray-500">
@@ -541,9 +556,9 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
                 </span>
               )}
             </p>
-            <p className="text-sm text-gray-500">Sprawdź karnety i karty sportowe</p>
+            <p className="text-base text-gray-500">Sprawdź karnety i karty sportowe</p>
           </div>
-          <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" />
+          <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />
         </button>
       </div>
 
@@ -704,7 +719,7 @@ function StudioSection({ studio }: { studio: OccurrenceDetail["studio"] }) {
           <p className="mt-0.5 truncate text-xs text-[#717171]">{studio.address}</p>
         )}
       </div>
-      {href && <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />}
+      {href && <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />}
     </div>
   );
 
@@ -1125,17 +1140,8 @@ export function SessionDetailModal({
             showTimeChange={showTimeChange}
             showInstructorChange={showInstructorChange}
             isCancelled={isCancelled}
+            withinWindow={withinWindow}
           />
-
-          {!isBooked && !isCancelled && (
-            <div className="px-4 pt-1">
-              <CancellationStrip
-                deadline={detail.free_cancellation_deadline}
-                withinWindow={withinWindow}
-                booking={null}
-              />
-            </div>
-          )}
 
           <div className="mt-2 divide-y divide-gray-100 border-t border-gray-100">
             <InstructorSection detail={detail} />
