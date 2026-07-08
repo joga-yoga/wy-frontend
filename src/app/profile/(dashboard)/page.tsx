@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import { ScheduleBlock } from "./components/ScheduleBlock";
+
 interface OrderListItem {
   id: string;
   customer_name: string | null;
@@ -148,6 +150,9 @@ export default function AktywnoscPage() {
         {getGreeting(user?.name, user?.email)}
       </h1>
 
+      {/* Schedule / Aktywność */}
+      <ScheduleBlock />
+
       {/* Zaproszenia — only shown when there are pending invitations */}
       {invitations.length > 0 && (
         <section className="space-y-2">
@@ -267,16 +272,6 @@ export default function AktywnoscPage() {
             ))}
           </div>
         )}
-      </section>
-
-      {/* Dziś w kalendarzu */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-          Dziś w kalendarzu
-        </h2>
-        <div className="rounded-xl border border-dashed bg-gray-50 py-8 text-center">
-          <p className="text-sm text-gray-400">Kalendarz — wkrótce</p>
-        </div>
       </section>
     </div>
   );

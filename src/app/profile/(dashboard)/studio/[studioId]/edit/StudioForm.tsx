@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
 import { PassTile } from "@/components/common/PassTile";
+import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { type Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
@@ -1102,32 +1103,15 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       Informacja widoczna na profilu studia — uczestnicy często szukają studiów
                       akceptujących ich kartę
                     </p>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <button
-                        type="button"
-                        className={cn(
-                          "min-h-10 rounded-lg border text-sm",
-                          values.accepts_sport_cards === false
-                            ? "border-brand-green font-semibold text-foreground"
-                            : "border-border text-muted-foreground",
-                        )}
-                        onClick={() => setDirtyValue("accepts_sport_cards", false)}
-                      >
-                        Nie
-                      </button>
-                      <button
-                        type="button"
-                        className={cn(
-                          "min-h-10 rounded-lg border text-sm",
-                          values.accepts_sport_cards === true
-                            ? "border-brand-green font-semibold text-foreground"
-                            : "border-border text-muted-foreground",
-                        )}
-                        onClick={() => setDirtyValue("accepts_sport_cards", true)}
-                      >
-                        Tak
-                      </button>
-                    </div>
+                    <SegmentedToggle
+                      className="mb-3"
+                      value={values.accepts_sport_cards}
+                      onChange={(next) => setDirtyValue("accepts_sport_cards", next)}
+                      options={[
+                        { label: "Nie", value: false },
+                        { label: "Tak", value: true },
+                      ]}
+                    />
                     {values.accepts_sport_cards === true && (
                       <div className="space-y-2">
                         {(values.sport_card_acceptances ?? []).map((sc, index) => (
@@ -1275,6 +1259,108 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       }`}
                     />
                   </button>
+                </div>
+              </Section>
+
+              <Section id="studio-payments-section" title="Płatności">
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">Gotówka</label>
+                    <SegmentedToggle
+                      disabled
+                      value={values.accepts_cash}
+                      onChange={() => {}}
+                      options={[
+                        { label: "Nieaktywna", value: false },
+                        { label: "Aktywna", value: true },
+                      ]}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Płatność gotówką jest wymagana i nie można jej wyłączyć.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">Stripe (online)</label>
+                    <SegmentedToggle
+                      disabled
+                      value={values.accepts_stripe}
+                      onChange={() => {}}
+                      options={[
+                        { label: "Wkrótce", value: false },
+                        { label: "Aktywna", value: true },
+                      ]}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">Przelew bankowy</label>
+                    <SegmentedToggle
+                      disabled
+                      value={values.accepts_bank_transfer}
+                      onChange={() => {}}
+                      options={[
+                        { label: "Wkrótce", value: false },
+                        { label: "Aktywna", value: true },
+                      ]}
+                    />
+                  </div>
+                </div>
+              </Section>
+
+              <Section id="studio-cancellation-section" title="Anulowanie">
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      Zasady bezpłatnego odwołania
+                    </label>
+                    <SegmentedToggle
+                      value={values.cancellation_policy_mode}
+                      onChange={(next) => setDirtyValue("cancellation_policy_mode", next)}
+                      options={[
+                        { label: "Wg pory zajęć", value: "by_time_of_day" },
+                        { label: "Zawsze bezpłatnie", value: "always_free" },
+                      ]}
+                    />
+                  </div>
+
+                  {values.cancellation_policy_mode === "by_time_of_day" && (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold">
+                          Godzina graniczna dla zajęć porannych (przed 12:00)
+                        </label>
+                        <p className="mb-2 text-xs text-muted-foreground">
+                          Bezpłatne odwołanie możliwe do tej godziny poprzedniego dnia.
+                        </p>
+                        <Input
+                          type="time"
+                          value={values.cancellation_morning_deadline_time ?? ""}
+                          onChange={(e) =>
+                            setDirtyValue("cancellation_morning_deadline_time", e.target.value)
+                          }
+                          className={fieldClass()}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold">
+                          Liczba godzin przed zajęciami popołudniowymi (od 12:00)
+                        </label>
+                        <p className="mb-2 text-xs text-muted-foreground">
+                          Bezpłatne odwołanie możliwe do tylu godzin przed rozpoczęciem zajęć.
+                        </p>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={values.cancellation_afternoon_hours_before ?? ""}
+                          onChange={(e) =>
+                            setDirtyValue("cancellation_afternoon_hours_before", e.target.value)
+                          }
+                          onKeyDown={blockInvalidNumberChars}
+                          placeholder="np. 3"
+                          className={fieldClass()}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </Section>
             </div>

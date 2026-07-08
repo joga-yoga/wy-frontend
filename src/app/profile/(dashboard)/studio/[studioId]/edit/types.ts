@@ -79,6 +79,12 @@ export interface StudioFormValues {
   image_ids: string[];
   is_public: boolean;
   is_listed: boolean;
+  accepts_cash: boolean;
+  accepts_stripe: boolean;
+  accepts_bank_transfer: boolean;
+  cancellation_policy_mode: string;
+  cancellation_morning_deadline_time: string | null;
+  cancellation_afternoon_hours_before: number | string | null;
 }
 
 export interface StudioApiResponse {
@@ -94,6 +100,12 @@ export interface StudioApiResponse {
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
   is_listed?: boolean;
+  accepts_cash?: boolean;
+  accepts_stripe?: boolean;
+  accepts_bank_transfer?: boolean;
+  cancellation_policy_mode?: string;
+  cancellation_morning_deadline_time?: string | null;
+  cancellation_afternoon_hours_before?: number | null;
   status: string;
   rooms: Array<{ id: string; studio_id: string; name: string }>;
   passes: Array<{
@@ -136,6 +148,12 @@ export interface StudioPayload {
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
   is_listed?: boolean;
+  accepts_cash?: boolean;
+  accepts_stripe?: boolean;
+  accepts_bank_transfer?: boolean;
+  cancellation_policy_mode?: string;
+  cancellation_morning_deadline_time?: string | null;
+  cancellation_afternoon_hours_before?: number | null;
   rooms?: Array<{ name: string }>;
   passes?: Array<{
     name: string;

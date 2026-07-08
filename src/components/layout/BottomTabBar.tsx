@@ -8,14 +8,14 @@ import { PiFlowerLotus } from "react-icons/pi";
 
 import { cn } from "@/lib/utils";
 
-const MAIN_TAB_PATHS = ["/profile", "/profile/oferta", "/profile/konto"] as const;
+const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"] as const;
 
 type TabPath = (typeof MAIN_TAB_PATHS)[number];
 
 const tabs: { path: TabPath; label: string; Icon: React.ElementType }[] = [
   { path: "/profile", label: "Aktywność", Icon: IoHomeOutline },
-  { path: "/profile/oferta", label: "Oferta", Icon: PiFlowerLotus },
-  { path: "/profile/konto", label: "Konto", Icon: IoPersonOutline },
+  { path: "/profile/offer", label: "Oferta", Icon: PiFlowerLotus },
+  { path: "/profile/account", label: "Konto", Icon: IoPersonOutline },
 ];
 
 export function BottomTabBar() {
@@ -30,7 +30,7 @@ export function BottomTabBar() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pt-2"
         style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
       >
-        <div className="bg-white shadow-[0_4px_24px_rgba(0,0,0,0.12)] rounded-[28px] flex w-full p-1.5 gap-1">
+        <div className="bg-white shadow-[0_4px_24px_rgba(0,0,0,0.12)] rounded-[16px] flex w-full p-1.5 gap-1">
           <LayoutGroup id="bottom-tab-bar">
             {tabs.map(({ path, label, Icon }) => {
               const isActive = pathname === path;
@@ -38,12 +38,12 @@ export function BottomTabBar() {
                 <Link
                   key={path}
                   href={path}
-                  className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 rounded-[22px] tap-highlight-transparent"
+                  className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2 rounded-[13px] tap-highlight-transparent"
                 >
                   {isActive && (
                     <motion.div
                       layoutId="tab-pill"
-                      className="absolute inset-0 bg-gray-100 rounded-[22px]"
+                      className="absolute inset-0 bg-gray-100 rounded-[13px]"
                       transition={{ type: "spring", stiffness: 380, damping: 32, mass: 1 }}
                     />
                   )}

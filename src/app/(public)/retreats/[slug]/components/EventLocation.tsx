@@ -18,7 +18,9 @@ function buildGoogleMapsHref(location: LocationDetail): string {
   if (location.google_place_id) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.google_place_id)}`;
   }
-  const parts = [location.address_line1, location.city, location.country].filter(Boolean).join(", ");
+  const parts = [location.address_line1, location.city, location.country]
+    .filter(Boolean)
+    .join(", ");
   if (parts) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parts)}`;
   }

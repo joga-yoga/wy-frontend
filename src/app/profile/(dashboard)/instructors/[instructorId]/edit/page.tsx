@@ -242,7 +242,7 @@ export default function InstructorProfileEditPage() {
     try {
       await axiosInstance.delete(`/instructors/${params.instructorId}`);
       toast({ title: "Instruktor usunięty" });
-      router.push("/profile/oferta");
+      router.push("/profile/offer");
     } catch {
       toast({ title: "Nie udało się usunąć instruktora", variant: "destructive" });
     }

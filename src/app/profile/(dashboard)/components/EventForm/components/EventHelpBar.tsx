@@ -323,10 +323,8 @@ export function EventHelpBar({ mode = "retreat" }: { mode?: "retreat" | "worksho
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle className="hidden">Pomoc</DrawerTitle>
-            <DrawerDescription asChild>
-              <div className="flex flex-col gap-1 pt-4 pb-10">
-                {activeTip ? <TipContent tip={activeTip} /> : <p>Nie znaleziono podpowiedzi.</p>}
-              </div>
+            <DrawerDescription render={<div className="flex flex-col gap-1 pt-4 pb-10" />}>
+              {activeTip ? <TipContent tip={activeTip} /> : <p>Nie znaleziono podpowiedzi.</p>}
             </DrawerDescription>
           </DrawerHeader>
         </DrawerContent>

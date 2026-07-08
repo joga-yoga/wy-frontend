@@ -106,15 +106,17 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
           scrollWheelZoom={false}
         />
         {isMobile && (
-          <DialogTrigger asChild>
-            <Button
-              className="absolute top-2 right-2 rounded-full z-10"
-              variant="secondary"
-              size="icon"
-            >
-              <Expand className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={
+              <Button
+                className="absolute top-2 right-2 rounded-full z-10"
+                variant="secondary"
+                size="icon"
+              >
+                <Expand className="h-4 w-4" />
+              </Button>
+            }
+          />
         )}
       </div>
       <DialogContent className="h-full w-full p-0 max-w-full rounded-none">
