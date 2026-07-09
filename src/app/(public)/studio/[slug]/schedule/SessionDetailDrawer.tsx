@@ -23,6 +23,7 @@ import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import type { LocationDetail } from "@/app/(public)/retreats/[slug]/types";
+import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { WyImage } from "@/components/custom/WyImage";
 import {
   discountPercent,
@@ -133,15 +134,6 @@ function buildLanguageLines(
     sessionLanguageInstrumental,
     extra: `${firstName} mówi także po ${joined} — możesz zwrócić się w swoim języku.`,
   };
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 function googleMapsUrl(address?: string | null) {
@@ -411,15 +403,7 @@ function InstructorSection({
 
   const row = (
     <div className="flex items-center gap-3">
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-amber-50">
-        {instructor.image_id ? (
-          <WyImage src={instructor.image_id} alt={instructor.name} fill className="object-cover" />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center text-base font-semibold text-amber-800">
-            {initials(instructor.name)}
-          </span>
-        )}
-      </div>
+      <InstructorAvatar name={instructor.name} imageId={instructor.image_id} size={48} />
       <div className="min-w-0 flex-1">
         {showInstructorChange && detail.previous_instructor_name && (
           <p className="truncate text-sm text-gray-400 line-through">

@@ -83,6 +83,9 @@ export interface OccurrenceDetailStudio {
   drop_in_price?: number | null;
   currency?: string | null;
   accepts_sport_cards?: boolean | null;
+  accepts_cash: boolean;
+  accepts_stripe: boolean;
+  accepts_bank_transfer: boolean;
   passes: OccurrenceDetailStudioPass[];
   sport_card_acceptances: OccurrenceDetailStudioSportCardAcceptance[];
   room_count: number;

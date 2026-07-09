@@ -3,7 +3,7 @@
 import { Check, ChevronRight, Clock } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
-import { WyImage } from "@/components/custom/WyImage";
+import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { COLOR_BORDER_MAP, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
@@ -48,15 +48,6 @@ function formatTime(iso: string): string {
 function formatDurationMinutes(start: string, end: string): string {
   const mins = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000);
   return `${mins} min`;
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 interface SessionCardProps {
@@ -139,20 +130,11 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
 
           {!isCancelled && occ.instructor_name && (
             <div className="mt-1 flex items-center gap-1.5">
-              <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-gray-100">
-                {occ.instructor_image_id ? (
-                  <WyImage
-                    src={occ.instructor_image_id}
-                    alt={occ.instructor_name}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-[8px] font-semibold text-gray-500">
-                    {initials(occ.instructor_name)}
-                  </span>
-                )}
-              </div>
+              <InstructorAvatar
+                name={occ.instructor_name}
+                imageId={occ.instructor_image_id}
+                size={20}
+              />
               <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
             </div>
           )}
