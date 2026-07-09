@@ -11,7 +11,6 @@ import {
   Flower2,
   Languages,
   Share2,
-  ShieldCheck,
   Users,
   Wallet,
   X,
@@ -23,6 +22,8 @@ import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5
 
 import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import type { LocationDetail } from "@/app/(public)/retreats/[slug]/types";
+import { CancellationChip } from "@/components/booking/CancellationChip";
+import { SportCardLogo } from "@/components/booking/SportCardLogo";
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { WyImage } from "@/components/custom/WyImage";
 import {
@@ -360,21 +361,7 @@ function CancellationStrip({
   booking: OccurrenceDetail["viewer_booking"];
 }) {
   if (withinWindow) {
-    return (
-      <div className="flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
-        <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-emerald-600" />
-        <span>
-          {deadline ? (
-            <>
-              Bezpłatne odwołanie do{" "}
-              <strong className="font-semibold">{formatDeadline(deadline)}</strong>
-            </>
-          ) : (
-            "Bezpłatne odwołanie w dowolnym momencie"
-          )}
-        </span>
-      </div>
-    );
+    return <CancellationChip deadline={deadline} />;
   }
   return (
     <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
@@ -642,19 +629,13 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
                           i > 0 && "border-t border-gray-100",
                         )}
                       >
-                        <div className="relative flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded bg-[#F5F3EE]">
-                          {photo ? (
-                            <WyImage
-                              src={photo}
-                              alt={name}
-                              width={44}
-                              height={32}
-                              className="h-8 w-11 object-fill"
-                            />
-                          ) : (
-                            <span className="text-[10px] font-semibold text-gray-400">Karta</span>
-                          )}
-                        </div>
+                        <SportCardLogo
+                          photo={photo}
+                          alt={name}
+                          width={44}
+                          height={32}
+                          className="rounded"
+                        />
                         <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">
                           {name}
                         </p>

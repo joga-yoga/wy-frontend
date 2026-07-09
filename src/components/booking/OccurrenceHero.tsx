@@ -65,7 +65,7 @@ export function OccurrenceHero({
           >
             {day}
           </span>
-          <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
             {month}
           </span>
         </div>
@@ -79,8 +79,8 @@ export function OccurrenceHero({
             {title}
           </p>
           <p className="mt-1 text-sm font-semibold text-gray-600">
-            {formatWeekday(calendarDate)} · {formatTime(startTime)}–{formatTime(endTime)} ·{" "}
-            {duration} min
+            {formatWeekday(calendarDate)} · {formatTime(startTime)}–{formatTime(endTime)} ·
+            <span className="ml-1 text-gray-400">{duration} min</span>
           </p>
           {!compact && instructor && (
             <div className="mt-3.5 flex items-center gap-2.5">

@@ -1,24 +1,21 @@
 "use client";
 
-import {
-  Banknote,
-  Check,
-  ChevronLeft,
-  CreditCard,
-  ShieldAlert,
-  ShieldCheck,
-  ShoppingBag,
-  Ticket,
-  Wallet,
-} from "lucide-react";
+import { Banknote, Check, ShieldAlert, ShoppingBag, Ticket, Wallet } from "lucide-react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { IoChevronForward } from "react-icons/io5";
 
 import type { OccurrenceDetail } from "@/app/(public)/studio/[slug]/schedule/types";
+import { CancellationChip } from "@/components/booking/CancellationChip";
 import { OccurrenceHero } from "@/components/booking/OccurrenceHero";
 import { OptionRadio, OptionRow, OwnTag } from "@/components/booking/OptionRow";
-import { formatMoney, perEntry } from "@/components/page-contents/studio/pricingHelpers";
+import { PickedOptionRow } from "@/components/booking/PickedOptionRow";
+import { SportCardLogo } from "@/components/booking/SportCardLogo";
+import {
+  formatMoney,
+  LightPassTile,
+  perEntry,
+} from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -26,6 +23,8 @@ import { downloadIcs } from "@/lib/generateIcs";
 import { cn } from "@/lib/utils";
 
 import { BuyPassDrawer } from "./BuyPassDrawer";
+import { CheckoutNav } from "./CheckoutNav";
+import { PaymentMethodSection } from "./PaymentMethodSection";
 import { SportCardDrawer } from "./SportCardDrawer";
 import {
   type BookingDrawer,
@@ -36,7 +35,6 @@ import {
   type ExistingPassOption,
   type FundingSelection,
   isMethodFundingSelection,
-  type MethodFundingSelection,
   skipsMethodScreen,
   toBookingCreateRequest,
 } from "./types";
@@ -105,6 +103,60 @@ function Chevron() {
   return <IoChevronForward className="h-5 w-5 text-gray-400" />;
 }
 
+function checkoutCtaCopy(selection: FundingSelection | null, currency?: string | null) {
+  if (!selection) {
+    return {
+      label: "Wybierz sposób płatności",
+      receipt: null,
+      disabled: true,
+      icon: "cash" as const,
+    };
+  }
+
+  switch (selection.kind) {
+    case "use_pass":
+      return {
+        label: "Zarezerwuj z karnetu",
+        receipt: "Zapłacisz karnetem — wykorzystasz 1 wejście",
+        disabled: false,
+        icon: "wallet" as const,
+      };
+    case "drop_in": {
+      const amount = formatMoney(selection.price, currency);
+      return {
+        label: `Zarezerwuj · ${amount}`,
+        receipt: `${amount} · płatność gotówką na miejscu`,
+        disabled: false,
+        icon: "cash" as const,
+      };
+    }
+    case "buy_and_use": {
+      const amount = formatMoney(selection.price, selection.currency);
+      return {
+        label: "Kup karnet i zarezerwuj",
+        receipt: `${amount} za karnet · płatność gotówką na miejscu`,
+        disabled: false,
+        icon: "wallet" as const,
+      };
+    }
+    case "sport_card":
+      if (!selection.fee || selection.fee <= 0) {
+        return {
+          label: "Zarezerwuj",
+          receipt: "Bez dopłaty · sprawdzimy kartę w studiu",
+          disabled: false,
+          icon: "wallet" as const,
+        };
+      }
+      return {
+        label: "Zarezerwuj",
+        receipt: `dopłata ${formatMoney(selection.fee, currency)} · płatność gotówką na miejscu`,
+        disabled: false,
+        icon: "cash" as const,
+      };
+  }
+}
+
 // ── Funding screen (§3) ─────────────────────────────────────────────────
 
 function FundingScreen({
@@ -113,7 +165,7 @@ function FundingScreen({
   selection,
   onSelect,
   onOpenDrawer,
-  onCta,
+  onSubmit,
   isSubmitting,
   submitError,
 }: {
@@ -122,36 +174,46 @@ function FundingScreen({
   selection: FundingSelection | null;
   onSelect: (selection: FundingSelection) => void;
   onOpenDrawer: (drawer: BookingDrawer) => void;
-  onCta: () => void;
+  onSubmit: (selection: FundingSelection) => void;
   isSubmitting: boolean;
   submitError: string | null;
 }) {
   const currency = options.currency;
+  const [expanded, setExpanded] = useState(() => options.existing_passes.length === 0);
 
   const buyAndUsePerEntries = options.buy_and_use_options
     .map((o) => perEntry(buyAndUseAsStudioPass(o)))
     .filter((v): v is number => v != null);
   const minPerEntry = buyAndUsePerEntries.length > 0 ? Math.min(...buyAndUsePerEntries) : null;
 
-  const ctaCopy = (() => {
-    if (!selection) return { label: "Wybierz sposób płatności", detail: null, disabled: true };
-    if (selection.kind === "use_pass") {
-      return { label: "Zarezerwuj z karnetu", detail: "1 wejście →", disabled: false };
-    }
-    if (selection.kind === "sport_card" && (!selection.fee || selection.fee <= 0)) {
-      return { label: "Zarezerwuj", detail: "bez dopłaty →", disabled: false };
-    }
-    const price =
-      selection.kind === "drop_in"
-        ? formatMoney(selection.price, currency)
-        : selection.kind === "buy_and_use"
-          ? formatMoney(selection.price, selection.currency)
-          : formatMoney(selection.fee, currency);
-    return { label: "Kontynuuj", detail: `${price} →`, disabled: false };
-  })();
+  const pickedBuyPass =
+    selection?.kind === "buy_and_use"
+      ? (options.buy_and_use_options.find((option) => option.pass_id === selection.passId) ?? null)
+      : null;
+  const pickedSportCard =
+    selection?.kind === "sport_card"
+      ? (options.sport_card_options.find(
+          (option) => option.studio_sport_card_id === selection.studioSportCardId,
+        ) ?? null)
+      : null;
+  const showFullFundingList = expanded || options.existing_passes.length === 0;
+  const ctaCopy = checkoutCtaCopy(selection, currency);
+
+  useEffect(() => {
+    if (selection || options.existing_passes.length === 0) return;
+    const pass = options.existing_passes[0];
+    onSelect({
+      kind: "use_pass",
+      userPassId: pass.user_pass_id,
+      passName: pass.pass_name,
+      entriesRemaining: pass.entries_remaining ?? null,
+    });
+  }, [onSelect, options.existing_passes, selection]);
 
   return (
-    <div className="mx-auto max-w-md px-4 py-6 pb-28">
+    <div className="mx-auto max-w-md p-4 pb-8">
+      <CheckoutNav studioSlug={detail.studio.slug} />
+
       <OccurrenceHero
         title={detail.template_title}
         calendarDate={detail.calendar_date}
@@ -166,12 +228,14 @@ function FundingScreen({
         }
       />
 
-      <h1 className="mt-6 text-xl font-extrabold text-gray-900">Jak chcesz zapłacić?</h1>
-      <p className="mt-1.5 text-sm text-gray-500">
-        Miejsce rezerwujemy od razu. Płatność potwierdzasz w kolejnym kroku.
-      </p>
+      <div className="mt-3">
+        <CancellationChip deadline={options.free_cancellation_deadline} />
+      </div>
 
-      <div className="mt-5 space-y-0">
+      <h1 className="mt-6 text-xl font-extrabold text-gray-900">Jak chcesz zapłacić?</h1>
+      <p className="mt-1.5 text-sm text-gray-500">Miejsce rezerwujemy od razu.</p>
+
+      <div className="mt-5 space-y-2">
         {options.existing_passes.map((pass) => {
           const isSelected =
             selection?.kind === "use_pass" && selection.userPassId === pass.user_pass_id;
@@ -200,254 +264,142 @@ function FundingScreen({
           );
         })}
 
-        {options.drop_in_price != null && (
-          <OptionRow
-            icon={<Ticket className="h-5 w-5 text-gray-700" />}
-            title="Pojedyncze wejście"
-            subtitle="Bez karnetu"
-            right={
-              <PriceRadioSlot
-                price={formatMoney(options.drop_in_price, currency)}
+        {!showFullFundingList && (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="flex w-full items-center justify-between rounded-2xl border-[1.5px] border-gray-200 bg-white px-4 py-3.5 text-left text-[15px] font-bold text-gray-900 transition-colors"
+          >
+            <span>Więcej opcji płatności</span>
+            <IoChevronForward className="h-5 w-5 text-gray-400" />
+          </button>
+        )}
+
+        {showFullFundingList && (
+          <>
+            {options.drop_in_price != null && (
+              <OptionRow
+                icon={<Ticket className="h-5 w-5 text-gray-700" />}
+                title="Pojedyncze wejście"
+                subtitle="Bez karnetu"
+                right={
+                  <PriceRadioSlot
+                    price={formatMoney(options.drop_in_price, currency)}
+                    selected={selection?.kind === "drop_in"}
+                  />
+                }
                 selected={selection?.kind === "drop_in"}
+                onClick={() => onSelect({ kind: "drop_in", price: options.drop_in_price! })}
               />
-            }
-            selected={selection?.kind === "drop_in"}
-            onClick={() => onSelect({ kind: "drop_in", price: options.drop_in_price! })}
-          />
-        )}
+            )}
 
-        {options.buy_and_use_options.length > 0 && (
-          <OptionRow
-            icon={<ShoppingBag className="h-5 w-5 text-gray-700" />}
-            title="Kup karnet"
-            subtitle={
-              minPerEntry != null
-                ? `Od ${formatMoney(minPerEntry, currency)}/wejście · ${pluralKarnetow(options.buy_and_use_options.length)}`
-                : pluralKarnetow(options.buy_and_use_options.length)
-            }
-            right={
-              selection?.kind === "buy_and_use" ? (
-                <PriceRadioSlot price={formatMoney(selection.price, selection.currency)} selected />
+            {options.buy_and_use_options.length > 0 &&
+              (selection?.kind === "buy_and_use" ? (
+                <PickedOptionRow
+                  left={
+                    <LightPassTile
+                      size={44}
+                      sessionCount={pickedBuyPass?.session_count}
+                      durationDays={pickedBuyPass?.duration_days}
+                    />
+                  }
+                  kicker="Kupujesz karnet"
+                  name={selection.passName}
+                  sub={`${
+                    pickedBuyPass && perEntry(buyAndUseAsStudioPass(pickedBuyPass)) != null
+                      ? `${formatMoney(
+                          perEntry(buyAndUseAsStudioPass(pickedBuyPass)),
+                          selection.currency,
+                        )}/wejście`
+                      : "bez limitu wejść"
+                  } · pierwsze wejście na te zajęcia`}
+                  price={formatMoney(selection.price, selection.currency)}
+                  onChange={() => onOpenDrawer("buy-pass")}
+                />
               ) : (
-                <Chevron />
-              )
-            }
-            selected={selection?.kind === "buy_and_use"}
-            onClick={() => onOpenDrawer("buy-pass")}
-          />
-        )}
+                <OptionRow
+                  icon={<ShoppingBag className="h-5 w-5 text-gray-700" />}
+                  title="Kup karnet"
+                  subtitle={
+                    minPerEntry != null
+                      ? `Od ${formatMoney(minPerEntry, currency)}/wejście · ${pluralKarnetow(options.buy_and_use_options.length)}`
+                      : pluralKarnetow(options.buy_and_use_options.length)
+                  }
+                  right={<Chevron />}
+                  selected={false}
+                  onClick={() => onOpenDrawer("buy-pass")}
+                />
+              ))}
 
-        {options.accepts_sport_cards && options.sport_card_options.length > 0 && (
-          <OptionRow
-            icon={<Wallet className="h-5 w-5 text-gray-700" />}
-            title="Karta sportowa"
-            subtitle="MultiSport, Medicover i inne"
-            right={
-              selection?.kind === "sport_card" ? (
-                <PriceRadioSlot
+            {options.accepts_sport_cards &&
+              options.sport_card_options.length > 0 &&
+              (selection?.kind === "sport_card" ? (
+                <PickedOptionRow
+                  left={
+                    <SportCardLogo
+                      photo={pickedSportCard?.photo}
+                      alt={selection.cardName}
+                      width={44}
+                      height={28}
+                      // className="rounded-[4px]"
+                      // width = 52,
+                      // height = 34,
+                    />
+                  }
+                  kicker="Karta sportowa"
+                  name={selection.cardName}
+                  sub="Sprawdzimy kartę w studiu"
                   price={
                     selection.fee && selection.fee > 0
                       ? `dopłata ${formatMoney(selection.fee, currency)}`
                       : "bez dopłaty"
                   }
-                  selected
-                  accent={!selection.fee || selection.fee <= 0}
+                  priceAccent={!selection.fee || selection.fee <= 0}
+                  onChange={() => onOpenDrawer("sport-card")}
                 />
               ) : (
-                <Chevron />
-              )
-            }
-            selected={selection?.kind === "sport_card"}
-            onClick={() => onOpenDrawer("sport-card")}
-          />
+                <OptionRow
+                  icon={<Wallet className="h-5 w-5 text-gray-700" />}
+                  title="Karta sportowa"
+                  subtitle="MultiSport, Medicover i inne"
+                  right={<Chevron />}
+                  selected={false}
+                  onClick={() => onOpenDrawer("sport-card")}
+                />
+              ))}
+          </>
         )}
       </div>
 
-      <div className="mt-5 flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
-        <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-brand-green-700" />
-        <span>
-          {options.free_cancellation_deadline
-            ? `Bezpłatne odwołanie do ${formatDeadline(options.free_cancellation_deadline)}`
-            : "Bezpłatne odwołanie w dowolnym momencie"}
-        </span>
-      </div>
-
-      {submitError && <p className="mt-4 text-sm text-destructive">{submitError}</p>}
-
-      <div className="fixed inset-x-0 bottom-0 border-t bg-white p-4 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
-        <div className="mx-auto max-w-md">
-          <Button
-            className="w-full"
-            style={!ctaCopy.disabled ? { background: "#4F8A62" } : undefined}
-            variant={ctaCopy.disabled ? "secondary" : undefined}
-            size="cta"
-            disabled={ctaCopy.disabled || isSubmitting}
-            onClick={onCta}
-          >
-            <span className="flex flex-col items-center leading-tight">
-              <span>{isSubmitting ? "Rezerwuję..." : ctaCopy.label}</span>
-              {ctaCopy.detail && !isSubmitting && (
-                <span className="text-xs font-normal opacity-80">{ctaCopy.detail}</span>
-              )}
-            </span>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Method screen (§5) ───────────────────────────────────────────────────
-
-function orderSummary(
-  selection: MethodFundingSelection,
-  currency?: string | null,
-): { label: string; value: string; amount: string; subtitle?: string } {
-  switch (selection.kind) {
-    case "drop_in":
-      return {
-        label: "Płacisz za",
-        value: "Pojedyncze wejście",
-        amount: formatMoney(selection.price, currency),
-      };
-    case "buy_and_use":
-      return {
-        label: "Kupujesz",
-        value: selection.passName,
-        amount: formatMoney(selection.price, selection.currency),
-        subtitle: "Płacisz za cały karnet. Pierwsze wejście wykorzystasz na te zajęcia.",
-      };
-    case "sport_card":
-      return {
-        label: "Dopłata do karty",
-        value: selection.cardName,
-        amount: formatMoney(selection.fee, currency),
-      };
-  }
-}
-
-function methodCta(selection: MethodFundingSelection, currency?: string | null) {
-  switch (selection.kind) {
-    case "drop_in":
-      return { label: "Zarezerwuj", amount: formatMoney(selection.price, currency) };
-    case "buy_and_use":
-      return {
-        label: "Kup karnet i zarezerwuj",
-        amount: formatMoney(selection.price, selection.currency),
-      };
-    case "sport_card":
-      return { label: "Zarezerwuj", amount: `+${formatMoney(selection.fee, currency)}` };
-  }
-}
-
-// Mockup screens 5/6 do not show OccurrenceHero on Method — only the order-summary block — even
-// though brief §2's prose says the hero appears on both Funding and Method. The mockup is the
-// more concrete, screen-specific artifact and omitting the hero loses no information the
-// order-summary doesn't already cover, so it wins per the brief's own tie-break rule.
-function MethodScreen({
-  selection,
-  currency,
-  freeCancellationDeadline,
-  studio,
-  onBack,
-  onSubmit,
-  isSubmitting,
-  submitError,
-}: {
-  selection: MethodFundingSelection;
-  currency?: string | null;
-  freeCancellationDeadline?: string | null;
-  studio: OccurrenceDetail["studio"];
-  onBack: () => void;
-  onSubmit: () => void;
-  isSubmitting: boolean;
-  submitError: string | null;
-}) {
-  const [method, setMethod] = useState<"cash" | "online">("cash");
-  const summary = orderSummary(selection, currency);
-  const cta = methodCta(selection, currency);
-  const onlineVisible = studio.accepts_stripe;
-  // accepts_cash defaults true / accepts_stripe defaults false — this collapsed form is the
-  // default state for most studios today, not a rare edge case (per T01's research finding).
-  const collapsed = studio.accepts_cash && !studio.accepts_stripe;
-
-  return (
-    <div className="mx-auto max-w-md px-4 py-6 pb-28">
-      <div className="mb-5 flex items-center gap-3">
-        <BackButton onClick={onBack} />
-        <p className="flex-1 text-center text-sm font-semibold text-gray-900">Metoda płatności</p>
-        <span className="w-9 text-right text-xs font-semibold text-gray-400">2 z 2</span>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border-[1.5px] border-gray-200 px-4 py-3.5">
-        <div className="min-w-0">
-          <p className="text-[13px] text-gray-500">{summary.label}</p>
-          <p className="mt-0.5 truncate text-[15px] font-bold text-gray-900">{summary.value}</p>
-        </div>
-        <span className="shrink-0 text-lg font-extrabold text-gray-900">{summary.amount}</span>
-      </div>
-      {summary.subtitle && <p className="mt-2 text-xs text-gray-500">{summary.subtitle}</p>}
-
-      <h2 className="mt-6 text-lg font-extrabold text-gray-900">Jak zapłacisz?</h2>
-
-      {!collapsed && (
-        <div className="mt-4 space-y-2.5">
-          <OptionRow
-            icon={<Banknote className="h-5 w-5 text-gray-700" />}
-            title="Gotówką na miejscu"
-            subtitle="Zapłać w studiu przed zajęciami"
-            right={<OptionRadio selected={method === "cash"} />}
-            selected={method === "cash"}
-            onClick={() => setMethod("cash")}
-          />
-          {onlineVisible && (
-            <div className="pointer-events-none opacity-60">
-              <OptionRow
-                icon={<CreditCard className="h-5 w-5 text-gray-400" />}
-                title={
-                  <>
-                    Online
-                    <span className="ml-1.5 rounded-md bg-gray-100 px-1.5 py-0.5 align-middle text-[10.5px] font-bold text-gray-500">
-                      wkrótce
-                    </span>
-                  </>
-                }
-                subtitle="Kartą lub BLIK"
-                right={<OptionRadio selected={false} />}
-                selected={false}
-                onClick={() => {}}
-              />
-            </div>
-          )}
-        </div>
+      {isMethodFundingSelection(selection) && !skipsMethodScreen(selection) && (
+        <PaymentMethodSection studio={detail.studio} />
       )}
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
-        <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-brand-green-700" />
-        <span>
-          {freeCancellationDeadline
-            ? `Bezpłatne odwołanie do ${formatDeadline(freeCancellationDeadline)}`
-            : "Bezpłatne odwołanie w dowolnym momencie"}
-        </span>
-      </div>
-
       {submitError && <p className="mt-4 text-sm text-destructive">{submitError}</p>}
 
-      <div className="fixed inset-x-0 bottom-0 border-t bg-white p-4 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
-        <div className="mx-auto max-w-md">
-          <Button
-            className="w-full"
-            style={{ background: "#4F8A62" }}
-            size="cta"
-            disabled={isSubmitting}
-            onClick={onSubmit}
-          >
-            <span className="flex flex-col items-center leading-tight">
-              <span>{isSubmitting ? "Rezerwuję..." : cta.label}</span>
-              <span className="text-xs font-normal opacity-80">{cta.amount} →</span>
-            </span>
-          </Button>
-        </div>
+      <div className="mt-6">
+        {ctaCopy.receipt && (
+          <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
+            {ctaCopy.icon === "wallet" ? (
+              <Wallet className="h-[18px] w-[18px] shrink-0 text-brand-green-700" />
+            ) : (
+              <Banknote className="h-[18px] w-[18px] shrink-0 text-brand-green-700" />
+            )}
+            <span>{ctaCopy.receipt}</span>
+          </div>
+        )}
+        <Button
+          className="w-full"
+          style={!ctaCopy.disabled ? { background: "#4F8A62" } : undefined}
+          variant={ctaCopy.disabled ? "secondary" : undefined}
+          size="cta"
+          disabled={ctaCopy.disabled || isSubmitting}
+          onClick={() => {
+            if (selection) onSubmit(selection);
+          }}
+        >
+          {isSubmitting ? "Rezerwuję..." : ctaCopy.label}
+        </Button>
       </div>
     </div>
   );
@@ -610,19 +562,6 @@ function BlockedState({
   );
 }
 
-function BackButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Wstecz"
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700"
-    >
-      <ChevronLeft className="h-5 w-5" />
-    </button>
-  );
-}
-
 // ── Root content ─────────────────────────────────────────────────────
 
 function BookClassContent() {
@@ -631,7 +570,7 @@ function BookClassContent() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
-  const [screen, setScreen] = useState<BookingScreen>("funding");
+  const [screen, setScreen] = useState<BookingScreen>("checkout");
   const [drawer, setDrawer] = useState<BookingDrawer>(null);
   const [fundingSelection, setFundingSelection] = useState<FundingSelection | null>(null);
 
@@ -691,15 +630,6 @@ function BookClassContent() {
     }
   }
 
-  function handleFundingCta() {
-    if (!fundingSelection) return;
-    if (skipsMethodScreen(fundingSelection)) {
-      submitBooking(fundingSelection);
-    } else {
-      setScreen("method");
-    }
-  }
-
   if (authLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-gray-400">
@@ -742,21 +672,6 @@ function BookClassContent() {
         selection={fundingSelection}
         detail={detail}
         currency={options.currency}
-      />
-    );
-  }
-
-  if (screen === "method" && isMethodFundingSelection(fundingSelection)) {
-    return (
-      <MethodScreen
-        selection={fundingSelection}
-        currency={options.currency}
-        freeCancellationDeadline={options.free_cancellation_deadline}
-        studio={detail.studio}
-        onBack={() => setScreen("funding")}
-        onSubmit={() => submitBooking(fundingSelection)}
-        isSubmitting={isSubmitting}
-        submitError={submitError}
       />
     );
   }
@@ -807,7 +722,7 @@ function BookClassContent() {
         selection={fundingSelection}
         onSelect={setFundingSelection}
         onOpenDrawer={setDrawer}
-        onCta={handleFundingCta}
+        onSubmit={submitBooking}
         isSubmitting={isSubmitting}
         submitError={submitError}
       />
@@ -816,6 +731,7 @@ function BookClassContent() {
         options={options.buy_and_use_options}
         dropInPrice={options.drop_in_price}
         currency={options.currency}
+        selectedPassId={fundingSelection?.kind === "buy_and_use" ? fundingSelection.passId : null}
         onClose={() => setDrawer(null)}
         onConfirm={(selection) => {
           setFundingSelection(selection);
@@ -826,6 +742,9 @@ function BookClassContent() {
         open={drawer === "sport-card"}
         options={options.sport_card_options}
         currency={options.currency}
+        selectedSportCardId={
+          fundingSelection?.kind === "sport_card" ? fundingSelection.studioSportCardId : null
+        }
         onClose={() => setDrawer(null)}
         onConfirm={(selection) => {
           setFundingSelection(selection);

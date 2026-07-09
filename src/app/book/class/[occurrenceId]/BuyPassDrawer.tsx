@@ -71,6 +71,7 @@ interface BuyPassDrawerProps {
   options: BuyAndUsePassOption[];
   dropInPrice?: number | null;
   currency?: string | null;
+  selectedPassId?: string | null;
   onClose: () => void;
   onConfirm: (selection: FundingSelection) => void;
 }
@@ -80,14 +81,15 @@ export function BuyPassDrawer({
   options,
   dropInPrice,
   currency,
+  selectedPassId,
   onClose,
   onConfirm,
 }: BuyPassDrawerProps) {
   const [pickedId, setPickedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) setPickedId(null);
-  }, [open]);
+    if (open) setPickedId(selectedPassId ?? null);
+  }, [open, selectedPassId]);
 
   const picked = options.find((o) => o.pass_id === pickedId) ?? null;
 
@@ -113,6 +115,7 @@ export function BuyPassDrawer({
               price: picked.price,
               currency: picked.currency ?? null,
             });
+            onClose();
           }}
         >
           {picked

@@ -1,6 +1,7 @@
 import { IoInfinite as InfiniteIcon } from "react-icons/io5";
 
 import { getCurrencySymbol } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 import type { StudioPass, StudioSportCardAcceptance } from "@/types/studio";
 
 export function formatMoney(value: number | null | undefined, currency?: string | null) {
@@ -30,26 +31,44 @@ export function sportCardPhoto(item: StudioSportCardAcceptance) {
 export function LightPassTile({
   sessionCount,
   durationDays,
+  size = 72,
 }: {
   sessionCount?: number | null;
   durationDays?: number | null;
+  size?: number;
 }) {
   const isUnlimitedSessions = sessionCount == null;
   const isUnlimitedDays = durationDays == null;
   const hideDuration = durationDays === 0;
+  const compact = size <= 48;
 
   return (
-    <div className="flex h-[72px] w-[72px] shrink-0 flex-col items-center justify-center rounded-[10px] bg-[#F5F3EE]">
+    <div
+      className="flex shrink-0 flex-col items-center justify-center rounded-[10px] bg-[#F5F3EE]"
+      style={{ width: size, height: size }}
+    >
       {isUnlimitedSessions ? (
-        <InfiniteIcon className="size-7 text-[#222222]" />
+        <InfiniteIcon className={cn(compact ? "size-5" : "size-7", "text-[#222222]")} />
       ) : (
-        <span className="text-2xl font-semibold leading-none text-[#222222]">{sessionCount}</span>
+        <span
+          className={cn(
+            compact ? "text-lg" : "text-2xl",
+            "font-semibold leading-none text-[#222222]",
+          )}
+        >
+          {sessionCount}
+        </span>
       )}
       {!hideDuration && (
-        <span className="mt-0.5 flex items-center text-[14px] font-medium text-[#888888]">
+        <span
+          className={cn(
+            "mt-0.5 flex items-center font-medium text-[#888888]",
+            compact ? "text-[9px]" : "text-[14px]",
+          )}
+        >
           {isUnlimitedDays ? (
             <>
-              <InfiniteIcon className="mr-0.5 size-3" /> dni
+              <InfiniteIcon className={cn("mr-0.5", compact ? "size-2.5" : "size-3")} /> dni
             </>
           ) : (
             <>{durationDays} dni</>

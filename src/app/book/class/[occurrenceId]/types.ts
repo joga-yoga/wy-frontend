@@ -10,6 +10,7 @@ export interface ExistingPassOption {
 export interface SportCardOption {
   studio_sport_card_id: string;
   name?: string | null;
+  photo?: string | null;
   fee?: number | null;
 }
 
@@ -58,7 +59,7 @@ export interface BookingOut {
 
 // ── T02: flow state ─────────────────────────────────────────────────
 
-export type BookingScreen = "funding" | "method" | "confirmation";
+export type BookingScreen = "checkout" | "confirmation";
 
 export type BookingDrawer = "buy-pass" | "sport-card" | null;
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { BookingDrawerShell } from "@/components/booking/BookingDrawerShell";
 import { OptionRadio } from "@/components/booking/OptionRow";
+import { SportCardLogo } from "@/components/booking/SportCardLogo";
 import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ function CardRow({
   onClick: () => void;
 }) {
   const hasFee = option.fee != null && option.fee > 0;
+  const name = option.name || "Karta sportowa";
 
   return (
     <button
@@ -32,10 +34,8 @@ function CardRow({
         selected && "border-2 border-brand-green-700 bg-brand-green-700/5 px-[13px] py-[11px]",
       )}
     >
-      <div className="h-[34px] w-[52px] shrink-0 rounded-md bg-gray-100" />
-      <p className="min-w-0 flex-1 text-[15px] font-bold text-gray-900">
-        {option.name || "Karta sportowa"}
-      </p>
+      <SportCardLogo photo={option.photo} alt={name} width={52} height={34} />
+      <p className="min-w-0 flex-1 text-[15px] font-bold text-gray-900">{name}</p>
       <span
         className={cn(
           "shrink-0 text-[13px] font-bold",
@@ -53,6 +53,7 @@ interface SportCardDrawerProps {
   open: boolean;
   options: SportCardOption[];
   currency?: string | null;
+  selectedSportCardId?: string | null;
   onClose: () => void;
   onConfirm: (selection: FundingSelection) => void;
 }
@@ -61,14 +62,15 @@ export function SportCardDrawer({
   open,
   options,
   currency,
+  selectedSportCardId,
   onClose,
   onConfirm,
 }: SportCardDrawerProps) {
   const [pickedId, setPickedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) setPickedId(null);
-  }, [open]);
+    if (open) setPickedId(selectedSportCardId ?? null);
+  }, [open, selectedSportCardId]);
 
   const picked = options.find((o) => o.studio_sport_card_id === pickedId) ?? null;
   const pickedHasFee = picked?.fee != null && picked.fee > 0;
@@ -94,6 +96,7 @@ export function SportCardDrawer({
               cardName: picked.name || "Karta sportowa",
               fee: picked.fee ?? null,
             });
+            onClose();
           }}
         >
           {picked
