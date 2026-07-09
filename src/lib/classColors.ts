@@ -1,36 +1,44 @@
 // Mirrors backend CLASS_COLOR_PALETTE / ck_class_details_color_palette (app.models.event).
-export const CLASS_COLORS = ["rose", "amber", "lime", "teal", "sky", "violet", "slate"] as const;
+export const CLASS_COLORS = [
+  "green",
+  "teal",
+  "blue",
+  "lavender",
+  "rose",
+  "sand",
+  "apricot",
+] as const;
 
 export type ClassColor = (typeof CLASS_COLORS)[number];
 
 export const COLOR_BORDER_MAP: Record<ClassColor, string> = {
-  rose: "border-rose-300",
-  amber: "border-amber-300",
-  lime: "border-lime-400",
-  teal: "border-teal-300",
-  sky: "border-sky-300",
-  violet: "border-violet-300",
-  slate: "border-slate-300",
+  green: "border-class-green-600",
+  teal: "border-class-teal-600",
+  blue: "border-class-blue-600",
+  lavender: "border-class-lavender-600",
+  rose: "border-class-rose-600",
+  sand: "border-class-sand-600",
+  apricot: "border-class-apricot-600",
 };
 
 export const DEFAULT_BORDER = "border-gray-200";
 
 export const COLOR_SWATCH_MAP: Record<ClassColor, string> = {
-  rose: "bg-rose-400",
-  amber: "bg-amber-400",
-  lime: "bg-lime-400",
-  teal: "bg-teal-400",
-  sky: "bg-sky-400",
-  violet: "bg-violet-400",
-  slate: "bg-slate-400",
+  green: "bg-class-green-600",
+  teal: "bg-class-teal-600",
+  blue: "bg-class-blue-600",
+  lavender: "bg-class-lavender-600",
+  rose: "bg-class-rose-600",
+  sand: "bg-class-sand-600",
+  apricot: "bg-class-apricot-600",
 };
 
 export const COLOR_LABELS: Record<ClassColor, string> = {
-  rose: "Różowy",
-  amber: "Bursztynowy",
-  lime: "Limonkowy",
+  green: "Zielony",
   teal: "Turkusowy",
-  sky: "Błękitny",
-  violet: "Fioletowy",
-  slate: "Szary",
+  blue: "Niebieski",
+  lavender: "Lawendowy",
+  rose: "Różowy",
+  sand: "Piaskowy",
+  apricot: "Morelowy",
 };
