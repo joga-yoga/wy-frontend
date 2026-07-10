@@ -15,6 +15,7 @@ const buttonVariants = cva(
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+        muted: "text-base bg-muted text-foreground hover:bg-muted/70",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         cta: "text-white bg-gray-700 hover:bg-gray-800",
@@ -25,7 +26,7 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
-        cta: "h-[48px] md:h-[48px] rounded-xl text-lg md:text-xl px-4",
+        cta: "h-[48px] md:h-[48px] rounded-full text-lg md:text-xl px-4",
       },
     },
     defaultVariants: {

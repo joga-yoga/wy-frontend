@@ -66,10 +66,7 @@ export function PublicLocation({
           href={mapsHref}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "h-12 w-full rounded-xl text-sm font-semibold",
-          )}
+          className={cn(buttonVariants({ variant: "muted" }), "h-12 w-full rounded-xl")}
         >
           <Route className="h-4 w-4" />
           Nawiguj w Google Maps

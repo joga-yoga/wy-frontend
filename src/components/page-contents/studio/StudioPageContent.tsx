@@ -19,10 +19,11 @@ import type {
 } from "@/app/(public)/studio/[slug]/schedule/types";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { cn } from "@/lib/utils";
 import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
 
 import {
@@ -112,7 +113,7 @@ function StudioScheduleSneak({
 
       <Link
         href={`/studio/${studioSlug}/grafik`}
-        className="mt-3 grid h-12 w-full grid-cols-[16px_1fr_16px] items-center gap-3 rounded-xl bg-gray-950 px-4 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
+        className="mt-3 grid h-12 w-full grid-cols-[16px_1fr_16px] items-center gap-3 rounded-xl bg-gray-950 px-4 text-md font-medium text-white transition-colors hover:bg-gray-800"
       >
         <Calendar className="h-4 w-4 shrink-0" />
         <span className="text-center">Zobacz cały grafik</span>
@@ -162,9 +163,10 @@ function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
 
       <Link
         href={`/studio/${studioSlug}/zajecia`}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
+        className={cn(buttonVariants({ variant: "muted" }), "relative mt-3 h-12 w-full rounded-xl")}
       >
-        Zobacz wszystkie zajęcia ({templates.total})
+        Zobacz wszystkie zajęcia
+        <ArrowRight className="absolute right-4 h-4 w-4" />
       </Link>
     </section>
   );
@@ -562,13 +564,13 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
         })}
       </div>
       {!showAllPasses && hiddenPassCount > 0 && (
-        <button
-          type="button"
+        <Button
+          variant="muted"
+          className="mt-3 h-12 w-full rounded-xl"
           onClick={() => setShowAllPasses(true)}
-          className="mt-3 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222]"
         >
-          Pokaż wszystkie karnety (+{hiddenPassCount})
-        </button>
+          Pokaż wszystkie karnety
+        </Button>
       )}
 
       <Drawer open={selectedPass != null} onOpenChange={(o) => !o && setSelectedPass(null)}>
@@ -724,13 +726,13 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
             </p>
           )}
           {!showAllCards && studio.sport_card_acceptances.length > 3 && (
-            <button
-              type="button"
+            <Button
+              variant="muted"
+              className="mt-3 h-12 w-full rounded-xl"
               onClick={() => setShowAllCards(true)}
-              className="mt-3 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222]"
             >
-              Pokaż wszystkie karty (+{studio.sport_card_acceptances.length - 3})
-            </button>
+              Pokaż wszystkie karty
+            </Button>
           )}
         </div>
       )}
@@ -852,14 +854,31 @@ function LocationSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
+const AMENITIES_PREVIEW_COUNT = 10;
+
+function amenityCountLabel(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (count === 1) return "udogodnienie";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "udogodnienia";
+  return "udogodnień";
+}
+
 function AmenitiesSection({ studio }: { studio: StudioPublic }) {
+  const [showAll, setShowAll] = useState(false);
+
   if (!studio.amenities || studio.amenities.length === 0) return null;
+
+  const amenities = studio.amenities;
+  const hasMore = amenities.length > AMENITIES_PREVIEW_COUNT;
+  const visibleAmenities =
+    showAll || !hasMore ? amenities : amenities.slice(0, AMENITIES_PREVIEW_COUNT);
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Udogodnienia</h2>
       <div className="flex flex-wrap gap-2">
-        {studio.amenities.map((amenity) => (
+        {visibleAmenities.map((amenity) => (
           <span
             key={amenity.id}
             className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm text-[#444444]"
@@ -868,6 +887,15 @@ function AmenitiesSection({ studio }: { studio: StudioPublic }) {
           </span>
         ))}
       </div>
+      {hasMore && !showAll && (
+        <Button
+          variant="muted"
+          className="mt-4 h-12 w-full rounded-xl"
+          onClick={() => setShowAll(true)}
+        >
+          Pokaż wszystkie {amenities.length} {amenityCountLabel(amenities.length)}
+        </Button>
+      )}
     </section>
   );
 }
