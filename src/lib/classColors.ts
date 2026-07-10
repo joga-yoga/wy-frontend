@@ -33,6 +33,8 @@ export const COLOR_SWATCH_MAP: Record<ClassColor, string> = {
   apricot: "bg-class-apricot-600",
 };
 
+export const DEFAULT_BAR = "bg-gray-200";
+
 export const COLOR_LABELS: Record<ClassColor, string> = {
   green: "Zielony",
   teal: "Turkusowy",

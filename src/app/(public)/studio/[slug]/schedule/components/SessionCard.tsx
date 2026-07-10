@@ -4,7 +4,7 @@ import { Check, ChevronRight, Clock } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
-import { COLOR_BORDER_MAP, DEFAULT_BORDER } from "@/lib/classColors";
+import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
@@ -71,6 +71,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
 
   const showColorBorder = state === "default" || state === "nearly-full" || state === "full";
   const borderClass = showColorBorder && occ.color ? COLOR_BORDER_MAP[occ.color] : DEFAULT_BORDER;
+  const barClass = showColorBorder && occ.color ? COLOR_SWATCH_MAP[occ.color] : DEFAULT_BAR;
 
   const showBookedFooter = occ.viewer_has_booking && !isCancelled;
   const changeVisible = !isCancelled && !isPast && isChangeAnnotationVisible(occ, now);
@@ -80,7 +81,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border-2 bg-white transition-colors",
+        "overflow-hidden rounded-xl border-[1.5px] bg-white transition-colors",
         borderClass,
         isDimmed && "opacity-60",
       )}
@@ -98,7 +99,7 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
         }
         className={cn("flex items-stretch gap-3 px-3 py-2.5", isInteractive && "cursor-pointer")}
       >
-        <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-gray-100 pr-2 text-center">
+        <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
           {showTimeChange && (
             <span className="text-xs leading-none text-gray-400 line-through">
               {formatTime(occ.previous_start_time!)}
@@ -117,6 +118,8 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
             {formatDurationMinutes(occ.start_time, occ.end_time)}
           </span>
         </div>
+
+        <div className={cn("w-1 shrink-0 self-stretch rounded-full", barClass)} />
 
         <div className="min-w-0 flex-1 py-0.5">
           <p
