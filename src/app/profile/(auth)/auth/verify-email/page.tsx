@@ -11,6 +11,7 @@ function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const next = searchParams.get("next");
   const { storeToken } = useAuth();
   const { toast } = useToast();
 
@@ -40,9 +41,12 @@ function VerifyEmailContent() {
           duration: 3000,
         });
 
+        const redirectTo = next || localStorage.getItem("wy_auth_next") || "/profile";
+        localStorage.removeItem("wy_auth_next");
+
         // Redirect after a short delay
         setTimeout(() => {
-          router.push("/profile");
+          router.push(redirectTo);
         }, 1500);
       } catch (error: any) {
         console.error("Verification failed:", error);
@@ -57,7 +61,7 @@ function VerifyEmailContent() {
     };
 
     verify();
-  }, [token, router, storeToken, toast]);
+  }, [next, token, router, storeToken, toast]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">

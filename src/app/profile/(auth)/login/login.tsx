@@ -50,6 +50,12 @@ export function LoginPage() {
   const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login?next=${encodeURIComponent(next)}`;
 
   useEffect(() => {
+    if (next && next !== "/profile") {
+      localStorage.setItem("wy_auth_next", next);
+    }
+  }, [next]);
+
+  useEffect(() => {
     if (loading || !user || hasAutoRedirected.current) {
       return;
     }
@@ -147,6 +153,7 @@ export function LoginPage() {
       const response = await axiosInstance.post("/register", {
         email: emailValue,
         password: data.password,
+        next,
       });
       // toast({ description: "Registration successful. Check your email for verification." });
       setStep("verify-signup");

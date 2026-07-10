@@ -53,7 +53,7 @@ const schema = z.object({
   email: z.union([z.literal(""), z.string().email("Podaj poprawny adres e-mail")]).optional(),
   name: z.string().min(1, "Imię i nazwisko jest wymagane"),
   description: z.string().optional(),
-  short_bio: z.string().max(120, "Maksymalnie 120 znaków").optional(),
+  short_bio: z.string().max(200, "Maksymalnie 200 znaków").optional(),
   image_id: z.string().optional(),
   photo_ids: z.array(z.string()).optional(),
   languages: z.array(z.string()).optional(),
@@ -70,6 +70,7 @@ export default function InstructorProfileEditPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [slug, setSlug] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(true);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [isOwnClaimedInstructor, setIsOwnClaimedInstructor] = useState(false);
@@ -99,6 +100,7 @@ export default function InstructorProfileEditPage() {
       .get<InstructorProfile>(`/instructors/${params.instructorId}`)
       .then(({ data }) => {
         setSlug(data.slug);
+        setIsPublished(data.is_published);
         const instructorEmail = data.email ?? null;
         setExistingEmail(instructorEmail);
         setClaimStatus(data.claim_status ?? null);
@@ -186,6 +188,8 @@ export default function InstructorProfileEditPage() {
         `/instructors/${params.instructorId}`,
         payload,
       );
+      setSlug(updated.slug);
+      setIsPublished(updated.is_published);
       setClaimStatus(updated.claim_status ?? null);
       setExistingEmail(updated.email ?? (isOwnClaimedInstructor ? existingEmail : emailValue));
       setIsOwnClaimedInstructor(updated.is_claimed || updated.claim_status === "claimed");
@@ -210,6 +214,28 @@ export default function InstructorProfileEditPage() {
         return;
       }
       toast({ title: "Nie udało się zapisać profilu", variant: "destructive" });
+    }
+  };
+
+  const handlePublish = async () => {
+    try {
+      const { data: published } = await axiosInstance.post<InstructorProfile>(
+        `/instructors/${params.instructorId}/publish`,
+      );
+      setSlug(published.slug);
+      setIsPublished(published.is_published);
+      toast({
+        title: "Profil opublikowany",
+        description: "Publiczna strona nauczyciela jogi jest już dostępna.",
+      });
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
+        ?.detail;
+      const message =
+        typeof detail === "object" && detail && "message" in detail
+          ? String((detail as { message?: string }).message)
+          : "Nie udało się opublikować profilu.";
+      toast({ title: "Publikacja nieudana", description: message, variant: "destructive" });
     }
   };
 
@@ -359,7 +385,7 @@ export default function InstructorProfileEditPage() {
                 <FormLabel>
                   Twoje zdanie o sobie{" "}
                   <span className="text-muted-foreground text-xs font-normal">
-                    (maks. 120 znaków)
+                    (maks. 200 znaków)
                   </span>
                 </FormLabel>
                 <FormDescription>
@@ -374,7 +400,7 @@ export default function InstructorProfileEditPage() {
                   />
                 </FormControl>
                 <div className="text-xs text-muted-foreground text-right">
-                  {field.value?.length ?? 0}/120
+                  {field.value?.length ?? 0}/200
                 </div>
                 <FormMessage />
               </FormItem>
@@ -550,12 +576,23 @@ export default function InstructorProfileEditPage() {
 
           {/* Fixed bottom action bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 flex gap-2 safe-area-bottom">
-            {slug && (
+            {slug && isPublished && (
               <Button type="button" variant="outline" className="flex-1" asChild>
                 <Link href={`/instruktor/${slug}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink size={15} className="mr-1.5" />
                   Zobacz profil
                 </Link>
+              </Button>
+            )}
+            {!isPublished && (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handlePublish}
+                disabled={form.formState.isSubmitting || isUploadingProfileImage}
+              >
+                Opublikuj profil
               </Button>
             )}
             <Button
