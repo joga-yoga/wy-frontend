@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { StudioPageContent } from "@/components/page-contents/studio/StudioPageContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getStudio } from "@/lib/api/getStudio";
+import { getStudioSchedulePreview } from "@/lib/api/getStudioSchedulePreview";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 import { buildPageMetadata, buildStudioJsonLd } from "@/lib/seo";
 
@@ -49,6 +50,10 @@ export default async function StudioPage({ params }: StudioPageProps) {
     notFound();
   }
 
+  const schedulePreview = await getStudioSchedulePreview(studio.id).catch((error) => {
+    console.error("Error fetching studio schedule preview:", error);
+    return null;
+  });
   const imageUrl = getOgImageUrl(studio.image_ids?.[0] ?? studio.image_id ?? null);
 
   return (
@@ -60,7 +65,7 @@ export default async function StudioPage({ params }: StudioPageProps) {
           imageUrl: imageUrl || undefined,
         })}
       />
-      <StudioPageContent studio={studio} />
+      <StudioPageContent studio={studio} initialSchedulePreview={schedulePreview} />
     </>
   );
 }

@@ -3,19 +3,14 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import React from "react";
 
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getRetreat } from "@/lib/api/getRetreat";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
 
-import {
-  EventHeader,
-  EventLocation,
-  EventMainContent,
-  EventSidebar,
-  ImageGallery,
-} from "./components";
+import { EventHeader, EventMainContent, EventSidebar, ImageGallery } from "./components";
 import { isMultiDayEvent } from "./helpers";
 
 interface EventDetailPageProps {
@@ -106,7 +101,7 @@ const EventDetailPage = async ({ params }: EventDetailPageProps) => {
         </div>
 
         <div className="mt-[44px]">
-          <EventLocation id="map" location={event.location} title={event.title} />
+          <PublicLocation id="map" location={event.location} title={event.title} />
         </div>
       </div>
     </div>

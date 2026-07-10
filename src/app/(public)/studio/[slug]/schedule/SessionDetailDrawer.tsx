@@ -20,11 +20,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5";
 
-import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
-import type { LocationDetail } from "@/app/(public)/retreats/[slug]/types";
 import { CancellationChip } from "@/components/booking/CancellationChip";
 import { SportCardLogo } from "@/components/booking/SportCardLogo";
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
 import {
   discountPercent,
@@ -135,11 +134,6 @@ function buildLanguageLines(
     sessionLanguageInstrumental,
     extra: `${firstName} mówi także po ${joined} — możesz zwrócić się w swoim języku.`,
   };
-}
-
-function googleMapsUrl(address?: string | null) {
-  if (!address) return "https://www.google.com/maps";
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
 // ── Fill-state / icon-row primitives (T05) ────────────────────────────
@@ -702,39 +696,20 @@ function LocationSection({ detail }: { detail: OccurrenceDetail }) {
   const { studio } = detail;
   const location = studio.location;
   const hasLatLng = location?.latitude != null && location?.longitude != null;
-  if (!studio.address && !hasLatLng) return null;
+  if (!studio.address && !location?.address_line1 && !hasLatLng) return null;
 
-  const mapsHref = googleMapsUrl(studio.address);
+  const publicLocation = {
+    title: location?.title ?? studio.name,
+    address: studio.address,
+    address_line1: location?.address_line1,
+    city: location?.city,
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+  };
 
   return (
     <section className="border-t border-gray-100 px-4 pt-4 pb-8">
-      {hasLatLng ? (
-        <EventLocation
-          location={
-            {
-              id: "",
-              title: studio.name,
-              address_line1: studio.address || location?.address_line1 || null,
-              address_line2: null,
-              city: location?.city || null,
-              state_province: null,
-              postal_code: null,
-              country: null,
-              latitude: location!.latitude!,
-              longitude: location!.longitude!,
-              google_place_id: null,
-            } as LocationDetail
-          }
-          title={studio.name}
-          googleMapsHref={mapsHref}
-        />
-      ) : (
-        <Button asChild variant="outline" className="w-full">
-          <a href={mapsHref} target="_blank" rel="noopener noreferrer">
-            Nawiguj w Google Maps
-          </a>
-        </Button>
-      )}
+      <PublicLocation location={publicLocation} title={studio.name} />
     </section>
   );
 }

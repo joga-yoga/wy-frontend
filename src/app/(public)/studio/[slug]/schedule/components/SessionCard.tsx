@@ -65,7 +65,8 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
   const isNearlyFull = state === "nearly-full";
   const isDimmed = isCancelled || isPast || isFull;
 
-  const isInteractive = isPast ? false : isCancelled ? occ.viewer_has_booking : true;
+  const canOpenDetails = isPast ? false : isCancelled ? occ.viewer_has_booking : true;
+  const isInteractive = canOpenDetails && Boolean(onClick);
   const showChevron = state === "default" || state === "nearly-full";
 
   const showColorBorder = state === "default" || state === "nearly-full" || state === "full";

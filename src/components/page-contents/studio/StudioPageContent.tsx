@@ -2,27 +2,22 @@
 
 import "swiper/css";
 
-import {
-  ArrowRight,
-  Calendar,
-  ChevronLeft,
-  CreditCard,
-  ImageIcon,
-  MapPin,
-  Navigation,
-} from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, CreditCard, ImageIcon, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
-import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
 import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
-import type { PublicScheduleWeekResponse } from "@/app/(public)/studio/[slug]/schedule/types";
+import type {
+  PublicOccurrence,
+  PublicSchedulePreviewResponse,
+} from "@/app/(public)/studio/[slug]/schedule/types";
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -38,15 +33,11 @@ import {
   sportCardName,
   sportCardPhoto,
 } from "./pricingHelpers";
-import { formatSneakDayHeader, isSessionOver } from "./scheduleSneakUtils";
+import { formatSneakDayHeader } from "./scheduleSneakUtils";
 
 interface StudioPageContentProps {
   studio: StudioPublic;
-}
-
-function googleMapsUrl(address?: string | null) {
-  if (!address) return "https://www.google.com/maps";
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  initialSchedulePreview?: PublicSchedulePreviewResponse | null;
 }
 
 function initials(name: string) {
@@ -58,104 +49,74 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function formatDateShort(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function formatWarsawDateShort(d: Date): string {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Warsaw",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
-function getMondayOf(d: Date): Date {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
+function groupOccurrencesByDay(occurrences: PublicOccurrence[]) {
+  const groups: { date: string; occurrences: PublicOccurrence[] }[] = [];
+  for (const occ of occurrences) {
+    const last = groups[groups.length - 1];
+    if (last?.date === occ.calendar_date) {
+      last.occurrences.push(occ);
+    } else {
+      groups.push({ date: occ.calendar_date, occurrences: [occ] });
+    }
+  }
+  return groups;
 }
 
-function todayLabelPL(d: Date): string {
-  return d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" });
-}
-
-function StudioScheduleSneak({ studioId, studioSlug }: { studioId: string; studioSlug: string }) {
-  const [days, setDays] = useState<PublicScheduleWeekResponse["days"] | null>(null);
+function StudioScheduleSneak({
+  studioSlug,
+  preview,
+}: {
+  studioSlug: string;
+  preview?: PublicSchedulePreviewResponse | null;
+}) {
   const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const weekStart = formatDateShort(getMondayOf(new Date()));
-    axiosInstance
-      .get<PublicScheduleWeekResponse>(`/public/studios/${studioId}/schedule`, {
-        params: { week_start: weekStart },
-      })
-      .then((r) => setDays(r.data.days))
-      .catch(() => setDays([]));
-  }, [studioId]);
-
-  if (days === null) return null;
-
-  const now = new Date();
-  const todayStr = formatDateShort(now);
-  const todayDay = days.find((d) => d.date === todayStr);
-  const todaySessions = (todayDay?.occurrences ?? []).filter(
-    (occ) => !isSessionOver(occ.end_time, now),
-  );
-  const todayEmpty = todaySessions.length === 0;
-
-  const nextDay = days.find((d) => d.date > todayStr && d.session_count > 0) ?? null;
-  const nextSessions = nextDay?.occurrences.slice(0, 3) ?? [];
-
-  const wholeWeekEmpty = days.every((d) => d.session_count === 0);
+  const occurrences = preview?.occurrences ?? [];
+  const groups = groupOccurrencesByDay(occurrences);
+  const todayStr = formatWarsawDateShort(new Date());
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Grafik zajęć</h2>
 
-      {wholeWeekEmpty ? (
-        <p className="text-sm text-[#717171]">Brak zajęć w tym tygodniu.</p>
-      ) : (
-        <div className="space-y-2">
-          {todayEmpty ? (
-            <p className="pb-1 text-xs text-[#717171]">
-              Dziś · {todayLabelPL(new Date())} · brak zajęć
-            </p>
-          ) : null}
-
-          {todayEmpty && nextDay ? (
-            <>
-              <p className="pb-1 text-xs font-medium uppercase tracking-wide text-[#717171]">
-                {formatSneakDayHeader(nextDay.date, todayStr)}
+      {groups.length > 0 && (
+        <div className="space-y-5">
+          {groups.map((group) => (
+            <div key={group.date}>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {formatSneakDayHeader(group.date, todayStr)}
               </p>
-              {nextSessions.map((occ) => (
-                <SessionCard
-                  key={occ.id}
-                  occ={occ}
-                  onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
-                />
-              ))}
-            </>
-          ) : null}
-
-          {!todayEmpty ? (
-            <>
-              <p className="pb-1 text-xs font-medium uppercase tracking-wide text-[#717171]">
-                {formatSneakDayHeader(todayStr, todayStr)}
-              </p>
-              {todaySessions.slice(0, 3).map((occ) => (
-                <SessionCard
-                  key={occ.id}
-                  occ={occ}
-                  onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
-                />
-              ))}
-            </>
-          ) : null}
+              <div className="space-y-2">
+                {group.occurrences.map((occ) => (
+                  <SessionCard
+                    key={occ.id}
+                    occ={occ}
+                    onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       <Link
         href={`/studio/${studioSlug}/grafik`}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222] transition-colors hover:bg-gray-50"
+        className="mt-3 grid h-12 w-full grid-cols-[16px_1fr_16px] items-center gap-3 rounded-xl bg-gray-950 px-4 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
       >
-        Zobacz pełny grafik
-        <ArrowRight className="h-4 w-4" />
+        <Calendar className="h-4 w-4 shrink-0" />
+        <span className="text-center">Zobacz cały grafik</span>
+        <ArrowRight className="h-4 w-4 shrink-0" />
       </Link>
 
       <SessionDetailDrawer
@@ -873,42 +834,20 @@ function LocationSection({ studio }: { studio: StudioPublic }) {
   const location = studio.location;
   const hasLatLng = location?.latitude != null && location?.longitude != null;
 
-  if (!studio.address && !hasLatLng) return null;
+  if (!studio.address && !location?.address_line1 && !hasLatLng) return null;
 
-  const mapsHref = googleMapsUrl(studio.address);
-
-  if (hasLatLng) {
-    const locationDetail = {
-      id: "",
-      title: studio.name,
-      address_line1: studio.address || location?.address_line1 || null,
-      address_line2: null,
-      city: location?.city || null,
-      state_province: null,
-      postal_code: null,
-      country: null,
-      latitude: location!.latitude!,
-      longitude: location!.longitude!,
-      google_place_id: null,
-    };
-
-    return (
-      <section id="location-section" className="mx-auto max-w-5xl px-4 py-5">
-        <EventLocation location={locationDetail} title={studio.name} googleMapsHref={mapsHref} />
-      </section>
-    );
-  }
+  const publicLocation = {
+    title: location?.title ?? studio.name,
+    address: studio.address,
+    address_line1: location?.address_line1,
+    city: location?.city,
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+  };
 
   return (
     <section id="location-section" className="mx-auto max-w-5xl px-4 py-5">
-      <h2 className="mb-3 text-xl font-semibold text-[#222222]">Lokalizacja</h2>
-      <p className="mb-4 text-sm text-[#717171]">{studio.address}</p>
-      <Button asChild variant="outline" className="w-full">
-        <a href={mapsHref} target="_blank" rel="noopener noreferrer">
-          <Navigation className="mr-2 h-4 w-4" />
-          Nawiguj w Google Maps
-        </a>
-      </Button>
+      <PublicLocation location={publicLocation} title={studio.name} />
     </section>
   );
 }
@@ -933,66 +872,19 @@ function AmenitiesSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
-function StudioBottomBar({ studio }: { studio: StudioPublic }) {
-  const hasPricing = studio.drop_in_price != null || studio.passes.length > 0;
-  const hasSportCards = studio.accepts_sport_cards != null;
-  const showCennikButton = hasPricing || hasSportCards;
-  const showGrafikButton = Boolean(studio.slug);
-
-  if (!showCennikButton && !showGrafikButton) return null;
-
-  const scrollToCennik = () => {
-    const targetId = hasPricing ? "pricing-section" : "sport-cards-section";
-    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-15 bg-white border-t"
-      style={{ borderColor: "#EBEBEB" }}
-    >
-      <div className="mx-auto max-w-5xl px-4 py-3 flex gap-3">
-        {showCennikButton && (
-          <button
-            type="button"
-            onClick={scrollToCennik}
-            aria-label="Przejdź do cennika"
-            className={`${showGrafikButton ? "flex-1" : "w-full"} flex h-12 items-center justify-center gap-2 rounded-xl border text-sm font-semibold`}
-            style={{ borderColor: "#222222", color: "#222222", background: "#FFFFFF" }}
-          >
-            <CreditCard className="h-4 w-4" />
-            Cennik
-          </button>
-        )}
-        {showGrafikButton && (
-          <Link
-            href={`/studio/${studio.slug}/grafik`}
-            aria-label="Zobacz grafik studia"
-            className={`${showCennikButton ? "flex-1" : "w-full"} flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-semibold`}
-            style={{ background: "#222222", color: "#FFFFFF" }}
-          >
-            <Calendar className="h-4 w-4" />
-            Grafik
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export function StudioPageContent({ studio }: StudioPageContentProps) {
+export function StudioPageContent({ studio, initialSchedulePreview }: StudioPageContentProps) {
   return (
     <main className="min-h-screen bg-white text-gray-950">
       <HeroSection studio={studio} />
-      {studio.slug && <StudioScheduleSneak studioId={studio.id} studioSlug={studio.slug} />}
+      {studio.slug && (
+        <StudioScheduleSneak studioSlug={studio.slug} preview={initialSchedulePreview} />
+      )}
       {studio.slug && <ZajeciaPreviewSection studioSlug={studio.slug} />}
       <InstructorsSection studio={studio} />
       <PricingSection studio={studio} />
       <SportCardsSection studio={studio} />
       <AmenitiesSection studio={studio} />
       <LocationSection studio={studio} />
-      <div className="h-24" />
-      <StudioBottomBar studio={studio} />
     </main>
   );
 }

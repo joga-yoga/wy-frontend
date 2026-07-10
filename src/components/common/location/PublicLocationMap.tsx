@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import useIsMobile from "@/hooks/useIsMobile";
 
-interface EventLeafletMapProps {
+interface PublicLocationMapProps {
   latitude: number;
   longitude: number;
   title?: string | null;
@@ -22,7 +22,7 @@ interface LeafletMapProps {
   scrollWheelZoom: boolean;
 }
 
-const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletMapProps) => {
+function LeafletMap({ dragging, latitude, longitude, scrollWheelZoom }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -30,9 +30,7 @@ const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletM
     let isMounted = true;
 
     const initMap = async () => {
-      if (!containerRef.current || !isMounted) {
-        return;
-      }
+      if (!containerRef.current || !isMounted) return;
 
       const L = await import("leaflet");
 
@@ -51,12 +49,10 @@ const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletM
       });
 
       L.control.attribution({ prefix: false }).addTo(map);
-
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
           '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">OpenStreetMap</a>',
       }).addTo(map);
-
       L.marker([latitude, longitude]).addTo(map);
 
       setTimeout(() => map?.invalidateSize(), 0);
@@ -74,23 +70,21 @@ const LeafletMap = ({ dragging, latitude, longitude, scrollWheelZoom }: LeafletM
   return (
     <div
       ref={containerRef}
-      className="h-full w-full md:rounded-lg z-0 [&_.leaflet-control-attribution]:!bg-white [&_.leaflet-control-attribution]:!pr-[10px] [&_.leaflet-control-attribution]:!pl-[3px] [&_.leaflet-control-attribution]:!rounded-tl-[6px]"
+      className="z-0 h-full w-full md:rounded-lg [&_.leaflet-control-attribution]:!rounded-tl-[6px] [&_.leaflet-control-attribution]:!bg-white [&_.leaflet-control-attribution]:!pr-[10px] [&_.leaflet-control-attribution]:!pl-[3px]"
     />
   );
-};
+}
 
-const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) => {
+export function PublicLocationMap({ latitude, longitude, title }: PublicLocationMapProps) {
   const isMobile = useIsMobile();
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => setIsClient(true), []);
 
   if (!isClient) {
     return (
-      <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-48 items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
         Loading map...
       </div>
     );
@@ -109,7 +103,7 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
           <DialogTrigger
             render={
               <Button
-                className="absolute top-2 right-2 rounded-full z-10"
+                className="absolute top-2 right-2 z-10 rounded-full"
                 variant="secondary"
                 size="icon"
               >
@@ -119,9 +113,9 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
           />
         )}
       </div>
-      <DialogContent className="h-full w-full p-0 max-w-full rounded-none">
+      <DialogContent className="h-full w-full max-w-full rounded-none p-0">
         <div className="hidden">
-          <DialogTitle>Map</DialogTitle>
+          <DialogTitle>{title ? `Mapa: ${title}` : "Mapa lokalizacji"}</DialogTitle>
         </div>
         {isFullScreen ? (
           <LeafletMap
@@ -134,6 +128,4 @@ const EventLeafletMap = ({ latitude, longitude, title }: EventLeafletMapProps) =
       </DialogContent>
     </Dialog>
   );
-};
-
-export default EventLeafletMap;
+}

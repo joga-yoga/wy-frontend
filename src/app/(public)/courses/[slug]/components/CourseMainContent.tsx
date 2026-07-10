@@ -15,8 +15,8 @@ import {
 import Link from "next/link";
 import React from "react";
 
-import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
 import { formatMultiLineText } from "@/app/(public)/retreats/[slug]/helpers";
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
 import { getCurrencySymbol } from "@/lib/currency";
 
@@ -540,7 +540,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
         <>
           <hr className="mt-6" />
           <div className="pt-6">
-            <EventLocation location={event.location} title={event.title} />
+            <PublicLocation location={event.location} title={event.title} />
           </div>
         </>
       )}

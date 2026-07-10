@@ -1,19 +1,10 @@
 "use client";
 
-import {
-  BarChart3,
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Flower2,
-  Navigation,
-} from "lucide-react";
+import { BarChart3, Building2, ChevronLeft, ChevronRight, Clock, Flower2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
-import type { LocationDetail } from "@/app/(public)/retreats/[slug]/types";
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import type { StudioPublic } from "@/types/studio";
@@ -32,11 +23,6 @@ function initials(name: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-}
-
-function googleMapsUrl(address?: string | null) {
-  if (!address) return "https://www.google.com/maps";
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
 function BackButton({ href }: { href: string }) {
@@ -208,44 +194,21 @@ function ClassLocationSection({ studio }: { studio: StudioPublic }) {
   const location = studio.location;
   const hasLatLng = location?.latitude != null && location?.longitude != null;
 
-  if (!studio.address && !hasLatLng) return null;
+  if (!studio.address && !location?.address_line1 && !hasLatLng) return null;
 
-  const mapsHref = googleMapsUrl(studio.address);
-
-  if (hasLatLng) {
-    const locationDetail: LocationDetail = {
-      id: "",
-      title: studio.name,
-      address_line1: studio.address || location?.address_line1 || null,
-      address_line2: null,
-      city: location?.city || null,
-      state_province: null,
-      postal_code: null,
-      country: null,
-      latitude: location!.latitude!,
-      longitude: location!.longitude!,
-      google_place_id: null,
-    };
-    return (
-      <section className="px-4 py-5">
-        <div className="mx-auto max-w-5xl">
-          <EventLocation location={locationDetail} title={studio.name} googleMapsHref={mapsHref} />
-        </div>
-      </section>
-    );
-  }
+  const publicLocation = {
+    title: location?.title ?? studio.name,
+    address: studio.address,
+    address_line1: location?.address_line1,
+    city: location?.city,
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+  };
 
   return (
     <section className="px-4 py-5">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-3 text-[18px] font-semibold text-[#222222]">Lokalizacja</h2>
-        <p className="mb-4 text-sm text-[#717171]">{studio.address}</p>
-        <Button asChild variant="outline" className="w-full">
-          <a href={mapsHref} target="_blank" rel="noopener noreferrer">
-            <Navigation className="mr-2 h-4 w-4" />
-            Nawiguj w Google Maps
-          </a>
-        </Button>
+        <PublicLocation location={publicLocation} title={studio.name} />
       </div>
     </section>
   );

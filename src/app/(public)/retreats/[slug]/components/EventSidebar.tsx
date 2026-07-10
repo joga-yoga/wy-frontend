@@ -50,7 +50,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
 }) => {
   return (
     <div className={`flex flex-col gap-5 md:gap-[44px] ${className}`}>
-      <div className="flex flex-col gap-2 border border-gray-100 rounded-[22px] shadow-[0px_8px_16px_8px_#FAFAFA] p-5">
+      <div className="flex flex-col gap-2 md:border border-gray-100 rounded-[22px] md:shadow-[0px_8px_16px_8px_#FAFAFA] md:p-5">
         <EventReservation event={event} project={project} />
         <div className="border border-gray-100 rounded-t-[20px] md:rounded-t-[4px] rounded-b-[20px]">
           <div className="p-5">

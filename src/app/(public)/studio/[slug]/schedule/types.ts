@@ -140,3 +140,8 @@ export interface PublicScheduleWeekResponse {
   week_end: string;
   days: PublicScheduleDaySummary[];
 }
+
+export interface PublicSchedulePreviewResponse {
+  studio_id: string;
+  occurrences: PublicOccurrence[];
+}
