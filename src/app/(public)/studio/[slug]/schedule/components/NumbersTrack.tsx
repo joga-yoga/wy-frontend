@@ -1,6 +1,12 @@
 "use client";
 
-import { animate, motion, type PanInfo, useMotionValue } from "motion/react";
+import {
+  animate,
+  type AnimationPlaybackControls,
+  motion,
+  type PanInfo,
+  useMotionValue,
+} from "motion/react";
 import {
   forwardRef,
   useEffect,
@@ -43,6 +49,17 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
   const [width, setWidth] = useState(0);
   const x = useMotionValue(0);
   const isAnimating = useRef(false);
+  const settleAnimation = useRef<AnimationPlaybackControls | null>(null);
+
+  // A drag or an external week change can interrupt an in-flight commit animation, in which
+  // case its onComplete (the only place that flips isAnimating back) never fires. Every
+  // interruption path must go through this reset, or commit() dead-locks and the track is
+  // left un-snapped.
+  function resetSettleState() {
+    settleAnimation.current?.stop();
+    settleAnimation.current = null;
+    isAnimating.current = false;
+  }
 
   useEffect(() => {
     const el = containerRef.current;
@@ -62,6 +79,7 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
   // snaps back to rest in the same frame the new week's numbers render, instead of one frame
   // later where the stale transform would briefly show the wrong panel.
   useLayoutEffect(() => {
+    resetSettleState();
     x.set(-width);
   }, [weekStart, width, x]);
 
@@ -69,7 +87,7 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
     if (isAnimating.current || width === 0) return;
     isAnimating.current = true;
     const target = -width - direction * width;
-    animate(x, target, {
+    settleAnimation.current = animate(x, target, {
       ...SPRING,
       onComplete: () => {
         onShiftWeek(direction * 7);
@@ -100,9 +118,14 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
         drag={width > 0 ? "x" : false}
         dragConstraints={{ left: -2 * width, right: 0 }}
         dragElastic={0.15}
+        onDragStart={resetSettleState}
         onDragEnd={(_event, info: PanInfo) => {
-          if (shouldCommitSwipe(info.offset.x, info.velocity.x, width)) {
-            commit(info.offset.x < 0 ? 1 : -1);
+          // Displacement from the rest position, not info.offset.x: a drag that starts
+          // mid-animation begins away from rest, so the gesture's own offset says nothing
+          // about which panel the track is actually closest to.
+          const delta = x.get() + width;
+          if (shouldCommitSwipe(delta, info.velocity.x, width)) {
+            commit(delta < 0 ? 1 : -1);
           } else {
             cancel();
           }
