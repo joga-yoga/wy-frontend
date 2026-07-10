@@ -1,11 +1,13 @@
 "use client";
 
+import { ImageIcon } from "lucide-react";
+
 import { WyImage } from "@/components/custom/WyImage";
 
-import type { StaticCompletedItem } from "./viewModel";
+import type { CompletedItemViewModel } from "./viewModel";
 
 type CompletedItemsPreviewProps = {
-  items: StaticCompletedItem[];
+  items: CompletedItemViewModel[];
 };
 
 export function CompletedItemsPreview({ items }: CompletedItemsPreviewProps) {
@@ -27,13 +29,19 @@ export function CompletedItemsPreview({ items }: CompletedItemsPreviewProps) {
         {items.map((item) => (
           <article key={item.id} className="flex items-center gap-3 rounded-2xl bg-[#FAFAFA] p-3">
             <div className="relative h-[75px] w-[75px] shrink-0 overflow-hidden rounded-xl bg-[#F7F7F7] md:h-[92px] md:w-[92px]">
-              <WyImage
-                src={item.imageId}
-                alt={item.title}
-                fill
-                className="object-cover grayscale"
-                sizes="(min-width: 768px) 92px, 75px"
-              />
+              {item.imageId ? (
+                <WyImage
+                  src={item.imageId}
+                  alt={item.title}
+                  fill
+                  className="object-cover grayscale"
+                  sizes="(min-width: 768px) 92px, 75px"
+                />
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center text-[#B0B0B0]">
+                  <ImageIcon aria-hidden="true" />
+                </span>
+              )}
             </div>
             <div className="min-w-0">
               <h3 className="text-[16px] font-semibold leading-5 text-[#222222]">{item.title}</h3>

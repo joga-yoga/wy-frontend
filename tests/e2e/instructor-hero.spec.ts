@@ -107,4 +107,24 @@ test.describe("instructor profile hero", () => {
     );
     expect(hasHorizontalOverflow).toBe(false);
   });
+
+  test("does not render sample sections on a real instructor profile", async ({ page }) => {
+    await page.goto("/instructor/hero-fixture");
+
+    await expect(page.getByText("Dane przykładowe")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Zajęcia", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Wyjazdy", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Wydarzenia", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Zrealizowano", exact: true })).toHaveCount(0);
+  });
+
+  test("labels sample data only on the generated preview", async ({ page }) => {
+    await page.goto("/create/preview/preview-fixture");
+
+    await expect(page.getByText("Dane przykładowe").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Wyjazdy", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Wydarzenia", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Zrealizowano", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Zajęcia", exact: true })).toHaveCount(0);
+  });
 });

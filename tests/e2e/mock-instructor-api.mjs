@@ -56,6 +56,42 @@ const instructorFixture = {
   past_retreats: [],
   upcoming_workshops: [],
   past_workshops: [],
+  upcoming_courses: [],
+  past_courses: [],
+};
+
+const generatedDraftFixture = {
+  draft_id: "preview-fixture",
+  public_token: "preview-fixture",
+  public_url: "/create/preview/preview-fixture",
+  status: "completed",
+  profile: {
+    instructor: {
+      ...instructorFixture.instructor,
+      id: "preview-fixture",
+      name: "Anna Kowalska",
+      description: null,
+      short_bio: null,
+      image_id: null,
+      studio_name: null,
+      languages: null,
+      cities: null,
+      photo_ids: null,
+      certificates: null,
+      yoga_styles: [],
+    },
+    upcoming_retreats: [],
+    past_retreats: [],
+    upcoming_workshops: [],
+    past_workshops: [],
+    upcoming_courses: [],
+    past_courses: [],
+  },
+  sources: [],
+  confidence: {},
+  image_provenance: {},
+  error_message: null,
+  expires_at: "2026-08-01T00:00:00.000Z",
 };
 
 const server = createServer((req, res) => {
@@ -70,6 +106,12 @@ const server = createServer((req, res) => {
   if (url.pathname === "/instructor/hero-fixture") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify(instructorFixture));
+    return;
+  }
+
+  if (url.pathname === "/instructor-profile-drafts/preview-fixture") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify(generatedDraftFixture));
     return;
   }
 

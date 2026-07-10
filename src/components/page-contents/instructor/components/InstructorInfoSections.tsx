@@ -189,15 +189,6 @@ export function InstructorCertificates({
 }: {
   certificates: InstructorCertificateViewModel[];
 }) {
-  const visibleCertificates =
-    certificates.length > 0
-      ? certificates
-      : [
-          { name: "Miejsce na certyfikat", imageId: null },
-          { name: "Miejsce na szkolenie", imageId: null },
-          { name: "Miejsce na edukację", imageId: null },
-        ];
-
   return (
     <section className="px-4 py-7 md:px-8 md:py-10" aria-labelledby="instructor-certificates-title">
       <SectionHeading
@@ -208,7 +199,7 @@ export function InstructorCertificates({
       </SectionHeading>
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-        {visibleCertificates.map((certificate, index) => (
+        {certificates.map((certificate, index) => (
           <article
             key={`${certificate.name}-${index}`}
             className="flex items-center gap-3 rounded-2xl border border-[#EBEBEB] bg-white p-4"

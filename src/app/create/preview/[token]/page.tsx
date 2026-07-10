@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { InstructorPageContent } from "@/components/page-contents/instructor/InstructorPageContent";
+import { GeneratedInstructorProfilePreview } from "@/components/create-profile/GeneratedInstructorProfilePreview";
 import { getGeneratedInstructorProfileDraft } from "@/lib/api/getGeneratedInstructorProfileDraft";
 
 interface PreviewPageProps {
@@ -29,23 +29,5 @@ export default async function GeneratedInstructorProfileDraftPreviewPage({
 
   const claimHref = `/create/claim/${draft.public_token}`;
 
-  return (
-    <InstructorPageContent
-      data={draft.profile}
-      draftNotice={
-        <div
-          className="rounded-xl border px-4 py-3 text-sm italic leading-5"
-          style={{ borderColor: "#EBEBEB", background: "#F7F7F7", color: "#52525B" }}
-        >
-          Profil utworzony automatycznie z publicznych informacji. Możesz założyć konto, poprawić
-          dane i opublikować
-        </div>
-      }
-      bottomPrimaryAction={{
-        label: "Załóż konto i opublikuj",
-        href: claimHref,
-        hideIcon: true,
-      }}
-    />
-  );
+  return <GeneratedInstructorProfilePreview draft={draft} claimHref={claimHref} />;
 }

@@ -14,12 +14,7 @@ type InstructorEventSectionProps = {
   items: InstructorEventCardViewModel[];
 };
 
-export function InstructorEventSection({
-  id,
-  title,
-  items,
-}: InstructorEventSectionProps) {
-  const isDemo = items.every((item) => item.isDemo);
+export function InstructorEventSection({ id, title, items }: InstructorEventSectionProps) {
   const emoji = title === "Wyjazdy" ? "🏕️" : title === "Wydarzenia" ? "🧘" : null;
 
   return (
@@ -51,7 +46,7 @@ function InstructorEventCard({ item }: { item: InstructorEventCardViewModel }) {
     <article
       className={cn(
         "flex h-[150px] w-full max-w-[366px] items-stretch gap-3 overflow-hidden md:max-w-none",
-        item.href && !item.isDemo && "transition-opacity hover:opacity-90",
+        item.href && "transition-opacity hover:opacity-90",
       )}
     >
       <div className="relative h-[150px] w-[150px] shrink-0 overflow-hidden rounded-2xl bg-[#F7F7F7]">
@@ -88,7 +83,7 @@ function InstructorEventCard({ item }: { item: InstructorEventCardViewModel }) {
     </article>
   );
 
-  if (!item.href || item.isDemo) {
+  if (!item.href) {
     return content;
   }
 
