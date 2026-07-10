@@ -60,7 +60,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
       setSubmitState("loading");
       setErrorMessage("");
 
-      const response = await axiosInstance.post("/orders", {
+      await axiosInstance.post("/orders", {
         event_id: event.id,
         email: data.email,
         preferred_contact: data.preferredContact,

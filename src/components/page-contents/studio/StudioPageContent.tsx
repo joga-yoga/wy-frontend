@@ -2,44 +2,43 @@
 
 import "swiper/css";
 
-import { ArrowRight, ChevronLeft, CreditCard, ImageIcon, MapPin, Navigation } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, CreditCard, ImageIcon, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IoInfinite as InfiniteIcon, IoPersonOutline } from "react-icons/io5";
+import { IoPersonOutline } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
-import { EventLocation } from "@/app/(public)/retreats/[slug]/components/EventLocation";
+import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
+import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
+import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
+import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
+import type {
+  PublicOccurrence,
+  PublicSchedulePreviewResponse,
+} from "@/app/(public)/studio/[slug]/schedule/types";
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
-import { getCurrencySymbol } from "@/lib/currency";
+import { axiosInstance } from "@/lib/axiosInstance";
+import { cn } from "@/lib/utils";
 import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
+
+import {
+  discountPercent,
+  formatMoney,
+  LightPassTile,
+  perEntry,
+  sportCardName,
+  sportCardPhoto,
+} from "./pricingHelpers";
+import { formatSneakDayHeader } from "./scheduleSneakUtils";
 
 interface StudioPageContentProps {
   studio: StudioPublic;
-}
-
-function formatMoney(value: number | null | undefined, currency?: string | null) {
-  if (value == null) return "";
-  return `${value.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(currency || "PLN")}`;
-}
-
-function googleMapsUrl(address?: string | null) {
-  if (!address) return "https://www.google.com/maps";
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-}
-
-function perEntry(pass: StudioPass) {
-  if (!pass.session_count || pass.session_count <= 0) return null;
-  return pass.price / pass.session_count;
-}
-
-function discountPercent(pass: StudioPass, dropInPrice?: number | null) {
-  const entry = perEntry(pass);
-  if (!entry || !dropInPrice || dropInPrice <= 0 || entry >= dropInPrice) return null;
-  return Math.round((1 - entry / dropInPrice) * 100);
+  initialSchedulePreview?: PublicSchedulePreviewResponse | null;
 }
 
 function initials(name: string) {
@@ -49,6 +48,128 @@ function initials(name: string) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+function formatWarsawDateShort(d: Date): string {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Warsaw",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function groupOccurrencesByDay(occurrences: PublicOccurrence[]) {
+  const groups: { date: string; occurrences: PublicOccurrence[] }[] = [];
+  for (const occ of occurrences) {
+    const last = groups[groups.length - 1];
+    if (last?.date === occ.calendar_date) {
+      last.occurrences.push(occ);
+    } else {
+      groups.push({ date: occ.calendar_date, occurrences: [occ] });
+    }
+  }
+  return groups;
+}
+
+function StudioScheduleSneak({
+  studioSlug,
+  preview,
+}: {
+  studioSlug: string;
+  preview?: PublicSchedulePreviewResponse | null;
+}) {
+  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
+  const occurrences = preview?.occurrences ?? [];
+  const groups = groupOccurrencesByDay(occurrences);
+  const todayStr = formatWarsawDateShort(new Date());
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-5">
+      <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Grafik zajęć</h2>
+
+      {groups.length > 0 && (
+        <div className="space-y-5">
+          {groups.map((group) => (
+            <div key={group.date}>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {formatSneakDayHeader(group.date, todayStr)}
+              </p>
+              <div className="space-y-2">
+                {group.occurrences.map((occ) => (
+                  <SessionCard
+                    key={occ.id}
+                    occ={occ}
+                    onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Link
+        href={`/studio/${studioSlug}/grafik`}
+        className="mt-3 grid h-12 w-full grid-cols-[16px_1fr_16px] items-center gap-3 rounded-xl bg-gray-950 px-4 text-md font-medium text-white transition-colors hover:bg-gray-800"
+      >
+        <Calendar className="h-4 w-4 shrink-0" />
+        <span className="text-center">Zobacz cały grafik</span>
+        <ArrowRight className="h-4 w-4 shrink-0" />
+      </Link>
+
+      <SessionDetailDrawer
+        occurrenceId={selectedOccurrenceId}
+        onClose={() => setSelectedOccurrenceId(null)}
+      />
+    </section>
+  );
+}
+
+function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
+  const [templates, setTemplates] = useState<ClassTemplateListResponse | null>(null);
+
+  useEffect(() => {
+    axiosInstance
+      .get<ClassTemplateListResponse>(`/public/studios/${studioSlug}/class-templates`)
+      .then((r) => setTemplates(r.data))
+      .catch(() => setTemplates({ total: 0, items: [] }));
+  }, [studioSlug]);
+
+  if (!templates || templates.items.length === 0) return null;
+
+  const preview = templates.items.slice(0, 3);
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-5">
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="text-[18px] font-semibold text-[#222222]">Zajęcia</h2>
+        <span className="text-sm text-[#717171]">{templates.total} rodzaje</span>
+      </div>
+
+      <div className="divide-y divide-gray-100">
+        {preview.map((item) => (
+          <ClassCard
+            key={item.id}
+            studioSlug={studioSlug}
+            item={item}
+            variant="compact"
+            backTo="studio"
+          />
+        ))}
+      </div>
+
+      <Link
+        href={`/studio/${studioSlug}/zajecia`}
+        className={cn(buttonVariants({ variant: "muted" }), "relative mt-3 h-12 w-full rounded-xl")}
+      >
+        Zobacz wszystkie zajęcia
+        <ArrowRight className="absolute right-4 h-4 w-4" />
+      </Link>
+    </section>
+  );
 }
 
 function GalleryLightbox({
@@ -340,39 +461,6 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
-function LightPassTile({
-  sessionCount,
-  durationDays,
-}: {
-  sessionCount?: number | null;
-  durationDays?: number | null;
-}) {
-  const isUnlimitedSessions = sessionCount == null;
-  const isUnlimitedDays = durationDays == null;
-  const hideDuration = durationDays === 0;
-
-  return (
-    <div className="flex h-[72px] w-[72px] shrink-0 flex-col items-center justify-center rounded-[10px] bg-[#F5F3EE]">
-      {isUnlimitedSessions ? (
-        <InfiniteIcon className="size-7 text-[#222222]" />
-      ) : (
-        <span className="text-2xl font-semibold leading-none text-[#222222]">{sessionCount}</span>
-      )}
-      {!hideDuration && (
-        <span className="mt-0.5 flex items-center text-[14px] font-medium text-[#888888]">
-          {isUnlimitedDays ? (
-            <>
-              <InfiniteIcon className="mr-0.5 size-3" /> dni
-            </>
-          ) : (
-            <>{durationDays} dni</>
-          )}
-        </span>
-      )}
-    </div>
-  );
-}
-
 function passDetailLines(
   pass: StudioPass,
   currency: string,
@@ -419,14 +507,14 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
   const hiddenPassCount = studio.passes.length - passLimit;
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-5">
+    <section id="pricing-section" className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Cennik</h2>
-      <div className="space-y-3">
+      <div className="divide-y divide-gray-100">
         {hasDropIn && (
           <button
             type="button"
             onClick={() => setShowDropIn(true)}
-            className="flex w-full items-center gap-4 rounded-xl border border-gray-200 bg-white p-2 pr-4 text-left"
+            className="flex w-full items-center gap-4 py-3 text-left"
           >
             <LightPassTile sessionCount={1} durationDays={0} />
             <div className="min-w-0 flex-1">
@@ -454,7 +542,7 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
               key={pass.id}
               type="button"
               onClick={() => setSelectedPass(pass)}
-              className="flex w-full items-center gap-4 rounded-xl border border-gray-200 bg-white p-2 pr-4 text-left"
+              className="flex w-full items-center gap-4 py-3 text-left"
             >
               <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
               <div className="min-w-0 flex-1">
@@ -474,16 +562,16 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
             </button>
           );
         })}
-        {!showAllPasses && hiddenPassCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowAllPasses(true)}
-            className="w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222]"
-          >
-            Pokaż wszystkie karnety (+{hiddenPassCount})
-          </button>
-        )}
       </div>
+      {!showAllPasses && hiddenPassCount > 0 && (
+        <Button
+          variant="muted"
+          className="mt-3 h-12 w-full rounded-xl"
+          onClick={() => setShowAllPasses(true)}
+        >
+          Pokaż wszystkie karnety
+        </Button>
+      )}
 
       <Drawer open={selectedPass != null} onOpenChange={(o) => !o && setSelectedPass(null)}>
         <DrawerContent>
@@ -573,14 +661,6 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
-function sportCardName(item: StudioSportCardAcceptance) {
-  return item.sport_card?.name ?? item.name ?? "Karta sportowa";
-}
-
-function sportCardPhoto(item: StudioSportCardAcceptance) {
-  return item.sport_card?.photo ?? item.photo ?? null;
-}
-
 function SportCardsSection({ studio }: { studio: StudioPublic }) {
   const [selectedCard, setSelectedCard] = useState<StudioSportCardAcceptance | null>(null);
   const [showAllCards, setShowAllCards] = useState(false);
@@ -592,7 +672,7 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
     selectedCard?.description || selectedCard?.sport_card?.description || null;
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-5">
+    <section id="sport-cards-section" className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-1 text-[18px] font-semibold text-[#222222]">Karty sportowe</h2>
       <p className="mb-4 text-sm text-[#717171]">
         Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za wejście.
@@ -646,13 +726,13 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
             </p>
           )}
           {!showAllCards && studio.sport_card_acceptances.length > 3 && (
-            <button
-              type="button"
+            <Button
+              variant="muted"
+              className="mt-3 h-12 w-full rounded-xl"
               onClick={() => setShowAllCards(true)}
-              className="mt-3 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-[#222222]"
             >
-              Pokaż wszystkie karty (+{studio.sport_card_acceptances.length - 3})
-            </button>
+              Pokaż wszystkie karty
+            </Button>
           )}
         </div>
       )}
@@ -756,54 +836,49 @@ function LocationSection({ studio }: { studio: StudioPublic }) {
   const location = studio.location;
   const hasLatLng = location?.latitude != null && location?.longitude != null;
 
-  if (!studio.address && !hasLatLng) return null;
+  if (!studio.address && !location?.address_line1 && !hasLatLng) return null;
 
-  const mapsHref = googleMapsUrl(studio.address);
-
-  if (hasLatLng) {
-    const locationDetail = {
-      id: "",
-      title: studio.name,
-      address_line1: studio.address || location?.address_line1 || null,
-      address_line2: null,
-      city: location?.city || null,
-      state_province: null,
-      postal_code: null,
-      country: null,
-      latitude: location!.latitude!,
-      longitude: location!.longitude!,
-      google_place_id: null,
-    };
-
-    return (
-      <section id="location-section" className="mx-auto max-w-5xl px-4 py-5">
-        <EventLocation location={locationDetail} title={studio.name} googleMapsHref={mapsHref} />
-      </section>
-    );
-  }
+  const publicLocation = {
+    title: location?.title ?? studio.name,
+    address: studio.address,
+    address_line1: location?.address_line1,
+    city: location?.city,
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+  };
 
   return (
     <section id="location-section" className="mx-auto max-w-5xl px-4 py-5">
-      <h2 className="mb-3 text-xl font-semibold text-[#222222]">Lokalizacja</h2>
-      <p className="mb-4 text-sm text-[#717171]">{studio.address}</p>
-      <Button asChild variant="outline" className="w-full">
-        <a href={mapsHref} target="_blank" rel="noopener noreferrer">
-          <Navigation className="mr-2 h-4 w-4" />
-          Nawiguj w Google Maps
-        </a>
-      </Button>
+      <PublicLocation location={publicLocation} title={studio.name} />
     </section>
   );
 }
 
+const AMENITIES_PREVIEW_COUNT = 10;
+
+function amenityCountLabel(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (count === 1) return "udogodnienie";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "udogodnienia";
+  return "udogodnień";
+}
+
 function AmenitiesSection({ studio }: { studio: StudioPublic }) {
+  const [showAll, setShowAll] = useState(false);
+
   if (!studio.amenities || studio.amenities.length === 0) return null;
+
+  const amenities = studio.amenities;
+  const hasMore = amenities.length > AMENITIES_PREVIEW_COUNT;
+  const visibleAmenities =
+    showAll || !hasMore ? amenities : amenities.slice(0, AMENITIES_PREVIEW_COUNT);
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Udogodnienia</h2>
       <div className="flex flex-wrap gap-2">
-        {studio.amenities.map((amenity) => (
+        {visibleAmenities.map((amenity) => (
           <span
             key={amenity.id}
             className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm text-[#444444]"
@@ -812,14 +887,27 @@ function AmenitiesSection({ studio }: { studio: StudioPublic }) {
           </span>
         ))}
       </div>
+      {hasMore && !showAll && (
+        <Button
+          variant="muted"
+          className="mt-4 h-12 w-full rounded-xl"
+          onClick={() => setShowAll(true)}
+        >
+          Pokaż wszystkie {amenities.length} {amenityCountLabel(amenities.length)}
+        </Button>
+      )}
     </section>
   );
 }
 
-export function StudioPageContent({ studio }: StudioPageContentProps) {
+export function StudioPageContent({ studio, initialSchedulePreview }: StudioPageContentProps) {
   return (
     <main className="min-h-screen bg-white text-gray-950">
       <HeroSection studio={studio} />
+      {studio.slug && (
+        <StudioScheduleSneak studioSlug={studio.slug} preview={initialSchedulePreview} />
+      )}
+      {studio.slug && <ZajeciaPreviewSection studioSlug={studio.slug} />}
       <InstructorsSection studio={studio} />
       <PricingSection studio={studio} />
       <SportCardsSection studio={studio} />

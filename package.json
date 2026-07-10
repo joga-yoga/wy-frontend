@@ -11,6 +11,7 @@
     "test:e2e": "yarn build && playwright test"
   },
   "dependencies": {
+    "@base-ui/react": "^1.6.0",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-alert-dialog": "^1.1.10",
     "@radix-ui/react-avatar": "^1.1.4",
@@ -34,7 +35,7 @@
     "date-fns": "^4.1.0",
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.535.0",
+    "lucide-react": "1.23.0",
     "mixpanel-browser": "^2.70.0",
     "motion": "^12.40.0",
     "next": "16.2.4",
@@ -48,7 +49,6 @@
     "react-leaflet": "5.0.0",
     "swiper": "^11.2.8",
     "tailwind-merge": "^3.2.0",
-    "vaul": "^1.1.2",
     "yup": "^1.6.1",
     "zod": "^3.24.2"
   },

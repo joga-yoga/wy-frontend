@@ -4,6 +4,7 @@ import { AlertTriangle, Lightbulb, X } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 
+import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -162,35 +163,17 @@ export function PassModal({
           {/* Ważność */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Ważność</label>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <button
-                type="button"
-                className={cn(
-                  "min-h-10 rounded-lg border text-sm",
-                  !durationUnlimited
-                    ? "border-brand-green font-semibold text-foreground"
-                    : "border-border text-muted-foreground",
-                )}
-                onClick={() => setDurationUnlimited(false)}
-              >
-                Liczba dni
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "min-h-10 rounded-lg border text-sm",
-                  durationUnlimited
-                    ? "border-brand-green font-semibold text-foreground"
-                    : "border-border text-muted-foreground",
-                )}
-                onClick={() => {
-                  setDurationUnlimited(true);
-                  setDurationDays("");
-                }}
-              >
-                ∞ Bez limitu
-              </button>
-            </div>
+            <SegmentedToggle
+              value={durationUnlimited}
+              onChange={(next) => {
+                setDurationUnlimited(next);
+                if (next) setDurationDays("");
+              }}
+              options={[
+                { label: "Liczba dni", value: false },
+                { label: "∞ Bez limitu", value: true },
+              ]}
+            />
             {durationUnlimited && (
               <p className="text-sm text-muted-foreground mb-2">
                 ∞ Karnet nie wygasa — ważny do wykorzystania wejść.
@@ -212,35 +195,17 @@ export function PassModal({
           {/* Liczba wejść */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Liczba wejść</label>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <button
-                type="button"
-                className={cn(
-                  "min-h-10 rounded-lg border text-sm",
-                  !sessionUnlimited
-                    ? "border-brand-green font-semibold text-foreground"
-                    : "border-border text-muted-foreground",
-                )}
-                onClick={() => setSessionUnlimited(false)}
-              >
-                Liczba
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "min-h-10 rounded-lg border text-sm",
-                  sessionUnlimited
-                    ? "border-brand-green font-semibold text-foreground"
-                    : "border-border text-muted-foreground",
-                )}
-                onClick={() => {
-                  setSessionUnlimited(true);
-                  setSessionCount("");
-                }}
-              >
-                ∞ Bez limitu
-              </button>
-            </div>
+            <SegmentedToggle
+              value={sessionUnlimited}
+              onChange={(next) => {
+                setSessionUnlimited(next);
+                if (next) setSessionCount("");
+              }}
+              options={[
+                { label: "Liczba", value: false },
+                { label: "∞ Bez limitu", value: true },
+              ]}
+            />
             {!sessionUnlimited && (
               <Input
                 type="number"
@@ -322,10 +287,8 @@ export function PassModal({
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <DrawerFooter className="flex-row gap-2">
-          <DrawerClose asChild>
-            <Button variant="outline" size="icon" className="shrink-0">
-              <X className="size-5" />
-            </Button>
+          <DrawerClose render={<Button variant="outline" size="icon" className="shrink-0" />}>
+            <X className="size-5" />
           </DrawerClose>
           <Button onClick={handleSave} disabled={isSaving} className="flex-1">
             {isSaving ? "Zapisuję..." : "Zapisz karnet"}

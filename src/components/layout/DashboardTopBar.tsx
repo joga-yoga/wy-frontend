@@ -7,16 +7,16 @@ import { IoChevronBack } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
 import { useNavigationBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/navigation-block";
-import { getOfertaCreatePath } from "@/app/profile/(dashboard)/oferta/ofertaConfig";
+import { getOfferCreatePath } from "@/app/profile/(dashboard)/offer/offerConfig";
 import { LogoFooter } from "@/components/layout/Footer";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 
-const MAIN_TAB_PATHS = ["/profile", "/profile/oferta", "/profile/konto"];
+const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"];
 const BECOME_PARTNER_PATH = "/profile/become-partner";
 
 const TAB_TITLES: Record<string, string> = {
-  "/profile/oferta": "Oferta",
-  "/profile/konto": "Konto",
+  "/profile/offer": "Oferta",
+  "/profile/account": "Konto",
 };
 
 function getPageTitle(pathname: string): string | undefined {
@@ -32,19 +32,52 @@ function getPageTitle(pathname: string): string | undefined {
   if (pathname.startsWith("/profile/courses/") && pathname.endsWith("/edit")) return "Edytuj kurs";
   if (pathname === "/profile/studio/create") return "Nowe studio";
   if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit")) return "Edytuj studio";
+  if (pathname === "/profile/class-templates") return "Szablony zajęć";
+  if (pathname === "/profile/class-templates/create") return "Nowy szablon";
+  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit"))
+    return "Edytuj szablon";
+  if (pathname === "/profile/class-schedules/create") return "Dodaj zajęcia";
+  if (pathname === "/profile/schedule") return "Grafik";
+  if (pathname === "/profile/schedule/instructor") return "Mój grafik";
+  if (pathname.startsWith("/profile/schedule/edit/")) return "Edytuj sesję";
+  if (pathname.startsWith("/profile/schedule/cancel/")) return "Odwołaj sesję";
+  return undefined;
+}
+
+function getBackHref(pathname: string): string | undefined {
+  if (pathname === "/profile/schedule") return "/profile";
+  if (pathname === "/profile/schedule/instructor") return "/profile";
+  if (pathname.startsWith("/profile/schedule/edit/")) return "/profile/schedule";
+  if (pathname.startsWith("/profile/schedule/cancel/")) return "/profile/schedule";
+  if (pathname === "/profile/class-schedules/create") return "/profile/schedule";
+  if (pathname === "/profile/class-templates") return "/profile/offer";
+  if (pathname === "/profile/class-templates/create") return "/profile/class-templates";
+  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit"))
+    return "/profile/class-templates";
+  if (pathname === "/profile/studio/create") return "/profile/offer";
+  if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit"))
+    return "/profile/offer";
+  if (pathname === "/profile/instructors") return "/profile/offer";
+  if (pathname === "/profile/instructors/create") return "/profile/instructors";
+  if (pathname.startsWith("/profile/instructors/") && pathname.endsWith("/edit"))
+    return "/profile/instructors";
   return undefined;
 }
 
 function BackButton() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isBlocked, openModal } = useNavigationBlocker();
 
   const handleBack = () => {
-    const goBack = () => startTransition(() => router.back());
+    const href = getBackHref(pathname);
+    const navigate = href
+      ? () => startTransition(() => router.push(href))
+      : () => startTransition(() => router.back());
     if (isBlocked) {
-      openModal(goBack);
+      openModal(navigate);
     } else {
-      goBack();
+      navigate();
     }
   };
 
@@ -68,17 +101,17 @@ export function DashboardTopBar() {
   // exit to the public site instead of a back button.
   const showHomeLogo = isMainTab || pathname === BECOME_PARTNER_PATH;
   const title = getPageTitle(pathname);
-  const showPlus = pathname === "/profile/oferta";
+  const showPlus = pathname === "/profile/offer";
 
   const handlePlus = () => {
     const filter = searchParams.get("filter");
-    const directPath = getOfertaCreatePath(filter, areClassesEnabled);
+    const directPath = getOfferCreatePath(filter, areClassesEnabled);
     if (directPath) {
       router.push(directPath);
     } else {
       const params = new URLSearchParams(searchParams.toString());
       params.set("create", "true");
-      router.push(`/profile/oferta?${params.toString()}`);
+      router.push(`/profile/offer?${params.toString()}`);
     }
   };
 

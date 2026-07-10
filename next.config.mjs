@@ -3,7 +3,7 @@
 const nextConfig = {
   cacheComponents: true,
   reactStrictMode: false,
-  allowedDevOrigins: ["172.20.10.4"],
+  allowedDevOrigins: ["172.20.10.4", "192.168.8.188"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
@@ -34,6 +34,10 @@ const nextConfig = {
       { source: "/kursy/:path*", destination: "/courses/:path*" },
       // Polish instructor URL → internal English route folder
       { source: "/instruktor/:slug", destination: "/instructor/:slug" },
+      // Public studio schedule route rename (grafik → schedule)
+      { source: "/studio/:slug/grafik", destination: "/studio/:slug/schedule" },
+      { source: "/studio/:slug/zajecia", destination: "/studio/:slug/classes" },
+      { source: "/studio/:slug/zajecia/:classSlug", destination: "/studio/:slug/classes/:classSlug" },
     ];
   },
   async redirects() {
@@ -42,6 +46,13 @@ const nextConfig = {
     const appJoga = { type: "host", value: "app.joga.yoga" };
 
     return [
+      // Polish → English dashboard route redirects (safety net for bookmarks)
+      { source: "/profile/grafik", destination: "/profile/schedule", permanent: false },
+      { source: "/profile/grafik/:path*", destination: "/profile/schedule/:path*", permanent: false },
+      { source: "/profile/oferta", destination: "/profile/offer", permanent: false },
+      { source: "/profile/oferta/:path*", destination: "/profile/offer/:path*", permanent: false },
+      { source: "/profile/konto", destination: "/profile/account", permanent: false },
+
       // ── Old domain → joga.yoga redirects (host-conditional, processed first) ──
 
       // wyjazdy.yoga

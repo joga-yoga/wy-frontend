@@ -1,6 +1,5 @@
 export * from "./CancellationPolicySection";
 export * from "./EventHeader";
-export * from "./EventLocation";
 export * from "./EventMainContent";
 export * from "./EventReservation";
 export * from "./EventSidebar";

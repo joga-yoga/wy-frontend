@@ -1,4 +1,5 @@
 "use client";
+import { LucideProvider } from "lucide-react";
 import { useEffect } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -20,8 +21,10 @@ export function Providers({ children }: React.PropsWithChildren) {
   return (
     <>
       <AuthProvider>
-        {children}
-        <Toaster />
+        <LucideProvider strokeWidth={1.75}>
+          {children}
+          <Toaster />
+        </LucideProvider>
       </AuthProvider>
     </>
   );

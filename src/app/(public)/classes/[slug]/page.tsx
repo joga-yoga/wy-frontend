@@ -5,12 +5,12 @@ import React from "react";
 
 import {
   EventHeader,
-  EventLocation,
   EventMainContent,
   EventSidebar,
   ImageGallery,
 } from "@/app/(public)/retreats/[slug]/components";
 import { isMultiDayEvent } from "@/app/(public)/retreats/[slug]/helpers";
+import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getClass } from "@/lib/api/getClass";
@@ -103,7 +103,7 @@ const ClassDetailPage = async ({ params }: ClassDetailPageProps) => {
         </div>
 
         <div className="mt-[44px]">
-          <EventLocation id="map" location={event.location} title={event.title} />
+          <PublicLocation id="map" location={event.location} title={event.title} />
         </div>
       </div>
     </div>
