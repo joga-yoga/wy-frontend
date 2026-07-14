@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import React from "react";
 
-import { EventHeader, ImageGallery } from "@/app/(public)/retreats/[slug]/components";
+import { EventHeader } from "@/app/(public)/retreats/[slug]/components";
+import { PhotoGallery } from "@/components/custom/PhotoGallery";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getCourse } from "@/lib/api/getCourse";
@@ -81,7 +82,7 @@ const CourseDetailPage = async ({ params }: CourseDetailPageProps) => {
       />
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
         <div className="flex flex-col gap-4">
-          <ImageGallery title={event.title} image_ids={event.image_ids || []} />
+          <PhotoGallery images={event.image_ids} alt={event.title} variant="grid" />
           <EventHeader title={event.title} eventId={slug} />
         </div>
         <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-12 lg:items-start">

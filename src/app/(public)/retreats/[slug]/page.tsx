@@ -4,13 +4,14 @@ import { connection } from "next/server";
 import React from "react";
 
 import { PublicLocation } from "@/components/common/location/PublicLocation";
+import { PhotoGallery } from "@/components/custom/PhotoGallery";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { isEventDetailNotFoundError } from "@/lib/api/eventDetailFetch";
 import { getRetreat } from "@/lib/api/getRetreat";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 import { buildEventJsonLd, buildPageMetadata } from "@/lib/seo";
 
-import { EventHeader, EventMainContent, EventSidebar, ImageGallery } from "./components";
+import { EventHeader, EventMainContent, EventSidebar } from "./components";
 import { isMultiDayEvent } from "./helpers";
 
 interface EventDetailPageProps {
@@ -81,7 +82,7 @@ const EventDetailPage = async ({ params }: EventDetailPageProps) => {
       />
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
         <EventHeader title={event.title} eventId={slug} />
-        <ImageGallery title={event.title} image_ids={event.image_ids || []} />
+        <PhotoGallery images={event.image_ids} alt={event.title} variant="grid" />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_400px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">
           <EventSidebar
