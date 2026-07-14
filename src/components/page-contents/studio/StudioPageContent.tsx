@@ -19,6 +19,7 @@ import type {
 } from "@/app/(public)/studio/[slug]/schedule/types";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
@@ -825,7 +826,11 @@ function InstructorsSection({ studio }: { studio: StudioPublic }) {
             </div>
           );
 
-          return <div key={instructor.id}>{href ? <Link href={href}>{row}</Link> : row}</div>;
+          return (
+            <div key={instructor.id}>
+              {href ? <DetailPageLink href={href}>{row}</DetailPageLink> : row}
+            </div>
+          );
         })}
       </div>
     </section>

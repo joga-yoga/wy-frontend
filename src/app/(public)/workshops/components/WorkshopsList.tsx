@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 
 import { Event } from "@/app/(public)/retreats/types";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext";
@@ -143,9 +143,9 @@ const WorkshopsList: React.FC<WorkshopsListProps> = ({ initialEvents, initialTot
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
         {events.map((event, index) => (
           <React.Fragment key={event.id}>
-            <Link href={`/wydarzenia/${event.slug}?from=/`} passHref>
+            <DetailPageLink href={`/wydarzenia/${event.slug}`}>
               <WorkshopCard event={event} />
-            </Link>
+            </DetailPageLink>
             {index < events.length - 1 && (
               <div className="w-full px-5 md:hidden">
                 <Separator className="bg-gray-400" />

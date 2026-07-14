@@ -60,6 +60,28 @@ const instructorFixture = {
   past_courses: [],
 };
 
+const navigationFixture = {
+  ...instructorFixture,
+  instructor: {
+    ...instructorFixture.instructor,
+    id: "navigation-fixture",
+    slug: "navigation-fixture",
+  },
+  upcoming_workshops: [
+    {
+      id: "destination-event",
+      slug: "destination-event",
+      title: "Navigation destination",
+      description: "Fixture used to verify detail-link origin tracking.",
+      start_date: "2026-09-12T10:00:00.000Z",
+      end_date: "2026-09-12T12:00:00.000Z",
+      price: 120,
+      currency: "PLN",
+      image_ids: [],
+    },
+  ],
+};
+
 const generatedDraftFixture = {
   draft_id: "preview-fixture",
   public_token: "preview-fixture",
@@ -106,6 +128,12 @@ const server = createServer((req, res) => {
   if (url.pathname === "/instructor/hero-fixture") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify(instructorFixture));
+    return;
+  }
+
+  if (url.pathname === "/instructor/navigation-fixture") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify(navigationFixture));
     return;
   }
 

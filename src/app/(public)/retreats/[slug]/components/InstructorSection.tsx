@@ -1,21 +1,15 @@
-import Link from "next/link";
 import React from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 
 import { EventDetail } from "../types";
 
 interface InstructorSectionProps {
   event: EventDetail;
-  eventSlug?: string;
-  project?: "retreats" | "workshops";
 }
 
-export const InstructorSection: React.FC<InstructorSectionProps> = ({
-  event,
-  eventSlug,
-  project,
-}) => {
+export const InstructorSection: React.FC<InstructorSectionProps> = ({ event }) => {
   if (!event.instructors || event.instructors.length === 0) {
     return null;
   }
@@ -53,18 +47,12 @@ export const InstructorSection: React.FC<InstructorSectionProps> = ({
           </div>
         );
 
-        const fromPrefix = project === "workshops" ? "/wydarzenia" : "/wyjazdy";
-        const instructorHref =
-          instructor.slug && eventSlug
-            ? `/instruktor/${instructor.slug}?from=${fromPrefix}/${eventSlug}`
-            : instructor.slug
-              ? `/instruktor/${instructor.slug}`
-              : null;
+        const instructorHref = instructor.slug ? `/instruktor/${instructor.slug}` : null;
 
         return instructorHref ? (
-          <Link key={instructor.id} href={instructorHref}>
+          <DetailPageLink key={instructor.id} href={instructorHref}>
             {card}
-          </Link>
+          </DetailPageLink>
         ) : (
           <React.Fragment key={instructor.id}>{card}</React.Fragment>
         );

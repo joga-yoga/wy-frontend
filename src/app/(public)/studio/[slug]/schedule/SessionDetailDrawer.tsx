@@ -25,6 +25,7 @@ import { SportCardLogo } from "@/components/booking/SportCardLogo";
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import {
   discountPercent,
   formatMoney,
@@ -408,7 +409,7 @@ function InstructorSection({
           <span>Zastępstwo na tych zajęciach</span>
         </div>
       )}
-      {href ? <Link href={href}>{row}</Link> : row}
+      {href ? <DetailPageLink href={href}>{row}</DetailPageLink> : row}
       {languageLines && (
         <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm leading-relaxed text-gray-600">
           <IoLanguage className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gray-500" />

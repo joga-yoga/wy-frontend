@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button } from "@/components/ui/button";
 import type { StudioPublic } from "@/types/studio";
 
@@ -149,9 +150,9 @@ function InstructorsSection({ classTemplate }: { classTemplate: ClassTemplateDet
               </div>
             );
             return instructor.slug ? (
-              <Link key={instructor.id} href={`/instruktor/${instructor.slug}`}>
+              <DetailPageLink key={instructor.id} href={`/instruktor/${instructor.slug}`}>
                 {row}
-              </Link>
+              </DetailPageLink>
             ) : (
               <div key={instructor.id}>{row}</div>
             );

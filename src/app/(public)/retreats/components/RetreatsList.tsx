@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext";
@@ -141,9 +141,9 @@ const RetreatsList: React.FC<RetreatsListProps> = ({ initialEvents, initialTotal
       <div className="flex flex-col gap-3 md:gap-6">
         {events.map((event, index) => (
           <React.Fragment key={event.id}>
-            <Link href={`/wyjazdy/${event.slug}?from=/wyjazdy`} passHref>
+            <DetailPageLink href={`/wyjazdy/${event.slug}`}>
               <EventCard event={event} />
-            </Link>
+            </DetailPageLink>
             {index < events.length - 1 && (
               <div className="w-full px-5">
                 <Separator className="bg-gray-400" />

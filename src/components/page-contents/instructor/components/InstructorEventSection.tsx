@@ -1,9 +1,9 @@
 "use client";
 
 import { ImageIcon } from "lucide-react";
-import Link from "next/link";
 
 import { WyImage } from "@/components/custom/WyImage";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { cn } from "@/lib/utils";
 
 import type { InstructorEventCardViewModel } from "./viewModel";
@@ -88,8 +88,8 @@ function InstructorEventCard({ item }: { item: InstructorEventCardViewModel }) {
   }
 
   return (
-    <Link href={item.href} className="block h-full">
+    <DetailPageLink href={item.href} className="block h-full">
       {content}
-    </Link>
+    </DetailPageLink>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CourseCard, type CourseCardEvent } from "@/app/(public)/courses/CourseCard";
 import { Event } from "@/app/(public)/retreats/types";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEventsFilter } from "@/context/EventsFilterContext";
@@ -167,13 +167,13 @@ const CombinedEventsList: React.FC<CombinedEventsListProps> = ({
         {combined.map((item, index) => (
           <React.Fragment key={item.id}>
             {item._type === "course" ? (
-              <Link href={`/kursy/${item.slug}?from=/`} passHref>
+              <DetailPageLink href={`/kursy/${item.slug}`}>
                 <CourseCard event={item} />
-              </Link>
+              </DetailPageLink>
             ) : (
-              <Link href={`/wydarzenia/${item.slug}?from=/`} passHref>
+              <DetailPageLink href={`/wydarzenia/${item.slug}`}>
                 <WorkshopCard event={item} />
-              </Link>
+              </DetailPageLink>
             )}
             {index < combined.length - 1 && (
               <div className="w-full px-5 md:hidden">

@@ -21,7 +21,6 @@ interface EventSidebarProps {
   className?: string;
   project: "retreats" | "workshops";
   isMultiDay: boolean;
-  eventSlug?: string;
 }
 
 const skillLevelTranslations: { [key: string]: string } = {
@@ -46,7 +45,6 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
   className,
   project,
   isMultiDay,
-  eventSlug,
 }) => {
   return (
     <div className={`flex flex-col gap-5 md:gap-[44px] ${className}`}>
@@ -145,7 +143,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
 
       {/* Instructor Section */}
       <div className="hidden lg:block">
-        <InstructorSection event={event} eventSlug={eventSlug} project={project} />
+        <InstructorSection event={event} />
       </div>
       <hr className="hidden lg:block" />
       {event.cancellation_policy ? (

@@ -12,12 +12,12 @@ import {
   Receipt,
   Shuffle,
 } from "lucide-react";
-import Link from "next/link";
 import React from "react";
 
 import { formatMultiLineText } from "@/app/(public)/retreats/[slug]/helpers";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
+import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { getCurrencySymbol } from "@/lib/currency";
 
 import { BALANCE_METHOD_SHORT, formatPolishDate } from "../helpers";
@@ -83,10 +83,9 @@ const CERT_DESIGNATION_LABELS: Record<string, string> = {
 
 interface CourseMainContentProps {
   event: CourseEventDetail;
-  eventSlug?: string;
 }
 
-export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eventSlug }) => {
+export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event }) => {
   const formatBadge = (() => {
     if (event.is_online && event.is_onsite) return { label: "Hybrydowo", Icon: Shuffle };
     if (event.is_online) return { label: "Online", Icon: Laptop };
@@ -111,8 +110,6 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
     !!event.payment_terms;
   const hasCancellation = !!event.cancellation_policy;
   const hasImportantInfo = !!event.important_info;
-
-  const fromPrefix = "/kursy";
 
   return (
     <div className="space-y-0 pb-24 lg:pb-0">
@@ -170,12 +167,7 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
             {event.instructors!.map((instructor) => {
               const initials = getInitials(instructor.name);
               const avatarColor = getAvatarColor(instructor.name);
-              const instructorHref =
-                instructor.slug && eventSlug
-                  ? `/instruktor/${instructor.slug}?from=${fromPrefix}/${eventSlug}`
-                  : instructor.slug
-                    ? `/instruktor/${instructor.slug}`
-                    : null;
+              const instructorHref = instructor.slug ? `/instruktor/${instructor.slug}` : null;
 
               const avatar = instructor.image_id ? (
                 <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0">
@@ -211,7 +203,11 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event, eve
 
               return (
                 <div key={instructor.id}>
-                  {instructorHref ? <Link href={instructorHref}>{row}</Link> : row}
+                  {instructorHref ? (
+                    <DetailPageLink href={instructorHref}>{row}</DetailPageLink>
+                  ) : (
+                    row
+                  )}
                   {/* {displayBio && (
                     <div className="mt-2">
                       <p className="text-sm text-gray-600 leading-relaxed">{displayBio}</p>

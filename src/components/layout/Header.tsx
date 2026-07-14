@@ -2,7 +2,7 @@
 import { ChevronLeft, LogOut } from "lucide-react";
 import { LayoutGroup, motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React from "react";
 import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
@@ -11,6 +11,7 @@ import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext";
+import { type NavigationOriginRecord, readNavigationOrigin } from "@/lib/navigation-origin";
 import { cn } from "@/lib/utils";
 
 import { WyImage } from "../custom/WyImage";
@@ -83,7 +84,6 @@ export const PublicHeader = () => {
   const { user } = useAuth();
   const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/wyjazdy/");
   const isWydarzenia =
@@ -106,7 +106,13 @@ export const PublicHeader = () => {
   const mobileTabIconHeight = useTransform(compactProgress, [0, 1], [36, 0]);
   const mobileTabIconMarginBottom = useTransform(compactProgress, [0, 1], [0, -2]);
 
-  const fromPath = searchParams.get("from");
+  const [navigationOrigin, setNavigationOrigin] = React.useState<NavigationOriginRecord | null>(
+    null,
+  );
+  React.useEffect(() => {
+    setNavigationOrigin(readNavigationOrigin(pathname));
+  }, [pathname]);
+  const storedOrigin = navigationOrigin?.target === pathname ? navigationOrigin.origin : null;
   const logoHref = isWyjazdy ? "/wyjazdy" : "/";
   if (isPartnersPage || isStudioPage) {
     return null;
@@ -120,12 +126,14 @@ export const PublicHeader = () => {
           <LogoFooter />
         </Link>
 
-        {/* Mobile: back button (from param or detail page) or logo */}
+        {/* Mobile: back button with a trusted origin, logo otherwise */}
         <Link
-          href={fromPath || logoHref}
+          href={storedOrigin ?? logoHref}
+          aria-label={storedOrigin ? "Wróć" : "Strona główna"}
           className="flex md:hidden items-center shrink-0 self-center"
+          data-testid="public-header-mobile-navigation"
         >
-          {fromPath ? (
+          {storedOrigin ? (
             <div className="h-10 w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
               <IoChevronBack className="h-6 w-6 ml-[-2px]" />
             </div>

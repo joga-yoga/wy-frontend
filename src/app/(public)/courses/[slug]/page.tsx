@@ -85,7 +85,7 @@ const CourseDetailPage = async ({ params }: CourseDetailPageProps) => {
           <EventHeader title={event.title} eventId={slug} />
         </div>
         <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-12 lg:items-start">
-          <CourseMainContent event={event} eventSlug={slug} />
+          <CourseMainContent event={event} />
           <CourseSidebar event={event} />
         </div>
       </div>
