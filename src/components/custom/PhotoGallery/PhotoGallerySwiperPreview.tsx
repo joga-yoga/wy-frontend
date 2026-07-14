@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { Keyboard } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
@@ -32,6 +33,8 @@ export function PhotoGallerySwiperPreview({
     >
       {images.length > 0 ? (
         <Swiper
+          modules={[Keyboard]}
+          keyboard={{ enabled: true }}
           onSwiper={(s) => (swiperRef.current = s)}
           onSlideChange={(s) => setActiveIndex(s.activeIndex)}
           className="h-full w-full"

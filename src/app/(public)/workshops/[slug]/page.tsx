@@ -85,7 +85,7 @@ const WorkshopDetailPage = async ({ params }: WorkshopDetailPageProps) => {
       />
       <div className="container-wy mx-auto p-4 pb-3 md:p-8">
         <EventHeader title={event.title} eventId={slug} />
-        <PhotoGallery images={event.image_ids} alt={event.title} variant="grid" />
+        <PhotoGallery images={event.image_ids} alt={event.title} variant="grid" className="mt-3" />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_428px] gap-y-10 lg:gap-y-0 lg:gap-x-16 mt-3 md:mt-[44px]">
           <EventSidebar

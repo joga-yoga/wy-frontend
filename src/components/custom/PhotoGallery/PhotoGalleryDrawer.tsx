@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
+import { Keyboard } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper/types";
 
@@ -114,6 +115,8 @@ export function PhotoGalleryDrawer({
         ) : (
           <div className="relative flex min-h-0 flex-1 items-center" data-base-ui-swipe-ignore="">
             <Swiper
+              modules={[Keyboard]}
+              keyboard={{ enabled: true }}
               initialSlide={zoomedIndex}
               onSwiper={(s) => (swiperRef.current = s)}
               onSlideChange={(s) => setZoomedIndex(s.activeIndex)}
