@@ -3,6 +3,5 @@ export * from "./EventHeader";
 export * from "./EventMainContent";
 export * from "./EventReservation";
 export * from "./EventSidebar";
-export * from "./ImageGallery";
 export * from "./InstructorSection";
 export * from "./OrganizerSection";
