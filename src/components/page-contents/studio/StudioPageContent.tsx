@@ -1,13 +1,9 @@
 "use client";
 
-import "swiper/css";
-
-import { ArrowRight, Calendar, ChevronLeft, CreditCard, ImageIcon, MapPin } from "lucide-react";
+import { ArrowRight, Calendar, CreditCard, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoPersonOutline } from "react-icons/io5";
-import { Swiper, SwiperSlide } from "swiper/react";
-import type { Swiper as SwiperType } from "swiper/types";
 
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
@@ -18,6 +14,7 @@ import type {
   PublicSchedulePreviewResponse,
 } from "@/app/(public)/studio/[slug]/schedule/types";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
+import { PhotoGallery } from "@/components/custom/PhotoGallery";
 import { WyImage } from "@/components/custom/WyImage";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -89,7 +86,7 @@ function StudioScheduleSneak({
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
-      <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Grafik zajęć</h2>
+      <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Najbliższe zajęcia</h2>
 
       {groups.length > 0 && (
         <div className="space-y-5">
@@ -173,112 +170,6 @@ function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
   );
 }
 
-function GalleryLightbox({
-  images,
-  initialIndex,
-  studioName,
-  onClose,
-}: {
-  images: string[];
-  initialIndex: number;
-  studioName: string;
-  onClose: () => void;
-}) {
-  const swiperRef = useRef<SwiperType | null>(null);
-  const [activeIndex, setActiveIndex] = useState(initialIndex);
-
-  return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black">
-      <div className="flex items-center justify-between px-4 py-3">
-        <button type="button" onClick={onClose} className="text-white">
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <span className="text-sm font-medium text-white">
-          {activeIndex + 1}/{images.length}
-        </span>
-        <div className="w-6" />
-      </div>
-      <div className="flex min-h-0 flex-1 items-center">
-        <Swiper
-          initialSlide={initialIndex}
-          onSwiper={(s) => (swiperRef.current = s)}
-          onSlideChange={(s) => setActiveIndex(s.activeIndex)}
-          className="h-full w-full"
-        >
-          {images.map((image, i) => (
-            <SwiperSlide key={`${image}-${i}`} className="flex items-center justify-center">
-              <div className="relative h-full w-full">
-                <WyImage
-                  src={image}
-                  alt={`${studioName} ${i + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="100vw"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </div>
-  );
-}
-
-function GalleryGridModal({
-  images,
-  studioName,
-  onClose,
-}: {
-  images: string[];
-  studioName: string;
-  onClose: () => void;
-}) {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  if (lightboxIndex != null) {
-    return (
-      <GalleryLightbox
-        images={images}
-        initialIndex={lightboxIndex}
-        studioName={studioName}
-        onClose={() => setLightboxIndex(null)}
-      />
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <button type="button" onClick={onClose} className="text-gray-900">
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <span className="text-sm font-semibold text-gray-900">Zdjęcia · {images.length}</span>
-        <div className="w-6" />
-      </div>
-      <div className="flex-1 overflow-y-auto p-2">
-        <div className="grid grid-cols-2 gap-1.5">
-          {images.map((image, i) => (
-            <button
-              key={`${image}-${i}`}
-              type="button"
-              onClick={() => setLightboxIndex(i)}
-              className="relative aspect-square overflow-hidden rounded-lg bg-gray-100"
-            >
-              <WyImage
-                src={image}
-                alt={`${studioName} ${i + 1}`}
-                fill
-                className="object-cover"
-                sizes="50vw"
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function StudioHeader() {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -350,14 +241,6 @@ function DescriptionBlock({ text }: { text: string }) {
 }
 
 function HeroSection({ studio }: { studio: StudioPublic }) {
-  const images = useMemo(() => {
-    const gallery = studio.image_ids?.filter(Boolean) ?? [];
-    return Array.from(new Set(gallery));
-  }, [studio.image_ids]);
-
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [galleryOpen, setGalleryOpen] = useState(false);
-
   const scrollToLocation = useCallback(() => {
     document.getElementById("location-section")?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -366,132 +249,37 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
   const [showAllStyles, setShowAllStyles] = useState(false);
 
   return (
-    <>
-      {galleryOpen && images.length > 0 && (
-        <GalleryGridModal
-          images={images}
-          studioName={studio.name}
-          onClose={() => setGalleryOpen(false)}
-        />
-      )}
-      <section className="relative">
-        <StudioHeader />
-        <div
-          className="relative aspect-[4/4] cursor-pointer overflow-hidden bg-gray-100 md:aspect-[21/9]"
-          onClick={() => images.length > 0 && setGalleryOpen(true)}
-        >
-          {images.length > 0 ? (
-            <Swiper onSlideChange={(s) => setActiveIndex(s.activeIndex)} className="h-full w-full">
-              {images.map((image, i) => (
-                <SwiperSlide key={`${image}-${i}`}>
-                  <div className="relative h-full w-full">
-                    <WyImage
-                      src={image}
-                      alt={`${studio.name} ${i + 1}`}
-                      fill
-                      fetchPriority={i === 0 ? "high" : undefined}
-                      className="object-cover"
-                      sizes="100vw"
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+    <section className="relative">
+      <StudioHeader />
+      <PhotoGallery images={studio.image_ids} alt={studio.name} />
+
+      <div className="relative z-10 mx-auto max-w-5xl px-4">
+        <div className="pointer-events-none relative -mt-[50px] h-[100px] w-[100px] overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
+          {studio.image_id ? (
+            <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <ImageIcon className="h-12 w-12 text-gray-300" />
-            </div>
-          )}
-          {images.length > 1 && (
-            <div className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-md bg-gray-800/80 px-2.5 py-1 text-xs font-semibold text-white">
-              {activeIndex + 1}/{images.length}
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xl font-bold text-gray-500">
+              {initials(studio.name)}
             </div>
           )}
         </div>
 
-        <div className="relative z-10 mx-auto max-w-5xl px-4">
-          <div className="pointer-events-none relative -mt-[50px] h-[100px] w-[100px] overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
-            {studio.image_id ? (
-              <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xl font-bold text-gray-500">
-                {initials(studio.name)}
-              </div>
-            )}
-          </div>
+        <h1 className="mt-2.5 text-xl font-bold text-gray-950 md:text-3xl">{studio.name}</h1>
 
-          <h1 className="mt-2.5 text-xl font-bold text-gray-950 md:text-3xl">{studio.name}</h1>
-
-          {studio.address && (
-            <button
-              type="button"
-              onClick={scrollToLocation}
-              className="mt-1.5 flex items-center gap-1.5 text-sm text-gray-600"
-            >
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span>{studio.address}</span>
-            </button>
-          )}
-
-          {styles.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(showAllStyles ? styles : styles.slice(0, 3)).map((style) => (
-                <span
-                  key={style.id}
-                  className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700"
-                >
-                  {style.name}
-                </span>
-              ))}
-              {!showAllStyles && styles.length > 3 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllStyles(true)}
-                  className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-500"
-                >
-                  +{styles.length - 3}
-                </button>
-              )}
-            </div>
-          )}
-
-          {studio.description && <DescriptionBlock text={studio.description} />}
-        </div>
-      </section>
-    </>
+        {studio.address && (
+          <button
+            type="button"
+            onClick={scrollToLocation}
+            className="mt-1.5 flex items-center gap-1.5 text-sm text-gray-600"
+          >
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span>{studio.address}</span>
+          </button>
+        )}
+        {studio.description && <DescriptionBlock text={studio.description} />}
+      </div>
+    </section>
   );
-}
-
-function passDetailLines(
-  pass: StudioPass,
-  currency: string,
-  dropInPrice?: number | null,
-): string[] {
-  const lines: string[] = [];
-  const isUnlimitedSessions = pass.session_count == null;
-  const isUnlimitedDays = pass.duration_days == null;
-
-  if (isUnlimitedSessions && isUnlimitedDays) {
-    lines.push("Bez limitu wejść i ważności.");
-  } else if (isUnlimitedSessions) {
-    lines.push(`Bez limitu wejść, ważny ${pass.duration_days} dni.`);
-  } else if (isUnlimitedDays) {
-    lines.push(`${pass.session_count} wejść, bez terminu ważności.`);
-  } else {
-    lines.push(`${pass.session_count} wejść w ${pass.duration_days} dni.`);
-  }
-
-  const entry = perEntry(pass);
-  if (entry != null) {
-    lines.push(`Cena za wejście: ${formatMoney(entry, pass.currency || currency)}.`);
-  }
-
-  const discount = discountPercent(pass, dropInPrice);
-  if (discount != null) {
-    lines.push(`Oszczędzasz ${discount}% w porównaniu do pojedynczego wejścia.`);
-  }
-
-  return lines;
 }
 
 function PricingSection({ studio }: { studio: StudioPublic }) {
