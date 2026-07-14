@@ -193,7 +193,7 @@ function PhotoGalleryGridPreview({
           variants={gridTileVariants}
           whileTap={{ scale: 0.95 }}
           className={cn(
-            "relative aspect-square cursor-pointer overflow-hidden bg-gray-100",
+            "relative aspect-square cursor-pointer overflow-hidden bg-gray-100 md:aspect-auto md:h-[168px]",
             GRID_TILE_CORNER_CLASSES[i],
           )}
         >
