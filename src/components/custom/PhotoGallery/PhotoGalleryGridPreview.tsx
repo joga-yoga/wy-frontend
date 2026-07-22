@@ -16,10 +16,10 @@ const GRID_TILE_CORNER_CLASSES = [
 ];
 
 const DESKTOP_THUMBNAIL_CORNER_CLASSES = [
+  "rounded-[4px]",
   "rounded-tr-[22px] rounded-b-[4px]",
   "rounded-[4px]",
   "rounded-br-[22px] rounded-t-[4px]",
-  "rounded-[4px]",
 ];
 
 export function PhotoGalleryGridPreview({
