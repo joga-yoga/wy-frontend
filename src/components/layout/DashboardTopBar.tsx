@@ -9,6 +9,7 @@ import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/
 import { useNavigationBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/navigation-block";
 import { getOfferCreatePath } from "@/app/profile/(dashboard)/offer/offerConfig";
 import { LogoFooter } from "@/components/layout/Footer";
+import { useOfferCreateMenu } from "@/context/OfferCreateMenuContext";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 
 const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"];
@@ -95,6 +96,7 @@ export function DashboardTopBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
+  const { openCreateMenu } = useOfferCreateMenu();
   const isMainTab = MAIN_TAB_PATHS.includes(pathname);
   // On become-partner the user has no partner profile yet, so back-navigation can
   // only lead into guarded pages (or the login bounce). Show the logo as a safe
@@ -109,9 +111,7 @@ export function DashboardTopBar() {
     if (directPath) {
       router.push(directPath);
     } else {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("create", "true");
-      router.push(`/profile/offer?${params.toString()}`);
+      openCreateMenu();
     }
   };
 

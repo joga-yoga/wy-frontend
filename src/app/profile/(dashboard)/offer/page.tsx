@@ -8,6 +8,7 @@ import {
   MoreVertical,
   Pencil,
   Plus,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,18 +27,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useOfferCreateMenu } from "@/context/OfferCreateMenuContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
@@ -306,7 +308,6 @@ export default function OfferPage() {
   const [loadingInstructors, setLoadingInstructors] = useState(true);
   const [acceptingInvitationId, setAcceptingInvitationId] = useState<string | null>(null);
   const [decliningInvitationId, setDecliningInvitationId] = useState<string | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -315,6 +316,7 @@ export default function OfferPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
+  const { isCreateMenuOpen, setIsCreateMenuOpen } = useOfferCreateMenu();
 
   const requestedFilter = searchParams.get("filter") ?? "all";
   const activeFilter: FilterType = isOfferFilterEnabled(requestedFilter, areClassesEnabled)
@@ -363,17 +365,6 @@ export default function OfferPage() {
     invitations.length,
     showBanner,
   ]);
-
-  // Open create dialog when ?create=true is pushed from DashboardTopBar
-  useEffect(() => {
-    if (searchParams.get("create") === "true") {
-      setIsCreateOpen(true);
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("create");
-      const qs = params.toString();
-      router.replace(`/profile/offer${qs ? `?${qs}` : ""}`, { scroll: false });
-    }
-  }, [searchParams, router]);
 
   // Fetch events
   useEffect(() => {
@@ -697,18 +688,26 @@ export default function OfferPage() {
     <>
       <FilterBar active={activeFilter} includeClasses={areClassesEnabled} onSelect={setFilter} />
 
-      {/* "Co chcesz dodać?" modal */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Co chcesz dodać?</DialogTitle>
-            <DialogDescription>Wybierz typ ogłoszenia.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
+      {/* "Co chcesz dodać?" drawer */}
+      <Drawer open={isCreateMenuOpen} onOpenChange={setIsCreateMenuOpen} showSwipeHandle>
+        <DrawerContent className="sm:mx-auto sm:max-w-2xl">
+          <div className="flex items-start justify-between px-4 pt-4">
+            <div className="min-w-0 pr-3">
+              <DrawerTitle className="text-2xl">Co chcesz dodać?</DrawerTitle>
+              <DrawerDescription className="mt-0.5">Wybierz typ ogłoszenia.</DrawerDescription>
+            </div>
+            <DrawerClose
+              aria-label="Zamknij"
+              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            >
+              <X className="h-4 w-4" />
+            </DrawerClose>
+          </div>
+          <div className="space-y-3 p-4 pt-2">
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <Link
                 href="/profile/retreats/create"
-                onClick={() => setIsCreateOpen(false)}
+                onClick={() => setIsCreateMenuOpen(false)}
                 className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
               >
                 <img
@@ -720,7 +719,7 @@ export default function OfferPage() {
               </Link>
               <Link
                 href="/profile/workshops/create"
-                onClick={() => setIsCreateOpen(false)}
+                onClick={() => setIsCreateMenuOpen(false)}
                 className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
               >
                 <img
@@ -732,7 +731,7 @@ export default function OfferPage() {
               </Link>
               <Link
                 href="/profile/courses/create"
-                onClick={() => setIsCreateOpen(false)}
+                onClick={() => setIsCreateMenuOpen(false)}
                 className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
               >
                 <img
@@ -745,7 +744,7 @@ export default function OfferPage() {
             </div>
             <Link
               href="/profile/instructors/create"
-              onClick={() => setIsCreateOpen(false)}
+              onClick={() => setIsCreateMenuOpen(false)}
               className="border rounded-xl p-4 hover:shadow-md transition bg-white flex items-center gap-4"
             >
               <span className="text-3xl leading-none" aria-hidden="true">
@@ -757,8 +756,8 @@ export default function OfferPage() {
               </div>
             </Link>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {isLoading ? (
         <div className="flex justify-center py-16">
@@ -766,7 +765,7 @@ export default function OfferPage() {
         </div>
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-4 space-y-6">
-          {showBanner && <WelcomeBanner onAddEvent={() => setIsCreateOpen(true)} />}
+          {showBanner && <WelcomeBanner onAddEvent={() => setIsCreateMenuOpen(true)} />}
           {/* Wyjazdy */}
           <EventSection
             title="Wyjazdy"

@@ -6,6 +6,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { DashboardTopBar } from "@/components/layout/DashboardTopBar";
 import { useAuth } from "@/context/AuthContext";
+import { OfferCreateMenuProvider } from "@/context/OfferCreateMenuContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { NavigationBlockerProvider } from "./components/EventForm/block-navigation/navigation-block";
@@ -103,13 +104,15 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <NavigationBlockerProvider>
-      <DashboardTopBar />
-      <div className="md:flex">
-        <BottomTabBar />
-        <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
-          <React.Fragment key={pathname}>{children}</React.Fragment>
-        </main>
-      </div>
+      <OfferCreateMenuProvider>
+        <DashboardTopBar />
+        <div className="md:flex">
+          <BottomTabBar />
+          <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
+            <React.Fragment key={pathname}>{children}</React.Fragment>
+          </main>
+        </div>
+      </OfferCreateMenuProvider>
     </NavigationBlockerProvider>
   );
 }
