@@ -1,5 +1,6 @@
 "use client";
 import { LucideProvider } from "lucide-react";
+import NextTopLoader from "nextjs-toploader";
 import { useEffect } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -20,6 +21,7 @@ export function Providers({ children }: React.PropsWithChildren) {
 
   return (
     <>
+      <NextTopLoader color="var(--brand-green-700)" height={3} showSpinner={false} shadow={false} />
       <AuthProvider>
         <LucideProvider strokeWidth={1.75}>
           {children}
