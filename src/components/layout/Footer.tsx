@@ -140,10 +140,10 @@ const FooterBottom = ({ onOpenCookieSettings }: { onOpenCookieSettings: () => vo
 export const Footer: React.FC = () => {
   const params = useParams();
   const pathname = usePathname();
-  const isEventPage = !!params.slug;
-  const project: "retreats" | "workshops" = pathname.startsWith("/wyjazdy")
-    ? "retreats"
-    : "workshops";
+  const isRetreatCtaPage = pathname === "/wyjazdy/dodaj" || pathname === "/retreats/dodaj";
+  const isEventPage = !!params.slug && !isRetreatCtaPage;
+  const project: "retreats" | "workshops" =
+    pathname.startsWith("/wyjazdy") || pathname.startsWith("/retreats") ? "retreats" : "workshops";
   const sectionPrefix = project === "retreats" ? "/wyjazdy" : "/wydarzenia";
   const FOOTER_SECTIONS = buildFooterSections(sectionPrefix, project);
 

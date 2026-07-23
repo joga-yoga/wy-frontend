@@ -23,13 +23,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  const staticRetreatRoutes = ["/wyjazdy", "/wyjazdy/faq/travelers", "/wyjazdy/faq/organizers"].map(
-    (route) => ({
-      url: `${BASE_URL}${route}`,
-      changeFrequency: "monthly" as const,
-      priority: route === "/wyjazdy" ? 0.9 : 0.7,
-    }),
-  );
+  const staticRetreatRoutes = [
+    "/wyjazdy",
+    "/wyjazdy/dodaj",
+    "/wyjazdy/faq/travelers",
+    "/wyjazdy/faq/organizers",
+  ].map((route) => ({
+    url: `${BASE_URL}${route}`,
+    changeFrequency: "monthly" as const,
+    priority: route === "/wyjazdy" ? 0.9 : 0.7,
+  }));
 
   let workshopRoutes: MetadataRoute.Sitemap = [];
   try {
