@@ -1,6 +1,7 @@
 import { discountPercent, formatMoney, LightPassTile, perEntry } from "./pricingHelpers";
 
 interface PassDetailBodyPass {
+  name: string;
   price: number;
   currency?: string | null;
   description?: string | null;
@@ -14,7 +15,7 @@ interface PassDetailBodyProps {
   currency?: string | null;
 }
 
-/** Tile + price/discount + description + Wejścia/Ważność/Cena-za-wejście rows, shared by
+/** Tile+title+price/discount + description + Wejścia/Ważność/Cena-za-wejście rows, shared by
  * `PassList`'s tappable detail drawer and the standalone `/book/pass/[passId]` checkout screen. */
 export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDetailBodyProps) {
   const passCurrency = pass.currency || currency;
@@ -25,21 +26,26 @@ export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDeta
 
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
-          <span className="text-2xl font-bold text-[#222222]">
-            {formatMoney(pass.price, passCurrency)}
-          </span>
+      <div className="flex items-center gap-4">
+        <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-bold text-[#222222]">{pass.name}</h2>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#222222]">
+              {formatMoney(pass.price, passCurrency)}
+            </span>
+            {discount != null && (
+              <span className="text-base font-semibold text-emerald-600">−{discount}%</span>
+            )}
+          </div>
         </div>
-        {discount != null && (
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-            −{discount}%
-          </span>
-        )}
       </div>
 
-      <div className="divide-y divide-gray-100 rounded-xl bg-[#FAFAFA] px-4">
+      {pass.description && (
+        <p className="mt-4 text-sm leading-relaxed text-[#717171]">{pass.description}</p>
+      )}
+
+      <div className="mt-4 divide-y divide-gray-100">
         <div className="flex items-center justify-between py-3">
           <span className="text-sm text-[#717171]">Wejścia</span>
           <span className="text-sm font-medium text-[#222222]">
@@ -61,10 +67,6 @@ export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDeta
           </div>
         )}
       </div>
-
-      {pass.description && (
-        <p className="mt-4 text-sm leading-relaxed text-[#717171]">{pass.description}</p>
-      )}
     </div>
   );
 }

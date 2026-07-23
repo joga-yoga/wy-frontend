@@ -56,15 +56,11 @@ function CheckoutScreen({
     <div className="mx-auto max-w-md p-4 pb-8">
       <CheckoutNav studioSlug={detail.studio.slug} title="Zakup karnetu" />
 
-      <h1 className="mt-2 text-xl font-extrabold text-gray-900">{detail.name}</h1>
-
-      <div className="mt-4">
-        <PassDetailBody
-          pass={detail}
-          dropInPrice={detail.studio.drop_in_price}
-          currency={detail.studio.currency}
-        />
-      </div>
+      <PassDetailBody
+        pass={detail}
+        dropInPrice={detail.studio.drop_in_price}
+        currency={detail.studio.currency}
+      />
 
       <PaymentMethodSection studio={{ accepts_stripe: detail.studio.accepts_stripe }} />
 

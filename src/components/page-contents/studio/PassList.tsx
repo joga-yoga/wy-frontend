@@ -1,10 +1,17 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import type { StudioPass } from "@/types/studio";
 
 import { PassDetailBody } from "./PassDetailBody";
@@ -99,11 +106,21 @@ export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProp
         </Button>
       )}
 
-      <Drawer open={selectedPass != null} onOpenChange={(o) => !o && setSelectedPass(null)}>
+      <Drawer
+        open={selectedPass != null}
+        onOpenChange={(o) => !o && setSelectedPass(null)}
+        showSwipeHandle
+      >
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{selectedPass?.name ?? ""}</DrawerTitle>
-          </DrawerHeader>
+          <div className="flex items-center justify-end px-4 pb-2 pt-2">
+            <DrawerTitle className="sr-only">{selectedPass?.name ?? ""}</DrawerTitle>
+            <DrawerClose
+              aria-label="Zamknij"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+            >
+              <X className="h-5 w-5" />
+            </DrawerClose>
+          </div>
           {selectedPass && (
             <div className="px-4 pb-6">
               <PassDetailBody pass={selectedPass} dropInPrice={dropInPrice} currency={currency} />
