@@ -3,12 +3,18 @@
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function CheckoutNav({ studioSlug }: { studioSlug?: string | null }) {
+export function CheckoutNav({
+  studioSlug,
+  title = "Rezerwacja",
+}: {
+  studioSlug?: string | null;
+  title?: string;
+}) {
   const router = useRouter();
 
   return (
     <div className="mb-4 flex items-center">
-      <p className="text-lg font-semibold text-gray-900">Rezerwacja</p>
+      <p className="text-lg font-semibold text-gray-900">{title}</p>
       <button
         type="button"
         aria-label="Zamknij rezerwację"
