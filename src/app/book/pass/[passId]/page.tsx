@@ -157,9 +157,19 @@ function BookPassContent() {
     router.replace(`/profile/login?next=${encodeURIComponent(pathname)}`);
   }, [authLoading, user, router, pathname]);
 
+  // Next.js's client router cache can keep this page's component instance (and its React
+  // state) alive across a client-side navigation to a different passId — e.g. buying pass A,
+  // then tapping "Kup karnet" for pass B from the studio page — rather than remounting fresh.
+  // Without resetting here, the confirmation screen / errors from pass A could still show while
+  // pass B's detail loads underneath them.
   useEffect(() => {
     if (!passId) return;
+    setScreen("checkout");
+    setSubmitError(null);
+    setIsSubmitting(false);
+    setPurchase(null);
     setDetailLoading(true);
+    setDetailError(null);
     axiosInstance
       .get<PassDetail>(`/public/passes/${passId}/detail`)
       .then((r) => setDetail(r.data))
