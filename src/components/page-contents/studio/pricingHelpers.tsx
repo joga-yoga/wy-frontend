@@ -2,19 +2,24 @@ import { IoInfinite as InfiniteIcon } from "react-icons/io5";
 
 import { getCurrencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import type { StudioPass, StudioSportCardAcceptance } from "@/types/studio";
+import type { StudioSportCardAcceptance } from "@/types/studio";
+
+interface PriceableItem {
+  price: number;
+  session_count?: number | null;
+}
 
 export function formatMoney(value: number | null | undefined, currency?: string | null) {
   if (value == null) return "";
   return `${value.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(currency || "PLN")}`;
 }
 
-export function perEntry(pass: StudioPass) {
+export function perEntry(pass: PriceableItem) {
   if (!pass.session_count || pass.session_count <= 0) return null;
   return pass.price / pass.session_count;
 }
 
-export function discountPercent(pass: StudioPass, dropInPrice?: number | null) {
+export function discountPercent(pass: PriceableItem, dropInPrice?: number | null) {
   const entry = perEntry(pass);
   if (!entry || !dropInPrice || dropInPrice <= 0 || entry >= dropInPrice) return null;
   return Math.round((1 - entry / dropInPrice) * 100);

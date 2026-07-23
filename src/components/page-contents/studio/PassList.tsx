@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import type { StudioPass } from "@/types/studio";
 
+import { PassDetailBody } from "./PassDetailBody";
 import { discountPercent, formatMoney, LightPassTile, perEntry } from "./pricingHelpers";
 
 interface PassListProps {
@@ -19,6 +21,7 @@ interface PassListProps {
  * are the studio page's pre-existing ones: `hasDropIn ? 2 : 3` visible passes, "Pokaż
  * wszystkie karnety" show-more button with no count suffix. */
 export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProps) {
+  const router = useRouter();
   const hasDropIn = dropInPrice != null;
   const [selectedPass, setSelectedPass] = useState<StudioPass | null>(null);
   const [showDropIn, setShowDropIn] = useState(false);
@@ -101,64 +104,19 @@ export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProp
           <DrawerHeader>
             <DrawerTitle>{selectedPass?.name ?? ""}</DrawerTitle>
           </DrawerHeader>
-          {selectedPass &&
-            (() => {
-              const passCurrency = selectedPass.currency || currency;
-              const entry = perEntry(selectedPass);
-              const discount = discountPercent(selectedPass, dropInPrice);
-              const isUnlimitedSessions = selectedPass.session_count == null;
-              const isUnlimitedDays = selectedPass.duration_days == null;
-
-              return (
-                <div className="px-4 pb-6">
-                  <div className="mb-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <LightPassTile
-                        sessionCount={selectedPass.session_count}
-                        durationDays={selectedPass.duration_days}
-                      />
-                      <span className="text-2xl font-bold text-[#222222]">
-                        {formatMoney(selectedPass.price, passCurrency)}
-                      </span>
-                    </div>
-                    {discount != null && (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                        −{discount}%
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="divide-y divide-gray-100 rounded-xl bg-[#FAFAFA] px-4">
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-sm text-[#717171]">Wejścia</span>
-                      <span className="text-sm font-medium text-[#222222]">
-                        {isUnlimitedSessions ? "Bez limitu" : selectedPass.session_count}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-sm text-[#717171]">Ważność</span>
-                      <span className="text-sm font-medium text-[#222222]">
-                        {isUnlimitedDays ? "Bezterminowo" : `${selectedPass.duration_days} dni`}
-                      </span>
-                    </div>
-                    {entry != null && (
-                      <div className="flex items-center justify-between py-3">
-                        <span className="text-sm text-[#717171]">Cena za wejście</span>
-                        <span className="text-sm font-medium text-[#222222]">
-                          {formatMoney(entry, passCurrency)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {selectedPass.description && (
-                    <p className="mt-4 text-sm leading-relaxed text-[#717171]">
-                      {selectedPass.description}
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
+          {selectedPass && (
+            <div className="px-4 pb-6">
+              <PassDetailBody pass={selectedPass} dropInPrice={dropInPrice} currency={currency} />
+              <Button
+                variant="green"
+                size="cta"
+                className="mt-5 w-full"
+                onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
+              >
+                Kup karnet · {formatMoney(selectedPass.price, selectedPass.currency || currency)}
+              </Button>
+            </div>
+          )}
         </DrawerContent>
       </Drawer>
 
