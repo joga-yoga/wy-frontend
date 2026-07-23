@@ -1,11 +1,11 @@
 "use client";
 
-import { CreditCard } from "lucide-react";
+import { CreditCard, X } from "lucide-react";
 import { useState } from "react";
 
 import { SportCardLogo } from "@/components/booking/SportCardLogo";
 import { WyImage } from "@/components/custom/WyImage";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import type { StudioSportCardAcceptance } from "@/types/studio";
 
 import { formatMoney, sportCardName, sportCardPhoto } from "./pricingHelpers";
@@ -32,6 +32,7 @@ export function SportCardList({
   const selectedPhoto = selectedCard ? sportCardPhoto(selectedCard) : null;
   const selectedDescription =
     selectedCard?.description || selectedCard?.sport_card?.description || null;
+  const selectedHasFee = selectedCard?.fee != null && selectedCard.fee > 0;
 
   return (
     <div>
@@ -72,12 +73,27 @@ export function SportCardList({
         </>
       )}
 
-      <Drawer open={selectedCard != null} onOpenChange={(o) => !o && setSelectedCard(null)}>
+      <Drawer
+        open={selectedCard != null}
+        onOpenChange={(o) => !o && setSelectedCard(null)}
+        showSwipeHandle
+      >
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{selectedCard ? sportCardName(selectedCard) : ""}</DrawerTitle>
-          </DrawerHeader>
+          <div className="flex items-center justify-end px-4 pb-2 pt-2">
+            <DrawerTitle className="sr-only">
+              {selectedCard ? sportCardName(selectedCard) : ""}
+            </DrawerTitle>
+            <DrawerClose
+              aria-label="Zamknij"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+            >
+              <X className="h-5 w-5" />
+            </DrawerClose>
+          </div>
           <div className="px-4 pb-6">
+            <h2 className="mb-4 text-lg font-bold text-[#222222]">
+              {selectedCard ? sportCardName(selectedCard) : ""}
+            </h2>
             {selectedPhoto ? (
               <div className="mb-4 overflow-hidden rounded-xl">
                 <WyImage
@@ -93,25 +109,18 @@ export function SportCardList({
                 <CreditCard className="h-8 w-8 text-[#BBBBBB]" />
               </div>
             )}
-            <div className="space-y-3">
-              <p className="text-[15px] leading-relaxed text-[#222222]">
-                {selectedCard?.fee != null && selectedCard.fee > 0 ? (
-                  <>
-                    Akceptujemy kartę{" "}
-                    <strong>{selectedCard ? sportCardName(selectedCard) : ""}</strong>. Do każdego
-                    wejścia obowiązuje dopłata {formatMoney(selectedCard.fee, currency)}.
-                  </>
-                ) : (
-                  <>
-                    Akceptujemy kartę{" "}
-                    <strong>{selectedCard ? sportCardName(selectedCard) : ""}</strong> bez
-                    dodatkowych opłat.
-                  </>
-                )}
-              </p>
-              {selectedDescription && (
-                <p className="text-sm leading-relaxed text-[#717171]">{selectedDescription}</p>
-              )}
+            {selectedDescription && (
+              <p className="text-base leading-relaxed text-[#717171]">{selectedDescription}</p>
+            )}
+            <div className="mt-4 divide-y divide-gray-100">
+              <div className="flex items-center justify-between py-3">
+                <span className="text-base text-[#717171]">Dopłata</span>
+                <span
+                  className={`text-base font-medium ${selectedHasFee ? "text-[#222222]" : "text-emerald-600"}`}
+                >
+                  {selectedHasFee ? formatMoney(selectedCard?.fee, currency) : "Bez dopłaty"}
+                </span>
+              </div>
             </div>
           </div>
         </DrawerContent>

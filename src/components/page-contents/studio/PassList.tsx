@@ -5,16 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import type { StudioPass } from "@/types/studio";
 
-import { PassDetailBody } from "./PassDetailBody";
+import { PassDetailBody, PassPriceHeader } from "./PassDetailBody";
 import { discountPercent, formatMoney, LightPassTile, perEntry } from "./pricingHelpers";
 
 interface PassListProps {
@@ -51,7 +45,7 @@ export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProp
           >
             <LightPassTile sessionCount={1} durationDays={0} />
             <div className="min-w-0 flex-1">
-              <h3 className="text-[15px] font-semibold text-[#222222]">Pojedyncze wejście</h3>
+              <h3 className="text-base font-semibold text-[#222222]">Pojedyncze wejście</h3>
               <p className="mt-0.5 text-sm text-[#717171]">Bez karnetu i karty sportowej</p>
             </div>
             <span className="shrink-0 text-lg font-semibold text-[#222222]">
@@ -80,7 +74,7 @@ export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProp
               <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-[15px] font-semibold text-[#222222]">{pass.name}</h3>
+                  <h3 className="text-base font-semibold text-[#222222]">{pass.name}</h3>
                   {discount != null && (
                     <span className="text-sm font-semibold text-emerald-600">−{discount}%</span>
                   )}
@@ -137,19 +131,26 @@ export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProp
         </DrawerContent>
       </Drawer>
 
-      <Drawer open={showDropIn} onOpenChange={setShowDropIn}>
+      <Drawer open={showDropIn} onOpenChange={setShowDropIn} showSwipeHandle>
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Pojedyncze wejście</DrawerTitle>
-          </DrawerHeader>
+          <div className="flex items-center justify-end px-4 pb-2 pt-2">
+            <DrawerTitle className="sr-only">Pojedyncze wejście</DrawerTitle>
+            <DrawerClose
+              aria-label="Zamknij"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
+            >
+              <X className="h-5 w-5" />
+            </DrawerClose>
+          </div>
           <div className="px-4 pb-6">
-            <div className="mb-5 flex items-center gap-4">
-              <LightPassTile sessionCount={1} durationDays={0} />
-              <span className="text-2xl font-bold text-[#222222]">
-                {formatMoney(dropInPrice, currency)}
-              </span>
-            </div>
-            <p className="text-[15px] leading-relaxed text-[#222222]">
+            <PassPriceHeader
+              title="Pojedyncze wejście"
+              price={dropInPrice}
+              currency={currency}
+              sessionCount={1}
+              durationDays={0}
+            />
+            <p className="mt-4 text-base leading-relaxed text-[#717171]">
               Cena za jedno wejście bez karnetu i bez karty sportowej.
             </p>
           </div>
