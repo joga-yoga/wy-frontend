@@ -131,7 +131,7 @@ function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
             key={item.id}
             studioSlug={studioSlug}
             item={item}
-            hideDescription
+            // hideDescription
             backTo="studio"
           />
         ))}
