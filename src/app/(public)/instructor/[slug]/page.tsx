@@ -35,6 +35,7 @@ export async function generateMetadata(
       description,
       path: `/instruktor/${slug}`,
       image: imageUrl || undefined,
+      noIndex: !instructor.is_published,
     }),
   };
 }
@@ -52,13 +53,15 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
 
   return (
     <>
-      <JsonLd
-        data={buildInstructorJsonLd({
-          path: `/instruktor/${slug}`,
-          instructor: data.instructor,
-          imageUrl: imageUrl || undefined,
-        })}
-      />
+      {data.instructor.is_published && (
+        <JsonLd
+          data={buildInstructorJsonLd({
+            path: `/instruktor/${slug}`,
+            instructor: data.instructor,
+            imageUrl: imageUrl || undefined,
+          })}
+        />
+      )}
       <InstructorPageContent data={data} />
     </>
   );

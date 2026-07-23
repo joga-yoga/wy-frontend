@@ -74,6 +74,7 @@ export interface InstructorPublic {
   certificates: CertificateItem[] | null;
   yoga_styles: InstructorYogaStyle[];
   social_links: SocialLinkOut[];
+  is_published: boolean;
   created_at: string;
   updated_at: string;
 }

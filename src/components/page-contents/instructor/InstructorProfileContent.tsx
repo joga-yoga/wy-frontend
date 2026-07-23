@@ -41,6 +41,9 @@ interface InstructorProfileContentProps {
   profile: InstructorProfileViewModel;
   notice?: ReactNode;
   bottomPrimaryAction?: InstructorBottomAction;
+  /** Suppresses the default "Napisz do mnie" CTA and its contact dialog entirely
+   * (e.g. unpublished/minimal profile with nobody to actually contact yet). */
+  hideBottomAction?: boolean;
   sampleSections?: Partial<Record<InstructorProfileSection, true>>;
 }
 
@@ -61,6 +64,7 @@ export function InstructorProfileContent({
   profile,
   notice,
   bottomPrimaryAction,
+  hideBottomAction = false,
   sampleSections = {},
 }: InstructorProfileContentProps) {
   const aboutRef = useRef<HTMLDivElement>(null);
@@ -215,34 +219,40 @@ export function InstructorProfileContent({
         <div className="h-24" />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#EBEBEB] bg-white">
-        <div className="container-wy mx-auto flex gap-3 px-4 py-3">
-          {hasAbout && (
-            <button
-              type="button"
-              onClick={() =>
-                aboutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
-              className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#222222] bg-white text-sm font-semibold text-[#222222]"
-              aria-label="Przejdź do O mnie"
-            >
-              <User data-icon="inline-start" size={16} /> O mnie
-            </button>
-          )}
+      {(hasAbout || !hideBottomAction) && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#EBEBEB] bg-white">
+          <div className="container-wy mx-auto flex gap-3 px-4 py-3">
+            {hasAbout && (
+              <button
+                type="button"
+                onClick={() =>
+                  aboutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+                className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#222222] bg-white text-sm font-semibold text-[#222222]"
+                aria-label="Przejdź do O mnie"
+              >
+                <User data-icon="inline-start" size={16} /> O mnie
+              </button>
+            )}
 
-          <button
-            type="button"
-            aria-label={bottomPrimaryAction?.label ?? `Napisz do: ${instructor.name}`}
-            onClick={handlePrimaryAction}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#222222] text-sm font-semibold text-white"
-          >
-            {!bottomPrimaryAction?.hideIcon && <MessageCircle size={16} data-icon="inline-start" />}
-            {bottomPrimaryAction?.label ?? "Napisz do mnie"}
-          </button>
+            {!hideBottomAction && (
+              <button
+                type="button"
+                aria-label={bottomPrimaryAction?.label ?? `Napisz do: ${instructor.name}`}
+                onClick={handlePrimaryAction}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#222222] text-sm font-semibold text-white"
+              >
+                {!bottomPrimaryAction?.hideIcon && (
+                  <MessageCircle size={16} data-icon="inline-start" />
+                )}
+                {bottomPrimaryAction?.label ?? "Napisz do mnie"}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {!bottomPrimaryAction && (
+      {!bottomPrimaryAction && !hideBottomAction && (
         <Dialog open={isContactModalOpen} onOpenChange={handleContactModalOpenChange}>
           <DialogContent className="sm:max-w-[560px]">
             {modalState === "default" && (
