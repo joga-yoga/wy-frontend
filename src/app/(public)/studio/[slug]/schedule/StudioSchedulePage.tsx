@@ -133,6 +133,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
     pendingScrollIndex.current = null;
     setWeekStart(getMonday(new Date()));
     setSelectedIndex(todayDayIndex());
+    setSelectedOccurrenceId(null);
   }, [pathname]);
 
   const fetchWeek = useCallback(() => {

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { getClassTemplateDetail } from "@/lib/api/getClassTemplateDetail";
 import { getStudio } from "@/lib/api/getStudio";
+import { getStudioSchedulePreview } from "@/lib/api/getStudioSchedulePreview";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -41,9 +42,20 @@ export default async function ClassDetailPage({ params }: Props) {
 
   if (!studio || !classTemplate) notFound();
 
+  const upcomingOccurrences = await getStudioSchedulePreview(studio.id, 3, classTemplate.id).catch(
+    (error) => {
+      console.error("Failed to load upcoming occurrences for class template", error);
+      return null;
+    },
+  );
+
   return (
     <Suspense>
-      <ClassLandingPage studio={studio} classTemplate={classTemplate} />
+      <ClassLandingPage
+        studio={studio}
+        classTemplate={classTemplate}
+        initialUpcomingOccurrences={upcomingOccurrences}
+      />
     </Suspense>
   );
 }

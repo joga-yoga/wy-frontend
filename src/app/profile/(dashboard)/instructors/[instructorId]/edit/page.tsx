@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
+import { SocialLinksField, type SocialLinkValue } from "@/components/common/SocialLinksField";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,7 @@ const schema = z.object({
   cities: z.array(z.any()).optional(),
   certificates: z.array(z.any()).optional(),
   yoga_styles: z.array(z.any()).optional(),
+  social_links: z.array(z.any()).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -92,6 +94,7 @@ export default function InstructorProfileEditPage() {
       cities: [],
       certificates: [],
       yoga_styles: [],
+      social_links: [],
     },
   });
 
@@ -121,6 +124,16 @@ export default function InstructorProfileEditPage() {
             custom_icon_id: ys.custom_icon_id ?? null,
             description: ys.description ?? null,
           })) as InstructorYogaStyleIn[],
+          social_links: (data.social_links ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((link) => ({
+              key: link.id,
+              url: link.url,
+              platform: link.platform as SocialLinkValue["platform"],
+              handle: link.handle,
+              label: link.label,
+            })),
         });
       })
       .catch(() => {
@@ -183,6 +196,11 @@ export default function InstructorProfileEditPage() {
         cities: (values.cities ?? []).length ? values.cities : null,
         certificates: (values.certificates ?? []).length ? values.certificates : null,
         yoga_styles: values.yoga_styles ?? [],
+        social_links: ((values.social_links ?? []) as SocialLinkValue[]).map((link, index) => ({
+          url: link.url,
+          label: link.platform === "custom" ? link.label || null : null,
+          position: index,
+        })),
       };
       const { data: updated } = await axiosInstance.put<InstructorProfile>(
         `/instructors/${params.instructorId}`,
@@ -530,6 +548,29 @@ export default function InstructorProfileEditPage() {
                 <FormControl>
                   <CertificatesField
                     value={(field.value ?? []) as CertificateItem[]}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Separator />
+
+          <FormField
+            control={form.control}
+            name="social_links"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Media społecznościowe</FormLabel>
+                <FormDescription>
+                  Wklej linki do Instagrama, Facebooka i innych profili — pojawią się jako ikony na
+                  publicznym profilu
+                </FormDescription>
+                <FormControl>
+                  <SocialLinksField
+                    value={(field.value ?? []) as SocialLinkValue[]}
                     onChange={field.onChange}
                   />
                 </FormControl>

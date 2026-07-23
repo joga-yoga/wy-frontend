@@ -1,5 +1,6 @@
 import { formatDateRange } from "@/lib/formatDateRange";
 import type { CertificateItem, InstructorDetails, InstructorYogaStyle } from "@/types/instructor";
+import type { SocialLinkOut } from "@/types/socialLink";
 
 import type { OrganizerEvent } from "../../organizer/types";
 import { formatTime } from "./helpers";
@@ -66,6 +67,7 @@ export type InstructorProfileViewModel = {
     roleLabel: "nauczyciel jogi";
     imageId: string | null;
     shortBio: string | null;
+    socialLinks: SocialLinkOut[];
   };
   highlights: InstructorHighlightViewModel[];
   bio: string | null;
@@ -114,6 +116,7 @@ export function buildInstructorProfileViewModel(
       roleLabel: "nauczyciel jogi",
       imageId: normalizeImageId(instructor.image_id),
       shortBio: normalizeText(instructor.short_bio),
+      socialLinks: instructor.social_links ?? [],
     },
     highlights: buildHighlights({
       certificates,

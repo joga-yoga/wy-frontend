@@ -1,5 +1,7 @@
 import * as yup from "yup";
 
+import type { SocialLinkValue } from "@/components/common/SocialLinksField";
+
 import type { StudioApiResponse, StudioFormValues, StudioLocation, StudioPayload } from "./types";
 
 const emptyToNull = <T>(value: T, originalValue: unknown) =>
@@ -79,6 +81,12 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     fee: cleanNumber(sc.fee),
   }));
 
+  const socialLinks = (values.social_links ?? []).map((link, index) => ({
+    url: link.url,
+    label: link.platform === "custom" ? cleanString(link.label) : null,
+    position: index,
+  }));
+
   return {
     name: values.name.trim(),
     slug: cleanString(values.slug),
@@ -103,6 +111,7 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     amenity_ids: values.amenity_ids ?? [],
     yoga_style_ids: values.yoga_style_ids ?? [],
     instructor_ids: values.instructor_ids ?? [],
+    social_links: socialLinks,
   };
 }
 
@@ -151,6 +160,16 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
     cancellation_policy_mode: studio.cancellation_policy_mode ?? "by_time_of_day",
     cancellation_morning_deadline_time: toTimeInputValue(studio.cancellation_morning_deadline_time),
     cancellation_afternoon_hours_before: studio.cancellation_afternoon_hours_before ?? null,
+    social_links: (studio.social_links ?? [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((link) => ({
+        key: link.id,
+        url: link.url,
+        platform: link.platform as SocialLinkValue["platform"],
+        handle: link.handle,
+        label: link.label,
+      })),
   };
 }
 
@@ -181,4 +200,5 @@ export const emptyStudioFormValues: StudioFormValues = {
   cancellation_policy_mode: "by_time_of_day",
   cancellation_morning_deadline_time: "22:00",
   cancellation_afternoon_hours_before: "",
+  social_links: [],
 };

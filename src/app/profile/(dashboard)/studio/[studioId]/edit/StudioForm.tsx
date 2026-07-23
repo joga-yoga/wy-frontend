@@ -22,6 +22,7 @@ import { Resolver, useForm } from "react-hook-form";
 import { PassTile } from "@/components/common/PassTile";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
+import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
 import { type Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { amenityIcon } from "@/lib/amenityIcons";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -837,6 +839,21 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     </div>
                   </div>
 
+                  {/* Social links */}
+                  <div>
+                    <label className="mb-1 block text-base font-semibold">
+                      Media społecznościowe
+                    </label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Wklej linki do Instagrama, Facebooka i innych profili studia — pojawią się
+                      jako ikony na publicznym profilu
+                    </p>
+                    <SocialLinksField
+                      value={values.social_links ?? []}
+                      onChange={(next) => setDirtyValue("social_links", next)}
+                    />
+                  </div>
+
                   {/* Udogodnienia (amenities) toggle chips */}
                   <div>
                     <label className="mb-1 block text-base font-semibold">Udogodnienia</label>
@@ -845,18 +862,24 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       wyborze
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {allAmenities.map((amenity) => (
-                        <Badge
-                          key={amenity.id}
-                          variant={
-                            (values.amenity_ids ?? []).includes(amenity.id) ? "default" : "outline"
-                          }
-                          className="cursor-pointer"
-                          onClick={() => toggleAmenity(amenity.id)}
-                        >
-                          {amenity.name}
-                        </Badge>
-                      ))}
+                      {allAmenities.map((amenity) => {
+                        const Icon = amenityIcon(amenity.icon_id);
+                        return (
+                          <Badge
+                            key={amenity.id}
+                            variant={
+                              (values.amenity_ids ?? []).includes(amenity.id)
+                                ? "default"
+                                : "outline"
+                            }
+                            className="cursor-pointer gap-1.5"
+                            onClick={() => toggleAmenity(amenity.id)}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {amenity.name}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

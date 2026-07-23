@@ -44,11 +44,14 @@ export function LightPassTile({
 
   return (
     <div
-      className="flex shrink-0 flex-col items-center justify-center rounded-[10px] bg-[#F5F3EE]"
+      className={cn(
+        "flex shrink-0 flex-col items-center justify-center rounded-[6px]",
+        isUnlimitedSessions ? "bg-brand-green-700" : "bg-[#F5F3EE]",
+      )}
       style={{ width: size, height: size }}
     >
       {isUnlimitedSessions ? (
-        <InfiniteIcon className={cn(compact ? "size-5" : "size-7", "text-[#222222]")} />
+        <InfiniteIcon className={cn("text-white", compact ? "size-5" : "size-7")} />
       ) : (
         <span
           className={cn(
@@ -62,7 +65,8 @@ export function LightPassTile({
       {!hideDuration && (
         <span
           className={cn(
-            "mt-0.5 flex items-center font-medium text-[#888888]",
+            "mt-0.5 flex items-center font-medium",
+            isUnlimitedSessions ? "text-gray-200" : "text-[#888888]",
             compact ? "text-[9px]" : "text-[14px]",
           )}
         >

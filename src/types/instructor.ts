@@ -1,3 +1,5 @@
+import type { SocialLinkOut } from "./socialLink";
+
 export interface YogaStyle {
   id: string;
   name: string;
@@ -46,6 +48,7 @@ export interface InstructorProfile {
   photo_ids: string[] | null;
   certificates: CertificateItem[] | null;
   yoga_styles: InstructorYogaStyle[];
+  social_links: SocialLinkOut[];
   created_by_partner_id: string | null;
   claimed_at: string | null;
   is_published: boolean;
@@ -70,6 +73,7 @@ export interface InstructorPublic {
   photo_ids: string[] | null;
   certificates: CertificateItem[] | null;
   yoga_styles: InstructorYogaStyle[];
+  social_links: SocialLinkOut[];
   created_at: string;
   updated_at: string;
 }
@@ -109,4 +113,5 @@ export interface InstructorUpdatePayload {
   photo_ids?: string[] | null;
   certificates?: CertificateItem[] | null;
   yoga_styles?: InstructorYogaStyleIn[];
+  social_links?: Array<{ url: string; label?: string | null; position: number }>;
 }

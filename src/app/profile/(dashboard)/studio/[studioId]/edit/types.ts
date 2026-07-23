@@ -1,3 +1,6 @@
+import type { SocialLinkValue } from "@/components/common/SocialLinksField";
+import type { SocialLinkOut } from "@/types/socialLink";
+
 export interface StudioRoom {
   id?: string;
   name: string;
@@ -85,6 +88,7 @@ export interface StudioFormValues {
   cancellation_policy_mode: string;
   cancellation_morning_deadline_time: string | null;
   cancellation_afternoon_hours_before: number | string | null;
+  social_links: SocialLinkValue[];
 }
 
 export interface StudioApiResponse {
@@ -132,6 +136,7 @@ export interface StudioApiResponse {
   amenity_ids: string[];
   yoga_style_ids: string[];
   instructor_links: Array<{ instructor_id: string; created_at: string }>;
+  social_links?: SocialLinkOut[];
   created_at: string;
   updated_at: string;
 }
@@ -174,4 +179,5 @@ export interface StudioPayload {
   amenity_ids?: string[];
   yoga_style_ids?: string[];
   instructor_ids?: string[];
+  social_links?: Array<{ url: string; label?: string | null; position: number }>;
 }
