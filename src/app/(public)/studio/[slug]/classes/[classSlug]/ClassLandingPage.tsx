@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, ChevronRight, Clock, Flower2 } from "lucide-react";
+import { BarChart3, Clock, Flower2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -9,9 +9,9 @@ import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/Se
 import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
 import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]/schedule/types";
 import { BackButton } from "@/components/common/BackButton";
-import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { InstructorList } from "@/components/common/InstructorList";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
+import { StudioCard } from "@/components/common/StudioCard";
 import { WyImage } from "@/components/custom/WyImage";
 import {
   formatSneakDayHeader,
@@ -182,25 +182,7 @@ function StudioCardSection({ studio }: { studio: StudioPublic }) {
     <section className="border-b px-4 py-5">
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-3 text-[18px] font-semibold text-[#222222]">Studio</h2>
-        <Link href={`/studio/${studio.slug}`} className="flex items-center gap-3">
-          <div className="w-12 shrink-0 overflow-hidden rounded-xl">
-            <HashedAvatar
-              seed={studio.id}
-              name={studio.name}
-              imageId={studio.image_id}
-              size={48}
-              imageFit="contain"
-              className="rounded-none bg-white"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold text-[#222222]">{studio.name}</p>
-            {studio.address && (
-              <p className="mt-0.5 truncate text-xs text-[#717171]">{studio.address}</p>
-            )}
-          </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-        </Link>
+        <StudioCard studio={studio} />
       </div>
     </section>
   );

@@ -14,6 +14,10 @@ interface ClassCardProps {
   backTo?: "studio";
   /** Studio-page preview hides the description; the /zajecia index shows it. */
   hideDescription?: boolean;
+  /** Studio attribution line, for aggregated multi-studio contexts (e.g. an instructor's
+   * classes list) where the studio isn't already implied by the surrounding page. Omitted
+   * on studio-owned pages, where it would be redundant. */
+  studioName?: string;
 }
 
 export function ClassCard({
@@ -22,6 +26,7 @@ export function ClassCard({
   className,
   backTo,
   hideDescription = false,
+  studioName,
 }: ClassCardProps) {
   const coverImage = item.image_ids?.[0];
   const metaLine = formatClassMetaLine(item);
@@ -44,6 +49,7 @@ export function ClassCard({
       <div className="min-w-0 flex-1">
         <p className="truncate text-[18px] font-semibold text-gray-900">{item.title}</p>
         {metaLine && <p className="mt-0.5 truncate text-[15px] text-gray-500">{metaLine}</p>}
+        {studioName && <p className="mt-0.5 truncate text-[13px] text-gray-400">{studioName}</p>}
         {!hideDescription && item.description && (
           <p className="mt-1 line-clamp-2 text-[15px] leading-[1.45] text-gray-500">
             {item.description}
@@ -51,7 +57,7 @@ export function ClassCard({
         )}
       </div>
 
-      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+      <ChevronRight className="h-5 w-5 shrink-0 self-center text-gray-500" />
     </Link>
   );
 }

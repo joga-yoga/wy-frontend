@@ -13,6 +13,9 @@ export interface PublicOccurrence {
   instructor_id?: string | null;
   instructor_name?: string | null;
   instructor_image_id?: string | null;
+  studio_id?: string | null;
+  studio_name?: string | null;
+  studio_image_id?: string | null;
   room_name?: string | null;
   capacity?: number | null;
   spots_remaining?: number | null;

@@ -3,6 +3,7 @@
 import { Check, ChevronRight, Clock } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
@@ -55,9 +56,17 @@ interface SessionCardProps {
   onClick?: (occ: PublicOccurrence) => void;
   /** Injectable for deterministic testing; defaults to the real current time. */
   now?: Date;
+  /** Which identity to highlight in the card row: the instructor (default, used on
+   * Studio profile pages) or the studio (used on Instructor profile pages). */
+  context?: "studio" | "instructor";
 }
 
-export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps) {
+export function SessionCard({
+  occ,
+  onClick,
+  now = new Date(),
+  context = "studio",
+}: SessionCardProps) {
   const state = computePrimaryState(occ, now);
   const isCancelled = state === "cancelled";
   const isPast = state === "past";
@@ -132,7 +141,21 @@ export function SessionCard({ occ, onClick, now = new Date() }: SessionCardProps
             {occ.template_title}
           </p>
 
-          {!isCancelled && occ.instructor_name && (
+          {!isCancelled && context === "instructor" && occ.studio_name && (
+            <div className="mt-1 flex items-center gap-1.5">
+              <HashedAvatar
+                seed={occ.studio_id ?? occ.studio_name}
+                name={occ.studio_name}
+                imageId={occ.studio_image_id}
+                size={20}
+                imageFit="contain"
+                className="bg-white"
+              />
+              <span className="truncate text-sm text-gray-500">{occ.studio_name}</span>
+            </div>
+          )}
+
+          {!isCancelled && context === "studio" && occ.instructor_name && (
             <div className="mt-1 flex items-center gap-1.5">
               <InstructorAvatar
                 name={occ.instructor_name}

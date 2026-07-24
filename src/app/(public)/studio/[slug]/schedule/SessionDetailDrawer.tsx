@@ -14,15 +14,14 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5";
 
 import { CancellationChip } from "@/components/booking/CancellationChip";
-import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
+import { StudioCard } from "@/components/common/StudioCard";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { hasPassPricing, PassList } from "@/components/page-contents/studio/PassList";
 import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
@@ -558,34 +557,10 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
 // ── Studio section (T07) ───────────────────────────────────────────────
 
 function StudioSection({ studio }: { studio: OccurrenceDetail["studio"] }) {
-  const href = studio.slug ? `/studio/${studio.slug}` : null;
-
-  const row = (
-    <div className="flex items-center gap-3">
-      <div className="w-12 shrink-0 overflow-hidden rounded-xl">
-        <HashedAvatar
-          seed={studio.id}
-          name={studio.name}
-          imageId={studio.image_id}
-          size={48}
-          imageFit="contain"
-          className="rounded-none bg-white"
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-[#222222]">{studio.name}</p>
-        {studio.address && (
-          <p className="mt-0.5 truncate text-xs text-[#717171]">{studio.address}</p>
-        )}
-      </div>
-      {href && <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />}
-    </div>
-  );
-
   return (
     <section className="space-y-3 px-4 py-4">
       <p className="text-[18px] font-semibold text-[#222222]">Studio</p>
-      {href ? <Link href={href}>{row}</Link> : row}
+      <StudioCard studio={studio} />
     </section>
   );
 }

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { InstructorPageContent } from "@/components/page-contents/instructor/InstructorPageContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getInstructor } from "@/lib/api/getInstructor";
+import { getInstructorSchedulePreview } from "@/lib/api/getInstructorSchedulePreview";
+import { getInstructorStudios } from "@/lib/api/getInstructorStudios";
 import { getOgImageUrl } from "@/lib/imageHelpers";
 import { buildInstructorJsonLd, buildPageMetadata } from "@/lib/seo";
 
@@ -49,6 +51,14 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
     notFound();
   }
 
+  const schedulePreview = await getInstructorSchedulePreview(slug).catch((error) => {
+    console.error("Error fetching instructor schedule preview:", error);
+    return null;
+  });
+  const studios = await getInstructorStudios(slug).catch((error) => {
+    console.error("Error fetching instructor studios:", error);
+    return [];
+  });
   const imageUrl = getOgImageUrl(data.instructor.image_id);
 
   return (
@@ -62,7 +72,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
           })}
         />
       )}
-      <InstructorPageContent data={data} />
+      <InstructorPageContent data={data} schedulePreview={schedulePreview} studios={studios} />
     </>
   );
 }

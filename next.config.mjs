@@ -34,6 +34,8 @@ const nextConfig = {
       { source: "/kursy/:path*", destination: "/courses/:path*" },
       // Polish instructor URL → internal English route folder
       { source: "/instruktor/:slug", destination: "/instructor/:slug" },
+      { source: "/instruktor/:slug/grafik", destination: "/instructor/:slug/schedule" },
+      { source: "/instruktor/:slug/zajecia", destination: "/instructor/:slug/classes" },
       // Public studio schedule route rename (grafik → schedule)
       { source: "/studio/:slug/grafik", destination: "/studio/:slug/schedule" },
       { source: "/studio/:slug/zajecia", destination: "/studio/:slug/classes" },

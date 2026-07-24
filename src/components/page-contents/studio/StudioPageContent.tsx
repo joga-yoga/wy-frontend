@@ -89,7 +89,10 @@ function StudioScheduleSneak({
 
       <Link
         href={`/studio/${studioSlug}/grafik`}
-        className="mt-3 grid h-12 w-full grid-cols-[16px_1fr_16px] items-center gap-3 rounded-xl bg-gray-950 px-4 text-md font-medium text-white transition-colors hover:bg-gray-800"
+        className={cn(
+          buttonVariants({ variant: "muted" }),
+          "relative mt-3 h-12 w-full rounded-xl grid grid-cols-[16px_1fr_16px] items-center gap-3 px-4!",
+        )}
       >
         <Calendar className="h-4 w-4 shrink-0" />
         <span className="text-center">Zobacz cały grafik</span>

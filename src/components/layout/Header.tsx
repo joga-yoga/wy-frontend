@@ -94,6 +94,9 @@ export const PublicHeader = () => {
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const isPartnersPage = pathname === "/partners";
   const isStudioPage = pathname.startsWith("/studio/");
+  const isInstructorScheduleOrClassesPage =
+    pathname.startsWith("/instruktor/") &&
+    (pathname.includes("/grafik") || pathname.includes("/zajecia"));
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -114,7 +117,7 @@ export const PublicHeader = () => {
   }, [pathname]);
   const storedOrigin = navigationOrigin?.target === pathname ? navigationOrigin.origin : null;
   const logoHref = isWyjazdy ? "/wyjazdy" : "/";
-  if (isPartnersPage || isStudioPage) {
+  if (isPartnersPage || isStudioPage || isInstructorScheduleOrClassesPage) {
     return null;
   }
 

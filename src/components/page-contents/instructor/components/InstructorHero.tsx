@@ -1,6 +1,5 @@
 "use client";
 
-import { SocialLinksRow } from "@/components/common/SocialLinksRow";
 import { WyImage } from "@/components/custom/WyImage";
 
 import { getInitials } from "./helpers";
@@ -63,8 +62,6 @@ export function InstructorHero({ hero }: InstructorHeroProps) {
               {hero.shortBio}
             </p>
           )}
-
-          <SocialLinksRow links={hero.socialLinks} />
         </div>
       </div>
     </section>

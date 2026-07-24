@@ -37,12 +37,7 @@ export type CompletedItemViewModel = {
   imageId: string | null;
 };
 
-export type InstructorHighlightKind =
-  | "experience"
-  | "certificate"
-  | "studio"
-  | "location"
-  | "language";
+export type InstructorHighlightKind = "experience" | "certificate" | "location" | "language";
 
 export type InstructorHighlightViewModel = {
   id: string;
@@ -53,10 +48,14 @@ export type InstructorHighlightViewModel = {
 export type InstructorProfileSection =
   | "hero"
   | "highlights"
+  | "schedule"
+  | "worksAt"
+  | "classes"
   | "retreats"
   | "workshops"
   | "completed"
   | "about"
+  | "social"
   | "experience"
   | "certificates"
   | "gallery";
@@ -108,7 +107,6 @@ export function buildInstructorProfileViewModel(
   const locations = (instructor.cities ?? [])
     .map(formatCityLabel)
     .filter((name): name is string => Boolean(name));
-  const studioName = normalizeLabel(instructor.studio_name);
 
   return {
     hero: {
@@ -120,7 +118,6 @@ export function buildInstructorProfileViewModel(
     },
     highlights: buildHighlights({
       certificates,
-      studioName,
       locations,
       experienceItems,
       languages,
@@ -129,7 +126,7 @@ export function buildInstructorProfileViewModel(
     languages,
     experienceItems,
     certificates,
-    galleryImageIds: unique(instructor.photo_ids ?? []).slice(0, 4),
+    galleryImageIds: unique(instructor.photo_ids ?? []),
     retreats: mapEvents(data.upcoming_retreats ?? [], "retreat"),
     workshops: mapEvents(data.upcoming_workshops ?? [], "workshop"),
     completedItems: mapCompletedEvents([
@@ -142,13 +139,11 @@ export function buildInstructorProfileViewModel(
 
 function buildHighlights({
   certificates,
-  studioName,
   locations,
   experienceItems,
   languages,
 }: {
   certificates: InstructorCertificateViewModel[];
-  studioName: string;
   locations: string[];
   experienceItems: InstructorStyleViewModel[];
   languages: { code: string; label: string }[];
@@ -167,9 +162,6 @@ function buildHighlights({
 
   if (primaryCertificate) {
     highlights.push({ id: "certificate", kind: "certificate", label: primaryCertificate });
-  }
-  if (studioName) {
-    highlights.push({ id: "studio", kind: "studio", label: `Studio: ${studioName}` });
   }
   if (primaryLocation) {
     highlights.push({ id: "location", kind: "location", label: primaryLocation });
