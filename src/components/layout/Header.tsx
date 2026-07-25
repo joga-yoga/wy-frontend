@@ -94,7 +94,13 @@ export const PublicHeader = () => {
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const isPartnersPage = pathname === "/partners";
   const isStudioPage = pathname.startsWith("/studio/");
-  const isRetreatCtaPage = pathname === "/wyjazdy/dodaj" || pathname === "/retreats/dodaj";
+  const isCtaPage =
+    pathname === "/wyjazdy/dodaj" ||
+    pathname === "/retreats/dodaj" ||
+    pathname === "/wydarzenia/dodaj" ||
+    pathname === "/workshops/dodaj" ||
+    pathname.startsWith("/instruktor/dodaj") ||
+    pathname.startsWith("/instructor/dodaj");
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -115,7 +121,7 @@ export const PublicHeader = () => {
   }, [pathname]);
   const storedOrigin = navigationOrigin?.target === pathname ? navigationOrigin.origin : null;
   const logoHref = isWyjazdy ? "/wyjazdy" : "/";
-  if (isPartnersPage || isStudioPage || isRetreatCtaPage) {
+  if (isPartnersPage || isStudioPage || isCtaPage) {
     return null;
   }
 
@@ -218,7 +224,7 @@ export const PublicHeader = () => {
         {/* Right Section: Actions & Profile */}
         <div className="ml-auto flex items-center gap-3 md:gap-3 self-center">
           <Link
-            href={isWyjazdy ? "/wyjazdy/dodaj" : "/partners"}
+            href={isWyjazdy ? "/wyjazdy/dodaj" : "/wydarzenia/dodaj"}
             passHref
             className={cn(isMainPage ? undefined : "hidden md:inline-block")}
           >
@@ -229,7 +235,7 @@ export const PublicHeader = () => {
             </button>
           </Link>
           <Link
-            href={isWyjazdy ? "/wyjazdy/dodaj" : "/partners"}
+            href={isWyjazdy ? "/wyjazdy/dodaj" : "/wydarzenia/dodaj"}
             passHref
             className={cn(isMainPage ? "hidden" : "md:hidden")}
           >

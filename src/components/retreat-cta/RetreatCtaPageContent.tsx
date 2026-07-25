@@ -3,23 +3,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ComponentType, SVGProps } from "react";
-import { useState } from "react";
 
 import type { Event } from "@/app/(public)/retreats/types";
 import { JogaYogaLogo } from "@/components/brand/JogaYogaLogo";
-import { WyImage } from "@/components/custom/WyImage";
+import {
+  CompactEventCard,
+  type CtaPageProperty,
+  type CtaProcessStep,
+  PagePropertiesGrid,
+  ProcessSteps,
+  SectionDivider,
+  SourceUrlForm,
+} from "@/components/event-cta/EventCtaShared";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { isValidRetreatSourceUrl, savePendingRetreatImport } from "@/lib/pendingRetreatImport";
-import { renderShortLocation } from "@/lib/renderLocation";
+import { savePendingRetreatImport } from "@/lib/pendingRetreatImport";
 import { cn } from "@/lib/utils";
 
 import {
   AccommodationIcon,
   AccountProcessIcon,
   ArrowDownIcon,
-  CardMapPinIcon,
   ContactIcon,
   EditProcessIcon,
   FacebookIcon,
@@ -39,13 +42,7 @@ const CREATE_RETREAT_FROM_URL_PATH = `${CREATE_RETREAT_PATH}?source=url`;
 const AUTH_CREATE_RETREAT_HREF = `/profile/login?next=${encodeURIComponent(CREATE_RETREAT_PATH)}`;
 const AUTH_IMPORT_RETREAT_HREF = `/profile/login?next=${encodeURIComponent(CREATE_RETREAT_FROM_URL_PATH)}`;
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
-
-const processSteps: Array<{
-  title: string;
-  description: string;
-  icon: IconComponent;
-}> = [
+const processSteps: CtaProcessStep[] = [
   {
     title: "Najpierw załóż konto",
     description: "To pomaga nam dbać o jakość ogłoszeń i kontakt z prawdziwymi organizatorami",
@@ -68,110 +65,57 @@ const processSteps: Array<{
   },
 ];
 
-const pageProperties: Array<{
-  title: string;
-  icon: IconComponent;
-  mobileOrderClass: string;
-}> = [
-  { title: "Krótki opis", icon: ShortDescriptionIcon, mobileOrderClass: "order-1" },
+const pageProperties: CtaPageProperty[] = [
+  { title: "Krótki opis", icon: ShortDescriptionIcon, className: "order-1" },
   {
     title: "Opcje zakwaterowania",
     icon: AccommodationIcon,
-    mobileOrderClass: "order-4",
+    className: "order-4",
   },
-  { title: "Cena i termin", icon: PriceDateIcon, mobileOrderClass: "order-2" },
+  { title: "Cena i termin", icon: PriceDateIcon, className: "order-2" },
   {
     title: "Program dzienny i harmonogram",
     icon: ProgramIcon,
-    mobileOrderClass: "order-5",
+    className: "order-5",
   },
   {
     title: "Profil prowadzącego / nauczyciela",
     icon: InstructorIcon,
-    mobileOrderClass: "order-6",
+    className: "order-6",
   },
   {
     title: "Galeria zdjęć i opisy miejsca",
     icon: GalleryIcon,
-    mobileOrderClass: "order-7",
+    className: "order-7",
   },
-  { title: "Lokalizacja i dojazd", icon: LocationIcon, mobileOrderClass: "order-3" },
+  { title: "Lokalizacja i dojazd", icon: LocationIcon, className: "order-3" },
   {
     title: "Informacje praktyczne",
     icon: PracticalInfoIcon,
-    mobileOrderClass: "order-8",
+    className: "order-8",
   },
-  { title: "Kontakt i zapisy", icon: ContactIcon, mobileOrderClass: "order-9" },
+  { title: "Kontakt i zapisy", icon: ContactIcon, className: "order-9" },
 ];
-
-function SectionDivider({ className }: { className?: string }) {
-  return (
-    <div className={cn("flex h-12 items-center px-2 md:h-[72px]", className)} aria-hidden="true">
-      <div className="h-px w-full bg-[#E4E4E7]" />
-    </div>
-  );
-}
 
 function ImportRetreatForm({ id }: { id: "mobile" | "desktop" }) {
   const router = useRouter();
-  const [url, setUrl] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const inputId = `retreat-source-url-${id}`;
-  const errorId = `${inputId}-error`;
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedUrl = url.trim();
-
-    if (!trimmedUrl) {
-      setError("Wklej link do strony swojego wyjazdu.");
-      return;
-    }
-
-    if (!isValidRetreatSourceUrl(trimmedUrl)) {
-      setError("Wpisz prawidłowy adres URL, np. https://twoja-strona.pl/wyjazd");
-      return;
-    }
-
-    savePendingRetreatImport(trimmedUrl);
-    router.push(AUTH_IMPORT_RETREAT_HREF);
-  };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-4 md:w-[520px]">
-      <div>
-        <label htmlFor={inputId} className="sr-only">
-          Link do strony wyjazdu
-        </label>
-        <Input
-          id={inputId}
-          type="url"
-          inputMode="url"
-          autoComplete="url"
-          placeholder="Wklej link do swojego wydarzenia"
-          value={url}
-          onChange={(event) => {
-            setUrl(event.target.value);
-            if (error) setError(null);
-          }}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-          className="h-9 rounded-xl border-[#71717A] bg-white px-3 text-[12px] placeholder:text-[#D4D4D8] md:h-11 md:p-[10px] md:text-[18px]"
-        />
-        {error && (
-          <p id={errorId} role="alert" className="mt-2 text-[13px] leading-4 text-destructive">
-            {error}
-          </p>
-        )}
-      </div>
-      <Button
-        type="submit"
-        variant="cta"
-        className="h-[34px] w-full rounded-[22px] text-[15px] font-normal md:h-[43px] md:text-[20px]"
-      >
-        Utwórz stronę z linku
-      </Button>
-    </form>
+    <SourceUrlForm
+      id={`retreat-source-url-${id}`}
+      label="Link do strony wyjazdu"
+      placeholder="Wklej link do swojego wydarzenia"
+      buttonLabel="Utwórz stronę z linku"
+      emptyError="Wklej link do strony swojego wyjazdu."
+      invalidError="Wpisz prawidłowy adres URL, np. https://twoja-strona.pl/wyjazd"
+      onValidSubmit={(url) => {
+        savePendingRetreatImport(url);
+        router.push(AUTH_IMPORT_RETREAT_HREF);
+      }}
+      className="flex w-full flex-col gap-4 md:w-[520px]"
+      inputClassName="h-9 rounded-xl border-[#71717A] bg-white px-3 text-[12px] placeholder:text-[#D4D4D8] md:h-11 md:p-[10px] md:text-[18px]"
+      buttonClassName="h-[34px] w-full rounded-[22px] text-[15px] font-normal md:h-[43px] md:text-[20px]"
+    />
   );
 }
 
@@ -185,23 +129,13 @@ function ProcessAndImportSection() {
         >
           Co będzie dalej po naciśnięciu:
         </h2>
-        <div className="mt-4 grid gap-4 md:mx-auto md:mt-10 md:w-[824px] md:grid-cols-2 md:gap-6">
-          {processSteps.map((step) => {
-            const Icon = step.icon;
-            return (
-              <article
-                key={step.title}
-                className="flex items-center gap-[18px] md:min-h-[113px] md:rounded-xl md:border md:border-[#E4E4E7] md:bg-[#F2F2F3] md:p-6"
-              >
-                <Icon className="size-9 shrink-0" aria-hidden="true" />
-                <div className="min-w-0">
-                  <h3 className="text-[18px] font-medium leading-6 text-[#27272A]">{step.title}</h3>
-                  <p className="text-[15px] leading-5 text-[#71717A]">{step.description}</p>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        <ProcessSteps
+          steps={processSteps}
+          className="mt-4 grid gap-4 md:mx-auto md:mt-10 md:w-[824px] md:grid-cols-2 md:gap-6"
+          itemClassName="gap-[18px] md:min-h-[113px] md:rounded-xl md:border md:border-[#E4E4E7] md:bg-[#F2F2F3] md:p-6"
+          titleClassName="text-[18px] font-medium leading-6 text-[#27272A]"
+          descriptionClassName="text-[15px] leading-5 text-[#71717A]"
+        />
 
         <div className="my-7 h-px bg-[#E4E4E7] md:hidden" aria-hidden="true" />
 
@@ -218,7 +152,7 @@ function ProcessAndImportSection() {
         </div>
       </div>
 
-      <SectionDivider className="hidden md:flex" />
+      <SectionDivider className="hidden md:flex md:h-[72px]" />
 
       <div className="hidden items-center justify-between bg-[#F2F2F3] px-24 py-[72px] md:flex">
         <div>
@@ -350,53 +284,13 @@ function PagePropertiesSection() {
       >
         Co zawiera strona Twojego wyjazdu
       </h2>
-      <div className="mt-6 grid gap-y-3 md:grid-cols-3 md:gap-x-16 md:gap-y-6">
-        {pageProperties.map((property) => {
-          const Icon = property.icon;
-          return (
-            <div
-              key={property.title}
-              className={cn("flex items-center gap-4 md:order-none", property.mobileOrderClass)}
-            >
-              <Icon className="size-6 shrink-0" aria-hidden="true" />
-              <span className="text-[15px] font-medium leading-[25px] text-[#71717A] md:text-[20px]">
-                {property.title}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      <PagePropertiesGrid
+        properties={pageProperties}
+        className="mt-6 grid gap-y-3 md:grid-cols-3 md:gap-x-16 md:gap-y-6"
+        itemClassName="gap-4 md:order-none"
+        textClassName="text-[15px] font-medium leading-[25px] text-[#71717A] md:text-[20px]"
+      />
     </section>
-  );
-}
-
-function RetreatExampleCard({ event }: { event: Event }) {
-  const imageId = event.image_ids?.[0] ?? null;
-  const location = renderShortLocation(event.location);
-
-  return (
-    <Link
-      href={`/wyjazdy/${event.slug}`}
-      className="flex h-[75px] w-full shrink-0 snap-start overflow-hidden rounded-xl border border-[#E5E0D8] bg-white shadow-[0_8px_9px_rgba(0,0,0,0.06)] md:h-[108px]"
-    >
-      <div className="relative size-[75px] shrink-0 overflow-hidden bg-[#E4E4E7] md:h-[108px] md:w-[72px]">
-        {imageId ? (
-          <WyImage src={imageId} alt={event.title} fill className="object-cover" sizes="75px" />
-        ) : null}
-      </div>
-      <div className="min-w-0 flex-1 px-4 py-2 md:py-[18px]">
-        <h3 className="truncate text-[15px] font-semibold text-[#27272A]">{event.title}</h3>
-        <p className="mt-1 line-clamp-2 text-[12px] leading-4 text-[#757580] md:line-clamp-1 md:text-[13px]">
-          {event.description || "Wyjazd jogowy na joga.yoga"}
-        </p>
-        {location && (
-          <div className="mt-1 hidden items-center gap-1 md:flex">
-            <CardMapPinIcon className="h-[11px] w-[10px]" aria-hidden="true" />
-            <span className="truncate text-[12px] text-[#9D9DA5]">{location}</span>
-          </div>
-        )}
-      </div>
-    </Link>
   );
 }
 
@@ -426,7 +320,11 @@ function ExamplesSection({ events }: { events: Event[] }) {
         <div className="-mx-1 mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-3 md:mx-0 md:mt-9 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0">
           {events.map((event) => (
             <div key={event.id} className="w-full shrink-0 md:w-auto">
-              <RetreatExampleCard event={event} />
+              <CompactEventCard
+                event={event}
+                hrefPrefix="/wyjazdy"
+                fallbackDescription="Wyjazd jogowy na joga.yoga"
+              />
             </div>
           ))}
         </div>
@@ -480,13 +378,13 @@ export function RetreatCtaPageContent({ events }: { events: Event[] }) {
         </div>
       </section>
 
-      <SectionDivider />
+      <SectionDivider className="md:h-[72px]" />
       <ProcessAndImportSection />
-      <SectionDivider />
+      <SectionDivider className="md:h-[72px]" />
       <BenefitsSection />
-      <SectionDivider />
+      <SectionDivider className="md:h-[72px]" />
       <PagePropertiesSection />
-      <SectionDivider />
+      <SectionDivider className="md:h-[72px]" />
       <ExamplesSection events={events} />
     </main>
   );

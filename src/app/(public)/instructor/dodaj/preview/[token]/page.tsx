@@ -27,7 +27,7 @@ export default async function GeneratedInstructorProfileDraftPreviewPage({
     notFound();
   }
 
-  const claimHref = `/create/claim/${draft.public_token}`;
+  const claimHref = `/instruktor/dodaj/claim/${draft.public_token}`;
 
   return <GeneratedInstructorProfilePreview draft={draft} claimHref={claimHref} />;
 }

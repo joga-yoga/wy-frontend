@@ -85,7 +85,7 @@ const navigationFixture = {
 const generatedDraftFixture = {
   draft_id: "preview-fixture",
   public_token: "preview-fixture",
-  public_url: "/create/preview/preview-fixture",
+  public_url: "/instruktor/dodaj/preview/preview-fixture",
   status: "completed",
   profile: {
     instructor: {
@@ -140,6 +140,12 @@ const server = createServer((req, res) => {
   if (url.pathname === "/instructor-profile-drafts/preview-fixture") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify(generatedDraftFixture));
+    return;
+  }
+
+  if (url.pathname === "/instructors/public") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify([]));
     return;
   }
 

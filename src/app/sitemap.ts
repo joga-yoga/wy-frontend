@@ -9,19 +9,23 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
 
-  const staticRoutes = ["/", "/partners", "/contact", "/policy", "/terms"].map((route) => ({
-    url: `${BASE_URL}${route}`,
-    changeFrequency: "monthly" as const,
-    priority: route === "/" ? 1 : 0.7,
-  }));
-
-  const staticWorkshopRoutes = ["/wydarzenia/faq/travelers", "/wydarzenia/faq/organizers"].map(
+  const staticRoutes = ["/", "/partners", "/contact", "/policy", "/terms", "/instruktor/dodaj"].map(
     (route) => ({
       url: `${BASE_URL}${route}`,
       changeFrequency: "monthly" as const,
-      priority: 0.7,
+      priority: route === "/" ? 1 : 0.7,
     }),
   );
+
+  const staticWorkshopRoutes = [
+    "/wydarzenia/dodaj",
+    "/wydarzenia/faq/travelers",
+    "/wydarzenia/faq/organizers",
+  ].map((route) => ({
+    url: `${BASE_URL}${route}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
 
   const staticRetreatRoutes = [
     "/wyjazdy",
