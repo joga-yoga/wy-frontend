@@ -32,7 +32,7 @@ export type CtaPageProperty = {
 
 export function SectionDivider({ className }: { className?: string }) {
   return (
-    <div className={cn("flex h-12 items-center px-2 md:h-[48px]", className)} aria-hidden="true">
+    <div className={cn("flex h-12 items-center px-6 md:h-[48px]", className)} aria-hidden="true">
       <div className="h-px w-full bg-[#E4E4E7]" />
     </div>
   );

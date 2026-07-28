@@ -87,6 +87,9 @@ const pageProperties: CtaPageProperty[] = [
   { title: "Kontakt lub zapisy", icon: ContactPropertyIcon },
 ];
 
+const SECTION_HEADING_CLASS_NAME =
+  "text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:text-[30px] md:tracking-[-0.6px]";
+
 export function InstructorCtaPageContent({
   additionalInstructors,
 }: {
@@ -356,10 +359,7 @@ function InstructorDraftForm({
 function ProcessSection() {
   return (
     <section aria-labelledby="instructor-process-title" className="px-8 md:h-[158px] md:px-20">
-      <h2
-        id="instructor-process-title"
-        className="text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:text-[30px] md:tracking-[-0.6px]"
-      >
+      <h2 id="instructor-process-title" className={SECTION_HEADING_CLASS_NAME}>
         Co będzie dalej:
       </h2>
       <ProcessSteps
@@ -382,6 +382,28 @@ function BenefitCopy({ title, description }: { title: string; description: strin
       <p className="text-[15px] font-medium leading-[22px] text-[#71717A] md:mt-1 md:text-[20px] md:leading-[25px] md:tracking-[-0.2px]">
         {description}
       </p>
+    </div>
+  );
+}
+
+function ScheduleBenefitCard() {
+  return (
+    <div
+      data-testid="instructor-schedule-benefit"
+      className="flex flex-col items-start justify-center gap-2 overflow-hidden rounded-[11px] bg-white px-6 py-4 ring-1 ring-inset ring-[#D4D4D8] md:flex-row md:items-center md:gap-6"
+    >
+      <h3 className="text-[22px] font-medium leading-[30px] tracking-[-0.44px] text-[#27272A] md:hidden">
+        Jeden grafik z różnych miejsc
+      </h3>
+
+      <div className="flex w-full items-center gap-2 md:contents">
+        <BenefitCalendarIcon className="size-9 shrink-0 md:size-11" aria-hidden="true" />
+        <div className="min-w-0 flex-1 md:flex md:flex-col md:gap-1">
+          <p className="text-[18px] font-medium leading-[22px] tracking-[-0.36px] text-[#71717A] md:text-[20px] md:leading-[25px] md:tracking-[-0.2px]">
+            Połącz zajęcia z kilku studiów w jeden grafik
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -422,13 +444,7 @@ function BenefitsSection() {
               title="Twórz i sprzedawaj swoje wydarzenia"
               description="Warsztaty, kursy i wyjazdy z łatwą rejestracją"
             />
-            <div className="flex items-center gap-6 rounded-xl border border-[#D4D4D8] bg-white px-6 py-4">
-              <BenefitCalendarIcon className="size-8 shrink-0 md:size-11" aria-hidden="true" />
-              <BenefitCopy
-                title="Jeden grafik z różnych miejsc"
-                description="Połącz zajęcia z kilku studiów w jeden grafik"
-              />
-            </div>
+            <ScheduleBenefitCard />
             <BenefitCopy
               title="Widoczność w mieście"
               description="Zajęcia łatwo znaleźć lokalnie"
@@ -443,10 +459,7 @@ function BenefitsSection() {
 function PropertiesSection() {
   return (
     <section aria-labelledby="instructor-properties-title" className="px-8 md:h-[278px] md:px-24">
-      <h2
-        id="instructor-properties-title"
-        className="text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:text-[30px] md:tracking-[-0.6px]"
-      >
+      <h2 id="instructor-properties-title" className={SECTION_HEADING_CLASS_NAME}>
         Co zawiera Twoja strona
       </h2>
       <PagePropertiesGrid
@@ -466,20 +479,17 @@ function InstructorExamplesSection({
   additionalInstructors: InstructorPublicListItem[];
 }) {
   return (
-    <section aria-labelledby="instructor-examples-title" className="pb-0 md:px-20 md:pb-[120px]">
-      <div className="leading-[30px]">
-        <h2
-          id="instructor-examples-title"
-          className="text-[30px] font-semibold tracking-[-0.6px] text-[#3F3F46]"
-        >
+    <section aria-labelledby="instructor-examples-title" className="md:px-20 md:pb-[120px]">
+      <div className="px-8 md:px-0">
+        <h2 id="instructor-examples-title" className={SECTION_HEADING_CLASS_NAME}>
           Strony innych nauczycieli
         </h2>
-        <p className="mt-2 text-[22px] font-medium tracking-[-0.44px] text-[#71717A]">
-          Można zobaczyć, jak wyglądają strony innych nauczycieli na joga.yoga
+        <p className="mt-0 text-[clamp(16px,5.48vw,18px)] font-medium leading-[clamp(22px,7.46vw,24px)] tracking-[-0.44px] text-[#71717A]">
+          Poczuj inspirację
         </p>
       </div>
 
-      <div className="mt-4 grid gap-[18px] md:mt-16 md:max-w-[1200px] md:grid-cols-3 md:gap-10">
+      <div className="mt-4 px-4 grid gap-[18px] md:mt-16 md:max-w-[1200px] md:grid-cols-3 md:gap-10">
         <InstructorExampleCard
           name={FEATURED_INSTRUCTOR.name}
           subtitle={FEATURED_INSTRUCTOR.subtitle}
@@ -525,9 +535,9 @@ function InstructorExampleCard({
   return (
     <Link
       href={href}
-      className="flex min-h-[398px] flex-col gap-5 rounded-[24px] border border-[#E4E4E7] bg-white p-6 shadow-[0_10px_10px_rgba(0,0,0,0.03)]"
+      className="flex flex-col gap-5 rounded-[24px] border border-[#E4E4E7] bg-white p-6 shadow-[0_10px_10px_rgba(0,0,0,0.03)] min-[400px]:min-h-[398px]"
     >
-      <div className="relative h-60 w-full overflow-hidden rounded-2xl bg-[#F2F2F3]">
+      <div className="relative aspect-[59/40] h-auto w-full overflow-hidden rounded-2xl bg-[#F2F2F3] min-[400px]:aspect-auto min-[400px]:h-60">
         {localImageSrc ? (
           <Image
             src={localImageSrc}
