@@ -5,63 +5,65 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition } from "react";
 import { IoChevronBack } from "react-icons/io5";
 
-import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
-import { useNavigationBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/navigation-block";
-import { getOfferCreatePath } from "@/app/profile/(dashboard)/offer/offerConfig";
+import { LinkWithBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/link";
+import { useNavigationBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/navigation-block";
+import { getOfferCreatePath } from "@/app/(account)/account/partner/offer/offerConfig";
 import { LogoFooter } from "@/components/layout/Footer";
 import { useOfferCreateMenu } from "@/context/OfferCreateMenuContext";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 
-const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"];
-const BECOME_PARTNER_PATH = "/profile/become-partner";
+const MAIN_TAB_PATHS = ["/konto/partner", "/konto/partner/oferta", "/konto/partner/konto"];
+const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
 
 const TAB_TITLES: Record<string, string> = {
-  "/profile/offer": "Oferta",
-  "/profile/account": "Konto",
+  "/konto/partner/oferta": "Oferta",
+  "/konto/partner/konto": "Konto",
 };
 
 function getPageTitle(pathname: string): string | undefined {
   if (TAB_TITLES[pathname]) return TAB_TITLES[pathname];
-  if (pathname.startsWith("/profile/orders/")) return "Rezerwacja";
-  if (pathname.startsWith("/profile/messages/")) return "Wiadomość";
-  if (pathname.startsWith("/profile/instructors/") && pathname.endsWith("/edit"))
+  if (pathname.startsWith("/konto/partner/zamowienia/")) return "Rezerwacja";
+  if (pathname.startsWith("/konto/partner/wiadomosci/")) return "Wiadomość";
+  if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
     return "Edytuj instruktora";
-  if (pathname === "/profile/instructors/create") return "Nowy instruktor";
-  if (pathname === "/profile/retreats/create") return "Nowy wyjazd";
-  if (pathname === "/profile/workshops/create") return "Nowe wydarzenie";
-  if (pathname === "/profile/courses/create") return "Nowy kurs";
-  if (pathname.startsWith("/profile/courses/") && pathname.endsWith("/edit")) return "Edytuj kurs";
-  if (pathname === "/profile/studio/create") return "Nowe studio";
-  if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit")) return "Edytuj studio";
-  if (pathname === "/profile/class-templates") return "Szablony zajęć";
-  if (pathname === "/profile/class-templates/create") return "Nowy szablon";
-  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit"))
+  if (pathname === "/konto/partner/instruktorzy/create") return "Nowy instruktor";
+  if (pathname === "/konto/partner/wyjazdy/create") return "Nowy wyjazd";
+  if (pathname === "/konto/partner/wydarzenia/create") return "Nowe wydarzenie";
+  if (pathname === "/konto/partner/kursy/create") return "Nowy kurs";
+  if (pathname.startsWith("/konto/partner/kursy/") && pathname.endsWith("/edit"))
+    return "Edytuj kurs";
+  if (pathname === "/konto/partner/studio/create") return "Nowe studio";
+  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/edit"))
+    return "Edytuj studio";
+  if (pathname === "/konto/partner/szablony-zajec") return "Szablony zajęć";
+  if (pathname === "/konto/partner/szablony-zajec/create") return "Nowy szablon";
+  if (pathname.startsWith("/konto/partner/szablony-zajec/") && pathname.endsWith("/edit"))
     return "Edytuj szablon";
-  if (pathname === "/profile/class-schedules/create") return "Dodaj zajęcia";
-  if (pathname === "/profile/schedule") return "Grafik";
-  if (pathname === "/profile/schedule/instructor") return "Mój grafik";
-  if (pathname.startsWith("/profile/schedule/edit/")) return "Edytuj sesję";
-  if (pathname.startsWith("/profile/schedule/cancel/")) return "Odwołaj sesję";
+  if (pathname === "/konto/partner/grafiki-zajec/create") return "Dodaj zajęcia";
+  if (pathname === "/konto/partner/grafik") return "Grafik";
+  if (pathname === "/konto/partner/grafik/instructor") return "Mój grafik";
+  if (pathname.startsWith("/konto/partner/grafik/edit/")) return "Edytuj sesję";
+  if (pathname.startsWith("/konto/partner/grafik/cancel/")) return "Odwołaj sesję";
   return undefined;
 }
 
 function getBackHref(pathname: string): string | undefined {
-  if (pathname === "/profile/schedule") return "/profile";
-  if (pathname === "/profile/schedule/instructor") return "/profile";
-  if (pathname.startsWith("/profile/schedule/edit/")) return "/profile/schedule";
-  if (pathname.startsWith("/profile/schedule/cancel/")) return "/profile/schedule";
-  if (pathname === "/profile/class-schedules/create") return "/profile/schedule";
-  if (pathname === "/profile/class-templates") return "/profile/offer";
-  if (pathname === "/profile/class-templates/create") return "/profile/class-templates";
-  if (pathname.startsWith("/profile/class-templates/") && pathname.endsWith("/edit"))
-    return "/profile/class-templates";
-  if (pathname === "/profile/studio/create") return "/profile/offer";
-  if (pathname.startsWith("/profile/studio/") && pathname.endsWith("/edit"))
-    return "/profile/offer";
-  if (pathname === "/profile/instructors") return "/profile/offer";
-  if (pathname === "/profile/instructors/create") return "/profile/instructors";
-  if (pathname.startsWith("/profile/instructors/") && pathname.endsWith("/edit"))
-    return "/profile/instructors";
+  if (pathname === "/konto/partner/grafik") return "/konto/partner";
+  if (pathname === "/konto/partner/grafik/instructor") return "/konto/partner";
+  if (pathname.startsWith("/konto/partner/grafik/edit/")) return "/konto/partner/grafik";
+  if (pathname.startsWith("/konto/partner/grafik/cancel/")) return "/konto/partner/grafik";
+  if (pathname === "/konto/partner/grafiki-zajec/create") return "/konto/partner/grafik";
+  if (pathname === "/konto/partner/szablony-zajec") return "/konto/partner/oferta";
+  if (pathname === "/konto/partner/szablony-zajec/create") return "/konto/partner/szablony-zajec";
+  if (pathname.startsWith("/konto/partner/szablony-zajec/") && pathname.endsWith("/edit"))
+    return "/konto/partner/szablony-zajec";
+  if (pathname === "/konto/partner/studio/create") return "/konto/partner/oferta";
+  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/edit"))
+    return "/konto/partner/oferta";
+  if (pathname === "/konto/partner/instruktorzy") return "/konto/partner/oferta";
+  if (pathname === "/konto/partner/instruktorzy/create") return "/konto/partner/instruktorzy";
+  if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
+    return "/konto/partner/instruktorzy";
   return undefined;
 }
 
@@ -103,7 +105,7 @@ export function DashboardTopBar() {
   // exit to the public site instead of a back button.
   const showHomeLogo = isMainTab || pathname === BECOME_PARTNER_PATH;
   const title = getPageTitle(pathname);
-  const showPlus = pathname === "/profile/offer";
+  const showPlus = pathname === "/konto/partner/oferta";
 
   const handlePlus = () => {
     const filter = searchParams.get("filter");

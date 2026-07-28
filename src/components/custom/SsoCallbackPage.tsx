@@ -20,11 +20,11 @@ function CallbackContent() {
 
     if (!token) {
       toast({ description: "Missing token from callback", variant: "destructive" });
-      router.push("/profile/login");
+      router.push("/konto/logowanie");
       return;
     }
 
-    const next = searchParams.get("next") || "/profile";
+    const next = searchParams.get("next") || "/konto/partner";
     storeToken(token);
     window.location.href = next;
   }, [router, storeToken, token, toast, searchParams]);

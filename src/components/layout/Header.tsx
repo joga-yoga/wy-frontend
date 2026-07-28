@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
-import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
+import { LinkWithBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/link";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -43,7 +43,7 @@ interface ProfileHeaderProps {
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true }) => {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
-  const logoHref = pathname === "/profile" ? "/" : "/profile";
+  const logoHref = pathname === "/konto/partner" ? "/" : "/konto/partner";
 
   return (
     <header
@@ -59,7 +59,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
 
         <div className="flex items-center gap-4">
           {user && (
-            <LinkWithBlocker href="/profile/partner">
+            <LinkWithBlocker href="/konto/partner/organizacja">
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
@@ -101,7 +101,7 @@ export const PublicHeader = () => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   const accountHref =
-    mounted && user ? "/profile" : `/profile/login?next=${encodeURIComponent(pathname)}`;
+    mounted && user ? "/konto/partner" : `/konto/logowanie?next=${encodeURIComponent(pathname)}`;
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);

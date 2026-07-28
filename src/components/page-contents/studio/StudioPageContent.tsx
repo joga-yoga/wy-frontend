@@ -155,7 +155,7 @@ function StudioHeader() {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const accountHref = mounted && user ? "/profile" : "/profile/login";
+  const accountHref = mounted && user ? "/konto/partner" : "/konto/logowanie";
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20">

@@ -8,14 +8,14 @@ import { PiFlowerLotus } from "react-icons/pi";
 
 import { cn } from "@/lib/utils";
 
-const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"] as const;
+const MAIN_TAB_PATHS = ["/konto/partner", "/konto/partner/oferta", "/konto/partner/konto"] as const;
 
 type TabPath = (typeof MAIN_TAB_PATHS)[number];
 
 const tabs: { path: TabPath; label: string; Icon: React.ElementType }[] = [
-  { path: "/profile", label: "Aktywność", Icon: IoHomeOutline },
-  { path: "/profile/offer", label: "Oferta", Icon: PiFlowerLotus },
-  { path: "/profile/account", label: "Konto", Icon: IoPersonOutline },
+  { path: "/konto/partner", label: "Aktywność", Icon: IoHomeOutline },
+  { path: "/konto/partner/oferta", label: "Oferta", Icon: PiFlowerLotus },
+  { path: "/konto/partner/konto", label: "Konto", Icon: IoPersonOutline },
 ];
 
 export function BottomTabBar() {

@@ -562,7 +562,7 @@ function BookClassContent() {
 
   useEffect(() => {
     if (authLoading || user) return;
-    router.replace(`/profile/login?next=${encodeURIComponent(pathname)}`);
+    router.replace(`/konto/logowanie?next=${encodeURIComponent(pathname)}`);
   }, [authLoading, user, router, pathname]);
 
   useEffect(() => {
