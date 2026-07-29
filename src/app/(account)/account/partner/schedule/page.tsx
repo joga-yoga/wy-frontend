@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertCircle,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +25,10 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { GrafikContextChips } from "./components/GrafikContextChips";
+import { GrafikSessionCard } from "./components/GrafikSessionCard";
 import type { ScheduleDaySummary, ScheduleOccurrence, ScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -41,16 +44,19 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function formatMonthTitle(weekStart: Date): string {
+function formatWeekRangeLabel(weekStart: Date): string {
   const end = new Date(weekStart);
   end.setDate(end.getDate() + 6);
+  const startDay = weekStart.getDate();
+  const endDay = end.getDate();
   const startMonth = weekStart.toLocaleDateString("pl-PL", { month: "long" });
   const endMonth = end.toLocaleDateString("pl-PL", { month: "long" });
   const startYear = weekStart.getFullYear();
   const endYear = end.getFullYear();
-  if (startYear !== endYear) return `${startMonth} ${startYear} – ${endMonth} ${endYear}`;
-  if (startMonth !== endMonth) return `${startMonth}–${endMonth} ${startYear}`;
-  return `${startMonth} ${startYear}`;
+  if (startYear !== endYear)
+    return `${startDay} ${startMonth} ${startYear} – ${endDay} ${endMonth} ${endYear}`;
+  if (startMonth !== endMonth) return `${startDay} ${startMonth} – ${endDay} ${endMonth}`;
+  return `${startDay} – ${endDay} ${startMonth}`;
 }
 
 function formatTime(iso: string): string {
@@ -91,6 +97,7 @@ export default function SchedulePage() {
   const [days, setDays] = useState<ScheduleDaySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [panelOcc, setPanelOcc] = useState<ScheduleOccurrence | null>(null);
+  const [overdueCount, setOverdueCount] = useState(0);
 
   useEffect(() => {
     axiosInstance
@@ -99,6 +106,17 @@ export default function SchedulePage() {
         if (!studioId && r.data?.length) setStudioId(r.data[0].id);
       })
       .catch(() => {});
+  }, [studioId]);
+
+  // Reconciliation strip — Grafik is single-context, so only this studio's count.
+  useEffect(() => {
+    if (!studioId) return;
+    axiosInstance
+      .get<{ sessions: { studio_id?: string }[] }>("/partner/reconciliation")
+      .then(({ data }) =>
+        setOverdueCount(data.sessions.filter((s) => s.studio_id === studioId).length),
+      )
+      .catch(() => setOverdueCount(0));
   }, [studioId]);
 
   const fetchWeek = useCallback(() => {
@@ -123,42 +141,62 @@ export default function SchedulePage() {
   const selectedDay = days[selectedDayIndex];
   const hasAnySessions = days.some((d) => d.session_count > 0);
 
-  const prevWeek = () => {
+  const dayStripRef = useRef<DayStripHandle>(null);
+
+  function shiftWeek(deltaDays: number) {
     const d = new Date(weekStart);
-    d.setDate(d.getDate() - 7);
+    d.setDate(d.getDate() + deltaDays);
     setWeekStart(d);
-  };
-  const nextWeek = () => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + 7);
-    setWeekStart(d);
-  };
+  }
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
+      <h1 className="mb-4 text-2xl font-bold text-gray-900">Grafik</h1>
+
       <GrafikContextChips />
 
-      {/* Week stepper */}
-      <div className="flex items-center mb-4">
-        <button
-          onClick={() => {
-            const today = new Date();
-            setWeekStart(getMonday(today));
-            const dow = today.getDay();
-            setSelectedDayIndex(dow === 0 ? 6 : dow - 1);
-          }}
-          className="px-3 py-1.5 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50 shrink-0"
+      {overdueCount > 0 && studioId && (
+        <Link
+          href={`/konto/partner/studio/${studioId}/front-desk`}
+          className="mb-4 flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 hover:bg-amber-100 transition-colors"
         >
-          Dziś
-        </button>
-        <span className="flex-1 text-center text-sm font-medium capitalize">
-          {formatMonthTitle(weekStart)}
-        </span>
+          <span className="flex items-center gap-2">
+            <AlertCircle size={16} />
+            {overdueCount} {overdueCount === 1 ? "sesja" : "sesje"} do rozliczenia
+          </span>
+          <ChevronRight size={16} />
+        </Link>
+      )}
+
+      {/* Week stepper */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-semibold text-gray-900 capitalize">
+            {formatWeekRangeLabel(weekStart)}
+          </span>
+          <button
+            onClick={() => {
+              const today = new Date();
+              setWeekStart(getMonday(today));
+              const dow = today.getDay();
+              setSelectedDayIndex(dow === 0 ? 6 : dow - 1);
+            }}
+            className="rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50"
+          >
+            Dziś
+          </button>
+        </div>
         <div className="flex items-center gap-1 shrink-0">
-          <button onClick={prevWeek} className="p-1 rounded hover:bg-gray-100">
+          <button
+            onClick={() => dayStripRef.current?.goToPreviousWeek()}
+            className="p-1 rounded hover:bg-gray-100"
+          >
             <ChevronLeft size={18} />
           </button>
-          <button onClick={nextWeek} className="p-1 rounded hover:bg-gray-100">
+          <button
+            onClick={() => dayStripRef.current?.goToNextWeek()}
+            className="p-1 rounded hover:bg-gray-100"
+          >
             <ChevronRight size={18} />
           </button>
         </div>
@@ -166,10 +204,13 @@ export default function SchedulePage() {
 
       {/* Day strip */}
       <DayStrip
+        ref={dayStripRef}
         weekStart={weekStart}
         sessionCounts={sessionCounts}
         selectedIndex={selectedDayIndex}
-        onSelect={setSelectedDayIndex}
+        isLoading={isLoading}
+        onSelectDay={setSelectedDayIndex}
+        onShiftWeek={shiftWeek}
       />
 
       {/* Day content */}
@@ -222,56 +263,11 @@ export default function SchedulePage() {
             </div>
 
             {/* Session cards */}
-            {selectedDay.occurrences.map((occ) => {
-              const isCancelled = occ.status === "cancelled";
-              const fillColor =
-                occ.capacity && occ.fill_count >= occ.capacity
-                  ? "bg-red-100 text-red-700"
-                  : occ.capacity && occ.fill_count >= occ.capacity * 0.8
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-green-100 text-green-700";
-
-              return (
-                <button
-                  key={occ.id}
-                  onClick={() => setPanelOcc(occ)}
-                  className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border bg-white hover:bg-gray-50 transition-colors ${
-                    isCancelled ? "opacity-60" : ""
-                  }`}
-                >
-                  <div className="text-sm font-mono text-gray-500 w-12 shrink-0">
-                    {formatTime(occ.start_time)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm font-semibold text-gray-900 truncate ${isCancelled ? "line-through" : ""}`}
-                    >
-                      {occ.template_title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
-                      {[occ.room_name, occ.instructor_name].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {occ.is_modified && !isCancelled && (
-                      <span className="flex items-center gap-0.5 text-[10px] text-gray-500">
-                        <Pencil size={10} />
-                        wyjątek
-                      </span>
-                    )}
-                    {isCancelled ? (
-                      <Badge variant="destructive" className="text-[10px]">
-                        odwołane
-                      </Badge>
-                    ) : occ.capacity ? (
-                      <Badge className={`text-[10px] ${fillColor}`}>
-                        {occ.fill_count}/{occ.capacity}
-                      </Badge>
-                    ) : null}
-                  </div>
-                </button>
-              );
-            })}
+            <div className="space-y-2.5">
+              {selectedDay.occurrences.map((occ) => (
+                <GrafikSessionCard key={occ.id} occ={occ} onClick={setPanelOcc} />
+              ))}
+            </div>
           </div>
         ) : null}
       </div>

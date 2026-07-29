@@ -16,6 +16,8 @@ export interface ScheduleOccurrence {
   notified_count: number;
   studio_id?: string | null;
   studio_name?: string | null;
+  instructor_image_id?: string | null;
+  color?: string | null;
 }
 
 export interface ScheduleDaySummary {

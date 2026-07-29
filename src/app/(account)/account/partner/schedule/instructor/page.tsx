@@ -2,7 +2,7 @@
 
 import { Calendar, ChevronLeft, ChevronRight, Clock, Coffee, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -10,8 +10,10 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import type { DayStripHandle } from "../components/DayStrip";
 import { DayStrip } from "../components/DayStrip";
 import { GrafikContextChips } from "../components/GrafikContextChips";
+import { GrafikSessionCard } from "../components/GrafikSessionCard";
 import type { ScheduleOccurrence } from "../types";
 
 function getMonday(d: Date): Date {
@@ -27,12 +29,15 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function formatWeekRange(weekStart: Date): string {
+function formatWeekRangeLabel(weekStart: Date): string {
   const end = new Date(weekStart);
   end.setDate(end.getDate() + 6);
-  const s = weekStart.toLocaleDateString("pl-PL", { day: "numeric" });
-  const e = end.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
-  return `${s}–${e}`;
+  const startDay = weekStart.getDate();
+  const endDay = end.getDate();
+  const startMonth = weekStart.toLocaleDateString("pl-PL", { month: "long" });
+  const endMonth = end.toLocaleDateString("pl-PL", { month: "long" });
+  if (startMonth !== endMonth) return `${startDay} ${startMonth} – ${endDay} ${endMonth}`;
+  return `${startDay} – ${endDay} ${startMonth}`;
 }
 
 function formatTime(iso: string): string {
@@ -108,39 +113,48 @@ export default function InstructorSchedulePage() {
     [occurrences, selectedDate],
   );
 
+  const dayStripRef = useRef<DayStripHandle>(null);
+
+  function shiftWeek(deltaDays: number) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + deltaDays);
+    setWeekStart(d);
+  }
+
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
+      <h1 className="mb-4 text-2xl font-bold text-gray-900">Mój grafik</h1>
+
       <GrafikContextChips />
 
-      <div className="flex items-center justify-center gap-4 mb-4">
-        <button
-          onClick={() => {
-            const d = new Date(weekStart);
-            d.setDate(d.getDate() - 7);
-            setWeekStart(d);
-          }}
-          className="p-1 rounded hover:bg-gray-100"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <span className="text-sm font-medium">{formatWeekRange(weekStart)}</span>
-        <button
-          onClick={() => {
-            const d = new Date(weekStart);
-            d.setDate(d.getDate() + 7);
-            setWeekStart(d);
-          }}
-          className="p-1 rounded hover:bg-gray-100"
-        >
-          <ChevronRight size={18} />
-        </button>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-base font-semibold text-gray-900 capitalize">
+          {formatWeekRangeLabel(weekStart)}
+        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => dayStripRef.current?.goToPreviousWeek()}
+            className="p-1 rounded hover:bg-gray-100"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={() => dayStripRef.current?.goToNextWeek()}
+            className="p-1 rounded hover:bg-gray-100"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
       <DayStrip
+        ref={dayStripRef}
         weekStart={weekStart}
         sessionCounts={sessionCounts}
         selectedIndex={selectedDayIndex}
-        onSelect={setSelectedDayIndex}
+        isLoading={isLoading}
+        onSelectDay={setSelectedDayIndex}
+        onShiftWeek={shiftWeek}
       />
 
       <div className="mt-4">
@@ -156,31 +170,16 @@ export default function InstructorSchedulePage() {
             <p className="text-sm font-semibold text-gray-700 capitalize">
               {formatDayHeader(selectedDate)}
             </p>
-            {dayOccurrences.map((occ) => (
-              <button
-                key={occ.id}
-                onClick={() => setPanelOcc(occ)}
-                className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border bg-white hover:bg-gray-50 transition-colors"
-              >
-                <div className="text-sm font-mono text-gray-500 w-12 shrink-0">
-                  {formatTime(occ.start_time)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {occ.template_title}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">
-                    {occ.studio_name && `${occ.studio_name} · `}
-                    {[occ.room_name].filter(Boolean).join(" · ")}
-                  </p>
-                </div>
-                {occ.capacity && (
-                  <Badge className="text-[10px] bg-green-100 text-green-700">
-                    {occ.fill_count} zapisanych
-                  </Badge>
-                )}
-              </button>
-            ))}
+            <div className="space-y-2.5">
+              {dayOccurrences.map((occ) => (
+                <GrafikSessionCard
+                  key={occ.id}
+                  occ={occ}
+                  onClick={setPanelOcc}
+                  context="instructor"
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
