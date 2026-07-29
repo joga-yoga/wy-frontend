@@ -7,19 +7,7 @@ import { useEffect, useState } from "react";
 
 import { axiosInstance } from "@/lib/axiosInstance";
 import { formatDateRange } from "@/lib/formatDateRange";
-
-interface OrderDetail {
-  id: string;
-  email: string;
-  customer_name: string | null;
-  preferred_contact: string | null;
-  customer_note: string | null;
-  type: string | null;
-  created_at: string;
-  event_title: string | null;
-  event_start_date: string | null;
-  event_end_date: string | null;
-}
+import { InquiryItem } from "@/lib/inboxTypes";
 
 function typeLabel(type: string | null): string {
   if (type === "retreat") return "Wyjazd";
@@ -39,13 +27,13 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 
 export default function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [order, setOrder] = useState<InquiryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     axiosInstance
-      .get<OrderDetail>(`/partner/orders/${orderId}`)
+      .get<InquiryItem>(`/partner/inbox/${orderId}`)
       .then(({ data }) => setOrder(data))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -79,13 +67,13 @@ export default function OrderDetailPage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
       <div className="rounded-xl border bg-white px-4 divide-y">
-        <Row label="Uczestnik" value={order.customer_name || order.email} />
-        {order.customer_name && <Row label="E-mail" value={order.email} />}
+        <Row label="Uczestnik" value={order.author?.email ?? null} />
+
         <Row label="Wydarzenie" value={order.event_title} />
         <Row label="Termin" value={eventDate} />
-        <Row label="Typ" value={typeLabel(order.type)} />
+        <Row label="Typ" value={typeLabel(order.event_type)} />
         <Row label="Preferowany kontakt" value={order.preferred_contact} />
-        <Row label="Notatka od uczestnika" value={order.customer_note} />
+        <Row label="Notatka od uczestnika" value={order.message} />
         <Row label="Data rezerwacji" value={reservedAt} />
       </div>
     </div>

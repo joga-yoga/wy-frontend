@@ -10,28 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { flattenInbox, InboxResponse, InquiryItem } from "@/lib/inboxTypes";
 
 import { ScheduleBlock } from "./components/ScheduleBlock";
-
-interface OrderListItem {
-  id: string;
-  customer_name: string | null;
-  email: string;
-  event_title: string | null;
-  type: string | null;
-  created_at: string;
-}
-
-interface MessageListItem {
-  id: string;
-  email: string | null;
-  message: string;
-  event_id: string | null;
-  event_title: string | null;
-  instructor_id: string | null;
-  instructor_name: string | null;
-  created_at: string;
-}
 
 interface InvitationItem {
   id: string;
@@ -72,8 +53,8 @@ function timeAgo(dateStr: string): string {
 export default function AktywnoscPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [messages, setMessages] = useState<MessageListItem[]>([]);
+  const [orders, setOrders] = useState<InquiryItem[]>([]);
+  const [messages, setMessages] = useState<InquiryItem[]>([]);
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [instructors, setInstructors] = useState<InstructorListItem[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -83,17 +64,23 @@ export default function AktywnoscPage() {
   const [decliningId, setDecliningId] = useState<string | null>(null);
 
   useEffect(() => {
+    // One inbox now; the two lists are just a kind filter over it. This whole
+    // Aktywność tab is superseded by the Rezerwacje inbox screen (T12).
     axiosInstance
-      .get<OrderListItem[]>("/partner/orders")
-      .then((r) => setOrders(r.data))
-      .catch(() => setOrders([]))
-      .finally(() => setLoadingOrders(false));
-
-    axiosInstance
-      .get<MessageListItem[]>("/partner/messages")
-      .then((r) => setMessages(r.data))
-      .catch(() => setMessages([]))
-      .finally(() => setLoadingMessages(false));
+      .get<InboxResponse>("/partner/inbox")
+      .then((r) => {
+        const items = flattenInbox(r.data);
+        setOrders(items.filter((i) => i.kind === "reservation"));
+        setMessages(items.filter((i) => i.kind === "question"));
+      })
+      .catch(() => {
+        setOrders([]);
+        setMessages([]);
+      })
+      .finally(() => {
+        setLoadingOrders(false);
+        setLoadingMessages(false);
+      });
 
     axiosInstance
       .get<InvitationItem[]>("/users/me/invitations")
@@ -216,7 +203,7 @@ export default function AktywnoscPage() {
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {order.customer_name || order.email}
+                    {order.author?.email ?? "Nieznany nadawca"}
                   </p>
                   {order.event_title && (
                     <p className="text-xs text-gray-500 truncate mt-0.5">{order.event_title}</p>
@@ -258,12 +245,12 @@ export default function AktywnoscPage() {
               >
                 <div className="h-9 w-9 shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
                   <span className="text-sm font-semibold text-gray-600">
-                    {avatarInitials(msg.email)}
+                    {avatarInitials(msg.author?.email ?? null)}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {msg.email || "Nieznany nadawca"}
+                    {msg.author?.email ?? "Nieznany nadawca"}
                   </p>
                   <p className="text-xs text-gray-500 truncate">{msg.message}</p>
                 </div>

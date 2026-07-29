@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
@@ -14,7 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { axiosInstance } from "@/lib/axiosInstance";
+import { useAuth } from "@/context/AuthContext";
+import { loginRedirectHref, submitInquiry } from "@/lib/inquiries";
 
 import { EventDetail } from "../types";
 
@@ -24,6 +26,9 @@ interface OrganizerSectionProps {
 }
 
 export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, project }) => {
+  const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const partner = event.partner ?? event.organizer;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -56,14 +61,19 @@ export const OrganizerSection: React.FC<OrganizerSectionProps> = ({ event, proje
     e.preventDefault();
     if (!email.trim() || !message.trim()) return;
 
+    if (!user) {
+      router.push(loginRedirectHref(pathname));
+      return;
+    }
+
     setIsSubmitting(true);
     setModalState("default");
 
     try {
-      await axiosInstance.post("/utils/contact/event", {
+      await submitInquiry({
+        kind: "question",
         event_id: event.id,
-        email: email.trim(),
-        contact_info: phone.trim() || undefined,
+        preferred_contact: phone.trim() || undefined,
         message: message.trim(),
       });
       setModalState("success");

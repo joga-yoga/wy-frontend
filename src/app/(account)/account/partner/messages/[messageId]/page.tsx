@@ -6,28 +6,17 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { axiosInstance } from "@/lib/axiosInstance";
-
-interface MessageDetail {
-  id: string;
-  email: string | null;
-  contact_info: string | null;
-  message: string;
-  event_id: string | null;
-  event_title: string | null;
-  instructor_id: string | null;
-  instructor_name: string | null;
-  created_at: string;
-}
+import { InquiryItem } from "@/lib/inboxTypes";
 
 export default function MessageDetailPage() {
   const { messageId } = useParams<{ messageId: string }>();
-  const [msg, setMsg] = useState<MessageDetail | null>(null);
+  const [msg, setMsg] = useState<InquiryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     axiosInstance
-      .get<MessageDetail>(`/partner/messages/${messageId}`)
+      .get<InquiryItem>(`/partner/inbox/${messageId}`)
       .then(({ data }) => setMsg(data))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -56,16 +45,16 @@ export default function MessageDetailPage() {
     <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
       {/* Sender */}
       <div className="rounded-xl border bg-white px-4 divide-y">
-        {msg.email && (
+        {msg.author?.email && (
           <div className="flex flex-col gap-0.5 py-3 border-b">
             <span className="text-xs text-gray-400 uppercase tracking-wide">Nadawca</span>
-            <span className="text-sm text-gray-900">{msg.email}</span>
+            <span className="text-sm text-gray-900">{msg.author?.email}</span>
           </div>
         )}
-        {msg.contact_info && (
+        {msg.preferred_contact && (
           <div className="flex flex-col gap-0.5 py-3 border-b">
             <span className="text-xs text-gray-400 uppercase tracking-wide">Dane kontaktowe</span>
-            <span className="text-sm text-gray-900">{msg.contact_info}</span>
+            <span className="text-sm text-gray-900">{msg.preferred_contact}</span>
           </div>
         )}
         {msg.event_title && (
@@ -74,10 +63,10 @@ export default function MessageDetailPage() {
             <span className="text-sm text-gray-900">{msg.event_title}</span>
           </div>
         )}
-        {msg.instructor_name && (
+        {msg.source_label && (
           <div className="flex flex-col gap-0.5 py-3 border-b">
             <span className="text-xs text-gray-400 uppercase tracking-wide">Instruktor</span>
-            <span className="text-sm text-gray-900">{msg.instructor_name}</span>
+            <span className="text-sm text-gray-900">{msg.source_label}</span>
           </div>
         )}
         <div className="flex flex-col gap-0.5 py-3">
