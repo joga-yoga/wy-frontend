@@ -10,6 +10,7 @@ import { useNavigationBlocker } from "@/app/(account)/account/partner/components
 import { getOfferCreatePath } from "@/app/(account)/account/partner/offer/offerConfig";
 import { TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { LogoFooter } from "@/components/layout/Footer";
+import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
 import { useOfferCreateMenu } from "@/context/OfferCreateMenuContext";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 
@@ -135,16 +136,19 @@ export function DashboardTopBar() {
         </h1>
       )}
 
-      {showPlus && (
-        <button
-          type="button"
-          aria-label="Dodaj nowe ogłoszenie"
-          onClick={handlePlus}
-          className="ml-auto h-10 w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      )}
+      <div className="ml-auto flex items-center gap-2">
+        {showPlus && (
+          <button
+            type="button"
+            aria-label="Dodaj nowe ogłoszenie"
+            onClick={handlePlus}
+            className="h-10 w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+        )}
+        {isMainTab && <HeaderAvatar />}
+      </div>
     </header>
   );
 }
