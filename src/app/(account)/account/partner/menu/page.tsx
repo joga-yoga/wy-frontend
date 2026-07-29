@@ -1,9 +1,11 @@
 "use client";
 
-import { Building2, ChevronRight, LogOut, Tag, Users } from "lucide-react";
+import { ArrowLeftRight, LogOut, Tag } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { MenuRow } from "@/components/menu/MenuRow";
+import { StudioWorkspaceRows } from "@/components/menu/StudioWorkspaceRows";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
@@ -19,34 +21,6 @@ interface InvitationItem {
   expires_at: string;
 }
 
-function MenuRow({
-  href,
-  title,
-  subtitle,
-  Icon,
-}: {
-  href: string;
-  title: string;
-  subtitle: string;
-  Icon: React.ElementType;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-        <Icon size={18} className="text-gray-600" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500 truncate">{subtitle}</p>
-      </div>
-      <ChevronRight size={16} className="text-gray-400 shrink-0" />
-    </Link>
-  );
-}
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">{children}</h2>
@@ -54,11 +28,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Menu frame + empty/ghost states per the conditionality table (spec-b2b §3). Full
- * workspace design (Płatności i odwołania, notifications, help) is T09 — this ships
- * the grouped-sections/icon-square row pattern from the approved design mockups plus
- * enough real navigation that the tab is never a dead end. The B2B→B2C mode-switch
- * row card also belongs to T09 (it needs the B2C hub built in T13 to link to).
+ * Menu tab (spec-b2b §4): the studio workspace (flattened for 1 studio, grouped for
+ * 2+), account rows, and the calm B2B→B2C switch card — the asymmetric counterpart
+ * to T13's pinned B2C profile button.
  */
 export default function MenuPage() {
   const { toast } = useToast();
@@ -92,9 +64,9 @@ export default function MenuPage() {
     }
   }
 
-  const managedStudio = capabilities?.managedStudios[0];
+  const managedStudios = capabilities?.managedStudios ?? [];
   const hasTeachingOnly = Boolean(
-    capabilities && !managedStudio && capabilities.teachingStudios.length > 0,
+    capabilities && managedStudios.length === 0 && capabilities.teachingStudios.length > 0,
   );
 
   return (
@@ -147,28 +119,23 @@ export default function MenuPage() {
         </section>
       )}
 
-      {!isLoading && managedStudio && (
+      {!isLoading && managedStudios.length === 1 && (
+        <StudioWorkspaceRows studioId={managedStudios[0].id} studioName={managedStudios[0].name} />
+      )}
+
+      {!isLoading && managedStudios.length >= 2 && (
         <section className="space-y-2">
-          <SectionLabel>{managedStudio.name} · Twoje studio</SectionLabel>
+          <SectionLabel>Twoje studia</SectionLabel>
           <div className="rounded-xl border bg-white overflow-hidden divide-y">
-            <MenuRow
-              href={`/konto/partner/studio/${managedStudio.id}/edit`}
-              title="Profil studia"
-              subtitle="Podstawy, lokalizacja, cennik, zdjęcia"
-              Icon={Building2}
-            />
-            <MenuRow
-              href="/konto/partner/instruktorzy"
-              title="Instruktorzy"
-              subtitle="Zarządzaj zespołem studia"
-              Icon={Users}
-            />
-            <MenuRow
-              href="/konto/partner/klienci"
-              title="Klienci"
-              subtitle="Karnety i wizyty"
-              Icon={Users}
-            />
+            {managedStudios.map((studio) => (
+              <MenuRow
+                key={studio.id}
+                href={`/konto/partner/menu/studio/${studio.id}`}
+                title={studio.name}
+                subtitle="Profil, instruktorzy, klienci, płatności"
+                Icon={Tag}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -188,7 +155,7 @@ export default function MenuPage() {
         </section>
       )}
 
-      {!isLoading && !managedStudio && !hasTeachingOnly && (
+      {!isLoading && managedStudios.length === 0 && !hasTeachingOnly && (
         <section className="space-y-2">
           <SectionLabel>Studio</SectionLabel>
           <Link
@@ -216,10 +183,25 @@ export default function MenuPage() {
             href="/konto/partner/konto"
             title="Dane konta"
             subtitle="Imię, e-mail, hasło"
-            Icon={Users}
+            Icon={Tag}
           />
         </div>
       </section>
+
+      {/* B2B→B2C switch — the calm counterpart to the pinned B2C button (T13);
+          calm here because the tab bar already exists (spec-b2b §2). */}
+      <Link
+        href="/konto"
+        className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-brand-green-700">
+          <ArrowLeftRight size={18} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-gray-900">Przełącz na konto osobiste</p>
+          <p className="text-xs text-gray-500">Twoje rezerwacje, karnety, odkrywanie</p>
+        </div>
+      </Link>
 
       <button
         onClick={signOut}

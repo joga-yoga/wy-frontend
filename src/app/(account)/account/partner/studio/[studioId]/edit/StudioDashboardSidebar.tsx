@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Camera, CreditCard, DollarSign, Home, MapPin, Users } from "lucide-react";
+import { Camera, DollarSign, Home, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,14 @@ import useIsMobile from "@/hooks/useIsMobile";
 import { scrollTo } from "@/lib/scrollTo";
 import { cn } from "@/lib/utils";
 
+// Exactly the 4 sections spec-b2b §8 names — Instruktorzy moved to the roster
+// (T10), Płatności/Anulowanie moved to their own workspace screen (see
+// `studio/[studioId]/payments/page.tsx`), not part of the public profile editor.
 export const studioNavItems = [
   { id: "studio-basics-section", icon: Home, label: "Podstawy" },
   { id: "studio-location-section", icon: MapPin, label: "Lokalizacja" },
-  { id: "studio-instructors-section", icon: Users, label: "Instruktorzy" },
   { id: "studio-oferta-section", icon: DollarSign, label: "Oferta" },
   { id: "studio-photos-section", icon: Camera, label: "Zdjęcia" },
-  { id: "studio-payments-section", icon: CreditCard, label: "Płatności" },
-  // { id: "studio-cancellation-section", icon: Ban, label: "Anulowanie" },
 ];
 
 const MOBILE_HEADER_HEIGHT = 64;

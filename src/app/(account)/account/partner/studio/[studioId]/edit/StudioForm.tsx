@@ -24,7 +24,6 @@ import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
-import { type Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +59,6 @@ import type {
   Amenity,
   StudioApiResponse,
   StudioFormValues,
-  StudioInstructor,
   StudioLocation,
   StudioPass,
   StudioRoom,
@@ -156,9 +154,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
   const [allAmenities, setAllAmenities] = useState<Amenity[]>([]);
   // Yoga styles catalogue
   const [allYogaStyles, setAllYogaStyles] = useState<YogaStyle[]>([]);
-  // Instructors
-  const [availableInstructors, setAvailableInstructors] = useState<Instructor[]>([]);
-  const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
   // Room input
   const [roomInput, setRoomInput] = useState("");
   // Pass modal
@@ -223,43 +218,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
       .then(({ data }) => setAllYogaStyles(data))
       .catch(() => {});
   }, []);
-
-  // Load instructors
-  useEffect(() => {
-    async function loadInstructors() {
-      const merged = new Map<string, Instructor>();
-      try {
-        const owned = await axiosInstance.get<Instructor[]>("/instructors");
-        console.log("🚀 ~ loadInstructors ~ owned:", owned);
-        owned.data.forEach((i) => merged.set(i.id, { ...i, is_owned: true, is_foreign: false }));
-      } catch {}
-      try {
-        const roster = await axiosInstance.get<Instructor[]>("/instructor-roster");
-        roster.data.forEach((i) => merged.set(i.id, { ...i, is_foreign: i.is_owned === false }));
-      } catch {}
-      console.log("🚀 ~ loadInstructors ~ merged:", merged);
-      setAvailableInstructors([...merged.values()]);
-    }
-    loadInstructors();
-  }, []);
-
-  // Hydrate instructor objects once both the form data and the available list are ready
-  const watchedInstructorIds = values.instructor_ids ?? [];
-  const watchedInstructors = values.instructors ?? [];
-  useEffect(() => {
-    if (
-      watchedInstructorIds.length === 0 ||
-      watchedInstructors.length > 0 ||
-      availableInstructors.length === 0
-    )
-      return;
-    const hydrated = watchedInstructorIds
-      .map((id) => availableInstructors.find((i) => i.id === id))
-      .filter(Boolean) as StudioInstructor[];
-    if (hydrated.length > 0) {
-      setValue("instructors", hydrated);
-    }
-  }, [watchedInstructorIds, watchedInstructors, availableInstructors, setValue]);
 
   // Reset on create mount
   useEffect(() => {
@@ -499,21 +457,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
     setDirtyValue("yoga_style_ids", next);
   }
 
-  // ── Instructor helpers ────────────────────────────────────────────────
-
-  function commitInstructors(nextInstructors: StudioInstructor[]) {
-    const unique = [...new Map(nextInstructors.map((i) => [i.id, i])).values()];
-    setDirtyValue("instructors", unique);
-    setDirtyValue(
-      "instructor_ids",
-      unique.map((i) => i.id),
-    );
-  }
-
-  function removeInstructor(instructorId: string) {
-    commitInstructors((values.instructors ?? []).filter((i) => i.id !== instructorId));
-  }
-
   // ── Pass helpers (list shell for T03 modal) ───────────────────────────
 
   function removePass(index: number) {
@@ -588,9 +531,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
       </main>
     );
   }
-
-  const instructors = values.instructors ?? [];
-  const instructorIds = values.instructor_ids ?? [];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -701,6 +641,55 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       spellCheck={false}
                     />
                     <FieldError message={errors.description?.message} />
+                  </div>
+
+                  {/* Style jogi */}
+                  <div>
+                    <label className="mb-1 block text-base font-semibold">Style jogi</label>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      Widoczne na profilu studia i w filtrach wyszukiwania
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allYogaStyles.map((style) => (
+                        <Badge
+                          key={style.id}
+                          variant={
+                            (values.yoga_style_ids ?? []).includes(style.id) ? "default" : "outline"
+                          }
+                          className="cursor-pointer"
+                          onClick={() => toggleYogaStyle(style.id)}
+                        >
+                          {style.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Widoczność */}
+                  <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {values.is_listed ? "Strona publiczna" : "Strona ukryta"}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {values.is_listed
+                          ? "Studio jest widoczne w wynikach wyszukiwania Google"
+                          : "Studio nie jest indeksowane przez wyszukiwarki"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDirtyValue("is_listed", !values.is_listed)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                        values.is_listed ? "bg-emerald-500" : "bg-gray-200"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                          values.is_listed ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
               </Section>
@@ -892,111 +881,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                 </div>
               </Section>
 
-              {/* ── Section 3: Instruktorzy ── */}
-              <Section id="studio-instructors-section" title="Instruktorzy">
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    {instructors.map((instructor) => {
-                      const resolved =
-                        availableInstructors.find((i) => i.id === instructor.id) ?? instructor;
-                      const isOwned = (resolved as any).is_owned === true;
-
-                      return (
-                        <div key={instructor.id} className="flex min-h-12 items-center gap-3">
-                          <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted text-base font-medium text-brand-green">
-                            {instructor.image_id ? (
-                              <WyImage
-                                src={instructor.image_id}
-                                alt={instructor.name}
-                                width={44}
-                                height={44}
-                                className="size-11 rounded-full object-cover"
-                              />
-                            ) : (
-                              instructor.name
-                                .split(/\s+/)
-                                .filter(Boolean)
-                                .slice(0, 2)
-                                .map((p) => p[0]?.toUpperCase())
-                                .join("")
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-base font-semibold">
-                              {instructor.name}
-                            </div>
-                            {!isOwned && (
-                              <span className="mt-1 inline-flex rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
-                                Zewnętrzny
-                              </span>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-10 text-muted-foreground"
-                            onClick={() => removeInstructor(instructor.id)}
-                            aria-label={`Usuń instruktora ${instructor.name}`}
-                          >
-                            <Trash2 className="size-5" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <button
-                    type="button"
-                    className="flex min-h-10 items-center gap-3 text-base font-medium text-brand-blue"
-                    onClick={() => setIsInstructorModalOpen(true)}
-                  >
-                    <Plus className="size-5" />
-                    Dodaj instruktora
-                  </button>
-                  <InstructorModal
-                    isOpen={isInstructorModalOpen}
-                    onClose={() => setIsInstructorModalOpen(false)}
-                    onInstructorSaved={(instructor) => {
-                      const saved = instructor as StudioInstructor;
-                      setAvailableInstructors((prev) => {
-                        const exists = prev.some((i) => i.id === saved.id);
-                        return exists
-                          ? prev.map((i) => (i.id === saved.id ? (saved as any) : i))
-                          : [...prev, saved as any];
-                      });
-                      commitInstructors([...instructors, saved]);
-                      setIsInstructorModalOpen(false);
-                    }}
-                    existingInstructors={availableInstructors}
-                    availableInstructors={availableInstructors}
-                    selectedInstructorIds={instructorIds}
-                  />
-
-                  {/* Style jogi */}
-                  <div className="pt-2">
-                    <label className="mb-1 block text-base font-semibold">Style jogi</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Widoczne na profilu studia i w filtrach wyszukiwania
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {allYogaStyles.map((style) => (
-                        <Badge
-                          key={style.id}
-                          variant={
-                            (values.yoga_style_ids ?? []).includes(style.id) ? "default" : "outline"
-                          }
-                          className="cursor-pointer"
-                          onClick={() => toggleYogaStyle(style.id)}
-                        >
-                          {style.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Section>
-
-              {/* ── Section 4: Oferta ── */}
+              {/* ── Section 3: Oferta ── */}
               <Section id="studio-oferta-section" title="Oferta">
                 <div className="space-y-6">
                   {/* Drop-in price */}
@@ -1261,137 +1146,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     showHeader={false}
                   />
                 </EventHelpBarProvider>
-              </Section>
-
-              {/* ── Widoczność ── */}
-              <Section id="studio-visibility-section" title="Widoczność">
-                <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {values.is_listed ? "Strona publiczna" : "Strona ukryta"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {values.is_listed
-                        ? "Studio jest widoczne w wynikach wyszukiwania Google"
-                        : "Studio nie jest indeksowane przez wyszukiwarki"}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDirtyValue("is_listed", !values.is_listed)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                      values.is_listed ? "bg-emerald-500" : "bg-gray-200"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                        values.is_listed ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </Section>
-
-              <Section id="studio-payments-section" title="Płatności">
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">Gotówka</label>
-                    <SegmentedToggle
-                      disabled
-                      value={values.accepts_cash}
-                      onChange={() => {}}
-                      options={[
-                        { label: "Nieaktywna", value: false },
-                        { label: "Aktywna", value: true },
-                      ]}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Płatność gotówką jest wymagana i nie można jej wyłączyć.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">Stripe (online)</label>
-                    <SegmentedToggle
-                      disabled
-                      value={values.accepts_stripe}
-                      onChange={() => {}}
-                      options={[
-                        { label: "Wkrótce", value: false },
-                        { label: "Aktywna", value: true },
-                      ]}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">Przelew bankowy</label>
-                    <SegmentedToggle
-                      disabled
-                      value={values.accepts_bank_transfer}
-                      onChange={() => {}}
-                      options={[
-                        { label: "Wkrótce", value: false },
-                        { label: "Aktywna", value: true },
-                      ]}
-                    />
-                  </div>
-                </div>
-              </Section>
-
-              <Section id="studio-cancellation-section" title="Anulowanie">
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">
-                      Zasady bezpłatnego odwołania
-                    </label>
-                    <SegmentedToggle
-                      value={values.cancellation_policy_mode}
-                      onChange={(next) => setDirtyValue("cancellation_policy_mode", next)}
-                      options={[
-                        { label: "Wg pory zajęć", value: "by_time_of_day" },
-                        { label: "Zawsze bezpłatnie", value: "always_free" },
-                      ]}
-                    />
-                  </div>
-
-                  {values.cancellation_policy_mode === "by_time_of_day" && (
-                    <>
-                      <div>
-                        <label className="mb-1 block text-sm font-semibold">
-                          Godzina graniczna dla zajęć porannych (przed 12:00)
-                        </label>
-                        <p className="mb-2 text-xs text-muted-foreground">
-                          Bezpłatne odwołanie możliwe do tej godziny poprzedniego dnia.
-                        </p>
-                        <Input
-                          type="time"
-                          value={values.cancellation_morning_deadline_time ?? ""}
-                          onChange={(e) =>
-                            setDirtyValue("cancellation_morning_deadline_time", e.target.value)
-                          }
-                          className={fieldClass()}
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-sm font-semibold">
-                          Liczba godzin przed zajęciami popołudniowymi (od 12:00)
-                        </label>
-                        <p className="mb-2 text-xs text-muted-foreground">
-                          Bezpłatne odwołanie możliwe do tylu godzin przed rozpoczęciem zajęć.
-                        </p>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={values.cancellation_afternoon_hours_before ?? ""}
-                          onChange={(e) =>
-                            setDirtyValue("cancellation_afternoon_hours_before", e.target.value)
-                          }
-                          onKeyDown={blockInvalidNumberChars}
-                          placeholder="np. 3"
-                          className={fieldClass()}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
               </Section>
             </div>
           </div>

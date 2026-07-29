@@ -70,17 +70,16 @@ export default function KontoPage() {
 
       {/* Przełącz na profil B2C */}
       <section className="space-y-1.5">
-        <div className="rounded-xl border bg-white px-4 py-3.5 flex items-center justify-between opacity-60">
+        <Link
+          href="/konto"
+          className="rounded-xl border bg-white px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
           <div>
-            <p className="text-sm font-medium text-gray-900">Przełącz profil</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Zmień aktywny profil z organizatora na uczestnika
-            </p>
+            <p className="text-sm font-medium text-gray-900">Przełącz na konto osobiste</p>
+            <p className="text-xs text-gray-500 mt-0.5">Twoje rezerwacje, karnety, odkrywanie</p>
           </div>
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-            Wkrótce
-          </span>
-        </div>
+          <ChevronRight size={16} className="text-gray-400 shrink-0" />
+        </Link>
       </section>
 
       {/* Wyloguj się */}

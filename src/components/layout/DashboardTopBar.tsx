@@ -39,6 +39,9 @@ function getPageTitle(pathname: string): string | undefined {
   if (pathname === "/konto/partner/studio/create") return "Nowe studio";
   if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/edit"))
     return "Edytuj studio";
+  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/payments"))
+    return "Płatności i odwołania";
+  if (pathname.startsWith("/konto/partner/menu/studio/")) return "Studio";
   if (pathname === "/konto/partner/szablony-zajec") return "Szablony zajęć";
   if (pathname === "/konto/partner/szablony-zajec/create") return "Nowy szablon";
   if (pathname.startsWith("/konto/partner/szablony-zajec/") && pathname.endsWith("/edit"))
@@ -63,6 +66,9 @@ function getBackHref(pathname: string): string | undefined {
   if (pathname === "/konto/partner/studio/create") return "/konto/partner/menu";
   if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/edit"))
     return "/konto/partner/menu";
+  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/payments"))
+    return "/konto/partner/menu";
+  if (pathname.startsWith("/konto/partner/menu/studio/")) return "/konto/partner/menu";
   if (pathname === "/konto/partner/instruktorzy") return "/konto/partner/menu";
   if (pathname === "/konto/partner/instruktorzy/create") return "/konto/partner/instruktorzy";
   if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
