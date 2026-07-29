@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { getLastMode } from "@/lib/partnerMode";
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -41,7 +42,10 @@ function VerifyEmailContent() {
           duration: 3000,
         });
 
-        const redirectTo = next || localStorage.getItem("wy_auth_next") || "/konto/partner";
+        const redirectTo =
+          next ||
+          localStorage.getItem("wy_auth_next") ||
+          (getLastMode() === "b2c" ? "/konto" : "/konto/partner");
         localStorage.removeItem("wy_auth_next");
 
         // Redirect after a short delay

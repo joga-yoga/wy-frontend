@@ -1,18 +1,17 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 
-import { BottomTabBar } from "@/components/layout/BottomTabBar";
+import { BottomTabBar, TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { DashboardTopBar } from "@/components/layout/DashboardTopBar";
 import { useAuth } from "@/context/AuthContext";
 import { OfferCreateMenuProvider } from "@/context/OfferCreateMenuContext";
+import { PartnerCapabilitiesProvider } from "@/context/PartnerCapabilitiesContext";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { setLastMode } from "@/lib/partnerMode";
 
 import { NavigationBlockerProvider } from "./components/EventForm/block-navigation/navigation-block";
-
-const MAIN_TAB_PATHS = ["/konto/partner", "/konto/partner/oferta", "/konto/partner/konto"];
-const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,12 +22,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 }
 
 function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const isBecomePartner = pathname === BECOME_PARTNER_PATH;
 
   // null = partner status not yet resolved for the current session
   const [hasPartner, setHasPartner] = useState<boolean | null>(null);
@@ -39,8 +35,13 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router]);
 
-  // Partner-profile guard: a logged-in user without a partner profile has nothing
-  // to do in the dashboard and must complete onboarding on become-partner first.
+  useEffect(() => {
+    setLastMode("b2b");
+  }, []);
+
+  // Switching to B2B creates the Partner instantly — no form (spec-b2b §2 decision 3).
+  // Phone/SMS verification is deferred to the first action that needs a contactable
+  // owner (currently: creating a studio, see PhoneVerificationDialog in StudioForm).
   useEffect(() => {
     if (loading || !user) {
       return;
@@ -57,12 +58,17 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
       .catch((err) => {
         if (cancelled) return;
         if (err.response?.status === 404) {
-          setHasPartner(false);
-          if (!isBecomePartner) {
-            const query = searchParams.toString();
-            const currentPath = query ? `${pathname}?${query}` : pathname;
-            router.replace(`${BECOME_PARTNER_PATH}?next=${encodeURIComponent(currentPath)}`);
-          }
+          axiosInstance
+            .post("/partner/instant")
+            .then(() => refreshUser())
+            .then(() => {
+              if (!cancelled) setHasPartner(true);
+            })
+            .catch(() => {
+              // A concurrent tab may have already created it — re-check once rather
+              // than stranding the user on a spinner.
+              if (!cancelled) setHasPartner(true);
+            });
         } else {
           // Don't lock the user out of the dashboard on transient/unexpected errors.
           setHasPartner(true);
@@ -72,24 +78,13 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [loading, user, isBecomePartner, pathname, router, searchParams]);
+  }, [loading, user, refreshUser]);
 
-  // First-login redirect: new partners land on Oferta, not Aktywność
-  useEffect(() => {
-    if (!loading && user && hasPartner === true && pathname === "/konto/partner") {
-      const shown = localStorage.getItem("wy_onboarding_shown");
-      if (!shown) {
-        localStorage.setItem("wy_onboarding_shown", "true");
-        router.replace("/konto/partner/oferta");
-      }
-    }
-  }, [loading, user, hasPartner, pathname, router]);
+  const isMainTab = (TAB_PATHS as readonly string[]).includes(pathname);
 
-  const isMainTab = MAIN_TAB_PATHS.includes(pathname);
-
-  // Wait for auth, and (outside become-partner) for the partner check, before
-  // rendering dashboard content — otherwise it flashes before a redirect.
-  if (loading || !user || (!isBecomePartner && hasPartner !== true)) {
+  // Wait for auth and the partner check before rendering dashboard content —
+  // otherwise it flashes before the instant-create round trip settles.
+  if (loading || !user || hasPartner !== true) {
     return (
       <div className="flex flex-col bg-background">
         <main className="flex-1 flex justify-center items-center min-h-[100dvh] w-full">
@@ -103,16 +98,18 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <NavigationBlockerProvider>
-      <OfferCreateMenuProvider>
-        <DashboardTopBar />
-        <div className="md:flex">
-          <BottomTabBar />
-          <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
-            <React.Fragment key={pathname}>{children}</React.Fragment>
-          </main>
-        </div>
-      </OfferCreateMenuProvider>
-    </NavigationBlockerProvider>
+    <PartnerCapabilitiesProvider>
+      <NavigationBlockerProvider>
+        <OfferCreateMenuProvider>
+          <DashboardTopBar />
+          <div className="md:flex">
+            <BottomTabBar />
+            <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
+              <React.Fragment key={pathname}>{children}</React.Fragment>
+            </main>
+          </div>
+        </OfferCreateMenuProvider>
+      </NavigationBlockerProvider>
+    </PartnerCapabilitiesProvider>
   );
 }

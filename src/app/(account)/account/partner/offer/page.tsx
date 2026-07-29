@@ -3,11 +3,17 @@
 import {
   Building2,
   Calendar,
+  ChevronRight,
   ExternalLink,
+  GraduationCap,
   ImageIcon,
   MoreVertical,
+  Mountain,
   Pencil,
   Plus,
+  Sparkles,
+  Tag,
+  Users,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -160,6 +166,7 @@ function EventCard({
   isDeleting,
   onDeleteConfirm,
   onDeleteCancel,
+  organizerLabel,
 }: {
   event: DashboardItem;
   onDelete: (e: DashboardItem) => void;
@@ -169,6 +176,8 @@ function EventCard({
   isDeleting: boolean;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
+  /** "jako: X" / "jako: X · Y" — only passed when the partner has 2+ entities (spec-b2b §4). */
+  organizerLabel?: string;
 }) {
   const status = getEventStatus(event);
   const isPast = status.text === "Minęło";
@@ -242,6 +251,9 @@ function EventCard({
             </DropdownMenu>
           </div>
           <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">{event.title}</h3>
+          {organizerLabel && (
+            <p className="text-[11px] text-gray-400 mt-0.5 truncate">jako: {organizerLabel}</p>
+          )}
           {event.start_date && (
             <div className="flex items-center gap-1 mt-0.5">
               <Calendar className="w-3.5 h-3.5 text-gray-500" />
@@ -308,9 +320,10 @@ export default function OfferPage() {
   const [loadingInstructors, setLoadingInstructors] = useState(true);
   const [acceptingInvitationId, setAcceptingInvitationId] = useState<string | null>(null);
   const [decliningInvitationId, setDecliningInvitationId] = useState<string | null>(null);
-  const [showBanner, setShowBanner] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [organizerLabels, setOrganizerLabels] = useState<Record<string, string[]>>({});
+  const [showOrganizerLabels, setShowOrganizerLabels] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -334,37 +347,8 @@ export default function OfferPage() {
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
-  // Show welcome banner for new users until first content is created
-  useEffect(() => {
-    const done = localStorage.getItem("wy_onboarding_done") === "true";
-    if (!done) setShowBanner(true);
-  }, []);
-
-  // Auto-dismiss banner once any content exists
-  useEffect(() => {
-    if (loadingItems || loadingInstructors || !showBanner) return;
-    const hasContent =
-      retreats.length > 0 ||
-      workshops.length > 0 ||
-      classes.length > 0 ||
-      courses.length > 0 ||
-      instructors.length > 0 ||
-      invitations.length > 0;
-    if (hasContent) {
-      localStorage.setItem("wy_onboarding_done", "true");
-      setShowBanner(false);
-    }
-  }, [
-    loadingItems,
-    loadingInstructors,
-    retreats.length,
-    workshops.length,
-    classes.length,
-    courses.length,
-    instructors.length,
-    invitations.length,
-    showBanner,
-  ]);
+  const hasAnyEvents =
+    retreats.length > 0 || workshops.length > 0 || courses.length > 0 || classes.length > 0;
 
   // Fetch events
   useEffect(() => {
@@ -393,9 +377,27 @@ export default function OfferPage() {
         setWorkshops(sortActiveFirst(w));
         setCourses(sortActiveFirst(co));
         setClasses(sortActiveFirst(c));
+
+        // "jako: X" chips (spec-b2b §4) — one call for every rendered id; the backend
+        // tells us whether to show them at all (only once the partner has 2+ entities).
+        const eventIds = [...r, ...w, ...co, ...c].map((e) => e.id);
+        if (eventIds.length > 0) {
+          axiosInstance
+            .post("/events/organizer-labels", { event_ids: eventIds })
+            .then(({ data }) => {
+              setOrganizerLabels(data.labels ?? {});
+              setShowOrganizerLabels(Boolean(data.show_labels));
+            })
+            .catch(() => {});
+        }
       })
       .finally(() => setLoadingItems(false));
   }, [areClassesEnabled]);
+
+  const getOrganizerLabel = useCallback(
+    (id: string) => (showOrganizerLabels ? organizerLabels[id]?.join(" · ") : undefined),
+    [showOrganizerLabels, organizerLabels],
+  );
 
   // Fetch studios
   useEffect(() => {
@@ -672,7 +674,12 @@ export default function OfferPage() {
           ) : (
             <div className="space-y-3">
               {items.map((event) => (
-                <EventCard key={event.id} event={event} {...cardProps} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  {...cardProps}
+                  organizerLabel={getOrganizerLabel(event.id)}
+                />
               ))}
               <p className="text-xs text-gray-400 text-center pt-2">{countLabel}</p>
             </div>
@@ -704,56 +711,43 @@ export default function OfferPage() {
             </DrawerClose>
           </div>
           <div className="space-y-3 p-4 pt-2">
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              <Link
-                href="/konto/partner/wyjazdy/create"
-                onClick={() => setIsCreateMenuOpen(false)}
-                className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
-              >
-                <img
-                  src="/images/logo/logo-retreats.png"
-                  className="w-12 h-12 sm:w-16 sm:h-16"
-                  alt=""
-                />
-                <div className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold">Wyjazd</div>
-              </Link>
-              <Link
-                href="/konto/partner/wydarzenia/create"
-                onClick={() => setIsCreateMenuOpen(false)}
-                className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
-              >
-                <img
-                  src="/images/logo/logo-workshops.png"
-                  className="w-12 h-12 sm:w-16 sm:h-16"
-                  alt=""
-                />
-                <div className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold">Wydarzenie</div>
-              </Link>
-              <Link
-                href="/konto/partner/kursy/create"
-                onClick={() => setIsCreateMenuOpen(false)}
-                className="border rounded-xl p-3 sm:p-6 hover:shadow-md transition bg-white flex flex-col items-center text-center"
-              >
-                <img
-                  src="/images/logo/logo-courses.png"
-                  className="w-12 h-12 sm:w-16 sm:h-16"
-                  alt=""
-                />
-                <div className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold">Kurs</div>
-              </Link>
+            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+              {OFFER_TYPE_ROWS.map(({ href, title, description, Icon, badgeClassName }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setIsCreateMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div
+                    className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                      badgeClassName,
+                    )}
+                  >
+                    <Icon size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900">{title}</p>
+                    <p className="text-xs text-gray-500 truncate">{description}</p>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-400 shrink-0" />
+                </Link>
+              ))}
             </div>
             <Link
               href="/konto/partner/instruktorzy/create"
               onClick={() => setIsCreateMenuOpen(false)}
-              className="border rounded-xl p-4 hover:shadow-md transition bg-white flex items-center gap-4"
+              className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
             >
-              <span className="text-3xl leading-none" aria-hidden="true">
-                🧘
-              </span>
-              <div>
-                <p className="text-base font-semibold text-gray-900">Profil Instruktora</p>
-                <p className="text-sm text-gray-500 mt-0.5">Dodaj instruktora do swojego konta</p>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+                <Users size={18} />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-900">Profil instruktora</p>
+                <p className="text-xs text-gray-500 truncate">Dodaj instruktora do swojego konta</p>
+              </div>
+              <ChevronRight size={16} className="text-gray-400 shrink-0" />
             </Link>
           </div>
         </DrawerContent>
@@ -765,55 +759,64 @@ export default function OfferPage() {
         </div>
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-4 space-y-6">
-          {showBanner && <WelcomeBanner onAddEvent={() => setIsCreateMenuOpen(true)} />}
-          {/* Wyjazdy */}
-          <EventSection
-            title="Wyjazdy"
-            emptyText="Brak wyjazdów"
-            items={retreats.slice(0, 2)}
-            totalCount={retreats.length}
-            onShowAll={() => setFilter("wyjazdy")}
-            createPath="/konto/partner/wyjazdy/create"
-            createLabel="Dodaj wyjazd"
-            cardProps={cardProps}
-          />
+          {hasAnyEvents ? (
+            <>
+              {/* Wyjazdy */}
+              <EventSection
+                title="Wyjazdy"
+                emptyText="Brak wyjazdów"
+                items={retreats.slice(0, 2)}
+                totalCount={retreats.length}
+                onShowAll={() => setFilter("wyjazdy")}
+                createPath="/konto/partner/wyjazdy/create"
+                createLabel="Dodaj wyjazd"
+                cardProps={cardProps}
+                getOrganizerLabel={getOrganizerLabel}
+              />
 
-          {/* Wydarzenia */}
-          <EventSection
-            title="Wydarzenia"
-            emptyText="Brak wydarzeń"
-            items={workshops.slice(0, 2)}
-            totalCount={workshops.length}
-            onShowAll={() => setFilter("wydarzenia")}
-            createPath="/konto/partner/wydarzenia/create"
-            createLabel="Dodaj wydarzenie"
-            cardProps={cardProps}
-          />
+              {/* Wydarzenia */}
+              <EventSection
+                title="Wydarzenia"
+                emptyText="Brak wydarzeń"
+                items={workshops.slice(0, 2)}
+                totalCount={workshops.length}
+                onShowAll={() => setFilter("wydarzenia")}
+                createPath="/konto/partner/wydarzenia/create"
+                createLabel="Dodaj wydarzenie"
+                cardProps={cardProps}
+                getOrganizerLabel={getOrganizerLabel}
+              />
 
-          {/* Kursy */}
-          <EventSection
-            title="Kursy"
-            emptyText="Brak kursów"
-            items={courses.slice(0, 2)}
-            totalCount={courses.length}
-            onShowAll={() => setFilter("kursy")}
-            createPath="/konto/partner/kursy/create"
-            createLabel="Dodaj kurs"
-            cardProps={cardProps}
-          />
+              {/* Kursy */}
+              <EventSection
+                title="Kursy"
+                emptyText="Brak kursów"
+                items={courses.slice(0, 2)}
+                totalCount={courses.length}
+                onShowAll={() => setFilter("kursy")}
+                createPath="/konto/partner/kursy/create"
+                createLabel="Dodaj kurs"
+                cardProps={cardProps}
+                getOrganizerLabel={getOrganizerLabel}
+              />
 
-          {/* Zajęcia */}
-          {areClassesEnabled && (
-            <EventSection
-              title="Zajęcia"
-              emptyText="Brak zajęć"
-              items={classes.slice(0, 2)}
-              totalCount={classes.length}
-              onShowAll={() => setFilter("zajecia")}
-              createPath="/konto/partner/zajecia/create"
-              createLabel="Dodaj zajęcia"
-              cardProps={cardProps}
-            />
+              {/* Zajęcia */}
+              {areClassesEnabled && (
+                <EventSection
+                  title="Zajęcia"
+                  emptyText="Brak zajęć"
+                  items={classes.slice(0, 2)}
+                  totalCount={classes.length}
+                  onShowAll={() => setFilter("zajecia")}
+                  createPath="/konto/partner/zajecia/create"
+                  createLabel="Dodaj zajęcia"
+                  cardProps={cardProps}
+                  getOrganizerLabel={getOrganizerLabel}
+                />
+              )}
+            </>
+          ) : (
+            <OfferEmptyState />
           )}
 
           {/* Studio */}
@@ -1095,22 +1098,80 @@ export default function OfferPage() {
 
 // ─── WelcomeBanner ───────────────────────────────────────────────────────────
 
-function WelcomeBanner({ onAddEvent }: { onAddEvent: () => void }) {
+const OFFER_TYPE_ROWS = [
+  {
+    href: "/konto/partner/wyjazdy/create",
+    title: "Wyjazd",
+    description: "Kilkudniowy retreat z zakwaterowaniem",
+    Icon: Mountain,
+    badgeClassName: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    href: "/konto/partner/wydarzenia/create",
+    title: "Wydarzenie",
+    description: "Spotkanie, jednorazowa praktyka",
+    Icon: Sparkles,
+    badgeClassName: "bg-amber-100 text-amber-700",
+  },
+  {
+    href: "/konto/partner/kursy/create",
+    title: "Kurs",
+    description: "Cykl spotkań z zapisami na całość",
+    Icon: GraduationCap,
+    badgeClassName: "bg-violet-100 text-violet-700",
+  },
+] as const;
+
+/** spec-b2b §5: one primary CTA + a type education card. Type is chosen by picking
+ * a row here, never inferred — the empty state itself stays type-agnostic. */
+function OfferEmptyState() {
+  const { setIsCreateMenuOpen } = useOfferCreateMenu();
+
   return (
-    <div className="mx-0 rounded-xl bg-green-50 border border-green-200 p-4 space-y-3">
-      <div>
-        <p className="text-base font-semibold text-gray-900">Witaj na joga.yoga! 🎉</p>
-        <p className="text-sm text-gray-600 mt-1">
-          Zacznij od dodania swojego pierwszego wydarzenia lub profilu instruktora.
-        </p>
+    <div className="space-y-3">
+      <div className="rounded-2xl border bg-white py-10 px-6 text-center space-y-4">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          <Tag size={22} className="text-gray-400" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-base font-semibold text-gray-900">Twoja oferta jest pusta</p>
+          <p className="text-sm text-gray-500">
+            Dodaj wyjazd, wydarzenie lub kurs — stworzymy publiczną stronę z linkiem do
+            udostępniania i zaczniemy zbierać rezerwacje.
+          </p>
+        </div>
+        <Button variant="green" className="rounded-full" onClick={() => setIsCreateMenuOpen(true)}>
+          Dodaj wydarzenie
+        </Button>
       </div>
-      <div className="flex gap-2">
-        <Button size="sm" onClick={onAddEvent} className="flex-1 text-xs">
-          + Dodaj wydarzenie
-        </Button>
-        <Button size="sm" variant="outline" asChild className="flex-1 text-xs">
-          <Link href="/konto/partner/instruktorzy/create">+ Dodaj instruktora</Link>
-        </Button>
+
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          Typy wydarzeń
+        </h2>
+        <div className="rounded-xl border bg-white overflow-hidden divide-y">
+          {OFFER_TYPE_ROWS.map(({ href, title, description, Icon, badgeClassName }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+            >
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                  badgeClassName,
+                )}
+              >
+                <Icon size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-900">{title}</p>
+                <p className="text-xs text-gray-500 truncate">{description}</p>
+              </div>
+              <ChevronRight size={16} className="text-gray-400 shrink-0" />
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1161,6 +1222,7 @@ function EventSection({
   createPath,
   createLabel,
   cardProps,
+  getOrganizerLabel,
 }: {
   title: string;
   emptyText: string;
@@ -1170,6 +1232,7 @@ function EventSection({
   createPath: string;
   createLabel: string;
   cardProps: object;
+  getOrganizerLabel?: (id: string) => string | undefined;
 }) {
   return (
     <section className="space-y-2">
@@ -1181,7 +1244,12 @@ function EventSection({
       ) : (
         <div className="space-y-3">
           {items.map((event) => (
-            <EventCard key={event.id} event={event} {...(cardProps as any)} />
+            <EventCard
+              key={event.id}
+              event={event}
+              {...(cardProps as any)}
+              organizerLabel={getOrganizerLabel?.(event.id)}
+            />
           ))}
         </div>
       )}

@@ -26,6 +26,7 @@ import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
 import { type Instructor, InstructorModal } from "@/components/instructors/InstructorModal";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
+import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,6 +147,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [directUploadError, setDirectUploadError] = useState<string | null>(null);
+  const [isPhoneVerificationOpen, setIsPhoneVerificationOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ id: string; file: File }[]>([]);
   const resolverSchemaRef = useRef(studioDraftSchema);
   const submitIntentRef = useRef<SubmitIntent>("draft");
@@ -366,9 +368,14 @@ export function StudioForm({ routeId }: StudioFormProps) {
       });
       router.refresh();
     } catch (error: any) {
+      const detail = error.response?.data?.detail;
+      if (!studioId && detail?.error_code === "PHONE_VERIFICATION_REQUIRED") {
+        setIsPhoneVerificationOpen(true);
+        return;
+      }
       toast({
         title: intent === "publish" ? "Błąd publikacji" : "Błąd zapisu",
-        description: error.response?.data?.detail || "Spróbuj ponownie.",
+        description: (typeof detail === "string" && detail) || "Spróbuj ponownie.",
         variant: "destructive",
       });
     }
@@ -1413,6 +1420,12 @@ export function StudioForm({ routeId }: StudioFormProps) {
           isSaveDisabled={isSubmitting}
         />
       </form>
+
+      <PhoneVerificationDialog
+        open={isPhoneVerificationOpen}
+        onOpenChange={setIsPhoneVerificationOpen}
+        onVerified={() => persist(submitIntentRef.current)}
+      />
     </main>
   );
 }

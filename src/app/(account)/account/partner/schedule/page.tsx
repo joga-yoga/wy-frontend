@@ -14,16 +14,18 @@ import {
   X as XIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { DayStrip } from "./components/DayStrip";
+import { GrafikContextChips } from "./components/GrafikContextChips";
 import type { ScheduleDaySummary, ScheduleOccurrence, ScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -63,7 +65,21 @@ function formatDayHeader(dateStr: string): string {
 
 export default function SchedulePage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
+  const { capabilities, isLoading: isLoadingCapabilities } = usePartnerCapabilities();
+
+  // Grafik is absent entirely for events-only/fresh partners and, for teaching-only
+  // partners, is the read-only variant — never this managed-owner view (spec-b2b §3).
+  useEffect(() => {
+    if (isLoadingCapabilities || !capabilities) return;
+    if (capabilities.managedStudios.length > 0) return;
+    router.replace(
+      capabilities.teachingStudios.length > 0
+        ? "/konto/partner/grafik/instructor"
+        : "/konto/partner/rezerwacje",
+    );
+  }, [isLoadingCapabilities, capabilities, router]);
 
   const studioParam = searchParams.get("studio_id") ?? "";
   const [studioId, setStudioId] = useState(studioParam);
@@ -120,6 +136,8 @@ export default function SchedulePage() {
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
+      <GrafikContextChips />
+
       {/* Week stepper */}
       <div className="flex items-center mb-4">
         <button

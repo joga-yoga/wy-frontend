@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { getLastMode } from "@/lib/partnerMode";
 
 const emailSchema = z.object({
   email: z.string().email({ message: "Proszę podać poprawny adres email." }),
@@ -43,7 +44,14 @@ export function LoginPage() {
   const [isSignupPasswordVisible, setIsSignupPasswordVisible] = useState(false);
   const hasAutoRedirected = useRef(false);
   const hasAutoSubmittedEmail = useRef(false);
-  const next = searchParams.get("next") || "/konto/partner";
+  const nextParam = searchParams.get("next");
+  // Renders "/konto/partner" on the server (no localStorage there) and only picks up
+  // the remembered mode after mount, to avoid a hydration mismatch — see partnerMode.ts.
+  const [defaultNext, setDefaultNext] = useState("/konto/partner");
+  useEffect(() => {
+    setDefaultNext(getLastMode() === "b2c" ? "/konto" : "/konto/partner");
+  }, []);
+  const next = nextParam || defaultNext;
   const emailParam = searchParams.get("email") || "";
 
   const googleAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login?next=${encodeURIComponent(next)}`;

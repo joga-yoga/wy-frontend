@@ -619,7 +619,7 @@ export function EventForm({
         toast({
           description:
             mode === "workshop"
-              ? "Warsztat zaktualizowany pomyślnie!"
+              ? "Wydarzenie zaktualizowane pomyślnie!"
               : mode === "class"
                 ? "Zajęcia zaktualizowane pomyślnie!"
                 : mode === "course"
@@ -635,7 +635,7 @@ export function EventForm({
         toast({
           description:
             mode === "workshop"
-              ? "Warsztat utworzony pomyślnie!"
+              ? "Wydarzenie utworzone pomyślnie!"
               : mode === "class"
                 ? "Zajęcia utworzone pomyślnie!"
                 : mode === "course"
@@ -683,7 +683,7 @@ export function EventForm({
         setCurrentIsPublic(true); // Successfully published and saved
         reset(getValues());
         toast({
-          description: `${mode === "workshop" ? "Warsztat" : mode === "class" ? "Zajęcia" : mode === "course" ? "Kurs" : "Wyjazd"} opublikowany/e i zmiany zapisane pomyślnie.`,
+          description: `${mode === "workshop" ? "Wydarzenie" : mode === "class" ? "Zajęcia" : mode === "course" ? "Kurs" : "Wyjazd"} opublikowany/e i zmiany zapisane pomyślnie.`,
         });
         router.refresh();
 
@@ -717,7 +717,7 @@ export function EventForm({
         setCurrentIsPublic(false);
         setValue("is_public", false, { shouldDirty: false, shouldValidate: false });
         toast({
-          description: `${mode === "workshop" ? "Warsztat" : mode === "class" ? "Zajęcia" : mode === "course" ? "Kurs" : "Wyjazd"} ukryty/e pomyślnie.`,
+          description: `${mode === "workshop" ? "Wydarzenie" : mode === "class" ? "Zajęcia" : mode === "course" ? "Kurs" : "Wyjazd"} ukryty/e pomyślnie.`,
         });
       } catch (error: any) {
         setValue("is_public", originalFormIsPublicValue, {

@@ -6,10 +6,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { DayStrip } from "../components/DayStrip";
+import { GrafikContextChips } from "../components/GrafikContextChips";
 import type { ScheduleOccurrence } from "../types";
 
 function getMonday(d: Date): Date {
@@ -46,6 +48,17 @@ function formatDayHeader(dateStr: string): string {
 export default function InstructorSchedulePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { capabilities, isLoading: isLoadingCapabilities } = usePartnerCapabilities();
+
+  // Nothing to show read-only for a partner with no accepted teaching links — send
+  // them back to the managed-owner view (which itself redirects on to Rezerwacje for
+  // a partner with neither, per spec-b2b §3).
+  useEffect(() => {
+    if (isLoadingCapabilities || !capabilities) return;
+    if (capabilities.teachingStudios.length === 0) {
+      router.replace("/konto/partner/grafik");
+    }
+  }, [isLoadingCapabilities, capabilities, router]);
 
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
   const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
@@ -97,6 +110,8 @@ export default function InstructorSchedulePage() {
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
+      <GrafikContextChips />
+
       <div className="flex items-center justify-center gap-4 mb-4">
         <button
           onClick={() => {
