@@ -50,7 +50,11 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
     return "Edytuj szablon";
   if (pathname === "/konto/partner/grafiki-zajec/create") return "Dodaj zajęcia";
   if (pathname === "/konto/partner/grafik/instructor") return "Mój grafik";
-  if (pathname.startsWith("/konto/partner/grafik/edit/")) return "Edytuj sesję";
+  if (pathname.startsWith("/konto/partner/grafik/edit/")) {
+    // Zastępstwo enters the same edit pipeline through a different door (S8), and its
+    // header names that door rather than the pipeline.
+    return searchParams.get("field") === "instructor" ? "Zmień prowadzącego" : "Edytuj sesję";
+  }
   if (pathname.startsWith("/konto/partner/grafik/cancel/")) return "Odwołaj sesję";
   return undefined;
 }

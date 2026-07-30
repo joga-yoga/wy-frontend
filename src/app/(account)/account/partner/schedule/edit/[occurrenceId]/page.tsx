@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
@@ -11,6 +12,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 
 import { ScheduleRecurrenceForm } from "../../../class-schedules/components/ScheduleRecurrenceForm";
 import type { RoomOption } from "../../../class-schedules/types";
+import { InstructorPicker } from "../../components/InstructorPicker";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { SessionChangesPreview } from "../../components/SessionChangesPreview";
 import type {
@@ -20,6 +22,26 @@ import type {
 } from "../../types";
 
 type Scope = "single" | "this_and_future" | "whole_series";
+
+/** How the chosen scope is described back to the user, kept identical across every step. */
+function scopeLabel(scope: Scope, isSubstitution: boolean): string {
+  if (scope === "single") return isSubstitution ? "tylko ta sesja (zastępstwo)" : "tylko ta sesja";
+  if (scope === "this_and_future") return "ta i kolejne";
+  return "cała seria";
+}
+
+function formatStartTime(iso: string): string {
+  const m = iso.match(/T(\d{2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : iso;
+}
+
+function shortDate(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("pl-PL", {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  });
+}
 type Step = "scope" | "form" | "preview" | "success";
 
 const WEEKDAY_KEYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
@@ -222,10 +244,14 @@ export default function EditSessionPage() {
 
   return (
     <div className="p-4 mx-auto max-w-lg">
-      {step === "scope" && (
+      {step === "scope" && sessionDetail && (
         <div className="space-y-4">
-          <p className="text-sm font-semibold text-gray-900">
-            {isSubstitution ? "Na ile zajęć?" : "Co chcesz zmienić?"}
+          <SessionContextCard
+            title={sessionDetail.template_title}
+            subtitle={`${shortDate(sessionDetail.calendar_date)} · ${formatStartTime(sessionDetail.start_time)}${sessionDetail.instructor_name ? ` · ${sessionDetail.instructor_name}` : ""}`}
+          />
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+            {isSubstitution ? "Na ile zajęć?" : "Czego dotyczy zmiana?"}
           </p>
           <div className="space-y-2">
             <ScopeOptionCard
@@ -247,25 +273,51 @@ export default function EditSessionPage() {
               onSelect={() => setScope("whole_series")}
             />
           </div>
-          <Button className="w-full" onClick={() => setStep("form")} disabled={!sessionDetail}>
-            Dalej →
+          <Button variant="green" className="w-full" onClick={() => setStep("form")}>
+            Dalej
           </Button>
         </div>
       )}
 
-      {step === "form" && sessionDetail && (
+      {step === "form" && sessionDetail && isSubstitution && (
+        <div className="space-y-4">
+          <SessionContextCard
+            title={sessionDetail.template_title}
+            subtitle={`Zakres: ${scopeLabel(scope, isSubstitution)} · ${shortDate(sessionDetail.calendar_date)}`}
+          />
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+            Prowadzący
+          </p>
+          <InstructorPicker
+            instructors={instructors}
+            selectedId={instructorId}
+            currentId={sessionDetail.instructor_id}
+            onSelect={setInstructorId}
+          />
+          <div className="flex gap-3 pt-2">
+            {sessionDetail.is_recurring && (
+              <Button variant="outline" onClick={() => setStep("scope")}>
+                <ArrowLeft size={14} className="mr-1" />
+                Wstecz
+              </Button>
+            )}
+            <Button
+              variant="green"
+              className="flex-1"
+              onClick={goToPreview}
+              disabled={isLoadingPreview}
+            >
+              {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === "form" && sessionDetail && !isSubstitution && (
         <div className="space-y-4">
           <ScheduleRecurrenceForm
             templateTitle={sessionDetail.template_title}
-            templateSubtitle={
-              new Date(sessionDetail.calendar_date + "T00:00:00").toLocaleDateString("pl-PL", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-              }) +
-              " · " +
-              sessionDetail.studio_name
-            }
+            templateSubtitle={`Zakres: ${scopeLabel(scope, isSubstitution)} · ${shortDate(sessionDetail.calendar_date)}`}
             studios={[]}
             studioId={sessionDetail.studio_id ?? ""}
             onStudioChange={() => {}}
@@ -288,6 +340,8 @@ export default function EditSessionPage() {
             onToDateChange={setToDate}
             startTime={startTime}
             onStartTimeChange={setStartTime}
+            // One session has no recurrence to speak of (S3).
+            showRecurrence={scope !== "single"}
           />
           <div className="flex gap-3 pt-4">
             {sessionDetail.is_recurring && (
@@ -296,8 +350,13 @@ export default function EditSessionPage() {
                 Wstecz
               </Button>
             )}
-            <Button className="flex-1" onClick={goToPreview} disabled={isLoadingPreview}>
-              {isLoadingPreview ? "Generowanie..." : "Podgląd →"}
+            <Button
+              variant="green"
+              className="flex-1"
+              onClick={goToPreview}
+              disabled={isLoadingPreview}
+            >
+              {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>
           </div>
         </div>
