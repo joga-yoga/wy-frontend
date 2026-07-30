@@ -20,6 +20,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         cta: "text-white bg-gray-700 hover:bg-gray-800",
         green: "text-white bg-brand-green-700 hover:bg-brand-green-700/90 disabled:bg-gray-500",
+        // The B2B panel's muted destructive fill (e.g. "Odwołaj sesję"). Distinct from
+        // `destructive`, which is the louder system red — don't repurpose that one.
+        danger:
+          "text-white bg-b2b-red-solid hover:bg-b2b-red-solid/90 disabled:bg-gray-500 focus-visible:ring-b2b-red-solid/20",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

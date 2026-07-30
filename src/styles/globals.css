@@ -139,6 +139,17 @@
     --color-brand-red: var(--brand-red);
     --color-brand-blue: var(--brand-blue);
     --color-brand-pink: var(--brand-pink);
+
+    --color-b2b-green-bg: var(--b2b-green-bg);
+    --color-b2b-green-border: var(--b2b-green-border);
+    --color-b2b-green-text: var(--b2b-green-text);
+    --color-b2b-amber-bg: var(--b2b-amber-bg);
+    --color-b2b-amber-border: var(--b2b-amber-border);
+    --color-b2b-amber-text: var(--b2b-amber-text);
+    --color-b2b-red-bg: var(--b2b-red-bg);
+    --color-b2b-red-border: var(--b2b-red-border);
+    --color-b2b-red-text: var(--b2b-red-text);
+    --color-b2b-red-solid: var(--b2b-red-solid);
     --color-gray-50: var(--gray-50);
     --color-gray-100: var(--gray-100);
     --color-gray-200: var(--gray-200);
@@ -303,6 +314,26 @@
     --brand-red: oklch(0.63 0.201 25.14);
     --brand-blue: oklch(0.66 0.18 262.89);
     --brand-pink: oklch(0.61 0.21 330.72);
+
+    /* B2B panel palette — the desaturated tints the partner-panel prototypes use.
+     * Deliberately NOT Tailwind's defaults: `emerald-50` is #ECFDF5, visibly lighter
+     * and cooler than the design's #E7F3EB, which is what made chip/icon backgrounds
+     * read as washed out. Every value below was sampled from the prototype PNGs in
+     * .plans/b2b-partner-shell/mockups/ rather than eyeballed.
+     * Semantics: green = done/connected, amber = money or verification pending,
+     * red = cancelled/void/destructive. */
+    --b2b-green-bg: #e7f3eb;
+    --b2b-green-border: #d4e3d9;
+    --b2b-green-text: var(--brand-green-700); /* sampled #4F8A63 == brand-green-700 */
+
+    --b2b-amber-bg: #fcf3e2;
+    --b2b-amber-border: #ead9af;
+    --b2b-amber-text: #74540e;
+
+    --b2b-red-bg: #f3e8ea;
+    --b2b-red-border: #d8a5a5;
+    --b2b-red-text: #6b3a45;
+    --b2b-red-solid: #b0534f; /* solid destructive button fill (S9 "Odwołaj sesję") */
     --gray-50: oklch(0.9851 0 0);
     --gray-100: oklch(0.9614 0.0013 286.38);
     --gray-200: oklch(0.9197 0.004 286.32);
@@ -377,4 +408,24 @@
     --brand-red: oklch(0.63 0.201 25.14);
     --brand-blue: oklch(0.66 0.18 262.89);
     --brand-pink: oklch(0.61 0.21 330.72);
+
+    /* B2B panel palette — the desaturated tints the partner-panel prototypes use.
+     * Deliberately NOT Tailwind's defaults: `emerald-50` is #ECFDF5, visibly lighter
+     * and cooler than the design's #E7F3EB, which is what made chip/icon backgrounds
+     * read as washed out. Every value below was sampled from the prototype PNGs in
+     * .plans/b2b-partner-shell/mockups/ rather than eyeballed.
+     * Semantics: green = done/connected, amber = money or verification pending,
+     * red = cancelled/void/destructive. */
+    --b2b-green-bg: #e7f3eb;
+    --b2b-green-border: #d4e3d9;
+    --b2b-green-text: var(--brand-green-700); /* sampled #4F8A63 == brand-green-700 */
+
+    --b2b-amber-bg: #fcf3e2;
+    --b2b-amber-border: #ead9af;
+    --b2b-amber-text: #74540e;
+
+    --b2b-red-bg: #f3e8ea;
+    --b2b-red-border: #d8a5a5;
+    --b2b-red-text: #6b3a45;
+    --b2b-red-solid: #b0534f; /* solid destructive button fill (S9 "Odwołaj sesję") */
 }
