@@ -177,8 +177,6 @@ export default function BookingsPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
-      <h1 className="text-xl font-semibold text-gray-900">Rezerwacje</h1>
-
       <div className="flex gap-2">
         {FILTERS.map(({ value, label }) => (
           <button

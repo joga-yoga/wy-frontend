@@ -7,6 +7,7 @@ import { BottomTabBar, TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { DashboardTopBar } from "@/components/layout/DashboardTopBar";
 import { useAuth } from "@/context/AuthContext";
 import { OfferCreateMenuProvider } from "@/context/OfferCreateMenuContext";
+import { PageHeaderProvider } from "@/context/PageHeaderContext";
 import { PartnerCapabilitiesProvider } from "@/context/PartnerCapabilitiesContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { setLastMode } from "@/lib/partnerMode";
@@ -101,13 +102,15 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     <PartnerCapabilitiesProvider>
       <NavigationBlockerProvider>
         <OfferCreateMenuProvider>
-          <DashboardTopBar />
-          <div className="md:flex">
-            <BottomTabBar />
-            <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
-              <React.Fragment key={pathname}>{children}</React.Fragment>
-            </main>
-          </div>
+          <PageHeaderProvider>
+            <DashboardTopBar />
+            <div className="md:flex">
+              <BottomTabBar />
+              <main className={isMainTab ? "pb-28 md:pb-0 flex-1 min-w-0" : "flex-1 min-w-0"}>
+                <React.Fragment key={pathname}>{children}</React.Fragment>
+              </main>
+            </div>
+          </PageHeaderProvider>
         </OfferCreateMenuProvider>
       </NavigationBlockerProvider>
     </PartnerCapabilitiesProvider>

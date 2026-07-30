@@ -123,8 +123,6 @@ export default function InstructorSchedulePage() {
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Mój grafik</h1>
-
       <GrafikContextChips />
 
       <div className="flex items-center justify-between mb-4">

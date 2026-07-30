@@ -101,8 +101,6 @@ export default function StudioPaymentsPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-6 pb-24">
-      <h1 className="text-xl font-semibold text-gray-900">Płatności i odwołania</h1>
-
       <section className="space-y-4">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Metody płatności

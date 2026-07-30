@@ -71,8 +71,6 @@ export default function MenuPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">Menu</h1>
-
       {invitations.length > 0 && (
         <section className="space-y-2">
           <SectionLabel>Zaproszenia</SectionLabel>

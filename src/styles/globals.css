@@ -94,6 +94,12 @@
     }
 }
 
+@media (width >= 48rem) {
+    :root {
+        --dashboard-header-h: 5rem;
+    }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -314,6 +320,12 @@
     --brand-red: oklch(0.63 0.201 25.14);
     --brand-blue: oklch(0.66 0.18 262.89);
     --brand-pink: oklch(0.61 0.21 330.72);
+
+    /* Mirrors DashboardTopBar's h-16 / md:h-20 so sticky sub-headers (Grafik's week nav +
+     * day strip) can offset from the header instead of hard-coding `top-16`. Keep the two
+     * in sync — the header's subtitle is absolutely positioned precisely so that adding
+     * one cannot change its height and desync this value. */
+    --dashboard-header-h: 4rem;
 
     /* B2B panel palette — the desaturated tints the partner-panel prototypes use.
      * Deliberately NOT Tailwind's defaults: `emerald-50` is #ECFDF5, visibly lighter

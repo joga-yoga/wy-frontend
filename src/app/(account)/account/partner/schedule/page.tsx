@@ -169,8 +169,6 @@ export default function SchedulePage() {
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Grafik</h1>
-
       <GrafikContextChips />
 
       {reconciliation.total > 0 && (
