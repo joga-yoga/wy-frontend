@@ -14,7 +14,6 @@ import { useEventsFilter } from "@/context/EventsFilterContext";
 import { type NavigationOriginRecord, readNavigationOrigin } from "@/lib/navigation-origin";
 import { cn } from "@/lib/utils";
 
-import { WyImage } from "../custom/WyImage";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
 import LogoBlackIcon from "../icons/LogoBlackIcon";
 import { LogoFooter } from "./Footer";
@@ -100,8 +99,11 @@ export const PublicHeader = () => {
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
+  // Public pages lead into B2C (spec-b2b §2/§7) — the mode is derivable from the
+  // route, and the pinned switch inside /konto is how a partner reaches B2B from
+  // here, not this icon directly.
   const accountHref =
-    mounted && user ? "/konto/partner" : `/konto/logowanie?next=${encodeURIComponent(pathname)}`;
+    mounted && user ? "/konto" : `/konto/logowanie?next=${encodeURIComponent(pathname)}`;
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);
@@ -249,20 +251,13 @@ export const PublicHeader = () => {
           )}
 
           <Link href={accountHref} passHref className="flex items-center justify-center">
+            {/* Partner is auth/back-office only (spec-b2b §6) — nothing public,
+                including this header, renders from it. A generic account icon
+                stands in until B2C grows its own avatar. */}
             <button aria-label="Account">
-              {user?.partner?.image_id ? (
-                <WyImage
-                  src={user.partner.image_id}
-                  alt="Partner Avatar"
-                  className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover"
-                  width={128}
-                  height={128}
-                />
-              ) : (
-                <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
-                  <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
-                </div>
-              )}
+              <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+                <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
+              </div>
             </button>
           </Link>
         </div>

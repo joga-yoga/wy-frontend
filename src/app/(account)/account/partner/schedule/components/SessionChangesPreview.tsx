@@ -1,8 +1,15 @@
 "use client";
 
+import { useState } from "react";
+
 import { Badge } from "@/components/ui/badge";
 
 import type { NotificationSummary, SessionEditPreviewItem } from "../types";
+
+// Representative-card cap (reception-desk §6 / mockups S6-S7, U5): a 21-session
+// series preview shows ~4 example cards, never all 21 — truncation is
+// presentation-only, the preview payload underneath is already the complete set.
+const MAX_VISIBLE = 4;
 
 interface SessionChangesPreviewProps {
   items: SessionEditPreviewItem[];
@@ -52,6 +59,8 @@ function statusBadge(status: SessionEditPreviewItem["status"]) {
 }
 
 export function SessionChangesPreview({ items, notificationSummary }: SessionChangesPreviewProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const sorted = [...items].sort(
     (a, b) => new Date(a.calendar_date).getTime() - new Date(b.calendar_date).getTime(),
   );
@@ -60,12 +69,16 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
     return <p className="text-sm text-gray-500 py-4 text-center">Brak zmian do zastosowania.</p>;
   }
 
+  const isTruncated = !isExpanded && sorted.length > MAX_VISIBLE;
+  const visible = isTruncated ? sorted.slice(0, MAX_VISIBLE) : sorted;
+  const hiddenCount = sorted.length - visible.length;
+
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-500">Sprawdź co się zmieni przed zapisaniem.</p>
 
       <div className="space-y-2">
-        {sorted.map((item) => {
+        {visible.map((item) => {
           const timeStr = extractTime(item.start_time);
 
           return (
@@ -118,6 +131,22 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
           );
         })}
       </div>
+
+      {isTruncated && (
+        <div className="space-y-2">
+          <p className="text-sm text-gray-400 text-center">
+            … i {hiddenCount} {hiddenCount === 1 ? "kolejna sesja" : "kolejnych sesji"} wg tego
+            wzoru
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="w-full rounded-xl border bg-white py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+          >
+            Pokaż wszystkie sesje ({sorted.length})
+          </button>
+        </div>
+      )}
 
       {notificationSummary && (
         <p className="text-sm text-gray-500 pt-1">

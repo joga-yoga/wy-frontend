@@ -41,3 +41,15 @@ export interface WalkInUserLookupResponse {
   user_id: string;
   email: string;
 }
+
+export interface WalkInCandidate {
+  user_id: string;
+  email: string;
+  name: string | null;
+  pass_context: string | null;
+}
+
+export interface WalkInSearchResponse {
+  studio_clients: WalkInCandidate[];
+  other_accounts: WalkInCandidate[];
+}

@@ -53,13 +53,13 @@ export function StudioWorkspaceRows({
           Icon={Building2}
         />
         <MenuRow
-          href="/konto/partner/instruktorzy"
+          href={`/konto/partner/instruktorzy?studioId=${studioId}`}
           title="Instruktorzy"
           subtitle={rosterSubtitle(roster)}
           Icon={Users}
         />
         <MenuRow
-          href="/konto/partner/klienci"
+          href={`/konto/partner/klienci?studioId=${studioId}`}
           title="Klienci"
           subtitle="Karnety i wizyty"
           Icon={Users}

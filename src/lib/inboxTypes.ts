@@ -43,6 +43,31 @@ export interface InboxResponse {
   groups: InquiryDayGroup[];
   total: number;
   unread_count: number;
+  show_source_labels: boolean;
+}
+
+/** A pending co-organizer invite — merged into the inbox client-side (T12); see
+ * `GET /partner/organizer-invites`. */
+export interface OrganizerInviteItem {
+  id: string;
+  event_id: string;
+  event_title: string | null;
+  organizer_name: string | null;
+  role: string;
+  created_at: string;
+}
+
+/** An instructor/studio claim invite — `GET /users/me/invitations`, also merged in. */
+export interface UserInvitationItem {
+  id: string;
+  kind: "instructor_claim" | "studio_claim";
+  instructor_id?: string | null;
+  instructor_name?: string | null;
+  studio_id?: string | null;
+  studio_name?: string | null;
+  event_title: string | null;
+  expires_at: string;
+  created_at: string;
 }
 
 /** Flattens the day-grouped feed when a caller only needs a plain list. */

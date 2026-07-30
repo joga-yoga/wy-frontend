@@ -7,8 +7,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import { ResolveSheet } from "./components/ResolveSheet";
 import { RosterRow } from "./components/RosterRow";
-import type { FrontDeskSessionsResponse } from "./types";
+import type { FrontDeskSessionsResponse, RosterEntry } from "./types";
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -29,6 +30,7 @@ export default function FrontDeskPage() {
   const [data, setData] = useState<FrontDeskSessionsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [busyBookingId, setBusyBookingId] = useState<string | null>(null);
+  const [resolveEntry, setResolveEntry] = useState<RosterEntry | null>(null);
 
   const fetchSessions = useCallback(() => {
     setIsLoading(true);
@@ -51,14 +53,27 @@ export default function FrontDeskPage() {
     setDate(next);
   }
 
-  async function runAction(bookingId: string, action: string) {
-    setBusyBookingId(bookingId);
+  async function resolveWith(action: string) {
+    if (!resolveEntry) return;
+    await axiosInstance.post(`/bookings/${resolveEntry.booking_id}/${action}`);
+    fetchSessions();
+  }
+
+  async function quickConfirm(entry: RosterEntry) {
+    setBusyBookingId(entry.booking_id);
     try {
-      await axiosInstance.post(`/bookings/${bookingId}/${action}`);
+      await axiosInstance.post(`/bookings/${entry.booking_id}/mark-attended`);
       fetchSessions();
-    } catch {
-      // Errors here are rare (idempotent actions on already-owned bookings) — a full toast
-      // system is out of this task's scope; a silent refetch keeps the list truthful either way.
+    } finally {
+      setBusyBookingId(null);
+    }
+  }
+
+  async function correctNoShow(entry: RosterEntry) {
+    setBusyBookingId(entry.booking_id);
+    try {
+      await axiosInstance.post(`/bookings/${entry.booking_id}/correct-no-show`);
+      fetchSessions();
     } finally {
       setBusyBookingId(null);
     }
@@ -93,17 +108,15 @@ export default function FrontDeskPage() {
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-amber-700">
             Do rozliczenia
           </h2>
-          <div className="space-y-2">
+          <div className="divide-y rounded-xl border bg-white overflow-hidden">
             {data.overdue.map((entry) => (
               <RosterRow
                 key={entry.booking_id}
                 entry={entry}
                 isBusy={busyBookingId === entry.booking_id}
-                onMarkPaid={() => runAction(entry.booking_id, "mark-paid")}
-                onMarkCardOk={() => runAction(entry.booking_id, "mark-card-ok")}
-                onMarkAttended={() => runAction(entry.booking_id, "mark-attended")}
-                onMarkNoShow={() => runAction(entry.booking_id, "mark-no-show")}
-                onCorrectNoShow={() => runAction(entry.booking_id, "correct-no-show")}
+                onConfirm={() => quickConfirm(entry)}
+                onOpenResolve={() => setResolveEntry(entry)}
+                onCorrectNoShow={() => correctNoShow(entry)}
               />
             ))}
           </div>
@@ -143,6 +156,16 @@ export default function FrontDeskPage() {
           </div>
         )}
       </section>
+
+      <ResolveSheet
+        entry={resolveEntry}
+        open={resolveEntry != null}
+        onOpenChange={(open) => !open && setResolveEntry(null)}
+        onMarkPaid={() => resolveWith("mark-paid")}
+        onMarkCardOk={() => resolveWith("mark-card-ok")}
+        onMarkAttended={() => resolveWith("mark-attended")}
+        onMarkNoShow={() => resolveWith("mark-no-show")}
+      />
     </div>
   );
 }

@@ -1,29 +1,61 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { ScheduleRecurrenceForm } from "../../../class-schedules/components/ScheduleRecurrenceForm";
 import type { RoomOption } from "../../../class-schedules/types";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { SessionChangesPreview } from "../../components/SessionChangesPreview";
-import type { SessionDetailResponse, SessionEditPreviewResponse } from "../../types";
+import type {
+  SessionDetailResponse,
+  SessionEditCommitResponse,
+  SessionEditPreviewResponse,
+} from "../../types";
 
 type Scope = "single" | "this_and_future" | "whole_series";
-type Step = "scope" | "form" | "preview";
+type Step = "scope" | "form" | "preview" | "success";
 
 const WEEKDAY_KEYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
+
+function isFewForm(n: number): boolean {
+  const lastDigit = n % 10;
+  const lastTwo = n % 100;
+  return lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14);
+}
+
+function sesjeAccusative(n: number): string {
+  if (n === 1) return "sesję";
+  return isFewForm(n) ? "sesje" : "sesji";
+}
+
+function zmienionaForm(n: number): string {
+  if (n === 1) return "zmieniona";
+  return isFewForm(n) ? "zmienione" : "zmienionych";
+}
+
+function nowaForm(n: number): string {
+  if (n === 1) return "nowa";
+  return isFewForm(n) ? "nowe" : "nowych";
+}
+
+function odwolanaForm(n: number): string {
+  if (n === 1) return "odwołana";
+  return isFewForm(n) ? "odwołane" : "odwołanych";
+}
 
 export default function EditSessionPage() {
   const params = useParams<{ occurrenceId: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { studio: currentStudio } = useCurrentStudio();
 
   const isSubstitution = searchParams.get("field") === "instructor";
 
@@ -50,6 +82,7 @@ export default function EditSessionPage() {
   const [previewResponse, setPreviewResponse] = useState<SessionEditPreviewResponse | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [commitResult, setCommitResult] = useState<SessionEditCommitResponse | null>(null);
 
   useEffect(() => {
     setIsLoadingDetail(true);
@@ -83,12 +116,22 @@ export default function EditSessionPage() {
       })
       .catch(() => toast({ description: "Nie udało się załadować sesji.", variant: "destructive" }))
       .finally(() => setIsLoadingDetail(false));
-
-    axiosInstance
-      .get<{ id: string; name: string }[]>("/instructors")
-      .then((r) => setInstructors(r.data ?? []))
-      .catch(() => {});
   }, [params.occurrenceId, toast]);
+
+  // The "Prowadzący" picker draws from the studio roster, not the partner's own
+  // instructors — Zastępstwo explicitly needs pending-link instructors to be
+  // selectable too (reception-desk §6), which a partner-owned-only list would
+  // silently exclude (e.g. a claimed instructor who joined from another account).
+  // Legacy schedules can have a null `studio_id` (never backfilled), so fall back
+  // to the studio context the edit screen was reached from.
+  useEffect(() => {
+    const studioId = sessionDetail?.studio_id || currentStudio?.id;
+    if (!studioId) return;
+    axiosInstance
+      .get<{ items: { id: string; name: string }[] }>(`/studios/${studioId}/roster`)
+      .then((r) => setInstructors(r.data.items.map(({ id, name }) => ({ id, name }))))
+      .catch(() => {});
+  }, [sessionDetail?.studio_id, currentStudio?.id]);
 
   useEffect(() => {
     if (!sessionDetail?.studio_id) return;
@@ -152,9 +195,16 @@ export default function EditSessionPage() {
   const handleCommit = async () => {
     setIsSubmitting(true);
     try {
-      await axiosInstance.post("/class-sessions/edit/commit", buildPayload());
-      toast({ description: "Sesja zaktualizowana." });
-      router.push("/konto/partner/grafik");
+      // Success-screen figures come from this response, never the preview payload
+      // (reception-desk §6) — the preview is computed fresh at commit time and can
+      // differ from what was shown a moment earlier (e.g. a booking landing between
+      // preview and commit).
+      const { data } = await axiosInstance.post<SessionEditCommitResponse>(
+        "/class-sessions/edit/commit",
+        buildPayload(),
+      );
+      setCommitResult(data);
+      setStep("success");
     } catch {
       toast({ description: "Nie udało się zapisać zmian.", variant: "destructive" });
     } finally {
@@ -273,6 +323,48 @@ export default function EditSessionPage() {
               {isSubmitting ? "Zapisywanie..." : "Zapisz i powiadom"}
             </Button>
           </div>
+        </div>
+      )}
+
+      {step === "success" && commitResult && (
+        <div className="flex flex-col items-center gap-4 py-10 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-brand-green-700">
+            <Check size={28} />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-gray-900">Zapisano zmiany</h2>
+            <p className="text-sm text-gray-500">
+              {(() => {
+                const total =
+                  commitResult.updated.length +
+                  commitResult.created.length +
+                  commitResult.cancelled.length;
+                return `Zaktualizowano ${total} ${sesjeAccusative(total)}.`;
+              })()}{" "}
+              Powiadomienia trafiły do kolejki wysyłki.
+            </p>
+          </div>
+          <div className="w-full rounded-xl border bg-white px-4 py-3.5 text-left">
+            <p className="text-sm font-medium text-gray-900">
+              {[
+                commitResult.updated.length > 0
+                  ? `${commitResult.updated.length} ${zmienionaForm(commitResult.updated.length)}`
+                  : null,
+                commitResult.created.length > 0
+                  ? `${commitResult.created.length} ${nowaForm(commitResult.created.length)}`
+                  : null,
+                commitResult.cancelled.length > 0
+                  ? `${commitResult.cancelled.length} ${odwolanaForm(commitResult.cancelled.length)}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") || "Brak zmian"}
+            </p>
+            <p className="mt-0.5 text-xs text-gray-500">Grafik odzwierciedla zmiany od razu.</p>
+          </div>
+          <Button className="w-full" onClick={() => router.push("/konto/partner/grafik")}>
+            Wróć do grafiku
+          </Button>
         </div>
       )}
     </div>

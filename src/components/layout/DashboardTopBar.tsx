@@ -24,13 +24,18 @@ const TAB_TITLES: Record<string, string> = {
   "/konto/partner/konto": "Konto",
 };
 
-function getPageTitle(pathname: string): string | undefined {
+function getPageTitle(pathname: string, searchParams: URLSearchParams): string | undefined {
   if (TAB_TITLES[pathname]) return TAB_TITLES[pathname];
-  if (pathname.startsWith("/konto/partner/zamowienia/")) return "Rezerwacja";
-  if (pathname.startsWith("/konto/partner/wiadomosci/")) return "Wiadomość";
+  if (/^\/konto\/partner\/rezerwacje\/[^/]+$/.test(pathname)) return "Wiadomość";
+  if (pathname === "/konto/partner/instruktorzy") return "Instruktorzy";
   if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
     return "Edytuj instruktora";
-  if (pathname === "/konto/partner/instruktorzy/create") return "Nowy instruktor";
+  if (pathname === "/konto/partner/instruktorzy/create")
+    return searchParams.get("step") === "new" ? "Nowy instruktor" : "Dodaj instruktora";
+  if (pathname === "/konto/partner/klienci") return "Klienci";
+  if (pathname === "/konto/partner/rozliczenia") return "Do rozliczenia";
+  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty"))
+    return "Historia wizyt";
   if (pathname === "/konto/partner/wyjazdy/create") return "Nowy wyjazd";
   if (pathname === "/konto/partner/wydarzenia/create") return "Nowe wydarzenie";
   if (pathname === "/konto/partner/kursy/create") return "Nowy kurs";
@@ -53,7 +58,7 @@ function getPageTitle(pathname: string): string | undefined {
   return undefined;
 }
 
-function getBackHref(pathname: string): string | undefined {
+function getBackHref(pathname: string, searchParams: URLSearchParams): string | undefined {
   if (pathname === "/konto/partner/grafik/instructor") return "/konto/partner/grafik";
   if (pathname.startsWith("/konto/partner/grafik/edit/")) return "/konto/partner/grafik";
   if (pathname.startsWith("/konto/partner/grafik/cancel/")) return "/konto/partner/grafik";
@@ -70,19 +75,51 @@ function getBackHref(pathname: string): string | undefined {
     return "/konto/partner/menu";
   if (pathname.startsWith("/konto/partner/menu/studio/")) return "/konto/partner/menu";
   if (pathname === "/konto/partner/instruktorzy") return "/konto/partner/menu";
-  if (pathname === "/konto/partner/instruktorzy/create") return "/konto/partner/instruktorzy";
+  if (pathname === "/konto/partner/instruktorzy/create") {
+    // Studio-scoped roster screens carry `studioId` through every step — never let a
+    // 2+-studio partner's back-navigation silently drop which studio they were in.
+    const studioQuery = searchParams.get("studioId")
+      ? `?studioId=${searchParams.get("studioId")}`
+      : "";
+    // Stub step (R4) backs up into the email step (R3), not all the way out.
+    return searchParams.get("step") === "new"
+      ? `/konto/partner/instruktorzy/create${studioQuery}`
+      : `/konto/partner/instruktorzy${studioQuery}`;
+  }
   if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
     return "/konto/partner/instruktorzy";
+  if (/^\/konto\/partner\/instruktorzy\/[^/]+$/.test(pathname)) {
+    const studioQuery = searchParams.get("studioId")
+      ? `?studioId=${searchParams.get("studioId")}`
+      : "";
+    return `/konto/partner/instruktorzy${studioQuery}`;
+  }
+  if (pathname === "/konto/partner/klienci") return "/konto/partner/menu";
+  if (pathname === "/konto/partner/rozliczenia") return "/konto/partner/grafik";
+  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty")) {
+    const studioQuery = searchParams.get("studioId")
+      ? `?studioId=${searchParams.get("studioId")}`
+      : "";
+    return `${pathname.replace(/\/wizyty$/, "")}${studioQuery}`;
+  }
+  if (/^\/konto\/partner\/klienci\/[^/]+$/.test(pathname)) {
+    const studioQuery = searchParams.get("studioId")
+      ? `?studioId=${searchParams.get("studioId")}`
+      : "";
+    return `/konto/partner/klienci${studioQuery}`;
+  }
+  if (/^\/konto\/partner\/rezerwacje\/[^/]+$/.test(pathname)) return "/konto/partner/rezerwacje";
   return undefined;
 }
 
 function BackButton() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isBlocked, openModal } = useNavigationBlocker();
 
   const handleBack = () => {
-    const href = getBackHref(pathname);
+    const href = getBackHref(pathname, searchParams);
     const navigate = href
       ? () => startTransition(() => router.push(href))
       : () => startTransition(() => router.back());
@@ -113,7 +150,7 @@ export function DashboardTopBar() {
   // only lead into guarded pages (or the login bounce). Show the logo as a safe
   // exit to the public site instead of a back button.
   const showHomeLogo = isMainTab || pathname === BECOME_PARTNER_PATH;
-  const title = getPageTitle(pathname);
+  const title = getPageTitle(pathname, searchParams);
   const showPlus = pathname === "/konto/partner/oferta";
 
   const handlePlus = () => {

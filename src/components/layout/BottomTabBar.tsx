@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   IoCalendarOutline,
   IoFileTrayOutline,
@@ -10,6 +11,7 @@ import {
 } from "react-icons/io5";
 
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
+import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 
 /** Every path a tab can point to — used by the layout to decide when to reserve
@@ -47,11 +49,23 @@ const GRAFIK: Tab = { path: "/konto/partner/grafik", label: "Grafik", Icon: IoCa
 export function BottomTabBar() {
   const pathname = usePathname();
   const { capabilities } = usePartnerCapabilities();
+  const [hasOverdue, setHasOverdue] = useState(false);
 
   const hasGrafik = Boolean(
     capabilities &&
       (capabilities.managedStudios.length > 0 || capabilities.teachingStudios.length > 0),
   );
+
+  // Amber dot on the Grafik icon whenever reconciliation has anything pending —
+  // visible cross-tab (reception-desk §5), not just while Grafik itself is open.
+  useEffect(() => {
+    if (!hasGrafik) return;
+    axiosInstance
+      .get<{ total: number }>("/partner/reconciliation")
+      .then(({ data }) => setHasOverdue(data.total > 0))
+      .catch(() => setHasOverdue(false));
+  }, [hasGrafik]);
+
   const tabs: Tab[] = hasGrafik ? [GRAFIK, REZERWACJE, OFERTA, MENU] : [REZERWACJE, OFERTA, MENU];
 
   if (!(TAB_PATHS as readonly string[]).includes(pathname)) return null;
@@ -72,7 +86,12 @@ export function BottomTabBar() {
                 href={path}
                 className="flex flex-1 flex-col items-center justify-center gap-1 py-2 rounded-[13px] tap-highlight-transparent"
               >
-                <Icon size={22} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
+                <span className="relative">
+                  <Icon size={22} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
+                  {path === GRAFIK.path && hasOverdue && (
+                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500" />
+                  )}
+                </span>
                 <span
                   className={cn(
                     "text-[11px] leading-none",
@@ -93,7 +112,12 @@ export function BottomTabBar() {
           const isActive = pathname === path;
           return (
             <Link key={path} href={path} className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
-              <Icon size={20} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
+              <span className="relative">
+                <Icon size={20} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
+                {path === GRAFIK.path && hasOverdue && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500" />
+                )}
+              </span>
               <span
                 className={cn(
                   "text-sm",

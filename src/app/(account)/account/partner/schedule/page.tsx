@@ -97,7 +97,11 @@ export default function SchedulePage() {
   const [days, setDays] = useState<ScheduleDaySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [panelOcc, setPanelOcc] = useState<ScheduleOccurrence | null>(null);
-  const [overdueCount, setOverdueCount] = useState(0);
+  const [reconciliation, setReconciliation] = useState<{
+    total: number;
+    showStudioLabels: boolean;
+    studioName: string | null;
+  }>({ total: 0, showStudioLabels: false, studioName: null });
 
   useEffect(() => {
     axiosInstance
@@ -108,16 +112,30 @@ export default function SchedulePage() {
       .catch(() => {});
   }, [studioId]);
 
-  // Reconciliation strip — Grafik is single-context, so only this studio's count.
+  // The reconciliation strip is global across every studio the partner manages and
+  // independent of the selected Grafik chip (reception-desk §5) — it must not read
+  // as "nothing to do" just because a different studio is the current context.
   useEffect(() => {
-    if (!studioId) return;
     axiosInstance
-      .get<{ sessions: { studio_id?: string }[] }>("/partner/reconciliation")
-      .then(({ data }) =>
-        setOverdueCount(data.sessions.filter((s) => s.studio_id === studioId).length),
-      )
-      .catch(() => setOverdueCount(0));
-  }, [studioId]);
+      .get<{
+        sessions: { studio_id?: string; studio_name?: string }[];
+        total: number;
+        show_studio_labels: boolean;
+      }>("/partner/reconciliation")
+      .then(({ data }) => {
+        const distinctStudioNames = [
+          ...new Set(data.sessions.map((s) => s.studio_name).filter(Boolean)),
+        ];
+        setReconciliation({
+          total: data.total,
+          showStudioLabels: data.show_studio_labels,
+          // Only unambiguous when every flagged session belongs to the same studio —
+          // a mixed set gets its per-session labels in the reconciliation list instead.
+          studioName: distinctStudioNames.length === 1 ? (distinctStudioNames[0] as string) : null,
+        });
+      })
+      .catch(() => setReconciliation({ total: 0, showStudioLabels: false, studioName: null }));
+  }, []);
 
   const fetchWeek = useCallback(() => {
     if (!studioId) return;
@@ -155,14 +173,17 @@ export default function SchedulePage() {
 
       <GrafikContextChips />
 
-      {overdueCount > 0 && studioId && (
+      {reconciliation.total > 0 && (
         <Link
-          href={`/konto/partner/studio/${studioId}/front-desk`}
+          href="/konto/partner/rozliczenia"
           className="mb-4 flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 hover:bg-amber-100 transition-colors"
         >
           <span className="flex items-center gap-2">
             <AlertCircle size={16} />
-            {overdueCount} {overdueCount === 1 ? "sesja" : "sesje"} do rozliczenia
+            {reconciliation.total} {reconciliation.total === 1 ? "sesja" : "sesje"} do rozliczenia
+            {reconciliation.showStudioLabels && reconciliation.studioName && (
+              <> · {reconciliation.studioName}</>
+            )}
           </span>
           <ChevronRight size={16} />
         </Link>

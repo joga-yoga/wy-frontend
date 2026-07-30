@@ -1,18 +1,322 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { Mail } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
+
+import type { InstructorLookupResponse, InstructorResolveResponse } from "../types";
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export default function AddInstructorPage() {
+  const searchParams = useSearchParams();
+  const studioId = searchParams.get("studioId");
+
+  // Two entry points share this route:
+  // - Menu → {Studio} → Instruktorzy → "Dodaj instruktora" carries `studioId` and gets
+  //   the email-first, live-lookup roster flow below (instructors-clients §3).
+  // - Every other "Dodaj instruktora" surface predates T10 (event/course forms via
+  //   `EventInstructorsSection`/`CourseInstructorsField` use their own modal, but
+  //   Oferta's instructor panel and the header-avatar placeholder still land here
+  //   without a studio) and keeps the legacy partner-scoped add flow unchanged.
+  return studioId ? <StudioRosterAddFlow /> : <LegacyAddInstructorFlow />;
+}
+
+function StudioRosterAddFlow() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const { studio } = useCurrentStudio();
+  const step = searchParams.get("step") === "new" ? "new" : "identify";
+
+  const [email, setEmail] = useState("");
+  const [lookup, setLookup] = useState<InstructorLookupResponse | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [stubName, setStubName] = useState("");
+  const [stubEmail, setStubEmail] = useState("");
+  const [stubImageId, setStubImageId] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [notFoundEmail, setNotFoundEmail] = useState<string | null>(null);
+
+  const goToStubStep = (prefillEmail: string | null) => {
+    setNotFoundEmail(prefillEmail);
+    setStubEmail(prefillEmail ?? "");
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("step", "new");
+    router.push(`/konto/partner/instruktorzy/create?${params.toString()}`, { scroll: false });
+  };
+
+  // Live lookup, debounced — read-only, never sends an invite (instructors-clients §3).
+  useEffect(() => {
+    if (step !== "identify") return;
+    if (!isValidEmail(email)) {
+      setLookup(null);
+      return;
+    }
+    setIsLookingUp(true);
+    const handle = setTimeout(() => {
+      axiosInstance
+        .get<InstructorLookupResponse>("/instructors/lookup", { params: { email } })
+        .then(({ data }) => {
+          setLookup(data);
+          if (data.found === "none") {
+            goToStubStep(email);
+          }
+        })
+        .catch(() => setLookup(null))
+        .finally(() => setIsLookingUp(false));
+    }, 400);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, step]);
+
+  async function handleInvite() {
+    if (!studio || !lookup) return;
+    setIsSubmitting(true);
+    try {
+      await axiosInstance.post<InstructorResolveResponse>("/instructors/resolve", {
+        email,
+        studio_id: studio.id,
+      });
+      toast({
+        description:
+          lookup.claim_status === "claimed"
+            ? "Instruktor dodany do studia."
+            : "Zaproszenie do studia wysłane.",
+      });
+      router.push("/konto/partner/instruktorzy");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Nie udało się dodać instruktora.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleStubSubmit() {
+    if (!studio || !stubName.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await axiosInstance.post<InstructorResolveResponse>("/instructors/resolve", {
+        name: stubName.trim(),
+        email: stubEmail.trim() || undefined,
+        image_id: stubImageId || undefined,
+        studio_id: studio.id,
+      });
+      toast({
+        description: stubEmail.trim()
+          ? "Instruktor dodany, zaproszenie wysłane."
+          : "Instruktor dodany do studia.",
+      });
+      router.push("/konto/partner/instruktorzy");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Nie udało się dodać instruktora.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleImageSelect(file: File) {
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append("image", file);
+    try {
+      const { data } = await axiosInstance.post<{ image_id: string }>(
+        "/instructors/image-upload",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setStubImageId(data.image_id);
+    } catch {
+      toast({ description: "Nie udało się przesłać zdjęcia.", variant: "destructive" });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
+  if (step === "new") {
+    return (
+      <div className="max-w-md mx-auto px-4 py-5 space-y-5">
+        {notFoundEmail && (
+          <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <Mail size={18} className="mt-0.5 shrink-0 text-blue-500" />
+            <p className="text-sm text-blue-900">
+              Brak konta z adresem <span className="font-semibold">{notFoundEmail}</span>. Utworzymy
+              profil i wyślemy zaproszenie do jego przejęcia.
+            </p>
+          </div>
+        )}
+
+        <div className="flex justify-center">
+          <SingleImageUpload
+            existingImageId={stubImageId}
+            isUploading={isUploadingImage}
+            onRemove={() => setStubImageId(null)}
+            onFileSelect={handleImageSelect}
+            previewClassName="h-24 w-24 rounded-full"
+          />
+        </div>
+        <p className="-mt-3 text-center text-xs text-gray-400">Dodaj zdjęcie (opcjonalnie)</p>
+
+        <div className="space-y-2">
+          <Label htmlFor="stub-name">Imię i nazwisko</Label>
+          <Input
+            id="stub-name"
+            value={stubName}
+            onChange={(e) => setStubName(e.target.value)}
+            placeholder="np. Marta Wiśniewska"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="stub-email">Email</Label>
+          <Input
+            id="stub-email"
+            type="email"
+            value={stubEmail}
+            onChange={(e) => setStubEmail(e.target.value)}
+            placeholder="instruktor@example.com"
+          />
+        </div>
+
+        <Button
+          variant="green"
+          className="w-full"
+          disabled={!stubName.trim() || isSubmitting}
+          onClick={handleStubSubmit}
+        >
+          {isSubmitting
+            ? "Dodaję..."
+            : stubEmail.trim()
+              ? "Dodaj i wyślij zaproszenie"
+              : "Dodaj instruktora"}
+        </Button>
+
+        {stubEmail.trim() && (
+          <p className="text-center text-xs text-gray-400 leading-relaxed">
+            Do czasu przejęcia profilu przez {stubName.trim().split(" ")[0] || "instruktora"} możesz
+            uzupełniać i edytować wszystkie jego dane.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md mx-auto px-4 py-5 space-y-5">
+      <div className="space-y-2">
+        <Label htmlFor="lookup-email">Email instruktora</Label>
+        <Input
+          id="lookup-email"
+          type="email"
+          autoFocus
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="instruktor@example.com"
+        />
+      </div>
+
+      {isLookingUp && <p className="px-1 text-xs text-gray-400">Sprawdzam...</p>}
+
+      {lookup && lookup.found !== "none" && (
+        <div className="space-y-3">
+          <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            Znaleziono na joga.yoga
+          </p>
+
+          <div className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5">
+            {lookup.found === "instructor" ? (
+              lookup.image_id ? (
+                <WyImage
+                  src={lookup.image_id}
+                  alt={lookup.name ?? ""}
+                  width={44}
+                  height={44}
+                  className="h-11 w-11 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
+                  {(lookup.name ?? "?").charAt(0).toUpperCase()}
+                </div>
+              )
+            ) : (
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                <Mail size={18} />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              {lookup.found === "instructor" ? (
+                <>
+                  <p className="truncate text-sm font-semibold text-gray-900">{lookup.name}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {[...lookup.styles, lookup.slug ? `joga.yoga/i/${lookup.slug}` : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="truncate text-sm font-semibold text-gray-900">{email}</p>
+                  <p className="truncate text-xs text-gray-500">Bez profilu instruktora</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          <Button variant="green" className="w-full" disabled={isSubmitting} onClick={handleInvite}>
+            {isSubmitting
+              ? "Wysyłam..."
+              : lookup.claim_status === "claimed"
+                ? "Dodaj do studia"
+                : "Wyślij zaproszenie do studia"}
+          </Button>
+
+          <p className="text-center text-xs text-gray-400 leading-relaxed">
+            {lookup.found === "instructor"
+              ? "Połączymy jej istniejący profil ze studiem. Możesz od razu przypisywać ją do zajęć."
+              : "Ten adres ma już konto na joga.yoga — zaprosimy je do stworzenia profilu instruktora."}
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 py-1">
+        <div className="h-px flex-1 bg-gray-100" />
+        <span className="text-xs text-gray-400">albo</span>
+        <div className="h-px flex-1 bg-gray-100" />
+      </div>
+
+      <Button variant="outline" className="w-full" onClick={() => goToStubStep(null)}>
+        Dodaj bez zaproszenia (bez emaila)
+      </Button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Legacy, non-studio-scoped add flow — predates T10. Still the target of the
+// header-avatar "Utwórz profil instruktora" placeholder (T08) and Oferta's
+// instructor panel, both of which link here without `studioId`. Writes to the
+// back-office `partner_instructors` index via `/instructors/resolve` (no `studio_id`),
+// unchanged from before T10.
+// ---------------------------------------------------------------------------
 
 type Step = "identify" | "preview";
 
@@ -36,7 +340,7 @@ const emailSchema = z.object({
 
 type EmailForm = z.infer<typeof emailSchema>;
 
-export default function InstructorCreatePage() {
+function LegacyAddInstructorFlow() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -51,7 +355,6 @@ export default function InstructorCreatePage() {
     defaultValues: { email: "" },
   });
 
-  // Reset all local state on every mount (guards against client-side navigation stale state)
   const isMountedRef = useRef(false);
   useEffect(() => {
     if (isMountedRef.current) {
@@ -61,9 +364,9 @@ export default function InstructorCreatePage() {
       form.reset({ email: "" });
     }
     isMountedRef.current = true;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Check if user already has a claimed instructor
   useEffect(() => {
     axiosInstance
       .get<Array<{ is_claimed: boolean; email: string | null }>>("/instructors")
@@ -106,7 +409,6 @@ export default function InstructorCreatePage() {
       }>("/instructors/resolve", { email: data.email });
 
       if (res.data.created) {
-        // New stub — go straight to full edit form
         router.push(`/konto/partner/instruktorzy/${res.data.instructor_id}/edit`);
       } else {
         setPreview({

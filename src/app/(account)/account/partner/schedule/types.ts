@@ -85,3 +85,11 @@ export interface SessionEditPreviewResponse {
   total_affected: number;
   notification_summary: NotificationSummary;
 }
+
+export interface SessionEditCommitResponse {
+  scope: string;
+  updated: string[];
+  created: string[];
+  cancelled: string[];
+  deleted: string[];
+}
