@@ -60,5 +60,7 @@ export interface ClientDetail {
   client_since: string | null;
   chip: ClientChipOut;
   wallet: PassWalletOut | null;
+  /** Total visits, so K2's "Wszystkie wizyty (n)" matches K4's row count exactly. */
+  visit_count: number;
   recent_visits: ClientVisit[];
 }

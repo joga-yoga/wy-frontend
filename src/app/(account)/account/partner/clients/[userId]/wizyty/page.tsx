@@ -4,16 +4,22 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ClientVisitRow } from "@/components/b2b/ClientVisitRow";
+import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { personLabel } from "@/lib/personDisplay";
+import { wizyty } from "@/lib/polishPlural";
 
-import type { ClientVisitMonth } from "../../types";
+import type { ClientDetail, ClientVisitMonth } from "../../types";
 
 function monthLabel(key: string): string {
   const [year, month] = key.split("-").map(Number);
+  const now = new Date();
+  // K4 labels months bare ("LIPIEC"). The year only earns its place once the history
+  // reaches back past this one, where "STYCZEŃ" alone would be ambiguous.
   const label = new Date(year, month - 1, 1).toLocaleDateString("pl-PL", {
     month: "long",
-    year: "numeric",
+    ...(year === now.getFullYear() ? {} : { year: "numeric" }),
   });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
@@ -22,6 +28,14 @@ export default function ClientVisitsPage() {
   const params = useParams<{ userId: string }>();
   const { studio, isLoading: isStudioLoading } = useCurrentStudio();
   const [months, setMonths] = useState<ClientVisitMonth[] | null>(null);
+  const [clientName, setClientName] = useState<string | null>(null);
+
+  // K4's subtitle: "Kasia Kwiatkowska · 14 wizyt". The count is the rows actually
+  // rendered here, which is the same list K2's "Wszystkie wizyty (n)" counts.
+  const total = months?.reduce((sum, m) => sum + m.visits.length, 0) ?? null;
+  useSetPageSubtitle(
+    clientName && total !== null ? `${clientName} · ${wizyty(total)}` : clientName,
+  );
 
   useEffect(() => {
     if (!studio) return;
@@ -29,6 +43,10 @@ export default function ClientVisitsPage() {
       .get<ClientVisitMonth[]>(`/studios/${studio.id}/clients/${params.userId}/visits`)
       .then(({ data }) => setMonths(data))
       .catch(() => setMonths([]));
+    axiosInstance
+      .get<ClientDetail>(`/studios/${studio.id}/clients/${params.userId}`)
+      .then(({ data }) => setClientName(personLabel(data.name, data.email).primary))
+      .catch(() => undefined);
   }, [studio, params.userId]);
 
   if (isStudioLoading || !months) {

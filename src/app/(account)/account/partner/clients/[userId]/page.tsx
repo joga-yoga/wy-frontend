@@ -1,16 +1,16 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ClientVisitRow } from "@/components/b2b/ClientVisitRow";
-import { PassWalletCard } from "@/components/b2b/PassWalletCard";
+import { PassCard } from "@/components/b2b/PassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { personInitials, personLabel } from "@/lib/personDisplay";
 
 import type { ClientDetail } from "../types";
 
@@ -34,7 +34,9 @@ const GENITIVE_MONTHS_PL = [
 function formatSince(iso: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso);
-  return `klient od ${GENITIVE_MONTHS_PL[d.getMonth()]} ${d.getFullYear()}`;
+  // K2 writes "klientka od maja 2026" because it draws a woman; "klient" as the generic
+  // is the masculine form. Neither works for an arbitrary row, so the noun goes.
+  return `w studiu od ${GENITIVE_MONTHS_PL[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export default function ClientDetailPage() {
@@ -70,17 +72,45 @@ export default function ClientDetailPage() {
   const displayName = client.name || client.email;
   const since = formatSince(client.client_since);
 
+  const label = personLabel(client.name, client.email);
+
   return (
     <div className="max-w-md mx-auto px-4 py-5 space-y-5">
-      <div>
-        <h1 className="text-lg font-semibold text-gray-900">{displayName}</h1>
-        {displayName !== client.email && <p className="text-sm text-gray-500">{client.email}</p>}
-        {since && <p className="mt-0.5 text-xs text-gray-400">{since}</p>}
+      {/* K2's identity block. `personLabel` returns a secondary only when it is not the
+          primary — the duplicate-email slip this exact screen shipped once already. */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
+          {personInitials(client.name, client.email)}
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-lg font-bold text-gray-900">{label.primary}</h1>
+          <p className="truncate text-xs text-gray-500">
+            {[label.secondary, since].filter(Boolean).join(" · ")}
+          </p>
+        </div>
       </div>
 
-      <PassWalletCard wallet={client.wallet} />
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Karnet</h2>
+        {client.wallet ? (
+          // The card is the doorway to the full history (K3) — a client with one visible
+          // pass usually has others behind it, and the card is where you look for them.
+          <Link
+            href={`/konto/partner/klienci/${client.user_id}/karnety?studioId=${studio.id}`}
+            className="block transition-opacity hover:opacity-90"
+          >
+            <PassCard pass={client.wallet} />
+          </Link>
+        ) : (
+          <div className="rounded-xl border border-dashed bg-white px-4 py-4 text-center text-sm text-gray-400">
+            Brak karnetu
+          </div>
+        )}
+      </section>
 
-      <Button variant="green" className="w-full" asChild>
+      {/* Outline, not green: the primary green is the desk's settle action. Selling from
+          a profile is navigation into a flow, not the flow's own commit. */}
+      <Button variant="outline" className="w-full" asChild>
         <Link
           href={`/konto/partner/studio/${studio.id}/front-desk/sell-pass?userId=${client.user_id}&email=${encodeURIComponent(client.email)}`}
         >
@@ -88,27 +118,28 @@ export default function ClientDetailPage() {
         </Link>
       </Button>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Wizyty</h2>
-          <Link
-            href={`/konto/partner/klienci/${client.user_id}/wizyty?studioId=${studio.id}`}
-            className="text-xs font-medium text-brand-green-700 flex items-center gap-0.5"
-          >
-            Pełna historia
-            <ChevronRight size={14} />
-          </Link>
-        </div>
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Ostatnie wizyty
+        </h2>
         {client.recent_visits.length === 0 ? (
           <p className="px-1 text-sm text-gray-400">Brak wizyt.</p>
         ) : (
-          <div className="rounded-xl border bg-white overflow-hidden divide-y">
+          <div className="overflow-hidden rounded-xl border bg-white divide-y">
             {client.recent_visits.map((v) => (
               <ClientVisitRow key={v.booking_id} visit={v} />
             ))}
+            {/* K2 puts the count in the link. "Wszystkie wizyty (14)" tells you whether
+                opening it is worth it; "Pełna historia" does not. */}
+            <Link
+              href={`/konto/partner/klienci/${client.user_id}/wizyty?studioId=${studio.id}`}
+              className="flex items-center justify-center gap-1 px-4 py-3 text-sm font-semibold text-b2b-green-text transition-colors hover:bg-gray-50"
+            >
+              Wszystkie wizyty ({client.visit_count})
+            </Link>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
