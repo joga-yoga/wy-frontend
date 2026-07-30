@@ -1,14 +1,16 @@
 "use client";
 
+import { Bell } from "lucide-react";
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { osoby, plural } from "@/lib/polishPlural";
+import { cn } from "@/lib/utils";
 
 import type { NotificationSummary, SessionEditPreviewItem } from "../types";
 
-// Representative-card cap (reception-desk §6 / mockups S6-S7, U5): a 21-session
-// series preview shows ~4 example cards, never all 21 — truncation is
-// presentation-only, the preview payload underneath is already the complete set.
+// Representative-card cap (reception-desk §6 / mockups S6-S7): a 21-session series preview
+// shows ~4 example cards, never all 21 — truncation is presentation-only, the preview payload
+// underneath is already the complete set.
 const MAX_VISIBLE = 4;
 
 interface SessionChangesPreviewProps {
@@ -24,38 +26,44 @@ function extractTime(iso: string | null | undefined): string {
 
 function formatDatePL(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" });
+  return d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "long" });
 }
 
-function statusBadge(status: SessionEditPreviewItem["status"]) {
-  switch (status) {
-    case "modified":
-      return (
-        <Badge variant="secondary" className="text-[10px] shrink-0">
-          Zmienione
-        </Badge>
-      );
-    case "new":
-      return (
-        <Badge className="text-[10px] shrink-0 bg-green-100 text-green-700 hover:bg-green-100">
-          Nowe
-        </Badge>
-      );
-    case "cancelled":
-      return (
-        <Badge variant="destructive" className="text-[10px] shrink-0">
-          Odwołane
-        </Badge>
-      );
-    case "deleted":
-      return (
-        <Badge className="text-[10px] shrink-0 bg-red-100 text-red-700 hover:bg-red-100">
-          Usunięte
-        </Badge>
-      );
-    default:
-      return null;
-  }
+const BADGES: Record<string, { label: string; className: string }> = {
+  // A modification is neither good news nor a loss, hence an informational blue rather than
+  // green or red. Sampled from S5.
+  modified: { label: "Zmienione", className: "bg-b2b-blue-bg text-b2b-blue-text" },
+  new: { label: "Nowe", className: "bg-b2b-green-bg text-b2b-green-text" },
+  cancelled: { label: "Odwołane", className: "bg-b2b-red-bg text-b2b-red-text" },
+  deleted: { label: "Usunięte", className: "bg-b2b-red-bg text-b2b-red-text" },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const badge = BADGES[status];
+  if (!badge) return null;
+  return (
+    <span
+      className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", badge.className)}
+    >
+      {badge.label}
+    </span>
+  );
+}
+
+/** Gray card with a leading icon — the explanatory note and the notification line (S5–S7). */
+export function PreviewNoteCard({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-4 py-3">
+      <span className="mt-0.5 shrink-0 text-gray-400">{icon}</span>
+      <p className="text-[13px] leading-snug text-gray-600">{children}</p>
+    </div>
+  );
 }
 
 export function SessionChangesPreview({ items, notificationSummary }: SessionChangesPreviewProps) {
@@ -66,7 +74,7 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
   );
 
   if (sorted.length === 0) {
-    return <p className="text-sm text-gray-500 py-4 text-center">Brak zmian do zastosowania.</p>;
+    return <p className="py-4 text-center text-sm text-gray-500">Brak zmian do zastosowania.</p>;
   }
 
   const isTruncated = !isExpanded && sorted.length > MAX_VISIBLE;
@@ -75,8 +83,6 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-gray-500">Sprawdź co się zmieni przed zapisaniem.</p>
-
       <div className="space-y-2">
         {visible.map((item) => {
           const timeStr = extractTime(item.start_time);
@@ -87,46 +93,49 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
                 item.occurrence_id ??
                 `${item.calendar_date}-${item.status}-${item.start_time ?? ""}`
               }
-              className="flex items-start gap-3 px-4 py-3 rounded-xl border bg-white"
+              // Every item in this payload *is* an affected session, so all cards carry the
+              // green outline and the badge says how each will be touched. S6 additionally
+              // draws greyed-out "Bez zmian" rows for untouched sessions before the cutoff, but
+              // the preview endpoint does not return those — the same reassurance is given in
+              // words by the note card the caller renders, rather than by faking rows.
+              className="rounded-xl border border-b2b-green-text/60 bg-white px-4 py-3 ring-1 ring-b2b-green-text/25"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-gray-900">
-                    {formatDatePL(item.calendar_date)}
-                    {timeStr && <span className="text-gray-500 font-normal"> · {timeStr}</span>}
-                  </p>
-                  {statusBadge(item.status)}
-                  {item.booked_count > 0 && (
-                    <span className="text-xs text-gray-400 ml-auto shrink-0">
-                      {item.booked_count} os.
-                    </span>
-                  )}
-                </div>
-
-                {item.diffs.length > 0 && (
-                  <div className="mt-1.5 space-y-0.5">
-                    {item.diffs.map((d) => (
-                      <p key={d.label} className="text-xs text-gray-500">
-                        <span className="font-medium text-gray-700">{d.label}:</span>{" "}
-                        <span className="line-through text-gray-400">{d.old}</span>
-                        {" → "}
-                        <span className="text-gray-700">{d.new}</span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-
-                {item.status === "new" && (
-                  <div className="mt-1.5 space-y-0.5">
-                    {item.instructor_id && (
-                      <p className="text-xs text-gray-400">Prowadzący przypisany</p>
-                    )}
-                    {item.capacity != null && (
-                      <p className="text-xs text-gray-400">Limit: {item.capacity}</p>
-                    )}
-                  </div>
-                )}
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatDatePL(item.calendar_date)}
+                </p>
+                <span className="ml-auto">
+                  <StatusBadge status={item.status} />
+                </span>
               </div>
+
+              {item.diffs.length > 0 && (
+                <div className="mt-1.5 space-y-0.5">
+                  {item.diffs.map((d) => (
+                    <p key={d.label} className="text-[13px] text-gray-500">
+                      {d.label}: <span className="font-semibold text-gray-900">{d.old}</span>
+                      <span className="mx-1 text-gray-400">→</span>
+                      <span className="font-semibold text-gray-900">{d.new}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {item.status === "new" && (
+                <p className="mt-1.5 text-[13px] text-gray-500">
+                  {[timeStr, item.capacity != null ? `limit ${item.capacity}` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              )}
+
+              {item.status === "cancelled" && item.booked_count > 0 && (
+                <p className="mt-1.5 text-[13px] text-gray-500">
+                  {item.booked_count}{" "}
+                  {plural(item.booked_count, "rezerwacja", "rezerwacje", "rezerwacji")} · sesja
+                  pozostanie widoczna
+                </p>
+              )}
             </div>
           );
         })}
@@ -134,14 +143,14 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
 
       {isTruncated && (
         <div className="space-y-2">
-          <p className="text-sm text-gray-400 text-center">
-            … i {hiddenCount} {hiddenCount === 1 ? "kolejna sesja" : "kolejnych sesji"} wg tego
-            wzoru
+          <p className="text-center text-[13px] text-gray-400">
+            … i {hiddenCount}{" "}
+            {plural(hiddenCount, "kolejna sesja", "kolejne sesje", "kolejnych sesji")} wg tego wzoru
           </p>
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="w-full rounded-xl border bg-white py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+            className="w-full rounded-xl border bg-white py-3 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
           >
             Pokaż wszystkie sesje ({sorted.length})
           </button>
@@ -149,11 +158,11 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
       )}
 
       {notificationSummary && (
-        <p className="text-sm text-gray-500 pt-1">
+        <PreviewNoteCard icon={<Bell size={15} />}>
           {notificationSummary.total_recipients > 0
-            ? `Powiadomimy ${notificationSummary.total_recipients} ${notificationSummary.total_recipients === 1 ? "osobę" : "osób"}.`
-            : "Żadne powiadomienia nie zostaną wysłane."}
-        </p>
+            ? `Powiadomimy ${osoby(notificationSummary.total_recipients)} z zajętych sesji`
+            : "Żadne powiadomienia nie zostaną wysłane"}
+        </PreviewNoteCard>
       )}
     </div>
   );

@@ -156,6 +156,8 @@
     --color-b2b-red-border: var(--b2b-red-border);
     --color-b2b-red-text: var(--b2b-red-text);
     --color-b2b-red-solid: var(--b2b-red-solid);
+    --color-b2b-blue-bg: var(--b2b-blue-bg);
+    --color-b2b-blue-text: var(--b2b-blue-text);
     --color-gray-50: var(--gray-50);
     --color-gray-100: var(--gray-100);
     --color-gray-200: var(--gray-200);
@@ -352,6 +354,11 @@
     --b2b-red-border: #d8a5a5;
     --b2b-red-text: #6b3a45;
     --b2b-red-solid: #b0534f; /* solid destructive button fill (S9 "Odwołaj sesję") */
+
+    /* "Zmienione" in the change preview (S5-S7). A fourth, informational tone: a modification
+     * is neither good news (green) nor a loss (red). Sampled from the prototype. */
+    --b2b-blue-bg: #e7edf4;
+    --b2b-blue-text: #3e556e;
     --gray-50: oklch(0.9851 0 0);
     --gray-100: oklch(0.9614 0.0013 286.38);
     --gray-200: oklch(0.9197 0.004 286.32);
@@ -446,4 +453,9 @@
     --b2b-red-border: #d8a5a5;
     --b2b-red-text: #6b3a45;
     --b2b-red-solid: #b0534f; /* solid destructive button fill (S9 "Odwołaj sesję") */
+
+    /* "Zmienione" in the change preview (S5-S7). A fourth, informational tone: a modification
+     * is neither good news (green) nor a loss (red). Sampled from the prototype. */
+    --b2b-blue-bg: #e7edf4;
+    --b2b-blue-text: #3e556e;
 }

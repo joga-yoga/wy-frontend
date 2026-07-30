@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { isFewForm, plural } from "@/lib/polishPlural";
 
 import { ScheduleRecurrenceForm } from "../../../class-schedules/components/ScheduleRecurrenceForm";
 import type { RoomOption } from "../../../class-schedules/types";
 import { InstructorPicker } from "../../components/InstructorPicker";
+import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
-import { SessionChangesPreview } from "../../components/SessionChangesPreview";
+import { PreviewNoteCard, SessionChangesPreview } from "../../components/SessionChangesPreview";
 import type {
   SessionDetailResponse,
   SessionEditCommitResponse,
@@ -46,12 +48,6 @@ type Step = "scope" | "form" | "preview" | "success";
 
 const WEEKDAY_KEYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
 
-function isFewForm(n: number): boolean {
-  const lastDigit = n % 10;
-  const lastTwo = n % 100;
-  return lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14);
-}
-
 function sesjeAccusative(n: number): string {
   if (n === 1) return "sesję";
   return isFewForm(n) ? "sesje" : "sesji";
@@ -70,6 +66,56 @@ function nowaForm(n: number): string {
 function odwolanaForm(n: number): string {
   if (n === 1) return "odwołana";
   return isFewForm(n) ? "odwołane" : "odwołanych";
+}
+
+/** "ZMIANA W 1 SESJI" / "ZMIANY W 21 SESJACH · OD 20 LIPCA" / "CAŁA SERIA · 34 PRZYSZŁE SESJE" */
+function previewScopeLabel(scope: Scope, total: number, cutoffDate: string): string {
+  if (scope === "single") return "ZMIANA W 1 SESJI";
+  if (scope === "whole_series") {
+    return `CAŁA SERIA · ${total} ${plural(total, "PRZYSZŁA SESJA", "PRZYSZŁE SESJE", "PRZYSZŁYCH SESJI")}`;
+  }
+  const from = new Date(cutoffDate + "T00:00:00").toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "long",
+  });
+  // "ZMIANA w 1 sesji" but "ZMIANY w 21 sesjach" — the noun agrees too, not just the count.
+  const head = total === 1 ? "ZMIANA W 1 SESJI" : `ZMIANY W ${total} SESJACH`;
+  return `${head} · OD ${from}`;
+}
+
+/** What this scope promises *not* to touch — the reassurance S5/S7 make explicit. */
+function scopeAssurance(scope: Scope): string {
+  if (scope === "single") {
+    return "Zmiana dotyczy tylko tej sesji — reszta serii bez zmian. Sesja zostanie oznaczona jako wyjątek.";
+  }
+  if (scope === "this_and_future") {
+    return "Wcześniejsze sesje pozostaną nietknięte. Ręcznie zmienione sesje nie są nadpisywane.";
+  }
+  return "Przeszłe sesje pozostaną nietknięte. Ręcznie zmienione sesje nie są nadpisywane.";
+}
+
+function usunietaForm(n: number): string {
+  if (n === 1) return "usunięta";
+  return isFewForm(n) ? "usunięte" : "usuniętych";
+}
+
+// `deleted` counts too: a series edit that drops a weekday deletes its empty occurrences, and
+// omitting them understated what the save actually did.
+function committedTotal(r: SessionEditCommitResponse): number {
+  return r.updated.length + r.created.length + r.cancelled.length + r.deleted.length;
+}
+
+function commitSummary(r: SessionEditCommitResponse): string {
+  return (
+    [
+      r.updated.length > 0 ? `${r.updated.length} ${zmienionaForm(r.updated.length)}` : null,
+      r.created.length > 0 ? `${r.created.length} ${nowaForm(r.created.length)}` : null,
+      r.cancelled.length > 0 ? `${r.cancelled.length} ${odwolanaForm(r.cancelled.length)}` : null,
+      r.deleted.length > 0 ? `${r.deleted.length} ${usunietaForm(r.deleted.length)}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ") || "Brak zmian"
+  );
 }
 
 export default function EditSessionPage() {
@@ -362,69 +408,42 @@ export default function EditSessionPage() {
         </div>
       )}
 
-      {step === "preview" && previewResponse && (
+      {step === "preview" && previewResponse && sessionDetail && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-gray-900">
-            Zmiany w {previewResponse.total_affected}{" "}
-            {previewResponse.total_affected === 1 ? "sesji" : "sesjach"}
-          </h2>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+            {previewScopeLabel(scope, previewResponse.total_affected, sessionDetail.calendar_date)}
+          </p>
 
           <SessionChangesPreview
             items={previewResponse.items}
             notificationSummary={previewResponse.notification_summary}
           />
 
+          {/* The scope's guarantee, stated rather than implied (S5/S7). */}
+          <PreviewNoteCard icon={<Info size={15} />}>{scopeAssurance(scope)}</PreviewNoteCard>
+
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => setStep("form")}>
               Wstecz
             </Button>
-            <Button className="flex-1" onClick={handleCommit} disabled={isSubmitting}>
-              {isSubmitting ? "Zapisywanie..." : "Zapisz i powiadom"}
+            <Button
+              variant="green"
+              className="flex-1"
+              onClick={handleCommit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
             </Button>
           </div>
         </div>
       )}
 
       {step === "success" && commitResult && (
-        <div className="flex flex-col items-center gap-4 py-10 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-brand-green-700">
-            <Check size={28} />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-gray-900">Zapisano zmiany</h2>
-            <p className="text-sm text-gray-500">
-              {(() => {
-                const total =
-                  commitResult.updated.length +
-                  commitResult.created.length +
-                  commitResult.cancelled.length;
-                return `Zaktualizowano ${total} ${sesjeAccusative(total)}.`;
-              })()}{" "}
-              Powiadomienia trafiły do kolejki wysyłki.
-            </p>
-          </div>
-          <div className="w-full rounded-xl border bg-white px-4 py-3.5 text-left">
-            <p className="text-sm font-medium text-gray-900">
-              {[
-                commitResult.updated.length > 0
-                  ? `${commitResult.updated.length} ${zmienionaForm(commitResult.updated.length)}`
-                  : null,
-                commitResult.created.length > 0
-                  ? `${commitResult.created.length} ${nowaForm(commitResult.created.length)}`
-                  : null,
-                commitResult.cancelled.length > 0
-                  ? `${commitResult.cancelled.length} ${odwolanaForm(commitResult.cancelled.length)}`
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(" · ") || "Brak zmian"}
-            </p>
-            <p className="mt-0.5 text-xs text-gray-500">Grafik odzwierciedla zmiany od razu.</p>
-          </div>
-          <Button className="w-full" onClick={() => router.push("/konto/partner/grafik")}>
-            Wróć do grafiku
-          </Button>
-        </div>
+        <ScheduleSuccessScreen
+          headline="Zapisano zmiany"
+          body={`Zaktualizowano ${sesjeAccusative(committedTotal(commitResult))}. Powiadomienia trafiły do kolejki wysyłki.`}
+          summary={commitSummary(commitResult)}
+        />
       )}
     </div>
   );

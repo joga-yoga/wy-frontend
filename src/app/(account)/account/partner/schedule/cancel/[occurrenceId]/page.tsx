@@ -1,34 +1,30 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { isFewForm } from "@/lib/polishPlural";
 
+import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
-import { SessionChangesPreview } from "../../components/SessionChangesPreview";
-import type { SessionEditCommitResponse, SessionEditPreviewResponse } from "../../types";
+import { PreviewNoteCard, SessionChangesPreview } from "../../components/SessionChangesPreview";
+import type {
+  SessionDetailResponse,
+  SessionEditCommitResponse,
+  SessionEditPreviewResponse,
+} from "../../types";
 
 type CancelScope = "single" | "end_series_from_date";
 type Step = "scope" | "preview" | "success";
 
-function isFewForm(n: number): boolean {
-  const lastDigit = n % 10;
-  const lastTwo = n % 100;
-  return lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14);
-}
-
 function sesjaNominative(n: number): string {
   if (n === 1) return "sesja";
   return isFewForm(n) ? "sesje" : "sesji";
-}
-
-function odwolanaAgreement(n: number): string {
-  if (n === 1) return "zostanie odwołana";
-  return isFewForm(n) ? "zostaną odwołane" : "zostanie odwołanych";
 }
 
 function odwolanaForm(n: number): string {
@@ -36,17 +32,60 @@ function odwolanaForm(n: number): string {
   return isFewForm(n) ? "odwołane" : "odwołanych";
 }
 
+function usunietaForm(n: number): string {
+  if (n === 1) return "usunięta";
+  return isFewForm(n) ? "usunięte" : "usuniętych";
+}
+
+/**
+ * Cancelling a session with bookings marks it `cancelled`; cancelling an **empty** one deletes
+ * it outright. Counting only `cancelled` therefore reported "0 sesji odwołanych" after
+ * successfully removing an empty session — telling the user nothing had happened.
+ */
+function cancelOutcome(r: SessionEditCommitResponse): { total: number; summary: string } {
+  const parts = [
+    r.cancelled.length > 0 ? `${r.cancelled.length} ${odwolanaForm(r.cancelled.length)}` : null,
+    r.deleted.length > 0 ? `${r.deleted.length} ${usunietaForm(r.deleted.length)}` : null,
+  ].filter(Boolean);
+  return {
+    total: r.cancelled.length + r.deleted.length,
+    summary: parts.join(" · ") || "Brak zmian",
+  };
+}
+
+function cancelDate(dateStr: string): string {
+  const label = new Date(dateStr + "T00:00:00").toLocaleDateString("pl-PL", {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function cancelTime(iso: string): string {
+  const m = iso.match(/T(\d{2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : iso;
+}
+
 export default function CancelSessionPage() {
   const params = useParams<{ occurrenceId: string }>();
   const router = useRouter();
   const { toast } = useToast();
 
+  const [sessionDetail, setSessionDetail] = useState<SessionDetailResponse | null>(null);
   const [scope, setScope] = useState<CancelScope>("single");
   const [step, setStep] = useState<Step>("scope");
   const [previewResponse, setPreviewResponse] = useState<SessionEditPreviewResponse | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commitResult, setCommitResult] = useState<SessionEditCommitResponse | null>(null);
+
+  useEffect(() => {
+    axiosInstance
+      .get<SessionDetailResponse>(`/class-sessions/${params.occurrenceId}`)
+      .then((r) => setSessionDetail(r.data))
+      .catch(() => setSessionDetail(null));
+  }, [params.occurrenceId]);
 
   const goToPreview = async () => {
     setIsLoadingPreview(true);
@@ -83,8 +122,17 @@ export default function CancelSessionPage() {
   return (
     <div className="p-4 mx-auto max-w-lg">
       {step === "scope" && (
-        <>
-          <p className="text-sm font-semibold text-gray-900 mb-4">Co odwołać?</p>
+        <div className="space-y-4">
+          {sessionDetail && (
+            <SessionContextCard
+              tone="danger"
+              title={sessionDetail.template_title}
+              subtitle={`${cancelDate(sessionDetail.calendar_date)} · ${cancelTime(sessionDetail.start_time)}`}
+            />
+          )}
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+            Co odwołać?
+          </p>
           <div className="space-y-2">
             <ScopeOptionCard
               title="Tylko tę sesję"
@@ -100,30 +148,40 @@ export default function CancelSessionPage() {
               variant="danger"
             />
           </div>
-          <div className="flex gap-3 pt-6">
+          <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => router.push("/konto/partner/grafik")}>
               Anuluj
             </Button>
-            <Button className="flex-1" onClick={goToPreview} disabled={isLoadingPreview}>
-              {isLoadingPreview ? "Generowanie..." : "Podgląd →"}
+            <Button
+              variant="green"
+              className="flex-1"
+              onClick={goToPreview}
+              disabled={isLoadingPreview}
+            >
+              {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>
           </div>
-        </>
+        </div>
       )}
 
       {step === "preview" && previewResponse && (
         <div className="space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">
-              {previewResponse.total_affected} {sesjaNominative(previewResponse.total_affected)}{" "}
-              {odwolanaAgreement(previewResponse.total_affected)}
-            </h2>
-          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+            {previewResponse.total_affected === 1
+              ? "ZMIANA W 1 SESJI"
+              : `ZMIANY W ${previewResponse.total_affected} SESJACH`}
+          </p>
 
           <SessionChangesPreview
             items={previewResponse.items}
             notificationSummary={previewResponse.notification_summary}
           />
+
+          <PreviewNoteCard icon={<Info size={15} />}>
+            {scope === "single"
+              ? "Dotyczy tylko tej sesji — seria bez zmian. Rezerwacje zostaną anulowane, karnety odzyskają wejścia (bezpłatne odwołanie po stronie studia)."
+              : "Seria zakończy się tą datą. Rezerwacje zostaną anulowane, karnety odzyskają wejścia (bezpłatne odwołanie po stronie studia)."}
+          </PreviewNoteCard>
 
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => setStep("scope")}>
@@ -131,35 +189,22 @@ export default function CancelSessionPage() {
             </Button>
             <Button
               className="flex-1"
-              variant="destructive"
+              variant="danger"
               onClick={handleCommit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Odwoływanie..." : "Odwołaj"}
+              {isSubmitting ? "Odwoływanie..." : "Odwołaj sesję"}
             </Button>
           </div>
         </div>
       )}
 
       {step === "success" && commitResult && (
-        <div className="flex flex-col items-center gap-4 py-10 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-brand-green-700">
-            <Check size={28} />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {scope === "single" ? "Sesja odwołana" : "Seria zakończona"}
-            </h2>
-            <p className="text-sm text-gray-500">
-              {commitResult.cancelled.length} {sesjaNominative(commitResult.cancelled.length)}{" "}
-              {odwolanaForm(commitResult.cancelled.length)}. Powiadomienia trafiły do kolejki
-              wysyłki.
-            </p>
-          </div>
-          <Button className="w-full" onClick={() => router.push("/konto/partner/grafik")}>
-            Wróć do grafiku
-          </Button>
-        </div>
+        <ScheduleSuccessScreen
+          headline={scope === "single" ? "Sesja odwołana" : "Seria zakończona"}
+          body={`${cancelOutcome(commitResult).total} ${sesjaNominative(cancelOutcome(commitResult).total)} ${cancelOutcome(commitResult).total === commitResult.deleted.length ? usunietaForm(cancelOutcome(commitResult).total) : odwolanaForm(cancelOutcome(commitResult).total)}. Powiadomienia trafiły do kolejki wysyłki.`}
+          summary={cancelOutcome(commitResult).summary}
+        />
       )}
     </div>
   );
