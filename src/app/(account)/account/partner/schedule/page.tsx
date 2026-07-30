@@ -23,7 +23,9 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { sesje } from "@/lib/polishPlural";
 
 import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
@@ -44,19 +46,26 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/**
+ * "13 – 19 lipca", "28 lipca – 3 sierpnia".
+ *
+ * Formats day+month together rather than the month alone, because Polish needs the genitive
+ * ("lipca") and `{ month: "long" }` on its own yields the nominative ("lipiec"). The old
+ * version produced "27 Lipiec – 2 Sierpień" once a CSS `capitalize` was applied on top.
+ */
 function formatWeekRangeLabel(weekStart: Date): string {
   const end = new Date(weekStart);
   end.setDate(end.getDate() + 6);
-  const startDay = weekStart.getDate();
-  const endDay = end.getDate();
-  const startMonth = weekStart.toLocaleDateString("pl-PL", { month: "long" });
-  const endMonth = end.toLocaleDateString("pl-PL", { month: "long" });
-  const startYear = weekStart.getFullYear();
-  const endYear = end.getFullYear();
-  if (startYear !== endYear)
-    return `${startDay} ${startMonth} ${startYear} – ${endDay} ${endMonth} ${endYear}`;
-  if (startMonth !== endMonth) return `${startDay} ${startMonth} – ${endDay} ${endMonth}`;
-  return `${startDay} – ${endDay} ${startMonth}`;
+
+  const dayMonth = (d: Date) => d.toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
+  const sameMonth = weekStart.getMonth() === end.getMonth();
+  const sameYear = weekStart.getFullYear() === end.getFullYear();
+
+  if (!sameYear) {
+    return `${dayMonth(weekStart)} ${weekStart.getFullYear()} – ${dayMonth(end)} ${end.getFullYear()}`;
+  }
+  if (!sameMonth) return `${dayMonth(weekStart)} – ${dayMonth(end)}`;
+  return `${weekStart.getDate()} – ${dayMonth(end)}`;
 }
 
 function formatTime(iso: string): string {
@@ -64,9 +73,15 @@ function formatTime(iso: string): string {
   return m ? `${m[1]}:${m[2]}` : iso;
 }
 
+/** "Poniedziałek, 13 lipca" — full month, capitalized weekday, as drawn in A1. */
 function formatDayHeader(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "short" });
+  const label = d.toLocaleDateString("pl-PL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export default function SchedulePage() {
@@ -160,12 +175,47 @@ export default function SchedulePage() {
   const hasAnySessions = days.some((d) => d.session_count > 0);
 
   const dayStripRef = useRef<DayStripHandle>(null);
+  const stickySentinelRef = useRef<HTMLDivElement>(null);
+  const [isStuck, setIsStuck] = useState(false);
+
+  useEffect(() => {
+    const sentinel = stickySentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(([entry]) => setIsStuck(!entry.isIntersecting), {
+      // The sentinel disappears under the header, not off the top of the viewport.
+      rootMargin: "-64px 0px 0px 0px",
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   function shiftWeek(deltaDays: number) {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + deltaDays);
     setWeekStart(d);
   }
+
+  function jumpToToday() {
+    const today = new Date();
+    setWeekStart(getMonday(today));
+    const dow = today.getDay();
+    setSelectedDayIndex(dow === 0 ? 6 : dow - 1);
+  }
+
+  /** Swiping the day content moves one day, rolling into the neighbouring week at the
+   * edges so the gesture never dead-ends on Monday or Sunday. */
+  const daySwipe = useHorizontalSwipe((direction) => {
+    const next = selectedDayIndex + direction;
+    if (next < 0) {
+      dayStripRef.current?.goToPreviousWeek();
+      setSelectedDayIndex(6);
+    } else if (next > 6) {
+      dayStripRef.current?.goToNextWeek();
+      setSelectedDayIndex(0);
+    } else {
+      setSelectedDayIndex(next);
+    }
+  });
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
@@ -174,11 +224,11 @@ export default function SchedulePage() {
       {reconciliation.total > 0 && (
         <Link
           href="/konto/partner/rozliczenia"
-          className="mb-4 flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 hover:bg-amber-100 transition-colors"
+          className="mb-4 flex items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
         >
           <span className="flex items-center gap-2">
             <AlertCircle size={16} />
-            {reconciliation.total} {reconciliation.total === 1 ? "sesja" : "sesje"} do rozliczenia
+            {sesje(reconciliation.total)} do rozliczenia
             {reconciliation.showStudioLabels && reconciliation.studioName && (
               <> · {reconciliation.studioName}</>
             )}
@@ -187,53 +237,63 @@ export default function SchedulePage() {
         </Link>
       )}
 
-      {/* Week stepper */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-semibold text-gray-900 capitalize">
+      {/* Sentinel: while it is still on screen the block above hasn't pinned yet. Must sit
+       * *before* the sticky element — once stuck, the sticky element itself never leaves the
+       * viewport, so it can't observe its own state. */}
+      <div ref={stickySentinelRef} className="h-0" />
+
+      {/* Week nav + day strip pin together below the header. Offsetting from
+       * --dashboard-header-h rather than a literal top-16 keeps this correct at md:,
+       * where the header grows to 5rem. */}
+      <div
+        className="sticky z-30 -mx-4 bg-background px-4 pb-2"
+        style={{ top: "var(--dashboard-header-h)" }}
+      >
+        <div className="flex items-center justify-between py-2">
+          <span className="text-base font-semibold text-gray-900">
             {formatWeekRangeLabel(weekStart)}
           </span>
-          <button
-            onClick={() => {
-              const today = new Date();
-              setWeekStart(getMonday(today));
-              const dow = today.getDay();
-              setSelectedDayIndex(dow === 0 ? 6 : dow - 1);
-            }}
-            className="rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50"
-          >
-            Dziś
-          </button>
+          {/* "Dziś" belongs with the week chevrons, not with the title — it is week
+           * navigation, not a label. */}
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              onClick={jumpToToday}
+              className="mr-1 rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Dziś
+            </button>
+            <button
+              onClick={() => dayStripRef.current?.goToPreviousWeek()}
+              aria-label="Poprzedni tydzień"
+              className="rounded p-1 hover:bg-gray-100"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => dayStripRef.current?.goToNextWeek()}
+              aria-label="Następny tydzień"
+              className="rounded p-1 hover:bg-gray-100"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={() => dayStripRef.current?.goToPreviousWeek()}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => dayStripRef.current?.goToNextWeek()}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+
+        <DayStrip
+          ref={dayStripRef}
+          weekStart={weekStart}
+          sessionCounts={sessionCounts}
+          selectedIndex={selectedDayIndex}
+          isLoading={isLoading}
+          onSelectDay={setSelectedDayIndex}
+          onShiftWeek={shiftWeek}
+        />
+        {/* Hairline only once stuck, so the unscrolled page looks unchanged. */}
+        {isStuck && <div className="-mx-4 mt-2 h-px bg-gray-200" />}
       </div>
 
-      {/* Day strip */}
-      <DayStrip
-        ref={dayStripRef}
-        weekStart={weekStart}
-        sessionCounts={sessionCounts}
-        selectedIndex={selectedDayIndex}
-        isLoading={isLoading}
-        onSelectDay={setSelectedDayIndex}
-        onShiftWeek={shiftWeek}
-      />
-
-      {/* Day content */}
-      <div className="mt-4">
+      {/* Day content — swipeable left/right to change day */}
+      <div className="mt-4" {...daySwipe}>
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
         ) : !hasAnySessions ? (
@@ -271,18 +331,14 @@ export default function SchedulePage() {
           </div>
         ) : selectedDay ? (
           <div className="space-y-3">
-            {/* Day header */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-700 capitalize">
-                {formatDayHeader(selectedDay.date)}
-              </p>
-              <span className="text-xs text-gray-500">
-                {selectedDay.session_count} {selectedDay.session_count === 1 ? "zajęcia" : "zajęć"}
-              </span>
-            </div>
+            {/* Day header. A1 shows no session count here — the strip's dots already carry
+             * which days have sessions, so a second count is noise. */}
+            <p className="text-[15px] font-semibold text-gray-900">
+              {formatDayHeader(selectedDay.date)}
+            </p>
 
-            {/* Session cards */}
-            <div className="space-y-2.5">
+            {/* One bordered container with dividers, not a stack of separate cards (A1). */}
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border bg-white">
               {selectedDay.occurrences.map((occ) => (
                 <GrafikSessionCard key={occ.id} occ={occ} onClick={setPanelOcc} />
               ))}
@@ -291,15 +347,17 @@ export default function SchedulePage() {
         ) : null}
       </div>
 
-      {/* FAB */}
-      {hasAnySessions && (
-        <Link
-          href="/konto/partner/grafiki-zajec/create"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
-        >
-          <Plus size={24} />
-        </Link>
-      )}
+      {/* Fixed add button. Always rendered — it used to be hidden whenever the week had no
+       * sessions, which is exactly when adding one matters most. Offsets from
+       * --bottom-tab-h (a Tailwind class, not an inline style, so the md: override still
+       * wins) because at md: the tab bar becomes a sidebar and the offset is unnecessary. */}
+      <Link
+        href="/konto/partner/grafiki-zajec/create"
+        aria-label="Dodaj zajęcia"
+        className="fixed bottom-[calc(var(--bottom-tab-h)+1rem)] right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800 md:bottom-6"
+      >
+        <Plus size={24} />
+      </Link>
 
       {/* Session panel drawer */}
       <Drawer open={!!panelOcc} onOpenChange={(open) => !open && setPanelOcc(null)}>

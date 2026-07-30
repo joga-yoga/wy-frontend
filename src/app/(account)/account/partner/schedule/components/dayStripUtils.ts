@@ -9,6 +9,9 @@ export interface DayInfo {
   isWeekend: boolean;
   isToday: boolean;
   isPast: boolean;
+  /** Drives A1's session dot. Only meaningful when `sessionsKnown` — preview weeks in the
+   * swipe track have no data yet, so they report false rather than guessing. */
+  hasSessions: boolean;
 }
 
 export function toDateStr(d: Date): string {
@@ -42,6 +45,7 @@ export function buildWeekDays(
       dayNumber: d.getDate(),
       dayLabel: DAY_LABELS[i],
       isMuted: isPast || (sessionsKnown && !hasSessions),
+      hasSessions: sessionsKnown && hasSessions,
       isWeekend: WEEKEND_INDICES.has(i),
       isToday: dateStr === todayStr,
       isPast,

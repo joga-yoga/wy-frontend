@@ -327,6 +327,12 @@
      * one cannot change its height and desync this value. */
     --dashboard-header-h: 4rem;
 
+    /* Height of BottomTabBar's mobile bar: its 8px top padding + the 67px pill + its own
+     * bottom padding, which is max(16px, safe-area). Anything floating above the bar (the
+     * Grafik add button, pinned footers) offsets from this instead of hard-coding a number —
+     * the add button previously sat at bottom-6 and was overlapped by the bar. */
+    --bottom-tab-h: calc(75px + max(16px, env(safe-area-inset-bottom)));
+
     /* B2B panel palette — the desaturated tints the partner-panel prototypes use.
      * Deliberately NOT Tailwind's defaults: `emerald-50` is #ECFDF5, visibly lighter
      * and cooler than the design's #E7F3EB, which is what made chip/icon backgrounds

@@ -45,6 +45,15 @@ export function DayNumberCircle({ day, isSelected, onClick }: DayNumberCirclePro
         </AnimatePresence>
         <span className="relative z-10 leading-none">{day.dayNumber}</span>
       </span>
+      {/* Session dot (A1). Deliberate divergence from the public studio strip this component
+       * was copied from — the owner Grafik marks which days have sessions, the public one
+       * conveys it only by muting. Hidden on the selected day, which A1 also leaves bare. */}
+      <span
+        className={cn(
+          "h-1 w-1 rounded-full transition-colors",
+          day.hasSessions && !isSelected ? "bg-gray-300" : "bg-transparent",
+        )}
+      />
     </button>
   );
 }

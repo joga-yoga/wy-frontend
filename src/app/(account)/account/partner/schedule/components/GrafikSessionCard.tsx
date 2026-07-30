@@ -4,7 +4,7 @@ import { Pencil } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
-import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
+import { COLOR_SWATCH_MAP, DEFAULT_BAR } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
@@ -32,13 +32,33 @@ function formatDurationMinutes(start: string, end: string): string {
   return `${mins} min`;
 }
 
+/** Fill-badge tone. Green reads "there is still room", so a past or cancelled session must
+ * never use it — those are gray regardless of how full they were. */
+function fillToneClass(state: PrimaryState): string {
+  switch (state) {
+    case "full":
+      return "bg-b2b-red-bg text-b2b-red-text";
+    case "nearly-full":
+      return "bg-b2b-amber-bg text-b2b-amber-text";
+    case "past":
+    case "cancelled":
+      return "bg-gray-100 text-gray-500";
+    default:
+      return "bg-b2b-green-bg text-b2b-green-text";
+  }
+}
+
 /**
- * Grafik's owner-facing session row — same colored-border / time-column / instructor
- * avatar visual language as the public studio schedule's `SessionCard`, reusing its
- * color utilities (`lib/classColors`) and `InstructorAvatar` directly rather than
- * reinventing them. Diverges where the semantics differ: no booking state (this is
- * the owner's view, not a participant's), tap opens the session panel instead of a
- * booking flow, and an "wyjątek" badge replaces the change-annotation footer.
+ * One session row in Grafik (mockup A1).
+ *
+ * Renders as a **row, not a card**: the parent wraps the day's rows in one bordered container
+ * with dividers between them, which is how A1 draws it. So this component owns no outer
+ * border, rounding or shadow. Previously it was a standalone card with a colored border and
+ * gaps between cards, which was the largest visual difference from the prototype.
+ *
+ * Layout: time + duration column, a thin bar carrying the class color, title and who/where,
+ * then the fill badge in its own right-hand column before the chevron. The badge reads bare
+ * ("9/12"), not "9/12 zapisanych".
  */
 export function GrafikSessionCard({
   occ,
@@ -56,12 +76,12 @@ export function GrafikSessionCard({
   const state = computePrimaryState(occ, now);
   const isCancelled = state === "cancelled";
   const isPast = state === "past";
-  const isDimmed = isCancelled || isPast || state === "full";
+  const isDimmed = isCancelled || isPast;
 
-  const showColorBorder = state === "default" || state === "nearly-full" || state === "full";
-  const color = occ.color as keyof typeof COLOR_BORDER_MAP | null | undefined;
-  const borderClass = showColorBorder && color ? COLOR_BORDER_MAP[color] : DEFAULT_BORDER;
-  const barClass = showColorBorder && color ? COLOR_SWATCH_MAP[color] : DEFAULT_BAR;
+  const color = occ.color as keyof typeof COLOR_SWATCH_MAP | null | undefined;
+  // A finished or cancelled session keeps its slot but drops its color, so the row reads as
+  // settled rather than as another live class.
+  const barClass = !isDimmed && color ? COLOR_SWATCH_MAP[color] : DEFAULT_BAR;
 
   return (
     <div
@@ -72,90 +92,95 @@ export function GrafikSessionCard({
         if (e.key === "Enter" || e.key === " ") onClick(occ);
       }}
       className={cn(
-        "flex cursor-pointer items-stretch gap-3 overflow-hidden rounded-xl border-[1.5px] bg-white px-3 py-2.5 transition-colors hover:bg-gray-50",
-        borderClass,
+        "flex cursor-pointer items-stretch gap-3 px-3 py-3 transition-colors hover:bg-gray-50",
         isDimmed && "opacity-60",
       )}
     >
-      <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
+      <div className="flex w-14 shrink-0 flex-col items-start justify-center gap-0.5">
         <span
           className={cn(
-            "text-xl font-semibold",
-            isCancelled || isPast ? "text-gray-400" : "text-gray-900",
+            "text-[17px] font-bold leading-tight",
+            isDimmed ? "text-gray-400" : "text-gray-900",
             isCancelled && "line-through",
           )}
         >
           {formatTime(occ.start_time)}
         </span>
-        <span className="text-sm text-gray-400">
+        <span className="text-xs text-gray-400">
           {formatDurationMinutes(occ.start_time, occ.end_time)}
         </span>
       </div>
 
-      <div className={cn("w-1 shrink-0 self-stretch rounded-full", barClass)} />
+      <div className={cn("w-[3px] shrink-0 self-stretch rounded-full", barClass)} />
 
-      <div className="min-w-0 flex-1 py-0.5">
+      <div className="min-w-0 flex-1 self-center">
         <p
           className={cn(
-            "truncate text-md font-semibold",
-            isCancelled || isPast ? "text-gray-400" : "text-gray-900",
+            "text-[15px] font-semibold leading-snug",
+            isDimmed ? "text-gray-400" : "text-gray-900",
             isCancelled && "line-through",
           )}
         >
           {occ.template_title}
         </p>
 
-        {!isCancelled && context === "owner" && occ.instructor_name && (
+        {isPast && !isCancelled && <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>}
+
+        {!isCancelled && !isPast && context === "owner" && occ.instructor_name && (
           <div className="mt-1 flex items-center gap-1.5">
             <InstructorAvatar
               name={occ.instructor_name}
               imageId={occ.instructor_image_id}
-              size={20}
+              size={18}
             />
-            <span className="truncate text-sm text-gray-500">
-              {[occ.room_name, occ.instructor_name].filter(Boolean).join(" · ")}
+            {/* Instructor before room, as drawn ("Oleg · Sala 1"). */}
+            <span className="truncate text-[13px] text-gray-500">
+              {[occ.instructor_name, occ.room_name].filter(Boolean).join(" · ")}
             </span>
           </div>
         )}
 
-        {!isCancelled && context === "instructor" && (occ.studio_name || occ.room_name) && (
-          <p className="mt-1 truncate text-sm text-gray-500">
-            {[occ.studio_name, occ.room_name].filter(Boolean).join(" · ")}
-          </p>
-        )}
+        {!isCancelled &&
+          !isPast &&
+          context === "instructor" &&
+          (occ.studio_name || occ.room_name) && (
+            <p className="mt-1 truncate text-[13px] text-gray-500">
+              {[occ.studio_name, occ.room_name].filter(Boolean).join(" · ")}
+            </p>
+          )}
 
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {occ.is_modified && !isCancelled && (
-            <span className="flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-              <Pencil size={10} />
-              Wyjątek
-            </span>
-          )}
-          {isCancelled && (
-            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
-              Odwołane
-            </span>
-          )}
-          {isPast && <span className="text-[11px] text-gray-400">Zakończone</span>}
-          {!isCancelled && occ.capacity ? (
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                state === "full"
-                  ? "bg-red-50 text-red-600"
-                  : state === "nearly-full"
-                    ? "bg-amber-50 text-amber-700"
-                    : "bg-gray-100 text-gray-600",
-              )}
-            >
-              {occ.fill_count}/{occ.capacity} zapisanych
-            </span>
-          ) : null}
-        </div>
+        {(isCancelled || occ.is_modified) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {isCancelled && (
+              <span className="rounded-full bg-b2b-red-bg px-2 py-0.5 text-[11px] font-medium text-b2b-red-text">
+                Odwołane
+              </span>
+            )}
+            {occ.is_modified && !isCancelled && (
+              <span className="flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                <Pencil size={10} />
+                Wyjątek
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="flex shrink-0 items-center text-gray-400">
-        <IoChevronForward className="h-5 w-5" />
+      {occ.capacity ? (
+        <div className="flex shrink-0 items-center">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[13px] font-semibold tabular-nums",
+              fillToneClass(state),
+            )}
+          >
+            {occ.fill_count}/{occ.capacity}
+          </span>
+        </div>
+      ) : null}
+
+      <div className="flex w-5 shrink-0 items-center text-gray-300">
+        {!isDimmed && <IoChevronForward className="h-5 w-5" />}
       </div>
     </div>
   );

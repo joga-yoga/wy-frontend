@@ -45,9 +45,15 @@ function formatTime(iso: string): string {
   return m ? `${m[1]}:${m[2]}` : iso;
 }
 
+/** "Poniedziałek, 13 lipca" — matches the owner Grafik's day header. */
 function formatDayHeader(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "short" });
+  const label = d.toLocaleDateString("pl-PL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export default function InstructorSchedulePage() {
@@ -165,10 +171,12 @@ export default function InstructorSchedulePage() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-gray-700 capitalize">
+            <p className="text-[15px] font-semibold text-gray-900">
               {formatDayHeader(selectedDate)}
             </p>
-            <div className="space-y-2.5">
+            {/* Same single-container-with-dividers treatment as the owner Grafik (C1):
+             * `GrafikSessionCard` is a row and carries no border of its own. */}
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border bg-white">
               {dayOccurrences.map((occ) => (
                 <GrafikSessionCard
                   key={occ.id}

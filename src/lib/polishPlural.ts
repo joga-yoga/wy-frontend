@@ -1,0 +1,32 @@
+/**
+ * Polish plural agreement.
+ *
+ * Polish has three forms, not two: 1 takes the singular, 2–4 take a "few" form, and 5+ take
+ * a "many" form — except the teens (12–14), which take "many" despite ending in 2–4. Writing
+ * `n === 1 ? "sesja" : "sesje"` therefore renders "7 sesje", which is wrong.
+ *
+ * The same three-way logic had already been written twice (in the schedule edit and cancel
+ * screens) after a round of pluralization fixes; this is the shared version so it doesn't get
+ * re-derived a fourth time.
+ */
+export function isFewForm(n: number): boolean {
+  const lastDigit = n % 10;
+  const lastTwo = n % 100;
+  return lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14);
+}
+
+/** Pick the right form for `n`: `plural(7, "sesja", "sesje", "sesji")` -> "sesji". */
+export function plural(n: number, one: string, few: string, many: string): string {
+  if (Math.abs(n) === 1) return one;
+  return isFewForm(n) ? few : many;
+}
+
+/** "1 sesja", "3 sesje", "7 sesji". */
+export function sesje(n: number): string {
+  return `${n} ${plural(n, "sesja", "sesje", "sesji")}`;
+}
+
+/** "1 osobę", "3 osoby", "7 osób" — accusative, for "Powiadomimy N …". */
+export function osoby(n: number): string {
+  return `${n} ${plural(n, "osobę", "osoby", "osób")}`;
+}
