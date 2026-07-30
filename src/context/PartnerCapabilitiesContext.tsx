@@ -8,6 +8,8 @@ import { axiosInstance } from "@/lib/axiosInstance";
 export interface CapabilityStudio {
   id: string;
   name: string;
+  /** `Studio.image_id` — the studio's logo, drawn as the Menu row's leading tile. */
+  image_id: string | null;
 }
 
 export interface PartnerCapabilities {

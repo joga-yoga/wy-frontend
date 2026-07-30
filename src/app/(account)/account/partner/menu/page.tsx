@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeftRight, LogOut, Tag } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, LogOut, Store, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { StudioLogoTile } from "@/components/b2b/StudioLogoTile";
 import { MenuRow } from "@/components/menu/MenuRow";
 import { StudioWorkspaceRows } from "@/components/menu/StudioWorkspaceRows";
 import { Button } from "@/components/ui/button";
@@ -118,7 +119,11 @@ export default function MenuPage() {
       )}
 
       {!isLoading && managedStudios.length === 1 && (
-        <StudioWorkspaceRows studioId={managedStudios[0].id} studioName={managedStudios[0].name} />
+        <StudioWorkspaceRows
+          studioId={managedStudios[0].id}
+          studioName={managedStudios[0].name}
+          studioImageId={managedStudios[0].image_id}
+        />
       )}
 
       {!isLoading && managedStudios.length >= 2 && (
@@ -130,8 +135,8 @@ export default function MenuPage() {
                 key={studio.id}
                 href={`/konto/partner/menu/studio/${studio.id}`}
                 title={studio.name}
-                subtitle="Profil, instruktorzy, klienci, płatności"
-                Icon={Tag}
+                subtitle="Profil, klienci, szablony"
+                leading={<StudioLogoTile name={studio.name} imageId={studio.image_id} />}
               />
             ))}
           </div>
@@ -175,30 +180,35 @@ export default function MenuPage() {
             href="/konto/partner/organizacja"
             title="Profil organizatora"
             subtitle="Publiczny profil, jako kogo organizujesz"
-            Icon={Tag}
+            Icon={Store}
           />
           <MenuRow
             href="/konto/partner/konto"
             title="Dane konta"
             subtitle="Imię, e-mail, hasło"
-            Icon={Tag}
+            Icon={UserRound}
           />
         </div>
       </section>
 
       {/* B2B→B2C switch — the calm counterpart to the pinned B2C button (T13);
           calm here because the tab bar already exists (spec-b2b §2). */}
+      {/* `bg-emerald-50` is #ECFDF5 — lighter and cooler than the design's #E7F3EB, which
+          is exactly the mismatch the user reported. It comes from the token now.
+          Stays a bordered card rather than a solid button: B2B already has a tab bar, so
+          the switch is calm here, while B2C (which has none) gets the pinned button. */}
       <Link
-        href="/konto"
+        href="/konto?from=b2b"
         className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-brand-green-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-b2b-green-bg text-b2b-green-text">
           <ArrowLeftRight size={18} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-900">Przełącz na konto osobiste</p>
           <p className="text-xs text-gray-500">Twoje rezerwacje, karnety, odkrywanie</p>
         </div>
+        <ChevronRight size={16} className="shrink-0 text-gray-400" />
       </Link>
 
       <button

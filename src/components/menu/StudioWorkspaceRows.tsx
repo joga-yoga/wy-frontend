@@ -1,10 +1,12 @@
 "use client";
 
-import { Building2, CreditCard, Layers, Users } from "lucide-react";
+import { CreditCard, Layers, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { StudioLogoTile } from "@/components/b2b/StudioLogoTile";
 import { MenuRow } from "@/components/menu/MenuRow";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { osobyNom, plural } from "@/lib/polishPlural";
 
 interface RosterSummary {
   total: number;
@@ -14,10 +16,12 @@ interface RosterSummary {
 function rosterSubtitle(summary: RosterSummary | null): string {
   if (!summary) return "Zarządzaj zespołem studia";
   if (summary.total === 0) return "Brak instruktorów";
-  const base = `${summary.total} ${summary.total === 1 ? "osoba" : "osób"}`;
-  return summary.awaiting_count > 0
-    ? `${base} · ${summary.awaiting_count} oczekuje na zaproszenie`
-    : base;
+  const base = osobyNom(summary.total);
+  if (summary.awaiting_count === 0) return base;
+  // The verb agrees too, not just the noun: "2 oczekują", but "1 oczekuje" and
+  // "5 oczekuje". A count-only plural gives "2 oczekuje na zaproszenie".
+  const verb = plural(summary.awaiting_count, "oczekuje", "oczekują", "oczekuje");
+  return `${base} · ${summary.awaiting_count} ${verb} na zaproszenie`;
 }
 
 /**
@@ -27,9 +31,11 @@ function rosterSubtitle(summary: RosterSummary | null): string {
 export function StudioWorkspaceRows({
   studioId,
   studioName,
+  studioImageId,
 }: {
   studioId: string;
   studioName: string;
+  studioImageId?: string | null;
 }) {
   const [roster, setRoster] = useState<RosterSummary | null>(null);
 
@@ -46,11 +52,13 @@ export function StudioWorkspaceRows({
         {studioName} · Twoje studio
       </h2>
       <div className="rounded-xl border bg-white overflow-hidden divide-y">
+        {/* R1 leads this row with the studio's own logo rather than a generic icon —
+            it is the only row that is *about* a specific studio. */}
         <MenuRow
           href={`/konto/partner/studio/${studioId}/edit`}
           title="Profil studia"
           subtitle="Podstawy, lokalizacja, cennik, zdjęcia"
-          Icon={Building2}
+          leading={<StudioLogoTile name={studioName} imageId={studioImageId} />}
         />
         <MenuRow
           href={`/konto/partner/instruktorzy?studioId=${studioId}`}

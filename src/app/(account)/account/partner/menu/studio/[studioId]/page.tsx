@@ -30,7 +30,11 @@ export default function StudioWorkspacePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5">
-      <StudioWorkspaceRows studioId={studio.id} studioName={studio.name} />
+      <StudioWorkspaceRows
+        studioId={studio.id}
+        studioName={studio.name}
+        studioImageId={studio.image_id}
+      />
     </div>
   );
 }
