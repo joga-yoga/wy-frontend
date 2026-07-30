@@ -1,16 +1,27 @@
 "use client";
 
-import { Bell, Calendar, HelpCircle, LogOut, User as UserIcon, X } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Bell,
+  CalendarDays,
+  ChevronRight,
+  HelpCircle,
+  LogOut,
+  User as UserIcon,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { PassWalletCard } from "@/components/b2b/PassWalletCard";
+import { PassCard } from "@/components/b2b/PassCard";
+import { StatusChip } from "@/components/b2b/StatusChip";
 import { SetLastMode } from "@/components/layout/SetLastMode";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { personInitials, personLabel } from "@/lib/personDisplay";
 
 import type { MyBookingsResponse, MyPassWalletOut } from "./types";
 
@@ -68,6 +79,8 @@ export default function AccountHubPage() {
     }
   }
 
+  const identity = personLabel(user?.name, user?.email ?? "");
+
   const bookingsSubtitle = summary
     ? [
         summary.upcoming_count > 0 ? `${summary.upcoming_count} nadchodzące` : null,
@@ -81,40 +94,47 @@ export default function AccountHubPage() {
     <div className="min-h-[100dvh] bg-background pb-28">
       <SetLastMode mode="b2c" />
 
-      <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background px-4">
+      {/* F2 sets the title beside the X, not centred — same shape as every B2B inner
+          screen, so crossing the B2B/B2C boundary does not feel like a different app. */}
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b bg-background px-4">
         <button
           onClick={handleClose}
           aria-label="Zamknij"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
         >
           <X size={18} />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-gray-900">
-          Profil
-        </h1>
+        <h1 className="truncate text-xl font-bold text-gray-900">Profil</h1>
       </header>
 
       <div className="max-w-md mx-auto px-4 py-5 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xl font-semibold text-gray-600">
-            {user?.email?.charAt(0).toUpperCase() ?? <UserIcon size={22} />}
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-600">
+            {personInitials(user?.name, user?.email ?? "")}
           </div>
+          {/* `personLabel` returns a secondary only when it differs from the primary, so
+              a user with no name shows their email once rather than twice. */}
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-gray-900">{user?.email}</p>
+            <p className="truncate text-lg font-bold text-gray-900">{identity.primary}</p>
+            {identity.secondary && (
+              <p className="truncate text-sm text-gray-500">{identity.secondary}</p>
+            )}
           </div>
         </div>
 
         <Link
           href="/konto/rezerwacje"
-          className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-            <Calendar size={18} />
+          {/* Rounded square, not a circle: F2 reserves circles for people. */}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+            <CalendarDays size={18} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-gray-900">Twoje rezerwacje</p>
             <p className="text-xs text-gray-500">{bookingsSubtitle}</p>
           </div>
+          <ChevronRight size={16} className="shrink-0 text-gray-400" />
         </Link>
 
         <section className="space-y-2">
@@ -131,18 +151,15 @@ export default function AccountHubPage() {
           ) : (
             <div className="space-y-2">
               {wallets.map((w) => (
-                <div key={w.studio_id} className="space-y-1">
-                  <PassWalletCard
-                    wallet={{
-                      state: w.state,
-                      pass_name: w.pass_name,
-                      entries_total: w.entries_total,
-                      entries_left: w.entries_left,
-                      valid_until: w.valid_until,
-                    }}
-                  />
-                  <p className="px-1 text-xs text-gray-400">{w.studio_name}</p>
-                </div>
+                // F2 puts the studio name *inside* the card where the partner-side card
+                // puts the purchase line, and drops the state chip — on your own wallet,
+                // a card being there already says it is usable.
+                <PassCard
+                  key={w.studio_id}
+                  pass={w}
+                  meta={w.studio_name}
+                  showState={w.state !== "active"}
+                />
               ))}
             </div>
           )}
@@ -185,11 +202,21 @@ export default function AccountHubPage() {
         </button>
       </div>
 
+      {/* Pinned, not scrolled with the content: B2C has no tab bar (it would collide
+          with the public pages' own bottom bars), so this is the only way back and has to
+          be always visible. Padded for the safe-area inset — part 1 shipped a FAB that
+          overlapped the home indicator by 3px for exactly this reason. */}
       {isPartner && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background px-4 py-3">
-          <div className="max-w-md mx-auto">
-            <Button variant="green" className="w-full" asChild>
-              <Link href="/konto/partner">⇄ Przełącz na konto partnera</Link>
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background px-4 pt-3"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto max-w-md">
+            <Button variant="green" className="w-full gap-2" asChild>
+              <Link href="/konto/partner">
+                <ArrowLeftRight size={16} />
+                Przełącz na konto partnera
+              </Link>
             </Button>
           </div>
         </div>
@@ -198,6 +225,14 @@ export default function AccountHubPage() {
   );
 }
 
+/**
+ * A Konto row with no destination yet.
+ *
+ * F2 draws chevrons on these, and the user asked for "chevrons on all buttons" — but
+ * these three screens do not exist. A chevron is a promise the tap breaks, discovered
+ * only by tapping. They carry the `Wkrótce` chip this codebase already uses for
+ * `Dane rozliczeniowe` instead, and gain chevrons the day they gain destinations.
+ */
 function StaticRow({
   title,
   subtitle,
@@ -214,8 +249,9 @@ function StaticRow({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500 truncate">{subtitle}</p>
+        <p className="truncate text-xs text-gray-500">{subtitle}</p>
       </div>
+      <StatusChip tone="gray">Wkrótce</StatusChip>
     </div>
   );
 }
