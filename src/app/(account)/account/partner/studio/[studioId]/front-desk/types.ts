@@ -3,6 +3,13 @@ export interface RosterEntry {
   user_id: string;
   user_email: string;
   user_name?: string | null;
+  pass_name?: string | null;
+  /** null alongside a pass_name = unlimited entries. */
+  pass_entries_total?: number | null;
+  pass_entries_left?: number | null;
+  sport_card_name?: string | null;
+  /** Transaction.method, e.g. "cash". */
+  payment_method?: string | null;
   status: string;
   funding_type: string;
   amount_owed?: number | null;
