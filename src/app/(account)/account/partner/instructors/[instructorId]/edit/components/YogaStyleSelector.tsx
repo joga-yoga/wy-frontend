@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { cn } from "@/lib/utils";
 import type { InstructorYogaStyleIn, YogaStyle } from "@/types/instructor";
 
 interface Props {
@@ -55,7 +56,13 @@ export function YogaStyleSelector({ value, onChange }: Props) {
           <Badge
             key={style.id}
             variant={selectedIds.includes(style.id) ? "default" : "outline"}
-            className="cursor-pointer"
+            // The outline variant's border is brand green, which on a grid of
+            // *unselected* chips reads as "all selected". R5 draws unselected chips in a
+            // neutral outline and only the chosen ones solid.
+            className={cn(
+              "cursor-pointer",
+              !selectedIds.includes(style.id) && "border-gray-200 text-gray-600 hover:bg-gray-50",
+            )}
             onClick={() => toggleStyle(style)}
           >
             {style.name}

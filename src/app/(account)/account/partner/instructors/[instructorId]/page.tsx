@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { useSetPageTitle } from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -45,6 +46,10 @@ export default function RosterInstructorDetailPage() {
   const [rosterItem, setRosterItem] = useState<StudioRosterItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDetaching, setIsDetaching] = useState(false);
+
+  // R5 heads this screen with the instructor's name, not a generic label. Only the
+  // screen knows it, so it pushes the title up rather than the header guessing.
+  useSetPageTitle(rosterItem?.name ?? null);
 
   useEffect(() => {
     if (!studio) return;

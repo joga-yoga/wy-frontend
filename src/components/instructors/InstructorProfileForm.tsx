@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 
+import { InfoNote } from "@/components/b2b/InfoNote";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,14 +89,16 @@ export function InstructorProfileForm({
       <div className="space-y-5 px-4 pb-4">
         {statusBanner}
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-1.5">
           <SingleImageUpload
             existingImageId={imageId}
             isUploading={isUploadingImage}
             onRemove={() => setImageId(null)}
             onFileSelect={handleImageSelect}
             previewClassName="h-24 w-24 rounded-full"
+            placeholderClassName="rounded-full md:w-24 md:h-24"
           />
+          <span className="text-xs font-semibold text-b2b-green-text">Zmień zdjęcie</span>
         </div>
 
         <div className="space-y-2">
@@ -118,11 +121,14 @@ export function InstructorProfileForm({
           <YogaStyleSelector value={yogaStyles} onChange={setYogaStyles} />
         </div>
 
+        {/* V3 spells out *where* the changes land. The URL alone leaves the owner
+            guessing whether an edit here also touches their studio listings. */}
         {instructor.slug && (
-          <p className="text-sm text-muted-foreground">
+          <InfoNote>
             Profil publiczny:{" "}
-            <span className="font-medium text-foreground">joga.yoga/i/{instructor.slug}</span>
-          </p>
+            <span className="font-semibold text-gray-900">joga.yoga/i/{instructor.slug}</span>.
+            Zmiany widać od razu na stronie profilu, w studiach i przy Twoich wydarzeniach.
+          </InfoNote>
         )}
       </div>
 

@@ -9,7 +9,7 @@ import { useNavigationBlocker } from "@/app/(account)/account/partner/components
 import { TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { LogoFooter } from "@/components/layout/Footer";
 import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
-import { usePageSubtitle } from "@/context/PageHeaderContext";
+import { usePageSubtitle, usePageTitleOverride } from "@/context/PageHeaderContext";
 
 const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
 
@@ -207,7 +207,10 @@ export function DashboardTopBar() {
   // exit to the public site instead of a back button.
   const isBecomePartner = pathname === BECOME_PARTNER_PATH;
   const isModal = isModalScreen(pathname);
-  const title = getPageTitle(pathname, searchParams);
+  const titleOverride = usePageTitleOverride();
+  // A screen-supplied title wins over the route map: only the screen knows its subject's
+  // name. The map still covers every screen that has a fixed title.
+  const title = titleOverride ?? getPageTitle(pathname, searchParams);
   const subtitle = usePageSubtitle();
 
   return (

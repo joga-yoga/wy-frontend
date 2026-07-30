@@ -13,11 +13,14 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 const PageHeaderContext = createContext<{
   subtitle: string | null;
   setSubtitle: (value: string | null) => void;
-}>({ subtitle: null, setSubtitle: () => {} });
+  title: string | null;
+  setTitle: (value: string | null) => void;
+}>({ subtitle: null, setSubtitle: () => {}, title: null, setTitle: () => {} });
 
 export function PageHeaderProvider({ children }: { children: React.ReactNode }) {
   const [subtitle, setSubtitle] = useState<string | null>(null);
-  const value = useMemo(() => ({ subtitle, setSubtitle }), [subtitle]);
+  const [title, setTitle] = useState<string | null>(null);
+  const value = useMemo(() => ({ subtitle, setSubtitle, title, setTitle }), [subtitle, title]);
   return <PageHeaderContext.Provider value={value}>{children}</PageHeaderContext.Provider>;
 }
 
@@ -37,4 +40,23 @@ export function useSetPageSubtitle(subtitle: string | null): void {
     setSubtitle(subtitle);
     return () => setSubtitle(null);
   }, [subtitle, setSubtitle]);
+}
+
+/** Read side for the title override — falls back to the route map when null. */
+export function usePageTitleOverride(): string | null {
+  return useContext(PageHeaderContext).title;
+}
+
+/**
+ * Write side for the title. Some screens are titled by their *subject* rather than their
+ * function — R5 heads the instructor editor with the instructor's name, K2 could do the
+ * same — and that string only exists once the screen has loaded. Same clear-on-unmount
+ * discipline as the subtitle, so a name never leaks into the next screen.
+ */
+export function useSetPageTitle(title: string | null): void {
+  const { setTitle } = useContext(PageHeaderContext);
+  useEffect(() => {
+    setTitle(title);
+    return () => setTitle(null);
+  }, [title, setTitle]);
 }
