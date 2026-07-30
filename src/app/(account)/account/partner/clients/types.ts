@@ -25,6 +25,18 @@ export interface PassWalletOut {
   entries_total: number | null;
   entries_left: number | null;
   valid_until: string | null;
+  // Purchase facts — "kupiony 2 lip · 150 zł · zapłacony" (K2/K3).
+  purchased_at: string | null;
+  price: number | null;
+  currency: string | null;
+  duration_days: number | null;
+  // A pass with no order row owes nothing, so the server defaults this to true.
+  is_paid: boolean;
+}
+
+/** One row of the client's full pass history (K3) — the wallet card plus an id. */
+export interface ClientPassOut extends PassWalletOut {
+  id: string;
 }
 
 export interface ClientVisit {

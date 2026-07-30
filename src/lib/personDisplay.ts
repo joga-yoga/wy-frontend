@@ -33,6 +33,23 @@ export function personInitials(name: string | null | undefined, email: string): 
   return email.slice(0, 2).toUpperCase();
 }
 
+/**
+ * Initials for a *thing* rather than a person — a studio, an organisation.
+ * "Święta Krowa Studio Jogi i Ruchu" -> "ŚK". Skips the joining words Polish studio
+ * names are full of, so "Studio Jogi i Ruchu" does not come out as "SI".
+ */
+const PL_STOPWORDS = new Set(["i", "w", "na", "z", "ze", "od", "do", "the", "of"]);
+
+export function entityInitials(name: string): string {
+  const words = name
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w && !PL_STOPWORDS.has(w.toLocaleLowerCase("pl-PL")));
+  if (words.length === 0) return "?";
+  const letters = words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2);
+  return letters.toLocaleUpperCase("pl-PL");
+}
+
 /** Sort key so lists order by the label the user actually sees, not always by email. */
 export function personSortKey(name: string | null | undefined, email: string): string {
   return personLabel(name, email).primary.toLocaleLowerCase("pl-PL");

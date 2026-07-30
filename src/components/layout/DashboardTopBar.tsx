@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition } from "react";
-import { IoChevronBack } from "react-icons/io5";
+import { IoChevronBack, IoClose } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/link";
 import { useNavigationBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/navigation-block";
@@ -12,6 +12,20 @@ import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
 import { usePageSubtitle } from "@/context/PageHeaderContext";
 
 const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
+
+/**
+ * Screens the prototypes draw as modals (R3, R4, U3): an X rather than a back chevron.
+ *
+ * The X is not a different destination — it still resolves through `getBackHref`, so a
+ * flow carrying `studioId` or `?step=new` keeps it. Only the affordance changes: a chevron
+ * says "one step back", an X says "leave this task".
+ */
+function isModalScreen(pathname: string): boolean {
+  return (
+    pathname === "/konto/partner/instruktorzy/create" ||
+    pathname === "/konto/partner/grafiki-zajec/create"
+  );
+}
 
 const TAB_TITLES: Record<string, string> = {
   "/konto/partner/grafik": "Grafik",
@@ -30,6 +44,11 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
   if (pathname === "/konto/partner/instruktorzy/create")
     return searchParams.get("step") === "new" ? "Nowy instruktor" : "Dodaj instruktora";
   if (pathname === "/konto/partner/klienci") return "Klienci";
+  // Ordering trap, same shape that bit the roster/sell-pass pair: the /karnety and
+  // /wizyty leaves both also match the bare `klienci/<id>` pattern below, so they are
+  // tested first.
+  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/karnety"))
+    return "Karnety klienta";
   if (pathname === "/konto/partner/rozliczenia") return "Do rozliczenia";
   // sell-pass must be tested before the roster pattern — it also matches `/front-desk/<seg>`.
   if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/sell-pass$/.test(pathname))
@@ -38,6 +57,7 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
     return "Lista obecności";
   if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty"))
     return "Historia wizyt";
+  if (/^\/konto\/partner\/klienci\/[^/]+$/.test(pathname)) return "Klient";
   if (pathname === "/konto/partner/wyjazdy/create") return "Nowy wyjazd";
   if (pathname === "/konto/partner/wydarzenia/create") return "Nowe wydarzenie";
   if (pathname === "/konto/partner/kursy/create") return "Nowy kurs";
@@ -111,6 +131,12 @@ function getBackHref(pathname: string, searchParams: URLSearchParams): string | 
   }
   if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/[^/]+$/.test(pathname))
     return "/konto/partner/grafik";
+  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/karnety")) {
+    const studioQuery = searchParams.get("studioId")
+      ? `?studioId=${searchParams.get("studioId")}`
+      : "";
+    return `${pathname.replace(/\/karnety$/, "")}${studioQuery}`;
+  }
   if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty")) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`
@@ -127,7 +153,7 @@ function getBackHref(pathname: string, searchParams: URLSearchParams): string | 
   return undefined;
 }
 
-function BackButton() {
+function BackButton({ variant = "back" }: { variant?: "back" | "close" }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -145,10 +171,15 @@ function BackButton() {
     }
   };
 
+  const isClose = variant === "close";
   return (
-    <button onClick={handleBack} aria-label="Wróć">
+    <button onClick={handleBack} aria-label={isClose ? "Zamknij" : "Wróć"}>
       <div className="h-10 w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
-        <IoChevronBack className="h-6 w-6 ml-[-2px]" />
+        {isClose ? (
+          <IoClose className="h-6 w-6" />
+        ) : (
+          <IoChevronBack className="h-6 w-6 ml-[-2px]" />
+        )}
       </div>
     </button>
   );
@@ -175,6 +206,7 @@ export function DashboardTopBar() {
   // only lead into guarded pages (or the login bounce). Show the logo as a safe
   // exit to the public site instead of a back button.
   const isBecomePartner = pathname === BECOME_PARTNER_PATH;
+  const isModal = isModalScreen(pathname);
   const title = getPageTitle(pathname, searchParams);
   const subtitle = usePageSubtitle();
 
@@ -193,7 +225,7 @@ export function DashboardTopBar() {
         </LinkWithBlocker>
       ) : (
         <>
-          <BackButton />
+          <BackButton variant={isModal ? "close" : "back"} />
           {title && (
             <div className="relative min-w-0 flex-1">
               <h1 className="truncate text-xl font-bold text-gray-900">{title}</h1>

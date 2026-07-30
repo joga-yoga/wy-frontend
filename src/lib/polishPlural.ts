@@ -30,3 +30,23 @@ export function sesje(n: number): string {
 export function osoby(n: number): string {
   return `${n} ${plural(n, "osobę", "osoby", "osób")}`;
 }
+
+/** "1 osoba", "3 osoby", "7 osób" — nominative, for counting a roster or a client list. */
+export function osobyNom(n: number): string {
+  return `${n} ${plural(n, "osoba", "osoby", "osób")}`;
+}
+
+/** "1 wejście", "3 wejścia", "7 wejść" — pass entries (K3, B2C wallet). */
+export function wejscia(n: number): string {
+  return `${n} ${plural(n, "wejście", "wejścia", "wejść")}`;
+}
+
+/** "1 wizyta", "3 wizyty", "7 wizyt" — visit history (K4). */
+export function wizyty(n: number): string {
+  return `${n} ${plural(n, "wizyta", "wizyty", "wizyt")}`;
+}
+
+/** "1 szablon", "3 szablony", "7 szablonów" — the template catalogue (U1). */
+export function szablony(n: number): string {
+  return `${n} ${plural(n, "szablon", "szablony", "szablonów")}`;
+}

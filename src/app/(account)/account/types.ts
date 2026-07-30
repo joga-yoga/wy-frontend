@@ -35,6 +35,13 @@ export interface MyPassWalletOut {
   entries_total: number | null;
   entries_left: number | null;
   valid_until: string | null;
+  // Same purchase facts the B2B side gets — one backend mapping serves both, so the
+  // partner's view of a pass and the client's own view cannot disagree.
+  purchased_at: string | null;
+  price: number | null;
+  currency: string | null;
+  duration_days: number | null;
+  is_paid: boolean;
   studio_id: string;
   studio_name: string;
 }
