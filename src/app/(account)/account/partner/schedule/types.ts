@@ -18,6 +18,10 @@ export interface ScheduleOccurrence {
   studio_name?: string | null;
   instructor_image_id?: string | null;
   color?: string | null;
+  /** "WEEKLY" when part of a series, null when the session is one-off. */
+  recurrence_frequency?: string | null;
+  /** Weekday codes in calendar order, e.g. ["MO", "FR"]. Sorted server-side. */
+  recurrence_days?: string[];
 }
 
 export interface ScheduleDaySummary {
@@ -53,6 +57,8 @@ export interface SessionDetailResponse {
   schedule_id: string;
   is_recurring: boolean;
   series_to_date?: string | null;
+  recurrence_frequency?: string | null;
+  recurrence_days?: string[];
 }
 
 export interface FieldDiffItem {
