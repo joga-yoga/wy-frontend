@@ -1,13 +1,16 @@
 "use client";
 
+import { CreditCard } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { cn } from "@/lib/utils";
 
 import type { StudioApiResponse } from "../edit/types";
 
@@ -20,6 +23,48 @@ import type { StudioApiResponse } from "../edit/types";
  * deliberately no separate pass-burn setting: this one config drives both the
  * free-cancel deadline and the pass-burn rule.
  */
+/**
+ * One payment method (V2): icon tile, name, state line, and a switch that reports rather
+ * than offers. All three are locked today — cash is mandatory, the other two unbuilt —
+ * so the switch is `disabled` and the row that is off is dimmed.
+ */
+function PaymentMethodRow({
+  title,
+  subtitle,
+  checked,
+}: {
+  title: string;
+  subtitle: string;
+  checked: boolean;
+}) {
+  return (
+    <div className={cn("flex items-center gap-3 px-4 py-3.5", !checked && "opacity-60")}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+        <CreditCard size={18} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500">{subtitle}</p>
+      </div>
+      {/* V2 draws the enabled method's switch in brand green. The primitive's default
+          `bg-primary` is near-black here, and `disabled:opacity-50` then greys it out
+          entirely — so a method that *is* active read as inert. Locked is not the same
+          as off, and the colour has to say which. */}
+      <Switch
+        checked={checked}
+        disabled
+        aria-label={title}
+        className={cn(
+          "disabled:cursor-default",
+          checked
+            ? "data-[state=checked]:bg-b2b-green-text disabled:opacity-100"
+            : "disabled:opacity-70",
+        )}
+      />
+    </div>
+  );
+}
+
 export default function StudioPaymentsPage() {
   const params = useParams<{ studioId: string }>();
   const router = useRouter();
@@ -105,46 +150,26 @@ export default function StudioPaymentsPage() {
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Metody płatności
         </h2>
-        <div className="space-y-4 rounded-xl border bg-white px-4 py-4">
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Gotówka na miejscu</label>
-            <SegmentedToggle
-              disabled
-              value={acceptsCash}
-              onChange={() => {}}
-              options={[
-                { label: "Nieaktywna", value: false },
-                { label: "Aktywna", value: true },
-              ]}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Płatność gotówką jest wymagana i nie można jej wyłączyć.
-            </p>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Online · karta lub BLIK</label>
-            <SegmentedToggle
-              disabled
-              value={acceptsStripe}
-              onChange={() => {}}
-              options={[
-                { label: "Wkrótce", value: false },
-                { label: "Aktywna", value: true },
-              ]}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Przelew bankowy</label>
-            <SegmentedToggle
-              disabled
-              value={acceptsBankTransfer}
-              onChange={() => {}}
-              options={[
-                { label: "Wkrótce", value: false },
-                { label: "Aktywna", value: true },
-              ]}
-            />
-          </div>
+        {/* V2 draws these as rows with a switch, not as segmented toggles. A segmented
+            control asks the user to pick between two states; every one of these is
+            locked, so the switch — which shows a state rather than offering a choice —
+            is the honest control. */}
+        <div className="divide-y overflow-hidden rounded-xl border bg-white">
+          <PaymentMethodRow
+            title="Gotówka na miejscu"
+            subtitle="Płatność w studiu przed zajęciami"
+            checked={acceptsCash}
+          />
+          <PaymentMethodRow
+            title="Online · karta lub BLIK"
+            subtitle="Wkrótce"
+            checked={acceptsStripe}
+          />
+          <PaymentMethodRow
+            title="Przelew bankowy"
+            subtitle="Wkrótce"
+            checked={acceptsBankTransfer}
+          />
         </div>
       </section>
 

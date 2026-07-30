@@ -140,7 +140,11 @@ export function PassCard({
           <>
             <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
-                className={cn("h-full rounded-full", isUsed ? "bg-gray-300" : "bg-brand-green-600")}
+                // NOT `bg-brand-green-600` — that token does not exist (only
+                // `brand-green` and `brand-green-700`), so the class resolved to
+                // transparent and the fill was invisible on every pass card. Inherited
+                // from PassWalletCard, where nothing ever caught it.
+                className={cn("h-full rounded-full", isUsed ? "bg-gray-300" : "bg-b2b-green-text")}
                 style={{ width: `${isUsed ? 100 : pct}%` }}
               />
             </div>
