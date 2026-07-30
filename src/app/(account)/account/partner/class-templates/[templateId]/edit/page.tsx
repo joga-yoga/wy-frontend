@@ -1,6 +1,7 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { CalendarPlus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -83,11 +84,25 @@ export default function EditTemplatePage() {
         onSubmit={handleSubmit}
         submitLabel="Zapisz zmiany"
         isSubmitting={isSubmitting}
+        onCancel={() => router.push("/konto/partner/szablony-zajec")}
       />
-      <div className="mt-6 pt-4 border-t">
+
+      {/* The user's "add Class to Schedule from Class details". A template exists to be
+          scheduled, and until now the only route into the wizard was Grafik's "+", which
+          then asked you to pick the template you were already looking at. */}
+      <div className="mt-6 border-t pt-4">
+        <Button variant="outline" className="w-full" asChild>
+          <Link href={`/konto/partner/grafiki-zajec/create?templateId=${params.templateId}`}>
+            <CalendarPlus size={15} className="mr-1.5" />
+            Dodaj do grafiku
+          </Link>
+        </Button>
+      </div>
+
+      <div className="mt-3">
         <Button
           variant="ghost"
-          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="w-full text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid"
           onClick={handleDelete}
           disabled={isDeleting}
         >

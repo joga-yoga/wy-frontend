@@ -33,6 +33,8 @@ interface TemplateEditorProps {
   onSubmit: (data: ClassTemplateCreate) => Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  /** Omitted where there is nowhere sensible to cancel to (the inline create in U3). */
+  onCancel?: () => void;
 }
 
 const DURATION_OPTIONS = [
@@ -62,6 +64,7 @@ export function TemplateEditor({
   onSubmit,
   submitLabel = "Zapisz szablon",
   isSubmitting = false,
+  onCancel,
 }: TemplateEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -188,45 +191,50 @@ export function TemplateEditor({
               rows={4}
             />
           </div>
-          <div>
-            <Label htmlFor="duration">Czas trwania</Label>
-            <Select value={durationMinutes} onValueChange={setDurationMinutes}>
-              <SelectTrigger id="duration">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DURATION_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="level">Poziom</Label>
-            <div className="flex gap-1.5">
-              <Select value={level || undefined} onValueChange={setLevel}>
-                <SelectTrigger id="level" className="flex-1">
-                  <SelectValue placeholder="Wybierz poziom" />
+          {/* U2 pairs these on one row — both are short, and a studio picks them
+              together when defining what the class *is*. */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="duration">Czas trwania</Label>
+              <Select value={durationMinutes} onValueChange={setDurationMinutes}>
+                <SelectTrigger id="duration">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {LEVEL_OPTIONS.map((o) => (
+                  {DURATION_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {level && (
-                <button
-                  type="button"
-                  onClick={() => setLevel("")}
-                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                >
-                  <X size={14} />
-                </button>
-              )}
+            </div>
+            <div>
+              <Label htmlFor="level">Poziom</Label>
+              <div className="flex gap-1.5">
+                <Select value={level || undefined} onValueChange={setLevel}>
+                  <SelectTrigger id="level" className="min-w-0 flex-1">
+                    <SelectValue placeholder="Wybierz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEVEL_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {level && (
+                  <button
+                    type="button"
+                    onClick={() => setLevel("")}
+                    aria-label="Wyczyść poziom"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div>
@@ -283,7 +291,7 @@ export function TemplateEditor({
             </Select>
           </div>
           <div>
-            <Label>Kolor</Label>
+            <Label>Kolor zajęć</Label>
             <div className="mt-1.5 flex flex-wrap gap-2">
               {CLASS_COLORS.map((c) => (
                 <button
@@ -374,9 +382,23 @@ export function TemplateEditor({
         </div>
       </section>
 
-      <Button className="w-full" onClick={handleSubmit} disabled={!title.trim() || isSubmitting}>
-        {isSubmitting ? "Zapisywanie..." : submitLabel}
-      </Button>
+      {/* U2 pairs Anuluj with Zapisz. A lone full-width save gives no way out of a form
+          you opened by mistake except the browser's back. */}
+      <div className="flex gap-3">
+        {onCancel && (
+          <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
+            Anuluj
+          </Button>
+        )}
+        <Button
+          variant="green"
+          className="flex-1"
+          onClick={handleSubmit}
+          disabled={!title.trim() || isSubmitting}
+        >
+          {isSubmitting ? "Zapisywanie..." : submitLabel}
+        </Button>
+      </div>
     </div>
   );
 }

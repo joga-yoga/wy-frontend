@@ -1,13 +1,15 @@
 "use client";
 
 import { ArrowLeft, Check, ChevronRight, Plus, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { COLOR_SWATCH_MAP } from "@/lib/classColors";
+import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
 import type { ClassTemplate, ClassTemplateCreate } from "../../class-templates/types";
@@ -35,8 +37,22 @@ function formatDatePL(dateStr: string): string {
 
 type Step = "select" | "recurrence" | "preview" | "success";
 
+// `level` is stored as an English enum ("advanced"). Rendering it raw leaked
+// "60 min · advanced" into a Polish UI.
+const LEVEL_LABELS: Record<string, string> = {
+  beginner: "początkujący",
+  intermediate: "średni",
+  advanced: "zaawansowany",
+  all_levels: "wszystkie poziomy",
+};
+
+function levelLabel(level: string): string {
+  return LEVEL_LABELS[level] ?? level;
+}
+
 export default function CreateScheduleWizard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>("select");
@@ -106,6 +122,26 @@ export default function CreateScheduleWizard() {
         setCapacity(String(selectedTemplate.default_capacity));
     }
   }, [selectedTemplate]);
+
+  // "Dodaj do grafiku" from a template's own screen arrives with ?templateId= and should
+  // skip step 1 — the user has already chosen, and asking again is the thing that link
+  // exists to avoid.
+  //
+  // This deliberately keys on `templates`, not on mount: the list loads asynchronously,
+  // so a mount-time read finds it empty and silently falls through to step 1. The ref
+  // makes it fire once, so pressing Back from step 2 returns to the picker instead of
+  // being bounced straight forward again.
+  const preselectAppliedRef = useRef(false);
+  useEffect(() => {
+    if (preselectAppliedRef.current) return;
+    const wanted = searchParams.get("templateId");
+    if (!wanted || templates.length === 0) return;
+    const match = templates.find((t) => t.id === wanted);
+    if (!match) return;
+    preselectAppliedRef.current = true;
+    setSelectedTemplate(match);
+    setStep("recurrence");
+  }, [templates, searchParams]);
 
   const filteredTemplates = useMemo(
     () => templates.filter((t) => t.title.toLowerCase().includes(search.toLowerCase())),
@@ -232,12 +268,12 @@ export default function CreateScheduleWizard() {
       {step === "select" && !showInlineCreate && (
         <div className="space-y-4">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Szukaj szablonu…"
-              className="pl-9"
+              className="h-11 rounded-full border-gray-200 bg-gray-50 pl-10"
             />
           </div>
 
@@ -253,37 +289,53 @@ export default function CreateScheduleWizard() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
-              {filteredTemplates.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setSelectedTemplate(t);
-                    setStep("recurrence");
-                  }}
-                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border text-left transition-colors ${
-                    selectedTemplate?.id === t.id
-                      ? "border-gray-900 bg-gray-50"
-                      : "bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {t.duration_minutes} min{t.level ? ` · ${t.level}` : ""}
-                      {t.default_capacity ? ` · limit ${t.default_capacity}` : ""}
-                    </p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-400 shrink-0" />
-                </button>
-              ))}
-              <button
+            <div className="space-y-4">
+              {/* Same single-container catalogue as U1, so the picker and the catalogue
+                  read as the same list rather than two views of it. */}
+              <div className="divide-y overflow-hidden rounded-xl border bg-white">
+                {filteredTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setSelectedTemplate(t);
+                      setStep("recurrence");
+                    }}
+                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                      selectedTemplate?.id === t.id ? "bg-gray-50" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <span
+                      className={cn(
+                        "h-2.5 w-2.5 shrink-0 rounded-full",
+                        t.color ? COLOR_SWATCH_MAP[t.color] : "bg-gray-200",
+                      )}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">{t.title}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        {t.duration_minutes} min{t.level ? ` · ${levelLabel(t.level)}` : ""}
+                        {t.default_capacity ? ` · limit ${t.default_capacity}` : ""}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className="shrink-0 text-gray-300" />
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-gray-100" />
+                <span className="text-xs text-gray-400">albo</span>
+                <div className="h-px flex-1 bg-gray-100" />
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => setShowInlineCreate(true)}
-                className="w-full text-center py-3 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
-                <Plus size={14} className="inline mr-1" />
+                <Plus size={15} className="mr-1.5" />
                 Nowy szablon zajęć
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -313,7 +365,9 @@ export default function CreateScheduleWizard() {
         <div className="space-y-5">
           <ScheduleRecurrenceForm
             templateTitle={selectedTemplate.title}
-            templateSubtitle={`${selectedTemplate.duration_minutes} min${selectedTemplate.level ? ` · ${selectedTemplate.level}` : ""}`}
+            templateSubtitle={`${selectedTemplate.duration_minutes} min${
+              selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""
+            }`}
             onChangeTemplate={() => setStep("select")}
             studios={studios}
             studioId={studioId}
