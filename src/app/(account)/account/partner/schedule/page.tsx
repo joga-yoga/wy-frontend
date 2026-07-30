@@ -1,28 +1,15 @@
 "use client";
 
-import {
-  AlertCircle,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  Clock,
-  Pencil,
-  Plus,
-  RefreshCw,
-  User,
-  Users,
-  X as XIcon,
-} from "lucide-react";
+import { AlertCircle, Calendar, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { sesje } from "@/lib/polishPlural";
@@ -31,6 +18,7 @@ import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { GrafikContextChips } from "./components/GrafikContextChips";
 import { GrafikSessionCard } from "./components/GrafikSessionCard";
+import { SessionPanel } from "./components/SessionPanel";
 import type { ScheduleDaySummary, ScheduleOccurrence, ScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -68,11 +56,6 @@ function formatWeekRangeLabel(weekStart: Date): string {
   return `${weekStart.getDate()} – ${dayMonth(end)}`;
 }
 
-function formatTime(iso: string): string {
-  const m = iso.match(/T(\d{2}):(\d{2})/);
-  return m ? `${m[1]}:${m[2]}` : iso;
-}
-
 /** "Poniedziałek, 13 lipca" — full month, capitalized weekday, as drawn in A1. */
 function formatDayHeader(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -89,6 +72,7 @@ export default function SchedulePage() {
   const router = useRouter();
   const { toast } = useToast();
   const { capabilities, isLoading: isLoadingCapabilities } = usePartnerCapabilities();
+  const { studio: currentStudio } = useCurrentStudio();
 
   // Grafik is absent entirely for events-only/fresh partners and, for teaching-only
   // partners, is the read-only variant — never this managed-owner view (spec-b2b §3).
@@ -359,95 +343,17 @@ export default function SchedulePage() {
         <Plus size={24} />
       </Link>
 
-      {/* Session panel drawer */}
-      <Drawer open={!!panelOcc} onOpenChange={(open) => !open && setPanelOcc(null)}>
-        <DrawerContent>
+      {/* Session panel (S1) */}
+      <Drawer open={!!panelOcc} onOpenChange={(open) => !open && setPanelOcc(null)} showSwipeHandle>
+        <DrawerContent className="sm:mx-auto sm:max-w-lg">
           {panelOcc && (
-            <div className="px-4 pb-6">
-              <DrawerHeader className="px-0">
-                <DrawerTitle>{panelOcc.template_title}</DrawerTitle>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {formatDayHeader(panelOcc.calendar_date)} · {formatTime(panelOcc.start_time)} –{" "}
-                  {formatTime(panelOcc.end_time)}
-                </p>
-                {panelOcc.status !== "cancelled" && (
-                  <Badge variant="secondary" className="mt-2 text-[10px]">
-                    Część serii
-                  </Badge>
-                )}
-              </DrawerHeader>
-
-              <div className="space-y-3 mt-2">
-                <div className="flex items-center gap-3 text-sm">
-                  <Clock size={14} className="text-gray-400" />
-                  <span>
-                    {formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}
-                  </span>
-                </div>
-                {panelOcc.room_name && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar size={14} className="text-gray-400" />
-                    <span>{panelOcc.room_name}</span>
-                  </div>
-                )}
-                {panelOcc.instructor_name && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <User size={14} className="text-gray-400" />
-                    <span>{panelOcc.instructor_name}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-sm">
-                  <Users size={14} className="text-gray-400" />
-                  <span>
-                    {panelOcc.fill_count}
-                    {panelOcc.capacity ? ` / ${panelOcc.capacity}` : ""} zapisanych
-                  </span>
-                </div>
-              </div>
-
-              {panelOcc.status !== "cancelled" && (
-                <div className="space-y-2 mt-6">
-                  <Button variant="outline" className="w-full justify-start" asChild>
-                    <Link href={`/konto/partner/grafik/edit/${panelOcc.id}`}>
-                      <Pencil size={14} className="mr-2" />
-                      Edytuj
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" asChild>
-                    <Link href={`/konto/partner/grafik/edit/${panelOcc.id}?field=instructor`}>
-                      <RefreshCw size={14} className="mr-2" />
-                      Zmień prowadzącego
-                    </Link>
-                  </Button>
-                  {panelOcc.studio_id && (
-                    <Button variant="outline" className="w-full justify-start" asChild>
-                      <Link
-                        href={`/konto/partner/studio/${panelOcc.studio_id}/front-desk/${panelOcc.id}`}
-                      >
-                        <ClipboardList size={14} className="mr-2" />
-                        Lista obecności
-                      </Link>
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-red-600 hover:text-red-700"
-                    asChild
-                  >
-                    <Link href={`/konto/partner/grafik/cancel/${panelOcc.id}`}>
-                      <XIcon size={14} className="mr-2" />
-                      Odwołaj
-                    </Link>
-                  </Button>
-                </div>
-              )}
-
-              {panelOcc.status === "cancelled" && panelOcc.notified_count > 0 && (
-                <p className="text-xs text-gray-500 mt-4">
-                  {panelOcc.notified_count} osób powiadomionych
-                </p>
-              )}
-            </div>
+            <SessionPanel
+              occ={panelOcc}
+              // Legacy schedules can have a null studio_id (the column post-dates them), which
+              // would silently hide "Lista obecności". Fall back to the studio this Grafik is
+              // already showing. Backfilling the column belongs to `classes-schedule`.
+              fallbackStudioId={currentStudio?.id ?? studioId ?? null}
+            />
           )}
         </DrawerContent>
       </Drawer>
