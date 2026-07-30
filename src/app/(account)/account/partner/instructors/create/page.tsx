@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { InfoNote } from "@/components/b2b/InfoNote";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
@@ -156,13 +157,10 @@ function StudioRosterAddFlow() {
     return (
       <div className="max-w-md mx-auto px-4 py-5 space-y-5">
         {notFoundEmail && (
-          <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-            <Mail size={18} className="mt-0.5 shrink-0 text-blue-500" />
-            <p className="text-sm text-blue-900">
-              Brak konta z adresem <span className="font-semibold">{notFoundEmail}</span>. Utworzymy
-              profil i wyślemy zaproszenie do jego przejęcia.
-            </p>
-          </div>
+          <InfoNote icon={<Mail size={15} />}>
+            Brak konta z adresem <span className="font-semibold">{notFoundEmail}</span>. Utworzymy
+            profil i wyślemy zaproszenie do jego przejęcia.
+          </InfoNote>
         )}
 
         <div className="flex justify-center">
@@ -172,6 +170,7 @@ function StudioRosterAddFlow() {
             onRemove={() => setStubImageId(null)}
             onFileSelect={handleImageSelect}
             previewClassName="h-24 w-24 rounded-full"
+            placeholderClassName="rounded-full md:w-24 md:h-24"
           />
         </div>
         <p className="-mt-3 text-center text-xs text-gray-400">Dodaj zdjęcie (opcjonalnie)</p>
@@ -291,7 +290,9 @@ function StudioRosterAddFlow() {
 
           <p className="text-center text-xs text-gray-400 leading-relaxed">
             {lookup.found === "instructor"
-              ? "Połączymy jej istniejący profil ze studiem. Możesz od razu przypisywać ją do zajęć."
+              ? // R3 writes "jej … ją" because it happens to draw a woman. The lookup
+                // payload has no gender, so the copy avoids needing one.
+                "Połączymy istniejący profil ze studiem. Możesz od razu przypisywać tę osobę do zajęć."
               : "Ten adres ma już konto na joga.yoga — zaprosimy je do stworzenia profilu instruktora."}
           </p>
         </div>

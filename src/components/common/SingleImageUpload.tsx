@@ -17,6 +17,8 @@ interface SingleImageUploadBaseProps {
   isRemoved?: boolean;
   onFileSelect?: (file: File) => void;
   previewClassName?: string;
+  /** Styles the empty drop target. R4 draws a circular avatar well, not a square one. */
+  placeholderClassName?: string;
 }
 
 interface ControlledSingleImageUploadProps extends SingleImageUploadBaseProps {
@@ -103,6 +105,7 @@ export const SingleImageUpload = ({
   isRemoved,
   onFileSelect,
   previewClassName,
+  placeholderClassName,
 }: SingleImageUploadProps) => {
   const existingImageUrl =
     !isRemoved && existingImageId
@@ -151,7 +154,10 @@ export const SingleImageUpload = ({
       ) : (
         <label
           htmlFor={inputId}
-          className="w-24 h-24 md:w-32 md:h-32 rounded border-2 border-dashed border-muted-foreground/50 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary cursor-pointer transition-colors"
+          className={cn(
+            "w-24 h-24 md:w-32 md:h-32 rounded border-2 border-dashed border-muted-foreground/50 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary cursor-pointer transition-colors",
+            placeholderClassName,
+          )}
         >
           {isUploading ? (
             <Loader2 className="h-8 w-8 animate-spin" />
