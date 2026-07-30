@@ -4,6 +4,7 @@ import { Lock } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { InfoNote } from "@/components/b2b/InfoNote";
 import { WyImage } from "@/components/custom/WyImage";
 import { InstructorProfileForm } from "@/components/instructors/InstructorProfileForm";
 import {
@@ -165,7 +166,7 @@ export default function RosterInstructorDetailPage() {
         {canDetach && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="text-sm font-medium text-red-600 hover:text-red-700">
+              <button className="text-sm font-medium text-b2b-red-solid hover:underline">
                 Odłącz od studia
               </button>
             </AlertDialogTrigger>
@@ -182,7 +183,7 @@ export default function RosterInstructorDetailPage() {
                 <AlertDialogAction
                   onClick={handleDetach}
                   disabled={isDetaching}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
                 >
                   Odłącz
                 </AlertDialogAction>
@@ -206,13 +207,13 @@ export default function RosterInstructorDetailPage() {
 
   const banner =
     rosterItem.row_state === "awaiting" || rosterItem.row_state === "no_account" ? (
-      <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <InfoNote tone="amber">
         Profil w Twoim zarządzaniu, dopóki {instructor.name.split(" ")[0]} go nie przejmie
         {rosterItem.row_state === "awaiting" ? " z zaproszenia" : ""}.
         {rosterItem.invited_at && (
           <> Zaproszenie wysłano {formatInviteDate(rosterItem.invited_at)}.</>
         )}
-      </div>
+      </InfoNote>
     ) : null;
 
   return (
@@ -232,7 +233,7 @@ export default function RosterInstructorDetailPage() {
         <div className="px-4 text-center">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="text-sm font-medium text-red-600 hover:text-red-700">
+              <button className="text-sm font-medium text-b2b-red-solid hover:underline">
                 Odłącz od studia
               </button>
             </AlertDialogTrigger>
@@ -249,7 +250,7 @@ export default function RosterInstructorDetailPage() {
                 <AlertDialogAction
                   onClick={handleDetach}
                   disabled={isDetaching}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
                 >
                   Odłącz
                 </AlertDialogAction>
