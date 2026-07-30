@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
@@ -8,6 +8,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { personLabel } from "@/lib/personDisplay";
 
 import { ResolveSheet } from "../studio/[studioId]/front-desk/components/ResolveSheet";
+import { fundingDetailLine } from "../studio/[studioId]/front-desk/fundingDetail";
 import type { RosterEntry } from "../studio/[studioId]/front-desk/types";
 
 interface ReconciliationSession {
@@ -23,13 +24,6 @@ interface SessionGroup {
   session: ReconciliationSession;
   rows: RosterEntry[];
 }
-
-const FUNDING_LABELS: Record<string, string> = {
-  drop_in: "gotówka na miejscu",
-  sport_card: "karta sportowa",
-  buy_and_use: "kup i użyj karnetu",
-  use_pass: "karnet",
-};
 
 function formatSessionHeader(session: ReconciliationSession, showStudioLabels: boolean): string {
   const day = new Date(session.start_time).toLocaleDateString("pl-PL", {
@@ -114,22 +108,28 @@ export default function ReconciliationPage() {
                 <button
                   key={entry.booking_id}
                   onClick={() => setResolveEntry(entry)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                  className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">
+                    <p className="truncate text-sm font-semibold text-gray-900">
                       {personLabel(entry.user_name, entry.user_email).primary}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {FUNDING_LABELS[entry.funding_type] ?? entry.funding_type}
-                    </p>
+                    {/* Chip then the funding detail, same shape as the roster row — this is the
+                     * same person and the same debt, seen from the other entry point. */}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <StatusChip tone="amber">
+                        {entry.funding_type === "sport_card" && entry.needs_card_check
+                          ? "Sprawdź kartę"
+                          : `Do zapłaty${entry.amount_owed != null ? ` · ${entry.amount_owed} zł` : ""}`}
+                      </StatusChip>
+                      {fundingDetailLine(entry) && (
+                        <span className="text-xs text-gray-500">{fundingDetailLine(entry)}</span>
+                      )}
+                    </div>
                   </div>
-                  <StatusChip tone="amber" className="shrink-0">
-                    {entry.funding_type === "sport_card" && entry.needs_card_check
-                      ? "Sprawdź kartę"
-                      : `Do zapłaty${entry.amount_owed != null ? ` · ${entry.amount_owed} zł` : ""}`}
-                  </StatusChip>
-                  <ChevronRight size={16} className="shrink-0 text-gray-400" />
+                  {/* Chevron, never a button: every outcome lives in the one sheet, so this list
+                   * stays a list. Future outcomes become sheet rows, not new buttons here. */}
+                  <ChevronRight size={16} className="shrink-0 self-center text-gray-300" />
                 </button>
               ))}
             </div>
@@ -137,10 +137,13 @@ export default function ReconciliationPage() {
         ))
       )}
 
-      <p className="px-1 text-xs text-gray-400 leading-relaxed">
-        Przypomnienie, nie automat: system sam niczego nie oznacza. Rozstrzygnięcie zawsze wymaga
-        Twojego działania.
-      </p>
+      <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-4 py-3">
+        <Info size={15} className="mt-0.5 shrink-0 text-gray-400" />
+        <p className="text-[13px] leading-snug text-gray-600">
+          Przypomnienie, nie automat: system sam niczego nie oznacza. Rozstrzygnięcie zawsze wymaga
+          Twojego działania.
+        </p>
+      </div>
 
       <ResolveSheet
         entry={resolveEntry}

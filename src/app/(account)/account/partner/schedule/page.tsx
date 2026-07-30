@@ -97,10 +97,10 @@ export default function SchedulePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [panelOcc, setPanelOcc] = useState<ScheduleOccurrence | null>(null);
   const [reconciliation, setReconciliation] = useState<{
-    total: number;
+    sessionCount: number;
     showStudioLabels: boolean;
     studioName: string | null;
-  }>({ total: 0, showStudioLabels: false, studioName: null });
+  }>({ sessionCount: 0, showStudioLabels: false, studioName: null });
 
   useEffect(() => {
     axiosInstance
@@ -126,14 +126,20 @@ export default function SchedulePage() {
           ...new Set(data.sessions.map((s) => s.studio_name).filter(Boolean)),
         ];
         setReconciliation({
-          total: data.total,
+          // The strip counts *sessions* ("2 sesje do rozliczenia", A1), and the list it links to
+          // is grouped by session. The endpoint's `total` is the number of unresolved *bookings*
+          // (sum of per-session counts), so using it here read as "7 sesji" when 7 people owed
+          // money across 6 sessions.
+          sessionCount: data.sessions.length,
           showStudioLabels: data.show_studio_labels,
           // Only unambiguous when every flagged session belongs to the same studio —
           // a mixed set gets its per-session labels in the reconciliation list instead.
           studioName: distinctStudioNames.length === 1 ? (distinctStudioNames[0] as string) : null,
         });
       })
-      .catch(() => setReconciliation({ total: 0, showStudioLabels: false, studioName: null }));
+      .catch(() =>
+        setReconciliation({ sessionCount: 0, showStudioLabels: false, studioName: null }),
+      );
   }, []);
 
   const fetchWeek = useCallback(() => {
@@ -205,14 +211,14 @@ export default function SchedulePage() {
     <div className="p-4 mx-auto max-w-lg min-h-screen">
       <GrafikContextChips />
 
-      {reconciliation.total > 0 && (
+      {reconciliation.sessionCount > 0 && (
         <Link
           href="/konto/partner/rozliczenia"
           className="mb-4 flex items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
         >
           <span className="flex items-center gap-2">
             <AlertCircle size={16} />
-            {sesje(reconciliation.total)} do rozliczenia
+            {sesje(reconciliation.sessionCount)} do rozliczenia
             {reconciliation.showStudioLabels && reconciliation.studioName && (
               <> · {reconciliation.studioName}</>
             )}
