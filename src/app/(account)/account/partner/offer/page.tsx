@@ -52,57 +52,16 @@ import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 import { formatDateRange } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
-import {
-  BaseEvent,
-  DashboardItem,
-  FilterType,
-  getOfferFilterPills,
-  getOfferSingleTypeViewConfig,
-  isOfferFilterEnabled,
-} from "./offerConfig";
+import { BaseEvent, DashboardItem } from "./offerConfig";
+import { OfferEventRow } from "./OfferEventRow";
+
+/** Rows shown per type before "Pokaż wszystkie" expands the rest in place. */
+const VISIBLE_PER_SECTION = 2;
+
+/** The delete/hide/duplicate handlers every row shares, passed down as one object. */
+type OfferRowActions = Omit<React.ComponentProps<typeof OfferEventRow>, "event" | "organizerLabel">;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-interface StudioItem {
-  id: string;
-  name: string;
-  slug?: string | null;
-  image_id?: string | null;
-  status: string;
-}
-
-interface YogaStyle {
-  id: string;
-  description: string;
-  yoga_style: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-}
-
-interface InstructorItem {
-  id: string;
-  name: string;
-  image_id: string | null;
-  short_bio: string | null;
-  slug: string | null;
-  yoga_styles: YogaStyle[];
-  is_owned?: boolean;
-  added_at?: string;
-}
-
-interface InvitationItem {
-  id: string;
-  kind: "instructor_claim" | "studio_claim";
-  instructor_id?: string | null;
-  instructor_name?: string | null;
-  studio_id?: string | null;
-  studio_name?: string | null;
-  event_title?: string | null;
-  expires_at: string;
-  created_at: string;
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -116,30 +75,6 @@ const getEventStatus = (event: BaseEvent) => {
   if (end && end < today) return { text: "Minęło", className: "bg-yellow-100 text-yellow-800" };
   return { text: "Publiczne", className: "bg-green-100 text-green-800" };
 };
-
-function sortActiveFirst(items: DashboardItem[]): DashboardItem[] {
-  return [...items].sort((a, b) => {
-    const aPast = getEventStatus(a).text === "Minęło";
-    const bPast = getEventStatus(b).text === "Minęło";
-    return aPast === bPast ? 0 : aPast ? 1 : -1;
-  });
-}
-
-function instructorCompletion(i: InstructorItem): number {
-  return Math.round(([i.name, i.short_bio, i.image_id, i.slug].filter(Boolean).length / 4) * 100);
-}
-
-function invitationExpiryLabel(expiresAt: string): string {
-  try {
-    return new Intl.DateTimeFormat("pl-PL", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }).format(new Date(expiresAt));
-  } catch {
-    return "";
-  }
-}
 
 function editLink(item: DashboardItem) {
   if (item.kind === "workshop") return `/konto/partner/wydarzenia/${item.id}/edit`;
@@ -157,152 +92,15 @@ function publicLink(item: DashboardItem): string | null {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function EventCard({
-  event,
-  onDelete,
-  onHide,
-  onDuplicate,
-  itemToDelete,
-  isDeleting,
-  onDeleteConfirm,
-  onDeleteCancel,
-  organizerLabel,
-}: {
-  event: DashboardItem;
-  onDelete: (e: DashboardItem) => void;
-  onHide: (e: DashboardItem) => void;
-  onDuplicate: (e: DashboardItem) => void;
-  itemToDelete: DashboardItem | null;
-  isDeleting: boolean;
-  onDeleteConfirm: () => void;
-  onDeleteCancel: () => void;
-  /** "jako: X" / "jako: X · Y" — only passed when the partner has 2+ entities (spec-b2b §4). */
-  organizerLabel?: string;
-}) {
-  const status = getEventStatus(event);
-  const isPast = status.text === "Minęło";
-  const imageId = event.image_ids?.[0] || event.image_id;
-
-  return (
-    <Link
-      href={editLink(event)}
-      className={cn(
-        "border rounded-xl shadow-sm bg-white flex overflow-hidden hover:shadow-md transition-shadow",
-        isPast && "opacity-60",
-      )}
-    >
-      <div className="relative w-[140px] shrink-0 self-stretch">
-        {imageId ? (
-          <WyImage src={imageId} alt={event.title} fill className="object-cover" />
-        ) : (
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-            <ImageIcon className="w-6 h-6 text-gray-300" />
-          </div>
-        )}
-      </div>
-      <div className="p-3 flex flex-col justify-between w-full min-w-0">
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className={cn("px-2 py-0.5 text-xs font-semibold rounded-md", status.className)}>
-              {status.text}
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 bg-gray-100 hover:bg-gray-200"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href={editLink(event)}>Edytuj</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDuplicate(event)} className="cursor-pointer">
-                  Duplikuj
-                </DropdownMenuItem>
-                {publicLink(event) && (
-                  <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link href={publicLink(event)!} target="_blank" rel="noopener noreferrer">
-                      Zobacz stronę publiczną
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {event.is_public && (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onHide(event);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    Ukryj
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => onDelete(event)}
-                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                >
-                  Usuń
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">{event.title}</h3>
-          {organizerLabel && (
-            <p className="text-[11px] text-gray-400 mt-0.5 truncate">jako: {organizerLabel}</p>
-          )}
-          {event.start_date && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <Calendar className="w-3.5 h-3.5 text-gray-500" />
-              <span className="text-xs text-gray-500">
-                {formatDateRange(event.start_date, event.end_date)}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end mt-2">
-          <img
-            src={
-              event.kind === "retreat"
-                ? "/images/logo/logo-retreats.png"
-                : event.kind === "course"
-                  ? "/images/logo/logo-courses.png"
-                  : "/images/logo/logo-workshops.png"
-            }
-            className="w-4 h-4"
-            alt=""
-          />
-        </div>
-      </div>
-
-      {itemToDelete?.id === event.id && (
-        <AlertDialog open onOpenChange={(open) => !open && onDeleteCancel()}>
-          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie &quot;
-                <strong>{event.title}</strong>&quot;.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={isDeleting}
-                onClick={onDeleteConfirm}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isDeleting ? "Usuwanie..." : "Tak, usuń"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-    </Link>
-  );
+/** Upcoming/active first, past last — within each type's section. */
+function sortActiveFirst(items: DashboardItem[]): DashboardItem[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPast = (i: DashboardItem) => {
+    const end = i.end_date ? new Date(i.end_date) : null;
+    return end != null && end < today;
+  };
+  return [...items].sort((a, b) => Number(isPast(a)) - Number(isPast(b)));
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -313,13 +111,6 @@ export default function OfferPage() {
   const [classes, setClasses] = useState<DashboardItem[]>([]);
   const [courses, setCourses] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
-  const [studios, setStudios] = useState<StudioItem[]>([]);
-  const [loadingStudios, setLoadingStudios] = useState(true);
-  const [instructors, setInstructors] = useState<InstructorItem[]>([]);
-  const [invitations, setInvitations] = useState<InvitationItem[]>([]);
-  const [loadingInstructors, setLoadingInstructors] = useState(true);
-  const [acceptingInvitationId, setAcceptingInvitationId] = useState<string | null>(null);
-  const [decliningInvitationId, setDecliningInvitationId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [organizerLabels, setOrganizerLabels] = useState<Record<string, string[]>>({});
@@ -330,22 +121,6 @@ export default function OfferPage() {
   const searchParams = useSearchParams();
   const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
   const { isCreateMenuOpen, setIsCreateMenuOpen } = useOfferCreateMenu();
-
-  const requestedFilter = searchParams.get("filter") ?? "all";
-  const activeFilter: FilterType = isOfferFilterEnabled(requestedFilter, areClassesEnabled)
-    ? requestedFilter
-    : "all";
-
-  const setFilter = (f: FilterType) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (f === "all") {
-      params.delete("filter");
-    } else {
-      params.set("filter", f);
-    }
-    router.replace(`/konto/partner/oferta?${params.toString()}`, { scroll: false });
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
 
   const hasAnyEvents =
     retreats.length > 0 || workshops.length > 0 || courses.length > 0 || classes.length > 0;
@@ -399,110 +174,7 @@ export default function OfferPage() {
     [showOrganizerLabels, organizerLabels],
   );
 
-  // Fetch studios
-  useEffect(() => {
-    axiosInstance
-      .get<StudioItem[]>("/studios")
-      .then(({ data }) => setStudios(data))
-      .catch(() => setStudios([]))
-      .finally(() => setLoadingStudios(false));
-  }, []);
-
-  const fetchInstructorSectionData = useCallback(async () => {
-    try {
-      const [{ data: owned }, rosterResult, invitationResult] = await Promise.all([
-        axiosInstance.get<InstructorItem[]>("/instructors"),
-        axiosInstance.get<InstructorItem[]>("/instructor-roster").catch(() => ({ data: [] })),
-        axiosInstance.get<InvitationItem[]>("/users/me/invitations").catch(() => ({ data: [] })),
-      ]);
-      const merged = new Map<string, InstructorItem>();
-      for (const instructor of rosterResult.data) {
-        merged.set(instructor.id, {
-          ...instructor,
-          yoga_styles: instructor.yoga_styles ?? [],
-          is_owned: instructor.is_owned === true,
-        });
-      }
-      for (const instructor of owned) {
-        merged.set(instructor.id, {
-          ...instructor,
-          yoga_styles: instructor.yoga_styles ?? [],
-          is_owned: true,
-        });
-      }
-      setInstructors([...merged.values()]);
-      setInvitations(invitationResult.data);
-    } catch {
-      setInstructors([]);
-      setInvitations([]);
-    } finally {
-      setLoadingInstructors(false);
-    }
-  }, []);
-
   // Fetch instructors and claim invitations
-  useEffect(() => {
-    fetchInstructorSectionData();
-  }, [fetchInstructorSectionData]);
-
-  const handleRemoveRosterInstructor = async (instructor: InstructorItem) => {
-    try {
-      const { data } = await axiosInstance.delete<{
-        remains_on_partner_events: boolean;
-        remaining_partner_event_count: number;
-      }>(`/instructor-roster/${instructor.id}`);
-      setInstructors((prev) => prev.filter((item) => item.id !== instructor.id));
-      toast({
-        description: data.remains_on_partner_events
-          ? `Usunięto z listy. Instruktor pozostaje na ${data.remaining_partner_event_count} wydarzeniach.`
-          : "Usunięto instruktora z zapisanej listy.",
-      });
-    } catch {
-      toast({
-        description: "Nie udało się usunąć instruktora z zapisanej listy.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAcceptInvitation = async (invitation: InvitationItem) => {
-    setAcceptingInvitationId(invitation.id);
-    try {
-      await axiosInstance.post(`/users/me/invitations/${invitation.id}/accept`);
-      setInvitations((prev) => prev.filter((item) => item.id !== invitation.id));
-      await fetchInstructorSectionData();
-      toast({
-        description:
-          invitation.kind === "studio_claim"
-            ? "Studio połączone z Twoim kontem."
-            : "Profil instruktora połączony z Twoim kontem.",
-      });
-    } catch {
-      toast({
-        description: "Nie udało się zaakceptować zaproszenia.",
-        variant: "destructive",
-      });
-    } finally {
-      setAcceptingInvitationId(null);
-    }
-  };
-
-  const handleDeclineInvitation = async (invitationId: string) => {
-    setDecliningInvitationId(invitationId);
-    try {
-      await axiosInstance.post(`/users/me/invitations/${invitationId}/decline`);
-      setInvitations((prev) => prev.filter((item) => item.id !== invitationId));
-      toast({ description: "Zaproszenie odrzucone." });
-    } catch {
-      toast({
-        description: "Nie udało się odrzucić zaproszenia.",
-        variant: "destructive",
-      });
-    } finally {
-      setDecliningInvitationId(null);
-    }
-  };
-
   const handleDelete = async () => {
     if (!itemToDelete) return;
     setIsDeleting(true);
@@ -645,56 +317,10 @@ export default function OfferPage() {
 
   const isLoading = loadingItems;
 
-  // ── Filtered single-type views ────────────────────────────────────────────
-
-  if (!isLoading && activeFilter !== "all") {
-    const viewConfig = getOfferSingleTypeViewConfig(
-      activeFilter,
-      { retreats, workshops, classes, courses },
-      areClassesEnabled,
-    );
-
-    if (!viewConfig) {
-      return null;
-    }
-
-    const { items, createPath, emptyLabel, countLabel } = viewConfig;
-
-    return (
-      <>
-        <FilterBar active={activeFilter} includeClasses={areClassesEnabled} onSelect={setFilter} />
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-              <p className="text-sm text-gray-500">Nie masz jeszcze żadnych {emptyLabel}</p>
-              <Link href={createPath} className="text-sm text-gray-400 hover:text-gray-600">
-                Dodaj →
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  {...cardProps}
-                  organizerLabel={getOrganizerLabel(event.id)}
-                />
-              ))}
-              <p className="text-xs text-gray-400 text-center pt-2">{countLabel}</p>
-            </div>
-          )}
-        </div>
-      </>
-    );
-  }
-
   // ── "Wszystkie" view ──────────────────────────────────────────────────────
 
   return (
     <>
-      <FilterBar active={activeFilter} includeClasses={areClassesEnabled} onSelect={setFilter} />
-
       {/* "Co chcesz dodać?" drawer */}
       <Drawer open={isCreateMenuOpen} onOpenChange={setIsCreateMenuOpen} showSwipeHandle>
         <DrawerContent className="sm:mx-auto sm:max-w-2xl">
@@ -766,8 +392,6 @@ export default function OfferPage() {
                 title="Wyjazdy"
                 emptyText="Brak wyjazdów"
                 items={retreats.slice(0, 2)}
-                totalCount={retreats.length}
-                onShowAll={() => setFilter("wyjazdy")}
                 createPath="/konto/partner/wyjazdy/create"
                 createLabel="Dodaj wyjazd"
                 cardProps={cardProps}
@@ -779,8 +403,6 @@ export default function OfferPage() {
                 title="Wydarzenia"
                 emptyText="Brak wydarzeń"
                 items={workshops.slice(0, 2)}
-                totalCount={workshops.length}
-                onShowAll={() => setFilter("wydarzenia")}
                 createPath="/konto/partner/wydarzenia/create"
                 createLabel="Dodaj wydarzenie"
                 cardProps={cardProps}
@@ -792,8 +414,6 @@ export default function OfferPage() {
                 title="Kursy"
                 emptyText="Brak kursów"
                 items={courses.slice(0, 2)}
-                totalCount={courses.length}
-                onShowAll={() => setFilter("kursy")}
                 createPath="/konto/partner/kursy/create"
                 createLabel="Dodaj kurs"
                 cardProps={cardProps}
@@ -806,8 +426,6 @@ export default function OfferPage() {
                   title="Zajęcia"
                   emptyText="Brak zajęć"
                   items={classes.slice(0, 2)}
-                  totalCount={classes.length}
-                  onShowAll={() => setFilter("zajecia")}
                   createPath="/konto/partner/zajecia/create"
                   createLabel="Dodaj zajęcia"
                   cardProps={cardProps}
@@ -818,278 +436,6 @@ export default function OfferPage() {
           ) : (
             <OfferEmptyState />
           )}
-
-          {/* Studio */}
-          <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Studio</h2>
-            {loadingStudios ? (
-              <div className="flex justify-center py-6">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            ) : studios.length > 0 ? (
-              <div className="space-y-3">
-                <Link
-                  href={`/konto/partner/studio/${studios[0].id}/edit`}
-                  className="rounded-xl border bg-white overflow-hidden hover:shadow-md transition-shadow block"
-                >
-                  <div className="flex items-center gap-3 px-4 py-4">
-                    {studios[0].image_id ? (
-                      <WyImage
-                        src={studios[0].image_id}
-                        alt={studios[0].name}
-                        width={48}
-                        height={48}
-                        className="rounded-lg object-contain shrink-0 h-12 w-12"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 shrink-0 rounded-lg bg-emerald-100 flex items-center justify-center">
-                        <span className="text-sm font-semibold text-emerald-600">
-                          {studios[0].name.slice(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {studios[0].name}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">Sale, dane, profil publiczny</p>
-                    </div>
-                    <Pencil size={16} className="text-gray-400 shrink-0" />
-                  </div>
-                </Link>
-                <Link
-                  href="/konto/partner/szablony-zajec"
-                  className="rounded-xl border bg-white overflow-hidden hover:bg-gray-50 transition-colors block"
-                >
-                  <div className="flex items-center gap-3 px-4 py-4">
-                    <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">Szablony zajęć</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Zarządzaj grafikiem zajęć</p>
-                    </div>
-                    <Pencil size={16} className="text-gray-400 shrink-0" />
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed bg-gray-50 py-5 px-4 text-center">
-                <p className="text-sm text-gray-500 mb-2">Masz studio z grafikiem zajęć?</p>
-                <Link
-                  href="/konto/partner/studio/create"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-brand-blue hover:underline"
-                >
-                  <Plus size={14} />
-                  Utwórz studio
-                </Link>
-              </div>
-            )}
-          </section>
-
-          {/* Instruktorzy */}
-          <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-              Instruktorzy
-            </h2>
-            {loadingInstructors ? (
-              <div className="flex justify-center py-6">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {instructors.length === 0 && invitations.length === 0 ? (
-                  <div className="rounded-xl border bg-white px-4 py-4 text-sm text-gray-400">
-                    Nie masz jeszcze żadnych instruktorów
-                  </div>
-                ) : (
-                  <>
-                    {invitations.map((invitation) => {
-                      const isStudioInvitation = invitation.kind === "studio_claim";
-                      const displayName =
-                        (isStudioInvitation
-                          ? invitation.studio_name
-                          : invitation.instructor_name) ?? "Zaproszenie";
-                      const initials = displayName
-                        .split(" ")
-                        .slice(0, 2)
-                        .map((word) => word[0])
-                        .join("")
-                        .toUpperCase();
-                      const isBusy =
-                        acceptingInvitationId === invitation.id ||
-                        decliningInvitationId === invitation.id;
-                      const expiresLabel = invitationExpiryLabel(invitation.expires_at);
-
-                      return (
-                        <div
-                          key={invitation.id}
-                          className="rounded-xl border bg-white overflow-hidden"
-                        >
-                          <div className="flex items-center gap-3 px-4 py-4">
-                            <div className="h-12 w-12 shrink-0 rounded-full bg-green-100 flex items-center justify-center">
-                              {isStudioInvitation ? (
-                                <Building2 className="h-5 w-5 text-green-700" />
-                              ) : (
-                                <span className="text-sm font-semibold text-green-700">
-                                  {initials}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
-                                  {displayName}
-                                </p>
-                                <span className="shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
-                                  {isStudioInvitation ? "Studio" : "Zaproszenie"}
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-0.5 truncate">
-                                {isStudioInvitation
-                                  ? "Studio oczekuje na przejęcie przez Twoje konto"
-                                  : invitation.event_title
-                                    ? `Wydarzenie: ${invitation.event_title}`
-                                    : "Profil instruktora oczekuje na decyzję"}
-                              </p>
-                              {expiresLabel && (
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                  Wygasa: {expiresLabel}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex border-t divide-x">
-                            <button
-                              type="button"
-                              onClick={() => handleAcceptInvitation(invitation)}
-                              disabled={isBusy}
-                              className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            >
-                              {acceptingInvitationId === invitation.id
-                                ? "Akceptuję..."
-                                : "Zaakceptuj"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeclineInvitation(invitation.id)}
-                              disabled={isBusy}
-                              className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            >
-                              {decliningInvitationId === invitation.id ? "Odrzucam..." : "Odrzuć"}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {instructors.map((instructor) => {
-                      const pct = instructorCompletion(instructor);
-                      const styleNames = instructor.yoga_styles
-                        .map((s) => s.yoga_style?.name)
-                        .join(" · ");
-                      const initials = instructor.name
-                        .split(" ")
-                        .slice(0, 2)
-                        .map((w) => w[0])
-                        .join("")
-                        .toUpperCase();
-                      return (
-                        <div
-                          key={instructor.id}
-                          className="rounded-xl border bg-white overflow-hidden"
-                        >
-                          {/* Info row */}
-                          <div className="flex items-center gap-3 px-4 py-4">
-                            {instructor.image_id ? (
-                              <WyImage
-                                src={instructor.image_id}
-                                alt={instructor.name}
-                                width={48}
-                                height={48}
-                                className="rounded-full object-cover shrink-0 h-12 w-12"
-                              />
-                            ) : (
-                              <div className="h-12 w-12 shrink-0 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span className="text-sm font-semibold text-blue-600">
-                                  {initials}
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
-                                  {instructor.name}
-                                </p>
-                                {instructor.is_owned === false && (
-                                  <span className="shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                                    Z listy
-                                  </span>
-                                )}
-                              </div>
-                              {(styleNames || instructor.short_bio) && (
-                                <p className="text-xs text-gray-500 mt-0.5 truncate">
-                                  {styleNames || instructor.short_bio}
-                                </p>
-                              )}
-                            </div>
-                            {instructor.is_owned !== false && pct < 100 && (
-                              <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                                Profil {pct}%
-                              </span>
-                            )}
-                          </div>
-                          {/* Action buttons */}
-                          <div className="flex border-t divide-x">
-                            {instructor.is_owned === false ? (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveRosterInstructor(instructor)}
-                                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                Usuń z listy
-                              </button>
-                            ) : (
-                              <Link
-                                href={`/konto/partner/instruktorzy/${instructor.id}/edit`}
-                                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <Pencil size={14} className="text-gray-500" />
-                                Edytuj profil
-                              </Link>
-                            )}
-                            {instructor.slug ? (
-                              <a
-                                href={`/instruktor/${instructor.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <ExternalLink size={14} className="text-gray-500" />
-                                Strona publiczna
-                              </a>
-                            ) : (
-                              <span className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm text-gray-300 cursor-not-allowed">
-                                <ExternalLink size={14} />
-                                Strona publiczna
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-                <Link
-                  href="/konto/partner/instruktorzy/create"
-                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-dashed px-4 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <Plus size={16} className="text-gray-400" />
-                  <span className="text-sm text-gray-500">Dodaj instruktora</span>
-                </Link>
-              </div>
-            )}
-          </section>
         </div>
       )}
     </>
@@ -1177,48 +523,12 @@ function OfferEmptyState() {
   );
 }
 
-// ─── FilterBar ────────────────────────────────────────────────────────────────
-
-function FilterBar({
-  active,
-  includeClasses,
-  onSelect,
-}: {
-  active: FilterType;
-  includeClasses: boolean;
-  onSelect: (f: FilterType) => void;
-}) {
-  return (
-    <div className="sticky top-16 md:top-20 z-20 bg-background border-b">
-      <div className="flex gap-2 px-4 py-2.5 overflow-x-auto scrollbar-none">
-        {getOfferFilterPills(includeClasses).map(({ key, label, logo }) => (
-          <button
-            key={key}
-            onClick={() => onSelect(key)}
-            className={cn(
-              "shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm transition-colors",
-              active === key
-                ? "bg-black text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-            )}
-          >
-            {logo && <img src={logo} className="w-4 h-4" alt="" />}
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── EventSection (Wszystkie view) ────────────────────────────────────────────
 
 function EventSection({
   title,
   emptyText,
   items,
-  totalCount,
-  onShowAll,
   createPath,
   createLabel,
   cardProps,
@@ -1227,44 +537,51 @@ function EventSection({
   title: string;
   emptyText: string;
   items: DashboardItem[];
-  totalCount: number;
-  onShowAll: () => void;
   createPath: string;
   createLabel: string;
-  cardProps: object;
+  cardProps: OfferRowActions;
   getOrganizerLabel?: (id: string) => string | undefined;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const visible = isExpanded ? items : items.slice(0, VISIBLE_PER_SECTION);
+  const hiddenCount = items.length - visible.length;
+
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{title}</h2>
-      {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed bg-gray-50 py-5 px-4 text-center">
-          <p className="text-sm text-gray-400">{emptyText}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {items.map((event) => (
-            <EventCard
+      <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</h2>
+
+      {/* One bordered card per type, with the add row as its last row (A3). */}
+      <div className="divide-y overflow-hidden rounded-xl border bg-white">
+        {items.length === 0 ? (
+          <p className="px-4 py-5 text-center text-sm text-gray-400">{emptyText}</p>
+        ) : (
+          visible.map((event) => (
+            <OfferEventRow
               key={event.id}
               event={event}
-              {...(cardProps as any)}
+              {...cardProps}
               organizerLabel={getOrganizerLabel?.(event.id)}
             />
-          ))}
-        </div>
-      )}
-      <div className="flex items-center justify-between pt-0.5">
-        <button
-          onClick={onShowAll}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          Zobacz wszystkie ({totalCount}) →
-        </button>
+          ))
+        )}
+
+        {/* Expands in place rather than navigating: with the filter bar gone there is no pill to
+         * come back to, so a single-type route would be a dead end. */}
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="w-full px-4 py-3 text-center text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50"
+          >
+            Pokaż wszystkie ({items.length})
+          </button>
+        )}
+
         <Link
           href={createPath}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-b2b-green-text transition-colors hover:bg-gray-50"
         >
-          <Plus size={14} />
+          <Plus size={16} />
           {createLabel}
         </Link>
       </div>
