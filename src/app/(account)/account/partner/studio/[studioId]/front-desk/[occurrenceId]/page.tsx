@@ -16,6 +16,7 @@ import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
+import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
@@ -41,6 +42,21 @@ const FUNDING_LABELS: Record<FundingType, string> = {
   sport_card: "Karta sportowa",
   buy_and_use: "Kup karnet",
 };
+
+/** "dziś" / "wczoraj" / "12 lipca" — the desk cares which day relative to now. */
+function relativeDay(dateStr: string): string {
+  const today = new Date();
+  const target = new Date(dateStr + "T00:00:00");
+  const diffDays = Math.round(
+    (target.getTime() -
+      new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) /
+      86400000,
+  );
+  if (diffDays === 0) return "dziś";
+  if (diffDays === -1) return "wczoraj";
+  if (diffDays === 1) return "jutro";
+  return target.toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
+}
 
 function formatTime(iso: string): string {
   const m = iso.match(/T(\d{2}):(\d{2})/);
@@ -96,6 +112,21 @@ export default function FrontDeskRosterPage() {
   const [selectedSportCardId, setSelectedSportCardId] = useState<string | null>(null);
   const [selectedPassId, setSelectedPassId] = useState<string | null>(null);
   const [isSubmittingWalkIn, setIsSubmittingWalkIn] = useState(false);
+
+  // T1's header subtitle: "AcroYoga · dziś 18:05 · Oleg · Sala 1". null while loading, so the
+  // header shows the title alone rather than flashing partial context.
+  useSetPageSubtitle(
+    session
+      ? [
+          session.template_title,
+          `${relativeDay(session.calendar_date)} ${formatTime(session.start_time)}`,
+          session.instructor_name,
+          session.room_name,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : null,
+  );
 
   const fetchRoster = useCallback(() => {
     axiosInstance
@@ -265,31 +296,15 @@ export default function FrontDeskRosterPage() {
     : [];
   const zapisanych = roster?.length ?? 0;
   const obecnych = roster?.filter((e) => e.checked_in_at != null).length ?? 0;
+  // Exactly the question `RosterRow` asks, answered by the same backend field — so the tile,
+  // the chips and the buttons can never disagree. Three call sites reimplementing this is what
+  // undercounted money owed last time.
   const doRozliczenia =
-    roster?.filter(
-      (e) =>
-        e.status !== "no_show" &&
-        (e.is_overdue || (e.funding_type === "sport_card" && e.needs_card_check)),
-    ).length ?? 0;
+    roster?.filter((e) => e.status !== "no_show" && (e.needs_settlement ?? e.is_overdue)).length ??
+    0;
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-32 pt-6">
-      {session && (
-        <div className="mb-4">
-          <h1 className="text-lg font-semibold text-gray-900">{session.template_title}</h1>
-          <p className="text-sm text-gray-500">
-            {new Date(session.calendar_date + "T00:00:00").toLocaleDateString("pl-PL", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}{" "}
-            · {formatTime(session.start_time)}–{formatTime(session.end_time)}
-            {session.instructor_name ? ` · ${session.instructor_name}` : ""}
-            {session.room_name ? ` · ${session.room_name}` : ""}
-          </p>
-        </div>
-      )}
-
       <div className="mb-4 grid grid-cols-3 gap-2">
         <div className="rounded-xl border bg-white px-3 py-2.5 text-center">
           <p className="text-lg font-semibold text-gray-900">{zapisanych}</p>
@@ -302,18 +317,18 @@ export default function FrontDeskRosterPage() {
         <div
           className={cn(
             "rounded-xl border px-3 py-2.5 text-center",
-            doRozliczenia > 0 ? "border-amber-200 bg-amber-50" : "bg-white",
+            doRozliczenia > 0 ? "border-b2b-amber-border bg-b2b-amber-bg" : "bg-white",
           )}
         >
           <p
             className={cn(
               "text-lg font-semibold",
-              doRozliczenia > 0 ? "text-amber-700" : "text-gray-900",
+              doRozliczenia > 0 ? "text-b2b-amber-text" : "text-gray-900",
             )}
           >
             {doRozliczenia}
           </p>
-          <p className={cn("text-xs", doRozliczenia > 0 ? "text-amber-700" : "text-gray-500")}>
+          <p className={cn("text-xs", doRozliczenia > 0 ? "text-b2b-amber-text" : "text-gray-500")}>
             do rozliczenia
           </p>
         </div>

@@ -31,6 +31,11 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
     return searchParams.get("step") === "new" ? "Nowy instruktor" : "Dodaj instruktora";
   if (pathname === "/konto/partner/klienci") return "Klienci";
   if (pathname === "/konto/partner/rozliczenia") return "Do rozliczenia";
+  // sell-pass must be tested before the roster pattern — it also matches `/front-desk/<seg>`.
+  if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/sell-pass$/.test(pathname))
+    return "Sprzedaj karnet";
+  if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/[^/]+$/.test(pathname))
+    return "Lista obecności";
   if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty"))
     return "Historia wizyt";
   if (pathname === "/konto/partner/wyjazdy/create") return "Nowy wyjazd";
@@ -97,6 +102,15 @@ function getBackHref(pathname: string, searchParams: URLSearchParams): string | 
   }
   if (pathname === "/konto/partner/klienci") return "/konto/partner/menu";
   if (pathname === "/konto/partner/rozliczenia") return "/konto/partner/grafik";
+  // Same ordering trap as the titles: sell-pass matches the roster pattern too, and it is
+  // reached *from* a roster, so it must go back there rather than out to Grafik.
+  const sellPass = pathname.match(/^(\/konto\/partner\/studio\/[^/]+\/front-desk)\/sell-pass$/);
+  if (sellPass) {
+    const occurrenceId = searchParams.get("occurrenceId");
+    return occurrenceId ? `${sellPass[1]}/${occurrenceId}` : "/konto/partner/grafik";
+  }
+  if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/[^/]+$/.test(pathname))
+    return "/konto/partner/grafik";
   if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty")) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`

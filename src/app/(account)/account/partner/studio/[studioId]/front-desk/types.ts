@@ -17,6 +17,9 @@ export interface RosterEntry {
   payment_status?: string | null;
   needs_card_check: boolean;
   checked_in_at?: string | null;
+  /** Money owed or a card still to check, with no time gate — drives the live roster. */
+  needs_settlement?: boolean;
+  /** The same question *plus* "and the session already started" — the reconciliation pile. */
   is_overdue: boolean;
 }
 

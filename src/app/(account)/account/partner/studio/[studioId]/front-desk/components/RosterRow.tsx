@@ -1,23 +1,24 @@
 "use client";
 
+import { IoChevronForward } from "react-icons/io5";
+
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { Button } from "@/components/ui/button";
-import { personInitials, personLabel } from "@/lib/personDisplay";
+import { personLabel } from "@/lib/personDisplay";
+import { cn } from "@/lib/utils";
 
+import { fundingDetailLine } from "../fundingDetail";
 import type { RosterEntry } from "../types";
 
-const FUNDING_LABELS: Record<string, string> = {
-  drop_in: "Wejście jednorazowe",
-  use_pass: "Karnet",
-  sport_card: "Karta sportowa",
-  buy_and_use: "Kup i użyj karnetu",
-};
-
 /**
- * Recepcja row doctrine (reception-desk §1, applies to all B2B lists): state is a
- * flat colored chip, action is a button, **max one button per row**. Only two verbs
- * exist — "✓ Potwierdź" (nothing to decide) and "Rozlicz" (opens the one resolve
- * sheet). Resolved rows are dimmed in place, "Cofnij" only.
+ * Recepcja row doctrine (reception-desk §1, applies to all B2B lists): state is a flat colored
+ * chip, action is a button, **max one button per row**. Only two verbs exist — "✓ Potwierdź"
+ * (nothing to decide) and "Rozlicz" (opens the one resolve sheet). Resolved rows dim in place
+ * and swap their button for a chevron, so the sheet is still reachable to correct a mistake.
+ *
+ * Layout is T1-v2: no avatar, name on its own line, then the chip and the funding detail, with
+ * the single action in its own right-hand column. The chip/detail line wraps, which is what
+ * produces the mockup's mix of two- and three-line rows depending on text length.
  */
 export function RosterRow({
   entry,
@@ -32,33 +33,44 @@ export function RosterRow({
   onOpenResolve: () => void;
   onCorrectNoShow: () => void;
 }) {
-  const fundingLabel = FUNDING_LABELS[entry.funding_type] ?? entry.funding_type;
   const isCheckedIn = entry.checked_in_at != null;
   const isNoShow = entry.status === "no_show";
-  // `is_overdue` is the backend's single source of truth for "still owes money" — it covers
-  // the post-check-in sport-card surcharge case that a payment_status/needs_card_check
-  // combination alone can't express (a card can be checked, then its surcharge left unpaid).
-  const needsMoneyOrCard = entry.is_overdue;
+  // `needs_settlement` is the backend's answer to "is there anything left to resolve here,
+  // right now" — money owed or a card unseen, following the buy-and-use pass chain that a
+  // payment_status check alone misses. Deliberately *not* `is_overdue`, which additionally
+  // requires the session to have already started: on a class running right now, a drop-in who
+  // owes 45 zł must read "Do zapłaty", not "Oczekuje". Never recompute either client-side —
+  // doing that undercounted money owed once already.
+  const needsMoney = entry.needs_settlement ?? entry.is_overdue;
   const needsCardCheck = entry.funding_type === "sport_card" && entry.needs_card_check;
-  const isResolved = isNoShow || (isCheckedIn && !needsMoneyOrCard && !needsCardCheck);
+  const isResolved = isNoShow || (isCheckedIn && !needsMoney && !needsCardCheck);
+  const detail = fundingDetailLine(entry);
 
   return (
-    <div className={isResolved && !isNoShow ? "opacity-60" : undefined}>
-      <div className="flex items-center gap-3 px-4 py-3.5">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-          {personInitials(entry.user_name, entry.user_email)}
-        </div>
+    <div className={cn("px-4 py-3.5", isResolved && "opacity-60")}>
+      <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">
+          <p
+            className={cn(
+              "truncate text-sm font-semibold",
+              isResolved ? "text-gray-500" : "text-gray-900",
+            )}
+          >
             {personLabel(entry.user_name, entry.user_email).primary}
           </p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             {isNoShow ? (
               <StatusChip tone="gray">Nieobecność</StatusChip>
-            ) : needsMoneyOrCard ? (
-              <StatusChip tone="amber">
-                Do zapłaty{entry.amount_owed != null ? ` · ${entry.amount_owed} zł` : ""}
-              </StatusChip>
+            ) : needsMoney ? (
+              // A sport card that hasn't been seen yet is a verification task, not a payment
+              // one — same amber, different ask.
+              needsCardCheck ? (
+                <StatusChip tone="amber">Sprawdź kartę</StatusChip>
+              ) : (
+                <StatusChip tone="amber">
+                  Do zapłaty{entry.amount_owed != null ? ` · ${entry.amount_owed} zł` : ""}
+                </StatusChip>
+              )
             ) : needsCardCheck ? (
               <StatusChip tone="amber">Sprawdź kartę</StatusChip>
             ) : isCheckedIn ? (
@@ -66,33 +78,35 @@ export function RosterRow({
             ) : (
               <StatusChip tone="gray">Oczekuje</StatusChip>
             )}
-            <span className="text-xs text-gray-400">{fundingLabel}</span>
+            {detail && <span className="text-xs text-gray-500">{detail}</span>}
           </div>
         </div>
 
-        {isNoShow ? (
-          <button
-            onClick={onCorrectNoShow}
-            disabled={isBusy}
-            className="shrink-0 text-sm font-medium text-gray-500 hover:text-gray-700"
-          >
-            Cofnij
-          </button>
-        ) : isResolved ? null : needsMoneyOrCard || needsCardCheck ? (
-          <Button size="sm" disabled={isBusy} onClick={onOpenResolve} className="shrink-0">
-            Rozlicz
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="green"
-            disabled={isBusy}
-            onClick={onConfirm}
-            className="shrink-0"
-          >
-            ✓ Potwierdź
-          </Button>
-        )}
+        <div className="flex shrink-0 items-center">
+          {isNoShow ? (
+            <Button size="sm" variant="outline" disabled={isBusy} onClick={onCorrectNoShow}>
+              Cofnij
+            </Button>
+          ) : isResolved ? (
+            // Settled rows keep a way back into the sheet without offering a second verb.
+            <button
+              type="button"
+              onClick={onOpenResolve}
+              aria-label="Zmień rozstrzygnięcie"
+              className="text-gray-300 hover:text-gray-500"
+            >
+              <IoChevronForward className="h-5 w-5" />
+            </button>
+          ) : needsMoney || needsCardCheck ? (
+            <Button size="sm" disabled={isBusy} onClick={onOpenResolve}>
+              Rozlicz
+            </Button>
+          ) : (
+            <Button size="sm" variant="green" disabled={isBusy} onClick={onConfirm}>
+              ✓ Potwierdź
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
