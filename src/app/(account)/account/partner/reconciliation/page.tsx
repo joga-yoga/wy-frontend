@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { personLabel } from "@/lib/personDisplay";
 
 import { ResolveSheet } from "../studio/[studioId]/front-desk/components/ResolveSheet";
 import type { RosterEntry } from "../studio/[studioId]/front-desk/types";
@@ -116,7 +117,9 @@ export default function ReconciliationPage() {
                   className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{entry.user_email}</p>
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {personLabel(entry.user_name, entry.user_email).primary}
+                    </p>
                     <p className="text-xs text-gray-500">
                       {FUNDING_LABELS[entry.funding_type] ?? entry.funding_type}
                     </p>

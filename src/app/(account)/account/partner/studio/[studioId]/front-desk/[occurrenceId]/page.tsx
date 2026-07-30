@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
+import { personSortKey } from "@/lib/personDisplay";
 import { cn } from "@/lib/utils";
 
 import { ResolveSheet } from "../components/ResolveSheet";
@@ -183,14 +184,15 @@ export default function FrontDeskRosterPage() {
   async function createNewUser() {
     if (!query.includes("@")) return;
     try {
-      const { data } = await axiosInstance.post<{ user_id: string; email: string }>(
-        `/studios/${studioId}/front-desk/new-user`,
-        { email: query.trim() },
-      );
+      const { data } = await axiosInstance.post<{
+        user_id: string;
+        email: string;
+        name: string | null;
+      }>(`/studios/${studioId}/front-desk/new-user`, { email: query.trim() });
       await selectCandidate({
         user_id: data.user_id,
         email: data.email,
-        name: null,
+        name: data.name,
         pass_context: null,
       });
     } catch (err: unknown) {
@@ -253,7 +255,14 @@ export default function FrontDeskRosterPage() {
     : [];
   const currency = options?.currency || "PLN";
 
-  const sorted = roster ? [...roster].sort((a, b) => a.user_email.localeCompare(b.user_email)) : [];
+  const sorted = roster
+    ? [...roster].sort((a, b) =>
+        personSortKey(a.user_name, a.user_email).localeCompare(
+          personSortKey(b.user_name, b.user_email),
+          "pl-PL",
+        ),
+      )
+    : [];
   const zapisanych = roster?.length ?? 0;
   const obecnych = roster?.filter((e) => e.checked_in_at != null).length ?? 0;
   const doRozliczenia =

@@ -2,6 +2,7 @@
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { Button } from "@/components/ui/button";
+import { personInitials, personLabel } from "@/lib/personDisplay";
 
 import type { RosterEntry } from "../types";
 
@@ -11,10 +12,6 @@ const FUNDING_LABELS: Record<string, string> = {
   sport_card: "Karta sportowa",
   buy_and_use: "Kup i użyj karnetu",
 };
-
-function initials(value: string): string {
-  return value.slice(0, 2).toUpperCase();
-}
 
 /**
  * Recepcja row doctrine (reception-desk §1, applies to all B2B lists): state is a
@@ -49,10 +46,12 @@ export function RosterRow({
     <div className={isResolved && !isNoShow ? "opacity-60" : undefined}>
       <div className="flex items-center gap-3 px-4 py-3.5">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-          {initials(entry.user_email)}
+          {personInitials(entry.user_name, entry.user_email)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">{entry.user_email}</p>
+          <p className="truncate text-sm font-semibold text-gray-900">
+            {personLabel(entry.user_name, entry.user_email).primary}
+          </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             {isNoShow ? (
               <StatusChip tone="gray">Nieobecność</StatusChip>

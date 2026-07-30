@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { personLabel } from "@/lib/personDisplay";
 
 import type { RosterEntry } from "../types";
 
@@ -49,7 +50,7 @@ export function ResolveSheet({
     <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
       <DrawerContent className="sm:mx-auto sm:max-w-md">
         <DrawerHeader>
-          <DrawerTitle>{entry.user_email}</DrawerTitle>
+          <DrawerTitle>{personLabel(entry.user_name, entry.user_email).primary}</DrawerTitle>
         </DrawerHeader>
         <div className="space-y-2 px-4 pb-6">
           {isCard ? (
