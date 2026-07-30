@@ -3,8 +3,6 @@
 import { Camera, DollarSign, Home, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import useIsMobile from "@/hooks/useIsMobile";
 import { scrollTo } from "@/lib/scrollTo";
 import { cn } from "@/lib/utils";
@@ -76,34 +74,42 @@ export function StudioDashboardSidebar({ isLoading }: StudioDashboardSidebarProp
         "top-16 md:top-20 w-full",
       )}
     >
-      <nav className="flex flex-row md:flex-col gap-2 w-full px-2 items-center justify-between md:justify-start">
-        <TooltipProvider>
-          {studioNavItems.map((item) => (
-            <Tooltip key={item.id} delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={item.label}
-                  className={cn(
-                    "h-12 w-12 text-gray-800 hover:bg-muted hover:text-black",
-                    "border-2 border-transparent transition-colors duration-200",
-                    activeId === item.id && "border-brand-green",
-                  )}
-                  onClick={() =>
-                    scrollTo(item.id, headerHeight + (isMobile ? 56 : SECTION_SCROLL_GAP))
-                  }
-                >
-                  <item.icon className="h-8 w-8 md:size-10" strokeWidth={1} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side={isMobile ? "bottom" : "right"}>
-                <p>{item.label}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </TooltipProvider>
+      {/* V1 draws icon *and* label, with the active one on a green tile. The label is
+          what makes this readable at a glance on mobile, where the tooltip that used to
+          carry it never fires — a touch device has no hover. */}
+      <nav className="flex w-full flex-row items-start justify-around gap-1 px-2 md:flex-col md:justify-start md:gap-2">
+        {studioNavItems.map((item) => {
+          const isActive = activeId === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              aria-label={item.label}
+              aria-current={isActive ? "true" : undefined}
+              onClick={() => scrollTo(item.id, headerHeight + (isMobile ? 56 : SECTION_SCROLL_GAP))}
+              className="flex min-w-0 flex-1 flex-col items-center gap-1 py-1 md:flex-none"
+            >
+              <span
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-200",
+                  isActive
+                    ? "bg-b2b-green-bg text-b2b-green-text"
+                    : "text-gray-500 hover:bg-muted hover:text-gray-900",
+                )}
+              >
+                <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              </span>
+              <span
+                className={cn(
+                  "max-w-full truncate text-[11px] leading-none",
+                  isActive ? "font-semibold text-b2b-green-text" : "text-gray-500",
+                )}
+              >
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
     </aside>
   );

@@ -21,7 +21,6 @@ import { Resolver, useForm } from "react-hook-form";
 
 import { PassTile } from "@/components/common/PassTile";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
-import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
@@ -55,6 +54,7 @@ import {
   studioDraftSchema,
   studioPublishSchema,
 } from "./studioFormModel";
+import { StudioLogoField } from "./StudioLogoField";
 import type {
   Amenity,
   StudioApiResponse,
@@ -543,21 +543,18 @@ export function StudioForm({ routeId }: StudioFormProps) {
               {/* ── Section 1: Podstawy ── */}
               <Section id="studio-basics-section" title="Podstawy" first>
                 <div className="space-y-4">
-                  {/* Logo */}
-                  <div>
-                    <label className="mb-1 block text-base font-semibold">Logo</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Wyświetlane na stronie studia, w wynikach wyszukiwania i na listach zajęć
-                    </p>
-                    <SingleImageUpload
-                      existingImageId={values.image_id}
-                      imagePreviewUrl={logoPreviewUrl}
-                      isUploading={isUploadingLogo}
-                      onFileSelect={handleLogoFileSelect}
-                      onRemove={() => setDirtyValue("image_id", null)}
-                      previewClassName="object-contain"
-                    />
-                  </div>
+                  {/* Logo — V1's compact tile + "Zmień logo", not a full dropzone. */}
+                  <StudioLogoField
+                    studioName={values.name}
+                    imageId={values.image_id}
+                    previewUrl={logoPreviewUrl}
+                    isUploading={isUploadingLogo}
+                    onFileSelect={handleLogoFileSelect}
+                    onRemove={() => {
+                      setLogoPreviewUrl(null);
+                      setDirtyValue("image_id", null);
+                    }}
+                  />
 
                   <div data-error-field="name">
                     <label className="mb-1 block text-base font-semibold" htmlFor="name">

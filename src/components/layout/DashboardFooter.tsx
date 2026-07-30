@@ -104,7 +104,7 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
               variant="outline"
               onClick={onPublishToggle}
               disabled={isPublishing}
-              className="w-full md:w-auto md:flex-none border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+              className="w-full md:w-auto md:flex-none border-b2b-green-border text-b2b-green-text hover:bg-b2b-green-bg hover:text-b2b-green-text"
             >
               <span className="inline-flex items-center">
                 {isPublishing ? publishingIcon : publishIcon}
@@ -119,15 +119,16 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           )}
           {/* Render Update button if handler exists */}
           {onUpdate && (
+            // Green, not black: V1/V2/V3 and every other prototype footer draw the
+            // primary save action in the brand green. The indigo shadow was left over
+            // from a palette this product does not use.
             <Button
-              variant="default"
+              variant="green"
               onClick={() => {
                 onUpdate();
               }}
               disabled={isSaveDisabled || isPublishing}
-              className={`w-full md:w-auto md:flex-none transition-all duration-300 ${
-                !isSaveDisabled ? "shadow-lg shadow-indigo-500/20" : ""
-              }`}
+              className="w-full md:w-auto md:flex-none transition-all duration-300"
             >
               <span className="inline-flex items-center">
                 {updateIcon}
