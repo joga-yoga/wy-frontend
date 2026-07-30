@@ -1,14 +1,16 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Check, CreditCard, Search } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
+import { personInitials, personLabel } from "@/lib/personDisplay";
 import { cn } from "@/lib/utils";
 
 import type { WalkInCandidate, WalkInSearchResponse } from "../types";
@@ -38,7 +40,7 @@ export default function SellPassPage() {
 
   const [candidate, setCandidate] = useState<WalkInCandidate | null>(
     presetUserId
-      ? { user_id: presetUserId, email: presetEmail ?? "Klient", name: null, pass_context: null }
+      ? { user_id: presetUserId, email: presetEmail ?? "", name: null, pass_context: null }
       : null,
   );
   const [query, setQuery] = useState("");
@@ -95,23 +97,47 @@ export default function SellPassPage() {
     }
   }
 
+  // Arriving from Klienci we only get `?userId=`, so look the person up rather than showing a
+  // placeholder — the header subtitle puts this name in front of the desk while they take money.
+  useEffect(() => {
+    if (!presetUserId || presetEmail) return;
+    axiosInstance
+      .get<{ email: string; name?: string | null }>(`/studios/${studioId}/clients/${presetUserId}`)
+      .then(({ data }) =>
+        setCandidate((prev) =>
+          prev ? { ...prev, email: data.email, name: data.name ?? null } : prev,
+        ),
+      )
+      .catch(() => {});
+  }, [presetUserId, presetEmail, studioId]);
+
   const selectedPass = passes.find((p) => p.id === selectedPassId) ?? null;
+
+  // T7 puts the client in the header subtitle rather than a line in the body.
+  useSetPageSubtitle(
+    candidate?.email || candidate?.name
+      ? personLabel(candidate.name, candidate.email).primary
+      : null,
+  );
 
   if (sold) {
     return (
-      <div className="mx-auto max-w-md px-4 py-10 text-center space-y-3">
-        <h1 className="text-lg font-semibold text-gray-900">Sprzedano karnet</h1>
-        <p className="text-sm text-gray-500">
-          {sold.pass_name} · {sold.price.toLocaleString("pl-PL")} zł · gotówka na miejscu
-        </p>
+      <div className="mx-auto flex max-w-md flex-col items-center gap-5 px-4 py-10 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-b2b-green-bg text-b2b-green-text">
+          <Check size={34} strokeWidth={2.5} />
+        </div>
+        <div className="space-y-1.5">
+          <h2 className="text-xl font-bold text-gray-900">Sprzedano karnet</h2>
+          <p className="text-sm text-gray-500">
+            {sold.pass_name} · {sold.price.toLocaleString("pl-PL")} zł · gotówka na miejscu
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-md px-4 py-6 space-y-5">
-      <h1 className="text-lg font-semibold text-gray-900">Sprzedaj karnet</h1>
-
       {!candidate ? (
         <div className="space-y-3">
           <div className="relative">
@@ -131,12 +157,19 @@ export default function SellPassPage() {
                 <button
                   key={c.user_id}
                   onClick={() => setCandidate(c)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                 >
-                  <p className="truncate text-sm font-medium text-gray-900">{c.name || c.email}</p>
-                  {c.pass_context && (
-                    <span className="shrink-0 text-xs text-gray-500">{c.pass_context}</span>
-                  )}
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                    {personInitials(c.name, c.email)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-gray-900">
+                      {personLabel(c.name, c.email).primary}
+                    </span>
+                    <span className="block truncate text-xs text-gray-500">
+                      {c.pass_context ?? personLabel(c.name, c.email).secondary ?? ""}
+                    </span>
+                  </span>
                 </button>
               ))}
             </div>
@@ -144,30 +177,48 @@ export default function SellPassPage() {
         </div>
       ) : (
         <>
-          {!presetUserId && (
-            <p className="text-sm text-gray-500">
-              Klient: <span className="font-medium text-gray-900">{candidate.email}</span>
-            </p>
-          )}
-
           <div className="space-y-2">
             {passes.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setSelectedPassId(p.id)}
+                aria-pressed={selectedPassId === p.id}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left",
-                  selectedPassId === p.id ? "border-brand-green bg-emerald-50/40" : "bg-white",
+                  "flex w-full items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left transition-colors",
+                  selectedPassId === p.id
+                    ? "border-b2b-green-text ring-1 ring-b2b-green-text"
+                    : "border-gray-200",
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
-                  {p.session_count ?? "∞"}
+                <span
+                  className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+                    selectedPassId === p.id ? "border-b2b-green-text" : "border-gray-300",
+                  )}
+                >
+                  {selectedPassId === p.id && (
+                    <span className="h-2.5 w-2.5 rounded-full bg-b2b-green-text" />
+                  )}
+                </span>
+                {/* Entry count as the leading badge (T7) — it is what distinguishes the passes. */}
+                <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-gray-100">
+                  <span className="text-sm font-bold leading-none text-gray-900">
+                    {p.session_count ?? "∞"}
+                  </span>
+                  {p.duration_days ? (
+                    <span className="mt-0.5 text-[10px] leading-none text-gray-500">
+                      {p.duration_days} dni
+                    </span>
+                  ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-gray-900">{p.name}</p>
                   <p className="text-xs text-gray-500">
-                    {p.duration_days ? `${p.duration_days} dni · ` : ""}
                     {p.price.toLocaleString("pl-PL")} {getCurrencySymbol(p.currency || "PLN")}
+                    {/* Per-entry price makes the passes comparable at a glance (T7). */}
+                    {p.session_count
+                      ? ` · ${(p.price / p.session_count).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(p.currency || "PLN")}/wejście`
+                      : " · bez limitu wejść"}
                   </p>
                 </div>
               </button>
@@ -180,9 +231,16 @@ export default function SellPassPage() {
           </div>
 
           {selectedPass && (
-            <div className="flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
-              Gotówka na miejscu · {selectedPass.price.toLocaleString("pl-PL")}{" "}
-              {getCurrencySymbol(selectedPass.currency || "PLN")} · karnet aktywny od razu
+            <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-4 py-3">
+              <CreditCard size={15} className="mt-0.5 shrink-0 text-gray-400" />
+              <p className="text-[13px] leading-snug text-gray-600">
+                Gotówka na miejscu ·{" "}
+                <span className="font-semibold text-gray-900">
+                  {selectedPass.price.toLocaleString("pl-PL")}{" "}
+                  {getCurrencySymbol(selectedPass.currency || "PLN")}
+                </span>{" "}
+                · karnet aktywny od razu
+              </p>
             </div>
           )}
 

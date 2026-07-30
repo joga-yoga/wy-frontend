@@ -8,11 +8,9 @@ import { useCallback, useEffect, useState } from "react";
 import type {
   BookingOptionsResponse,
   BuyAndUsePassOption,
-  ExistingPassOption,
   SportCardOption,
 } from "@/app/book/class/[occurrenceId]/types";
 import { StatusChip } from "@/components/b2b/StatusChip";
-import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
@@ -20,7 +18,8 @@ import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
-import { personSortKey } from "@/lib/personDisplay";
+import { personInitials, personLabel, personSortKey } from "@/lib/personDisplay";
+import { plural } from "@/lib/polishPlural";
 import { cn } from "@/lib/utils";
 
 import { ResolveSheet } from "../components/ResolveSheet";
@@ -35,13 +34,6 @@ interface SessionHeader {
   instructor_name: string | null;
   room_name: string | null;
 }
-
-const FUNDING_LABELS: Record<FundingType, string> = {
-  use_pass: "Karnet klienta",
-  drop_in: "Wejście jednorazowe",
-  sport_card: "Karta sportowa",
-  buy_and_use: "Kup karnet",
-};
 
 /** "dziś" / "wczoraj" / "12 lipca" — the desk cares which day relative to now. */
 function relativeDay(dateStr: string): string {
@@ -63,14 +55,23 @@ function formatTime(iso: string): string {
   return m ? `${m[1]}:${m[2]}` : iso;
 }
 
-function OptionRow({
+/**
+ * One payment choice (mockup T4-v2): radio, label, optional neutral chip, subtitle.
+ *
+ * T4-v2 flattens what used to be two steps — pick a funding *type*, then pick within it — into a
+ * single list of concrete choices. The desk is choosing "how is this person paying", and that is
+ * one decision, not two.
+ */
+function PaymentOptionRow({
   label,
   detail,
+  chip,
   isSelected,
   onClick,
 }: {
   label: string;
-  detail: string;
+  detail?: string | null;
+  chip?: string | null;
   isSelected: boolean;
   onClick: () => void;
 }) {
@@ -78,15 +79,33 @@ function OptionRow({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={isSelected}
       className={cn(
-        "flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-sm",
-        isSelected
-          ? "border-brand-green font-semibold text-foreground"
-          : "border-border text-muted-foreground",
+        "flex w-full items-start gap-3 rounded-xl border bg-white px-4 py-3 text-left transition-colors",
+        isSelected ? "border-b2b-green-text ring-1 ring-b2b-green-text" : "border-gray-200",
       )}
     >
-      <span>{label}</span>
-      <span className="text-xs">{detail}</span>
+      <span
+        className={cn(
+          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+          isSelected ? "border-b2b-green-text" : "border-gray-300",
+        )}
+      >
+        {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-b2b-green-text" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-gray-900">{label}</span>
+          {/* Neutral, never possessive: "Aktywny karnet", not "JEJ karnet" — the desk may be
+           * looking at anyone's account, and gendered/possessive copy is banned system-wide. */}
+          {chip && (
+            <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+              {chip}
+            </span>
+          )}
+        </span>
+        {detail && <span className="mt-0.5 block text-xs text-gray-500">{detail}</span>}
+      </span>
     </button>
   );
 }
@@ -241,18 +260,6 @@ export default function FrontDeskRosterPage() {
     setFundingType(undefined);
   }
 
-  function handleFundingTypeChange(next: FundingType) {
-    setFundingType(next);
-    if (!options) return;
-    if (next === "use_pass" && options.existing_passes.length > 0) {
-      setSelectedUserPassId(options.existing_passes[0].user_pass_id);
-    } else if (next === "sport_card" && options.sport_card_options.length > 0) {
-      setSelectedSportCardId(options.sport_card_options[0].studio_sport_card_id);
-    } else if (next === "buy_and_use" && options.buy_and_use_options.length > 0) {
-      setSelectedPassId(options.buy_and_use_options[0].pass_id);
-    }
-  }
-
   async function handleWalkInSubmit() {
     if (!selectedCandidate || !fundingType) return;
     setIsSubmittingWalkIn(true);
@@ -274,17 +281,114 @@ export default function FrontDeskRosterPage() {
     }
   }
 
-  const availableFundingTypes: FundingType[] = options
-    ? [
-        ...(options.existing_passes.length > 0 ? (["use_pass"] as const) : []),
-        ...(options.drop_in_price != null ? (["drop_in"] as const) : []),
-        ...(options.accepts_sport_cards && options.sport_card_options.length > 0
-          ? (["sport_card"] as const)
-          : []),
-        ...(options.buy_and_use_options.length > 0 ? (["buy_and_use"] as const) : []),
-      ]
-    : [];
   const currency = options?.currency || "PLN";
+
+  /** The flat list of concrete ways this person can pay (T4-v2). Order follows what the desk
+   * reaches for most often: an existing pass, then cash at the door, then buying a pass, then a
+   * sport card. Each choice carries the funding type *and* the specific id, so selecting one
+   * fully determines the request payload — the submit path itself is unchanged. */
+  type PaymentChoice = {
+    key: string;
+    fundingType: FundingType;
+    label: string;
+    detail?: string | null;
+    chip?: string | null;
+    userPassId?: string;
+    sportCardId?: string;
+    passId?: string;
+    /** True for the "Kup karnet" row, which expands into the individual passes. */
+    isGroup?: boolean;
+  };
+
+  const paymentChoices: PaymentChoice[] = [];
+  if (options) {
+    const sym = getCurrencySymbol(currency);
+    for (const pass of options.existing_passes) {
+      const left =
+        pass.entries_remaining != null
+          ? `po rezerwacji ${plural(pass.entries_remaining - 1, "zostanie", "zostaną", "zostanie")} ${pass.entries_remaining - 1}`
+          : "bez limitu wejść";
+      paymentChoices.push({
+        key: `pass:${pass.user_pass_id}`,
+        fundingType: "use_pass",
+        label: pass.pass_name,
+        chip: "Aktywny karnet",
+        detail: `Z konta klienta · ${left}`,
+        userPassId: pass.user_pass_id,
+      });
+    }
+    if (options.drop_in_price != null) {
+      paymentChoices.push({
+        key: "drop_in",
+        fundingType: "drop_in",
+        label: `Pojedyncze wejście · ${options.drop_in_price.toLocaleString("pl-PL")} ${sym}`,
+        detail: "Gotówka na miejscu",
+      });
+    }
+    // A studio can offer a dozen passes. T4-v2 collapses them behind one "Kup karnet" row
+    // summarising the cheapest per-entry price and the count, so buying a pass does not crowd
+    // out the two choices the desk makes most often (existing pass, cash at the door).
+    if (options.buy_and_use_options.length > 0) {
+      const perEntry = options.buy_and_use_options
+        .map((pass) => (pass.session_count ? pass.price / pass.session_count : null))
+        .filter((v): v is number => v != null);
+      const cheapest = perEntry.length > 0 ? Math.min(...perEntry) : null;
+      paymentChoices.push({
+        key: "buy",
+        fundingType: "buy_and_use",
+        label: "Kup karnet",
+        detail: [
+          cheapest != null
+            ? `Od ${cheapest.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${sym}/wejście`
+            : null,
+          `${options.buy_and_use_options.length} ${plural(options.buy_and_use_options.length, "karnet", "karnety", "karnetów")}`,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        isGroup: true,
+      });
+    }
+    // Collapsed for the same reason as the passes (T4-v2): a studio accepting five card brands
+    // should not push the everyday choices off the screen.
+    if (options.accepts_sport_cards && options.sport_card_options.length > 0) {
+      const names = options.sport_card_options.map((c) => c.name).filter(Boolean) as string[];
+      paymentChoices.push({
+        key: "card",
+        fundingType: "sport_card",
+        label: "Karta sportowa",
+        detail:
+          names.length > 2 ? `${names.slice(0, 2).join(", ")} i inne` : names.join(", ") || null,
+        isGroup: true,
+      });
+    }
+  }
+
+  const selectedChoiceKey = (() => {
+    if (fundingType === "use_pass" && selectedUserPassId) return `pass:${selectedUserPassId}`;
+    if (fundingType === "drop_in") return "drop_in";
+    if (fundingType === "buy_and_use") return "buy";
+    if (fundingType === "sport_card") return "card";
+    return null;
+  })();
+
+  function applyChoice(choice: PaymentChoice) {
+    setFundingType(choice.fundingType);
+    setSelectedUserPassId(choice.userPassId ?? null);
+    setSelectedSportCardId(choice.isGroup ? null : (choice.sportCardId ?? null));
+    // Selecting the group only opens it; the concrete pass is chosen from the nested list, so
+    // the CTA stays disabled until the desk has actually picked one.
+    setSelectedPassId(choice.isGroup ? null : (choice.passId ?? null));
+  }
+
+  /** The CTA names the chosen instrument, as drawn ("Dodaj rezerwację z karnetu"). */
+  const submitLabel =
+    fundingType === "use_pass"
+      ? "Dodaj rezerwację z karnetu"
+      : fundingType === "buy_and_use"
+        ? "Kup karnet i dodaj rezerwację"
+        : fundingType === "sport_card"
+          ? "Dodaj rezerwację z karty"
+          : "Dodaj rezerwację";
 
   const sorted = roster
     ? [...roster].sort((a, b) =>
@@ -414,17 +518,21 @@ export default function FrontDeskRosterPage() {
                         <button
                           key={c.user_id}
                           onClick={() => selectCandidate(c)}
-                          className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                         >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-gray-900">
-                              {c.name || c.email}
-                            </p>
-                            {c.name && <p className="truncate text-xs text-gray-500">{c.email}</p>}
-                          </div>
-                          {c.pass_context && (
-                            <span className="shrink-0 text-xs text-gray-500">{c.pass_context}</span>
-                          )}
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                            {personInitials(c.name, c.email)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-gray-900">
+                              {personLabel(c.name, c.email).primary}
+                            </span>
+                            {/* Pass context inline, so the desk does not open a second screen. */}
+                            <span className="block truncate text-xs text-gray-500">
+                              {c.pass_context ?? personLabel(c.name, c.email).secondary ?? ""}
+                            </span>
+                          </span>
+                          <StatusChip tone="green">Klient</StatusChip>
                         </button>
                       ))}
                     </div>
@@ -441,11 +549,21 @@ export default function FrontDeskRosterPage() {
                         <button
                           key={c.user_id}
                           onClick={() => selectCandidate(c)}
-                          className="flex w-full items-center px-4 py-3 text-left hover:bg-gray-50"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                         >
-                          <p className="truncate text-sm font-medium text-gray-900">
-                            {c.name || c.email}
-                          </p>
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                            {personInitials(c.name, c.email)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-gray-900">
+                              {personLabel(c.name, c.email).primary}
+                            </span>
+                            {personLabel(c.name, c.email).secondary && (
+                              <span className="block truncate text-xs text-gray-500">
+                                {personLabel(c.name, c.email).secondary}
+                              </span>
+                            )}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -457,7 +575,11 @@ export default function FrontDeskRosterPage() {
                   searchResults.other_accounts.length === 0 &&
                   !isSearching && (
                     <div className="space-y-2">
-                      <p className="px-1 text-sm text-gray-400">nie ma na liście</p>
+                      <div className="flex items-center gap-3">
+                        <span className="h-px flex-1 bg-gray-200" />
+                        <span className="text-xs text-gray-400">nie ma na liście</span>
+                        <span className="h-px flex-1 bg-gray-200" />
+                      </div>
                       <button
                         onClick={createNewUser}
                         disabled={!query.includes("@")}
@@ -470,7 +592,9 @@ export default function FrontDeskRosterPage() {
               </>
             ) : (
               <>
-                <p className="text-sm text-gray-600">{selectedCandidate.email}</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {personLabel(selectedCandidate.name, selectedCandidate.email).primary}
+                </p>
 
                 {options && !options.seat_available ? (
                   <p className="text-sm text-destructive">
@@ -479,69 +603,62 @@ export default function FrontDeskRosterPage() {
                 ) : (
                   options && (
                     <>
-                      <SegmentedToggle
-                        columns={Math.min(availableFundingTypes.length, 2)}
-                        value={fundingType}
-                        onChange={handleFundingTypeChange}
-                        options={availableFundingTypes.map((type) => ({
-                          label: FUNDING_LABELS[type],
-                          value: type,
-                        }))}
-                      />
-
-                      {fundingType === "drop_in" && options.drop_in_price != null && (
-                        <div className="rounded-lg border px-4 py-3 text-sm text-gray-700">
-                          Cena: {options.drop_in_price.toLocaleString("pl-PL")}{" "}
-                          {getCurrencySymbol(currency)}
-                        </div>
-                      )}
-
-                      {fundingType === "use_pass" && (
+                      {paymentChoices.length === 0 ? (
+                        <p className="text-sm text-gray-500">
+                          Brak dostępnych opcji płatności dla tych zajęć.
+                        </p>
+                      ) : (
                         <div className="space-y-2">
-                          {options.existing_passes.map((pass: ExistingPassOption) => (
-                            <OptionRow
-                              key={pass.user_pass_id}
-                              label={pass.pass_name}
-                              detail={
-                                pass.entries_remaining != null
-                                  ? `${pass.entries_remaining} wejść`
-                                  : "∞"
-                              }
-                              isSelected={selectedUserPassId === pass.user_pass_id}
-                              onClick={() => setSelectedUserPassId(pass.user_pass_id)}
-                            />
-                          ))}
-                        </div>
-                      )}
-
-                      {fundingType === "sport_card" && (
-                        <div className="space-y-2">
-                          {options.sport_card_options.map((card: SportCardOption) => (
-                            <OptionRow
-                              key={card.studio_sport_card_id}
-                              label={card.name || "Karta sportowa"}
-                              detail={
-                                card.fee
-                                  ? `+${card.fee.toLocaleString("pl-PL")} ${getCurrencySymbol(currency)}`
-                                  : "bez dopłaty"
-                              }
-                              isSelected={selectedSportCardId === card.studio_sport_card_id}
-                              onClick={() => setSelectedSportCardId(card.studio_sport_card_id)}
-                            />
-                          ))}
-                        </div>
-                      )}
-
-                      {fundingType === "buy_and_use" && (
-                        <div className="space-y-2">
-                          {options.buy_and_use_options.map((pass: BuyAndUsePassOption) => (
-                            <OptionRow
-                              key={pass.pass_id}
-                              label={pass.name}
-                              detail={`${pass.price.toLocaleString("pl-PL")} ${getCurrencySymbol(pass.currency || currency)}`}
-                              isSelected={selectedPassId === pass.pass_id}
-                              onClick={() => setSelectedPassId(pass.pass_id)}
-                            />
+                          {paymentChoices.map((choice) => (
+                            <div key={choice.key} className="space-y-2">
+                              <PaymentOptionRow
+                                label={choice.label}
+                                detail={choice.detail}
+                                chip={choice.chip}
+                                isSelected={selectedChoiceKey === choice.key}
+                                onClick={() => applyChoice(choice)}
+                              />
+                              {choice.isGroup &&
+                                choice.fundingType === "buy_and_use" &&
+                                fundingType === "buy_and_use" && (
+                                  <div className="ml-8 space-y-2">
+                                    {options.buy_and_use_options.map(
+                                      (pass: BuyAndUsePassOption) => (
+                                        <PaymentOptionRow
+                                          key={pass.pass_id}
+                                          label={pass.name}
+                                          detail={`${pass.price.toLocaleString("pl-PL")} ${getCurrencySymbol(pass.currency || currency)}`}
+                                          isSelected={selectedPassId === pass.pass_id}
+                                          onClick={() => setSelectedPassId(pass.pass_id)}
+                                        />
+                                      ),
+                                    )}
+                                  </div>
+                                )}
+                              {choice.isGroup &&
+                                choice.fundingType === "sport_card" &&
+                                fundingType === "sport_card" && (
+                                  <div className="ml-8 space-y-2">
+                                    {options.sport_card_options.map((card: SportCardOption) => (
+                                      <PaymentOptionRow
+                                        key={card.studio_sport_card_id}
+                                        label={card.name || "Karta sportowa"}
+                                        detail={
+                                          card.fee
+                                            ? `Dopłata ${card.fee.toLocaleString("pl-PL")} ${getCurrencySymbol(currency)}`
+                                            : "Bez dopłaty"
+                                        }
+                                        isSelected={
+                                          selectedSportCardId === card.studio_sport_card_id
+                                        }
+                                        onClick={() =>
+                                          setSelectedSportCardId(card.studio_sport_card_id)
+                                        }
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                            </div>
                           ))}
                         </div>
                       )}
@@ -549,10 +666,15 @@ export default function FrontDeskRosterPage() {
                       <Button
                         className="w-full"
                         variant="green"
-                        disabled={!fundingType || isSubmittingWalkIn}
+                        disabled={
+                          !fundingType ||
+                          (fundingType === "buy_and_use" && !selectedPassId) ||
+                          (fundingType === "sport_card" && !selectedSportCardId) ||
+                          isSubmittingWalkIn
+                        }
                         onClick={handleWalkInSubmit}
                       >
-                        {isSubmittingWalkIn ? "Dodaję..." : "Dodaj uczestnika"}
+                        {isSubmittingWalkIn ? "Dodaję..." : submitLabel}
                       </Button>
                     </>
                   )
