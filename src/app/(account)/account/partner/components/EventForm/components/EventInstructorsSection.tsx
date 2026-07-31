@@ -166,7 +166,7 @@ export const EventInstructorsSection = ({
                         <AlertDialogAction
                           disabled={isDeletingInstructor}
                           onClick={handleDeleteInstructor}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
                         >
                           {isDeletingInstructor ? "Usuwanie..." : "Usuń z wydarzenia"}
                         </AlertDialogAction>

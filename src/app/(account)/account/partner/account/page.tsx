@@ -61,7 +61,7 @@ export default function KontoPage() {
               <p className="text-sm font-medium text-gray-900">Dane rozliczeniowe</p>
               <p className="text-xs text-gray-500 mt-0.5">NIP, konto bankowe</p>
             </div>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-b2b-amber-bg text-b2b-amber-text">
               Wkrótce
             </span>
           </div>
@@ -83,10 +83,10 @@ export default function KontoPage() {
       </section>
 
       {/* Wyloguj się */}
-      <div className="rounded-xl border border-red-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-b2b-red-border bg-white overflow-hidden">
         <button
           onClick={signOut}
-          className="w-full flex items-center gap-3 px-4 py-3.5 text-red-500 hover:bg-red-50 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-b2b-red-solid hover:bg-b2b-red-bg transition-colors"
         >
           <IoLogOut size={18} className="shrink-0" />
           <span className="text-sm font-medium">Wyloguj się</span>

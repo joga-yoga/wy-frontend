@@ -126,7 +126,7 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
                   onChange={(e) => handleInputChange(index, e.target.value)}
                   placeholder={placeholder}
                   aria-label={`Element ${index + 1}`}
-                  className={`flex-grow rounded-[20px] h-10 pl-[24px] md:pl-[44px] placeholder:text-gray-300 ${itemError ? "border-red-500" : ""}`}
+                  className={`flex-grow rounded-[20px] h-10 pl-[24px] md:pl-[44px] placeholder:text-gray-300 ${itemError ? "border-b2b-red-border" : ""}`}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   ref={inputRefs.current[index]}
                 />
@@ -147,7 +147,7 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
               )}
             </div>
             {itemError && itemError.message && (
-              <p className="text-xs text-red-500 pl-1">{itemError.message}</p>
+              <p className="text-xs text-b2b-red-solid pl-1">{itemError.message}</p>
             )}
           </div>
         );
@@ -169,7 +169,7 @@ export const DynamicArrayInput: React.FC<DynamicArrayInputProps> = ({
 
       {error && !Array.isArray(error) && typeof error === "object" && error.message && (
         <div className="mt-1">
-          <p className="text-xs text-red-500">{error.message}</p>
+          <p className="text-xs text-b2b-red-solid">{error.message}</p>
         </div>
       )}
       <Controller

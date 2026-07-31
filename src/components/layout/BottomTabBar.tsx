@@ -89,7 +89,7 @@ export function BottomTabBar() {
                 <span className="relative">
                   <Icon size={22} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
                   {path === GRAFIK.path && hasOverdue && (
-                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-b2b-amber-text" />
                   )}
                 </span>
                 <span
@@ -115,7 +115,7 @@ export function BottomTabBar() {
               <span className="relative">
                 <Icon size={20} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
                 {path === GRAFIK.path && hasOverdue && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500" />
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-b2b-amber-text" />
                 )}
               </span>
               <span

@@ -973,7 +973,7 @@ export function EventForm({
   if (fetchError) {
     return (
       <div className="p-6 text-center">
-        <p className="text-red-600 mb-4">{fetchError}</p>
+        <p className="text-b2b-red-solid mb-4">{fetchError}</p>
         <Button onClick={() => router.back()}>Wróć</Button>
       </div>
     );

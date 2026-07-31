@@ -607,7 +607,10 @@ export default function InstructorProfileEditPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
+                  >
                     Tak, usuń
                   </AlertDialogAction>
                 </AlertDialogFooter>

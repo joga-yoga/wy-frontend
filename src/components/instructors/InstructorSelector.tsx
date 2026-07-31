@@ -114,7 +114,7 @@ export function InstructorSelector({
             <SelectValue placeholder={isLoading ? "Loading..." : "Select an instructor..."} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="add-new" className="text-blue-600 italic">
+            <SelectItem value="add-new" className="text-b2b-green-text italic">
               <div className="flex items-center gap-2">
                 <PlusCircle size={16} /> Add New Instructor...
               </div>
@@ -144,7 +144,7 @@ export function InstructorSelector({
           </Button>
         )}
       </div>
-      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-sm text-b2b-red-solid mt-1">{error}</p>}
 
       <InstructorModal
         isOpen={isModalOpen}

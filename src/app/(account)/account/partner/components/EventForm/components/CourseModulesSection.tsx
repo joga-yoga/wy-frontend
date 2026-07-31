@@ -40,7 +40,7 @@ export const CourseModulesSection = ({ control, register, errors }: CourseModule
                 variant="ghost"
                 size="icon"
                 onClick={() => remove(index)}
-                className="h-7 w-7 text-gray-500 hover:text-red-600"
+                className="h-7 w-7 text-gray-500 hover:text-b2b-red-solid"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

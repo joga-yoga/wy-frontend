@@ -144,7 +144,7 @@ export function CourseProgramBuilder({ program, errors, onChange }: CourseProgra
 
       <button
         type="button"
-        className="flex min-h-10 items-center gap-3 text-base font-medium text-blue-600"
+        className="flex min-h-10 items-center gap-3 text-base font-medium text-b2b-green-text"
         onClick={addBlock}
       >
         <Plus className="size-5" />

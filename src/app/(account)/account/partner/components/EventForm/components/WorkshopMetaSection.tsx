@@ -56,7 +56,7 @@ export const WorkshopMetaSection = ({ control }: WorkshopMetaSectionProps) => {
                   typeof fieldState.error === "object" &&
                   fieldState.error.message && (
                     <div className="mt-1">
-                      <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                      <p className="text-xs text-b2b-red-solid">{fieldState.error.message}</p>
                     </div>
                   )}
               </>

@@ -443,8 +443,8 @@ export function LoginPage() {
       {step === "verify-forgot" && (
         <div className="max-w-md w-full text-center space-y-6">
           <div className="flex justify-center">
-            <div className="bg-blue-100 p-4 rounded-full">
-              <Mail className="w-12 h-12 text-blue-600" />
+            <div className="bg-gray-100 p-4 rounded-full">
+              <Mail className="w-12 h-12 text-b2b-green-text" />
             </div>
           </div>
           <div className="space-y-2">

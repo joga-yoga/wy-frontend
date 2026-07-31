@@ -334,7 +334,7 @@ function InquiryRow({ item, showSourceLabel }: { item: InquiryItem; showSourceLa
             </StatusChip>
           ) : (
             !item.is_read && (
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-brand-green-700">
+              <span className="rounded-full bg-b2b-green-bg px-2 py-0.5 text-[10px] font-medium text-brand-green-700">
                 Nowa
               </span>
             )
@@ -367,13 +367,13 @@ function InviteRowShell({
         onClick={() => setIsOpen(true)}
         className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-brand-green-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-b2b-green-bg text-brand-green-700">
           <UserPlus size={18} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-gray-900">{title}</p>
           {subtitle && <p className="truncate text-xs text-gray-500 mt-0.5">{subtitle}</p>}
-          <span className="mt-1 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+          <span className="mt-1 inline-block rounded-full bg-b2b-amber-bg px-2 py-0.5 text-[10px] font-medium text-b2b-amber-text">
             Zaproszenie
           </span>
         </div>

@@ -78,7 +78,7 @@ export const CourseMetaSection = ({ control, register, errors }: CourseMetaSecti
                   className="absolute w-0 h-0 opacity-0 pointer-events-none"
                 />
                 {fieldState.error?.message && (
-                  <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                  <p className="text-xs text-b2b-red-solid">{fieldState.error.message}</p>
                 )}
               </>
             )}

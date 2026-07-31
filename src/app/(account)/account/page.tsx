@@ -210,7 +210,7 @@ export default function AccountHubPage() {
 
         <button
           onClick={signOut}
-          className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-red-600 hover:text-red-700"
+          className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-b2b-red-solid hover:text-b2b-red-solid"
         >
           <LogOut size={14} />
           Wyloguj się

@@ -166,7 +166,7 @@ function ListEditor({
           </div>
         ))}
         <div className="flex items-center gap-3">
-          <Plus className="size-5 shrink-0 text-blue-600" />
+          <Plus className="size-5 shrink-0 text-b2b-green-text" />
           <Input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -304,7 +304,7 @@ export function MoreDetailsBuilder({ values, setField }: MoreDetailsBuilderProps
                 onClick={() => setActive(key)}
               >
                 <span className="min-w-0 flex-1 text-base">{detailLabels[key]}</span>
-                <Plus className="size-5 text-blue-600" />
+                <Plus className="size-5 text-b2b-green-text" />
               </button>
             ),
           )}

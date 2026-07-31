@@ -105,7 +105,7 @@ export default function FrontDeskPage() {
 
       {data && data.overdue.length > 0 && (
         <section className="mb-6">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-amber-700">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-b2b-amber-text">
             Do rozliczenia
           </h2>
           <div className="divide-y rounded-xl border bg-white overflow-hidden">

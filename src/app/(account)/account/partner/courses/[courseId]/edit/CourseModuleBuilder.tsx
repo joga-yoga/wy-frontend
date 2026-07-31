@@ -178,7 +178,7 @@ export function CourseModuleBuilder({ modules, errors, onChange }: CourseModuleB
       <div className="flex items-center justify-between pt-1">
         <button
           type="button"
-          className="flex min-h-10 items-center gap-3 text-base font-medium text-blue-600"
+          className="flex min-h-10 items-center gap-3 text-base font-medium text-b2b-green-text"
           onClick={() => setEditing(emptyEditModule)}
         >
           <Plus className="size-5" />

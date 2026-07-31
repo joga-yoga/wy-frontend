@@ -678,7 +678,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       type="button"
                       onClick={() => setDirtyValue("is_listed", !values.is_listed)}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        values.is_listed ? "bg-emerald-500" : "bg-gray-200"
+                        values.is_listed ? "bg-b2b-green-text" : "bg-gray-200"
                       }`}
                     >
                       <span

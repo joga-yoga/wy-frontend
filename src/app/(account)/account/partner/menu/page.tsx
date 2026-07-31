@@ -193,7 +193,7 @@ export default function MenuPage() {
 
       {/* B2B→B2C switch — the calm counterpart to the pinned B2C button (T13);
           calm here because the tab bar already exists (spec-b2b §2). */}
-      {/* `bg-emerald-50` is #ECFDF5 — lighter and cooler than the design's #E7F3EB, which
+      {/* `bg-b2b-green-bg` is #ECFDF5 — lighter and cooler than the design's #E7F3EB, which
           is exactly the mismatch the user reported. It comes from the token now.
           Stays a bordered card rather than a solid button: B2B already has a tab bar, so
           the switch is calm here, while B2C (which has none) gets the pinned button. */}
@@ -213,7 +213,7 @@ export default function MenuPage() {
 
       <button
         onClick={signOut}
-        className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-red-600 hover:text-red-700"
+        className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-b2b-red-solid hover:text-b2b-red-solid"
       >
         <LogOut size={14} />
         Wyloguj się

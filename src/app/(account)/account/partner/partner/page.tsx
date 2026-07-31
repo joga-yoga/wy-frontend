@@ -516,24 +516,24 @@ export default function PartnerProfilePage() {
               </div>
 
               {hasUnsavedLocationChange && selectedLocation && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-amber-800 text-sm">
+                <div className="p-3 bg-b2b-amber-bg border border-b2b-amber-border rounded-lg">
+                  <p className="text-b2b-amber-text text-sm">
                     Zapisz profil, aby używać tej lokalizacji na publicznej stronie organizatora.
                   </p>
                 </div>
               )}
 
               {!selectedLocation && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-blue-700 text-sm">
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-b2b-green-text text-sm">
                     📍 Wybierz lokalizację powyżej, aby móc pobierać recenzje z Google Maps.
                   </p>
                 </div>
               )}
 
               {selectedLocation && !selectedGooglePlaceId && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm">
+                <div className="p-4 bg-b2b-amber-bg border border-b2b-amber-border rounded-lg">
+                  <p className="text-b2b-amber-text text-sm">
                     Wybrana lokalizacja nie ma Google Place ID. Edytuj lokalizację i wybierz wynik z
                     Google Maps.
                   </p>
@@ -565,7 +565,7 @@ export default function PartnerProfilePage() {
 
               {/* Error Message */}
               {collectReviewsError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                <div className="p-3 bg-b2b-red-bg border border-b2b-red-border rounded text-b2b-red-solid text-sm">
                   {collectReviewsError}
                 </div>
               )}
@@ -576,7 +576,7 @@ export default function PartnerProfilePage() {
                     type="button"
                     onClick={handleCollectReviews}
                     disabled={isCollectingReviews || isSubmitting || !selectedGooglePlaceId}
-                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="w-full h-10 bg-b2b-green-text hover:bg-b2b-green-text text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {isCollectingReviews ? (
                       <>

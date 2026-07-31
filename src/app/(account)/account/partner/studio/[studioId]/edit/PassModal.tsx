@@ -221,7 +221,7 @@ export function PassModal({
 
           {/* Both unlimited warning */}
           {bothUnlimited && (
-            <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+            <div className="flex items-center gap-2 rounded-md bg-b2b-amber-bg border border-b2b-amber-border px-3 py-2 text-sm text-b2b-amber-text">
               <AlertTriangle className="size-4 shrink-0" />
               Karnet bez limitu dni i wejść — upewnij się, że tego chcesz.
             </div>

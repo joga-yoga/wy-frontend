@@ -91,7 +91,7 @@ function VerifyEmailContent() {
 
       {status === "error" && (
         <div className="space-y-4">
-          <div className="h-16 w-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+          <div className="h-16 w-16 bg-b2b-red-bg text-b2b-red-solid rounded-full flex items-center justify-center mx-auto text-3xl">
             ✕
           </div>
           <h1 className="text-2xl font-semibold">Błąd weryfikacji</h1>

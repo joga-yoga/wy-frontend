@@ -39,7 +39,7 @@ export function EventVisibilitySection({ type, isToggling, onHide }: EventVisibi
         <Button
           type="button"
           variant="outline"
-          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 w-full sm:w-auto"
+          className="border-b2b-red-border text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid w-full sm:w-auto"
           onClick={onHide}
           disabled={isToggling}
         >

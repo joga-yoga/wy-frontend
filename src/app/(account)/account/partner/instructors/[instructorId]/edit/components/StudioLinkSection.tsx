@@ -192,7 +192,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
               <p className="truncate text-xs text-muted-foreground">{studio.address}</p>
             )}
             {studio.status === "stub" && (
-              <span className="text-xs text-amber-600">zaproszenie wysłane · oczekuje</span>
+              <span className="text-xs text-b2b-amber-text">zaproszenie wysłane · oczekuje</span>
             )}
           </div>
           <Button
@@ -426,12 +426,12 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
 
       {/* Success state */}
       {mode === "success" && createdStudioId && (
-        <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <div className="space-y-3 rounded-lg border border-b2b-green-border bg-b2b-green-bg p-4">
           <div className="flex items-center gap-2">
-            <Check className="size-5 text-emerald-600" />
-            <p className="text-sm font-semibold text-emerald-800">Studio utworzone!</p>
+            <Check className="size-5 text-b2b-green-text" />
+            <p className="text-sm font-semibold text-b2b-green-text">Studio utworzone!</p>
           </div>
-          <p className="text-sm text-emerald-700">Szczegóły uzupełnisz w Oferta → Studio.</p>
+          <p className="text-sm text-b2b-green-text">Szczegóły uzupełnisz w Oferta → Studio.</p>
           <div className="flex gap-2">
             <Button
               type="button"

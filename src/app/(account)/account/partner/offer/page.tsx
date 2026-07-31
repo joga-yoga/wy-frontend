@@ -72,7 +72,8 @@ const getEventStatus = (event: BaseEvent) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const end = event.end_date ? new Date(event.end_date) : null;
-  if (end && end < today) return { text: "Minęło", className: "bg-yellow-100 text-yellow-800" };
+  if (end && end < today)
+    return { text: "Minęło", className: "bg-b2b-amber-bg text-b2b-amber-text" };
   return { text: "Publiczne", className: "bg-green-100 text-green-800" };
 };
 
@@ -366,7 +367,7 @@ export default function OfferPage() {
               onClick={() => setIsCreateMenuOpen(false)}
               className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-b2b-green-text">
                 <Users size={18} />
               </div>
               <div className="min-w-0 flex-1">
@@ -450,14 +451,14 @@ const OFFER_TYPE_ROWS = [
     title: "Wyjazd",
     description: "Kilkudniowy retreat z zakwaterowaniem",
     Icon: Mountain,
-    badgeClassName: "bg-emerald-100 text-emerald-700",
+    badgeClassName: "bg-b2b-green-bg text-b2b-green-text",
   },
   {
     href: "/konto/partner/wydarzenia/create",
     title: "Wydarzenie",
     description: "Spotkanie, jednorazowa praktyka",
     Icon: Sparkles,
-    badgeClassName: "bg-amber-100 text-amber-700",
+    badgeClassName: "bg-b2b-amber-bg text-b2b-amber-text",
   },
   {
     href: "/konto/partner/kursy/create",

@@ -61,7 +61,9 @@ export const TagsSelect = ({ control, errors }: TagsSelectProps) => {
               );
             })}
           </div>
-          {fieldState.error && <p className="text-sm text-red-500">{fieldState.error.message}</p>}
+          {fieldState.error && (
+            <p className="text-sm text-b2b-red-solid">{fieldState.error.message}</p>
+          )}
         </div>
       )}
     />
