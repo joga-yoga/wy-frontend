@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowLeft, Calendar, MapPin, Sparkles, User } from "lucide-react";
+import { Calendar, MapPin, Sparkles, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
-import { InstructorProfileForm } from "@/components/instructors/InstructorProfileForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +37,7 @@ interface PublicPreview {
 export function HeaderAvatar() {
   const [instructor, setInstructor] = useState<InstructorProfile | null | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const router = useRouter();
   const [preview, setPreview] = useState<PublicPreview | null>(null);
 
   useEffect(() => {
@@ -70,7 +70,6 @@ export function HeaderAvatar() {
   }, [isOpen, instructor?.slug]);
 
   function openDrawer() {
-    setIsEditing(false);
     setIsOpen(true);
   }
 
@@ -102,31 +101,20 @@ export function HeaderAvatar() {
 
       <Drawer open={isOpen} onOpenChange={setIsOpen} showSwipeHandle>
         <DrawerContent className="sm:mx-auto sm:max-w-md">
-          {isEditing && instructor ? (
-            <>
-              <DrawerHeader className="flex-row items-center justify-between">
-                <button onClick={() => setIsEditing(false)} aria-label="Wróć" className="p-1">
-                  <ArrowLeft size={18} />
-                </button>
-                <DrawerTitle>Edytuj profil</DrawerTitle>
-                <span className="w-6" />
-              </DrawerHeader>
-              <InstructorProfileForm
-                instructor={instructor}
-                onSaved={(updated) => {
-                  setInstructor(updated);
-                  setIsEditing(false);
-                }}
-              />
-            </>
-          ) : instructor ? (
+          {instructor ? (
             <>
               <DrawerHeader className="flex-row items-center justify-between">
                 <DrawerTitle className="sr-only">Twój profil instruktora</DrawerTitle>
                 <DrawerClose className="text-sm text-muted-foreground">Zamknij</DrawerClose>
+                {/* V3's caption: "Ten sam edytor, którym manager edytuje stuby (R5)" —
+                    one editor, not a drawer-sized copy of it. A profile with certificates,
+                    a gallery and social links does not belong in a bottom sheet. */}
                 <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-sm font-semibold text-brand-green-700"
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push(`/konto/partner/instruktorzy/${instructor.id}/edit`);
+                  }}
+                  className="text-sm font-semibold text-b2b-green-strong"
                 >
                   Edytuj
                 </button>

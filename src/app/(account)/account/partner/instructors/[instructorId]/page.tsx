@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { WyImage } from "@/components/custom/WyImage";
-import { InstructorProfileForm } from "@/components/instructors/InstructorProfileForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +25,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import type { InstructorProfile, InstructorPublic } from "@/types/instructor";
 
 import type { StudioRosterDetachResponse, StudioRosterItem, StudioRosterResponse } from "../types";
+import { InstructorFullProfileForm } from "./edit/InstructorFullProfileForm";
 
 function formatInviteDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
@@ -221,49 +221,47 @@ export default function RosterInstructorDetailPage() {
       </InfoNote>
     ) : null;
 
-  return (
-    <div className="max-w-md mx-auto py-5 space-y-4">
-      <InstructorProfileForm
-        instructor={instructor}
-        statusBanner={banner}
-        onSaved={(updated) => setInstructor(updated)}
-        onViewPublic={
-          instructor.slug
-            ? () => window.open(`/instruktor/${instructor.slug}`, "_blank")
-            : undefined
-        }
-      />
+  const detachAction = canDetach ? (
+    <div className="px-4 text-center">
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button type="button" className="text-sm font-medium text-b2b-red-solid hover:underline">
+            Odłącz od studia
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Odłączyć {instructor.name} od studia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Profil instruktora zostanie odłączony od tego studia. Instruktor zachowuje swój profil
+              i może zostać dodany ponownie w każdej chwili.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDetach}
+              disabled={isDetaching}
+              className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
+            >
+              Odłącz
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  ) : null;
 
-      {canDetach && (
-        <div className="px-4 text-center">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="text-sm font-medium text-b2b-red-solid hover:underline">
-                Odłącz od studia
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Odłączyć {instructor.name} od studia?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Profil instruktora zostanie odłączony od tego studia. Instruktor zachowuje swój
-                  profil i może zostać dodany ponownie w każdej chwili.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDetach}
-                  disabled={isDetaching}
-                  className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
-                >
-                  Odłącz
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      )}
+  // The full editor, not the 4-field cut-down this screen used to render. Certificates,
+  // descriptions, gallery, languages, locations and social links were all reachable only
+  // from the /edit URL, which nothing linked to.
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-5 pb-28">
+      <InstructorFullProfileForm
+        instructorId={instructor.id}
+        statusBanner={banner}
+        extraActions={detachAction}
+      />
     </div>
   );
 }

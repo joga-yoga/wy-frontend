@@ -176,7 +176,7 @@ function BackButton({ variant = "back" }: { variant?: "back" | "close" }) {
     <button onClick={handleBack} aria-label={isClose ? "Zamknij" : "Wróć"}>
       <div className="h-10 w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
         {isClose ? (
-          <IoClose className="h-6 w-6" />
+          <IoClose className="h-5 w-5" />
         ) : (
           <IoChevronBack className="h-5 w-5 ml-[-2px]" />
         )}
