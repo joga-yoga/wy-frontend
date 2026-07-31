@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { PassCard } from "@/components/b2b/PassCard";
@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { cameFromB2B, clearB2COrigin, rememberB2COrigin } from "@/lib/b2cOrigin";
 import { personInitials, personLabel } from "@/lib/personDisplay";
+import { publicReturnHref } from "@/lib/publicReturn";
 
 import type { MyBookingsResponse, MyPassWalletOut } from "./types";
 
@@ -34,7 +34,6 @@ import type { MyBookingsResponse, MyPassWalletOut } from "./types";
  */
 export default function AccountHubPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
   const [summary, setSummary] = useState<MyBookingsResponse | null>(null);
@@ -46,11 +45,6 @@ export default function AccountHubPage() {
       router.replace(`/konto/logowanie?next=${encodeURIComponent("/konto")}`);
     }
   }, [loading, user, router]);
-
-  // Recorded once on arrival so it survives navigating away into public pages and back.
-  useEffect(() => {
-    rememberB2COrigin(searchParams.get("from"));
-  }, [searchParams]);
 
   useEffect(() => {
     if (!user) return;
@@ -73,16 +67,13 @@ export default function AccountHubPage() {
   }
 
   function handleClose() {
-    // If the user came from the partner panel, close returns there — deterministically,
-    // not via history. By the time they have tapped a public link and come back,
-    // `router.back()` lands on that public page, which is the bug being fixed.
-    if (cameFromB2B()) {
-      clearB2COrigin();
-      router.push("/konto/partner");
-      return;
-    }
-    if (window.history.length > 1) router.back();
-    else router.push("/");
+    // Always out to the public site — never to the partner panel. The panel is reached by
+    // the pinned "Przełącz na konto partnera" button below, which is always on screen;
+    // closing to it left a partner with no way out to joga.yoga at all.
+    //
+    // Not `router.back()`: by now the previous entry could be another account screen or an
+    // auth bounce. The recorded public URL is the thing the user actually means.
+    router.push(publicReturnHref());
   }
 
   async function handleBecomePartner() {
@@ -228,7 +219,7 @@ export default function AccountHubPage() {
         >
           <div className="mx-auto max-w-md">
             <Button size="action" variant="green" className="w-full gap-2" asChild>
-              <Link href="/konto/partner" onClick={clearB2COrigin}>
+              <Link href="/konto/partner">
                 <ArrowLeftRight size={16} />
                 Przełącz na konto partnera
               </Link>

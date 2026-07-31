@@ -198,7 +198,7 @@ export default function MenuPage() {
           Stays a bordered card rather than a solid button: B2B already has a tab bar, so
           the switch is calm here, while B2C (which has none) gets the pinned button. */}
       <Link
-        href="/konto?from=b2b"
+        href="/konto"
         className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-b2b-green-bg text-b2b-green-text">
