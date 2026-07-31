@@ -246,12 +246,12 @@ export default function SchedulePage() {
           {/* "Dziś" belongs with the week chevrons, not with the title — it is week
            * navigation, not a label. */}
           <div className="flex shrink-0 items-center gap-1">
-            <button
+            {/* <button
               onClick={jumpToToday}
               className="mr-1 rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50"
             >
               Dziś
-            </button>
+            </button> */}
             <button
               onClick={() => dayStripRef.current?.goToPreviousWeek()}
               aria-label="Poprzedni tydzień"

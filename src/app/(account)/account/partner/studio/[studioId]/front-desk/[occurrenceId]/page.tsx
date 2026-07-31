@@ -408,15 +408,15 @@ export default function FrontDeskRosterPage() {
     0;
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-32 pt-6">
+    <div className="mx-auto max-w-lg px-4 pb-32 pt-3">
       <div className="mb-4 grid grid-cols-3 gap-2">
         <div className="rounded-xl border bg-white px-3 py-2.5 text-center">
-          <p className="text-lg font-semibold text-gray-900">{zapisanych}</p>
-          <p className="text-xs text-gray-500">zapisanych</p>
+          <p className="text-xl font-bold text-gray-900">{zapisanych}</p>
+          <p className="text-xs font-semibold text-gray-400">zapisanych</p>
         </div>
         <div className="rounded-xl border bg-white px-3 py-2.5 text-center">
-          <p className="text-lg font-semibold text-gray-900">{obecnych}</p>
-          <p className="text-xs text-gray-500">obecnych</p>
+          <p className="text-xl font-bold text-gray-900">{obecnych}</p>
+          <p className="text-xs font-semibold text-gray-400">obecnych</p>
         </div>
         <div
           className={cn(
@@ -426,13 +426,18 @@ export default function FrontDeskRosterPage() {
         >
           <p
             className={cn(
-              "text-lg font-semibold",
+              "text-xl font-bold",
               doRozliczenia > 0 ? "text-b2b-amber-text" : "text-gray-900",
             )}
           >
             {doRozliczenia}
           </p>
-          <p className={cn("text-xs", doRozliczenia > 0 ? "text-b2b-amber-text" : "text-gray-500")}>
+          <p
+            className={cn(
+              "text-xs font-semibold",
+              doRozliczenia > 0 ? "text-b2b-amber-text" : "text-gray-400",
+            )}
+          >
             do rozliczenia
           </p>
         </div>

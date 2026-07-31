@@ -178,7 +178,7 @@ function BackButton({ variant = "back" }: { variant?: "back" | "close" }) {
         {isClose ? (
           <IoClose className="h-6 w-6" />
         ) : (
-          <IoChevronBack className="h-6 w-6 ml-[-2px]" />
+          <IoChevronBack className="h-5 w-5 ml-[-2px]" />
         )}
       </div>
     </button>
@@ -214,7 +214,7 @@ export function DashboardTopBar() {
   const subtitle = usePageSubtitle();
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-3 border-b bg-background px-4 md:h-20 md:px-6">
+    <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-3 bg-background px-4 md:h-20 md:px-6">
       {isMainTab ? (
         <>
           {title && <h1 className="truncate text-2xl font-bold text-gray-900">{title}</h1>}
@@ -233,9 +233,7 @@ export function DashboardTopBar() {
             <div className="relative min-w-0 flex-1">
               <h1 className="truncate text-xl font-bold text-gray-900">{title}</h1>
               {subtitle && (
-                <p className="absolute inset-x-0 top-full truncate text-xs text-gray-500">
-                  {subtitle}
-                </p>
+                <p className="truncate text-sm font-semibold text-gray-400">{subtitle}</p>
               )}
             </div>
           )}
