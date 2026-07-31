@@ -44,10 +44,15 @@ export function SegmentedToggle<T>({
             disabled={disabled}
             aria-pressed={isSelected}
             className={cn(
-              "min-h-10 rounded-lg border text-sm",
+              // Design HTML `.seg .sg`: 1.5px border, 12px radius, 700 weight. The
+              // selected state is `--brand` (#4F8A62 == brand-green-700) plus a 1px ring
+              // of the same, on a barely-tinted white. It was `--brand-green`, the
+              // *bright* brand green, which reads as a highlighter next to the muted
+              // palette the rest of the panel uses.
+              "min-h-11 rounded-xl border-[1.5px] px-3 text-sm font-bold transition-colors",
               isSelected
-                ? "border-brand-green font-semibold text-foreground"
-                : "border-border text-muted-foreground",
+                ? "border-b2b-green-text bg-[#FBFDFC] text-b2b-green-strong ring-1 ring-b2b-green-text"
+                : "border-border text-muted-foreground hover:bg-gray-50",
               disabled && "cursor-not-allowed opacity-60",
             )}
             onClick={() => onChange(option.value)}

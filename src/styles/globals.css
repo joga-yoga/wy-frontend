@@ -138,6 +138,10 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    /* The design HTML's card radius (`.card{border-radius:18px}`). Tailwind's rounded-xl
+     * is 12px, which is what every container in the panel had been using. */
+    --radius-b2b: 18px;
+
     --color-brand-green: var(--brand-green);
     --color-brand-green-700: var(--brand-green-700);
     --color-brand-yellow: var(--brand-yellow);
@@ -147,6 +151,7 @@
     --color-brand-pink: var(--brand-pink);
 
     --color-b2b-green-bg: var(--b2b-green-bg);
+    --color-b2b-green-strong: var(--b2b-green-strong);
     --color-b2b-green-border: var(--b2b-green-border);
     --color-b2b-green-text: var(--b2b-green-text);
     --color-b2b-amber-bg: var(--b2b-amber-bg);
@@ -345,6 +350,11 @@
     --b2b-green-bg: #e7f3eb;
     --b2b-green-border: #d4e3d9;
     --b2b-green-text: var(--brand-green-700); /* sampled #4F8A63 == brand-green-700 */
+    /* The design HTML's `--brand-text`. Deliberately darker than --b2b-green-text: that
+     * one is the *fill* colour (buttons, bars), and at #4F8A63 it is too light to read
+     * as text on the #E7F3EB tint. Chips, tinted-tile icons and inline green links use
+     * this instead. */
+    --b2b-green-strong: #396a49;
 
     --b2b-amber-bg: #fcf3e2;
     --b2b-amber-border: #ead9af;
@@ -444,6 +454,11 @@
     --b2b-green-bg: #e7f3eb;
     --b2b-green-border: #d4e3d9;
     --b2b-green-text: var(--brand-green-700); /* sampled #4F8A63 == brand-green-700 */
+    /* The design HTML's `--brand-text`. Deliberately darker than --b2b-green-text: that
+     * one is the *fill* colour (buttons, bars), and at #4F8A63 it is too light to read
+     * as text on the #E7F3EB tint. Chips, tinted-tile icons and inline green links use
+     * this instead. */
+    --b2b-green-strong: #396a49;
 
     --b2b-amber-bg: #fcf3e2;
     --b2b-amber-border: #ead9af;

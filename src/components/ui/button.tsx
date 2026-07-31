@@ -13,7 +13,7 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border-[1.5px] bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         muted: "text-base bg-muted text-foreground hover:bg-muted/70",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
@@ -31,6 +31,17 @@ const buttonVariants = cva(
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
         cta: "h-[48px] md:h-[48px] rounded-full text-lg md:text-xl px-4",
+        /**
+         * The B2B panel's action size, from the design HTML: `.btn-primary` is
+         * `border-radius:999px; padding:16px; font-size:16.5px; font-weight:700`, and
+         * `.footbar .fb` the same pill one step down.
+         *
+         * `cta` is the *public* pages' larger single call to action (Zarezerwuj) and
+         * keeps its bigger type; this is its panel-scale sibling. Both are pills —
+         * the default `rounded-md h-9` is what made every save button in the panel look
+         * unlike the design.
+         */
+        action: "h-12 rounded-full px-5 text-base font-semibold",
       },
     },
     defaultVariants: {
