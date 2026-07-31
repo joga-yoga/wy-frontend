@@ -33,7 +33,7 @@ export function InstructorPicker({
 }) {
   if (instructors.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+      <p className="rounded-b2b border border-dashed bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
         Brak instruktorów w tym studiu. Dodaj kogoś w Menu → Instruktorzy.
       </p>
     );
@@ -56,7 +56,7 @@ export function InstructorPicker({
             type="button"
             onClick={() => onSelect(instructor.id)}
             className={cn(
-              "flex w-full items-center gap-3 rounded-xl border bg-white px-3 py-3 text-left transition-colors",
+              "flex w-full items-center gap-3 rounded-b2b border bg-white px-3 py-3 text-left transition-colors",
               isSelected ? "border-b2b-green-text ring-1 ring-b2b-green-text" : "border-gray-200",
             )}
           >

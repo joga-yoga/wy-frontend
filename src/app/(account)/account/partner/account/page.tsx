@@ -26,7 +26,7 @@ export default function KontoPage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-5">
       {/* Identity card */}
-      <div className="rounded-xl border bg-white px-4 py-4 flex items-center gap-4">
+      <div className="rounded-b2b border bg-white px-4 py-4 flex items-center gap-4">
         <div className="h-12 w-12 shrink-0 rounded-full bg-gray-200 flex items-center justify-center">
           <span className="text-base font-semibold text-gray-700">
             {avatarInitials(user?.name, user?.email)}
@@ -45,7 +45,7 @@ export default function KontoPage() {
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">
           Profil partnera
         </h2>
-        <div className="rounded-xl border bg-white divide-y overflow-hidden">
+        <div className="rounded-b2b border bg-white divide-y overflow-hidden">
           <Link
             href="/konto/partner/organizacja"
             className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors"
@@ -72,7 +72,7 @@ export default function KontoPage() {
       <section className="space-y-1.5">
         <Link
           href="/konto?from=b2b"
-          className="rounded-xl border bg-white px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          className="rounded-b2b border bg-white px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
         >
           <div>
             <p className="text-sm font-medium text-gray-900">Przełącz na konto osobiste</p>
@@ -83,7 +83,7 @@ export default function KontoPage() {
       </section>
 
       {/* Wyloguj się */}
-      <div className="rounded-xl border border-b2b-red-border bg-white overflow-hidden">
+      <div className="rounded-b2b border border-b2b-red-border bg-white overflow-hidden">
         <button
           onClick={signOut}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-b2b-red-solid hover:bg-b2b-red-bg transition-colors"

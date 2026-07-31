@@ -214,7 +214,7 @@ export default function SchedulePage() {
       {reconciliation.sessionCount > 0 && (
         <Link
           href="/konto/partner/rozliczenia"
-          className="mb-4 flex items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
+          className="mb-4 flex items-center justify-between rounded-b2b border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
         >
           <span className="flex items-center gap-2">
             <AlertCircle size={16} />
@@ -287,7 +287,7 @@ export default function SchedulePage() {
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
         ) : !hasAnySessions ? (
-          <div className="rounded-xl border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
+          <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
             <Calendar size={24} className="mx-auto text-gray-400" />
             <p className="text-sm font-semibold text-gray-900">Grafik jest pusty</p>
             <p className="text-xs text-gray-500">
@@ -301,7 +301,7 @@ export default function SchedulePage() {
             </Link>
           </div>
         ) : selectedDay && selectedDay.session_count === 0 ? (
-          <div className="rounded-xl border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
+          <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
             <Calendar size={20} className="mx-auto text-gray-400" />
             {selectedDay.date < formatDate(new Date()) ? (
               <p className="text-sm text-gray-500">Nie było zajęć w ten dzień</p>
@@ -328,7 +328,7 @@ export default function SchedulePage() {
             </p>
 
             {/* One bordered container with dividers, not a stack of separate cards (A1). */}
-            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border bg-white">
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-b2b border bg-white">
               {selectedDay.occurrences.map((occ) => (
                 <GrafikSessionCard key={occ.id} occ={occ} onClick={setPanelOcc} />
               ))}

@@ -61,7 +61,7 @@ export default function ClassTemplatesPage() {
       {isLoading ? (
         <p className="text-center text-gray-400 py-8">Ładowanie...</p>
       ) : templates.length === 0 ? (
-        <div className="rounded-xl border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
+        <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
           <div className="mx-auto h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
             <Plus size={20} className="text-gray-400" />
           </div>
@@ -81,7 +81,7 @@ export default function ClassTemplatesPage() {
         // U1 draws one container with dividers, not a stack of cards — the same shape
         // part 1 landed for Grafik. Cards imply each row is a separate object; this is
         // one catalogue.
-        <div className="divide-y overflow-hidden rounded-xl border bg-white">
+        <div className="divide-y overflow-hidden rounded-b2b border bg-white">
           {templates.map((t) => (
             <Link
               key={t.id}

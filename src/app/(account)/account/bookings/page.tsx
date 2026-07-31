@@ -196,7 +196,7 @@ export default function MyBookingsPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Nadchodzące zajęcia
             </h2>
-            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
               {upcomingClasses.map((b) => (
                 <BookingRow key={b.booking_id} booking={b} dimmed={false} />
               ))}
@@ -209,7 +209,7 @@ export default function MyBookingsPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Wyjazdy i wydarzenia
             </h2>
-            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
               {upcomingTripEvents.map((b) => (
                 <BookingRow key={b.booking_id} booking={b} dimmed={false} />
               ))}
@@ -225,7 +225,7 @@ export default function MyBookingsPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Minione
             </h2>
-            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
               {past.map((b) => (
                 <BookingRow key={b.booking_id} booking={b} dimmed />
               ))}

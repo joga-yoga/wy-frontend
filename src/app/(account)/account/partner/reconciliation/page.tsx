@@ -103,7 +103,7 @@ export default function ReconciliationPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               {formatSessionHeader(session, showStudioLabels)}
             </h2>
-            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
               {rows.map((entry) => (
                 <button
                   key={entry.booking_id}

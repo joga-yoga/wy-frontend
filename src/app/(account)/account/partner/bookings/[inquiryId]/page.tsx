@@ -129,14 +129,14 @@ export default function InquiryDetailPage() {
       </div>
 
       {inquiry.event_title && (
-        <div className="rounded-xl border bg-white px-4 py-3">
+        <div className="rounded-b2b border bg-white px-4 py-3">
           <p className="text-xs text-gray-400 uppercase tracking-wide">Wydarzenie</p>
           <p className="mt-0.5 text-sm font-medium text-gray-900">{inquiry.event_title}</p>
         </div>
       )}
 
       {inquiry.message && (
-        <div className="rounded-xl border bg-white px-4 py-3.5">
+        <div className="rounded-b2b border bg-white px-4 py-3.5">
           <p className="text-sm text-gray-700 whitespace-pre-wrap">{inquiry.message}</p>
         </div>
       )}

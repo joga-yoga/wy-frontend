@@ -203,13 +203,22 @@ export function ScheduleRecurrenceForm({
           <div>
             <Label>{frequency === "once" ? "Data" : "Od dnia"}</Label>
             {disableFromDate ? (
-              <Button variant="outline" className="w-full justify-start font-normal" disabled>
+              <Button
+                size="action"
+                variant="outline"
+                className="w-full justify-start font-normal"
+                disabled
+              >
                 {fromDate ? fromDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
               </Button>
             ) : (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start font-normal">
+                  <Button
+                    size="action"
+                    variant="outline"
+                    className="w-full justify-start font-normal"
+                  >
                     {fromDate ? fromDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
                   </Button>
                 </PopoverTrigger>
@@ -224,7 +233,11 @@ export function ScheduleRecurrenceForm({
               <Label>Do dnia</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start font-normal">
+                  <Button
+                    size="action"
+                    variant="outline"
+                    className="w-full justify-start font-normal"
+                  >
                     {toDate ? toDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
                   </Button>
                 </PopoverTrigger>

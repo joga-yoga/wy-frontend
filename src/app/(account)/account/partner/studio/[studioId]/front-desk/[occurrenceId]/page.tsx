@@ -81,7 +81,7 @@ function PaymentOptionRow({
       onClick={onClick}
       aria-pressed={isSelected}
       className={cn(
-        "flex w-full items-start gap-3 rounded-xl border bg-white px-4 py-3 text-left transition-colors",
+        "flex w-full items-start gap-3 rounded-b2b border bg-white px-4 py-3 text-left transition-colors",
         isSelected ? "border-b2b-green-text ring-1 ring-b2b-green-text" : "border-gray-200",
       )}
     >
@@ -410,17 +410,17 @@ export default function FrontDeskRosterPage() {
   return (
     <div className="mx-auto max-w-lg px-4 pb-32 pt-3">
       <div className="mb-4 grid grid-cols-3 gap-2">
-        <div className="rounded-xl border bg-white px-3 py-2.5 text-center">
+        <div className="rounded-b2b border bg-white px-3 py-2.5 text-center">
           <p className="text-xl font-bold text-gray-900">{zapisanych}</p>
           <p className="text-xs font-semibold text-gray-400">zapisanych</p>
         </div>
-        <div className="rounded-xl border bg-white px-3 py-2.5 text-center">
+        <div className="rounded-b2b border bg-white px-3 py-2.5 text-center">
           <p className="text-xl font-bold text-gray-900">{obecnych}</p>
           <p className="text-xs font-semibold text-gray-400">obecnych</p>
         </div>
         <div
           className={cn(
-            "rounded-xl border px-3 py-2.5 text-center",
+            "rounded-b2b border px-3 py-2.5 text-center",
             doRozliczenia > 0 ? "border-b2b-amber-border bg-b2b-amber-bg" : "bg-white",
           )}
         >
@@ -448,7 +448,7 @@ export default function FrontDeskRosterPage() {
       ) : roster.length === 0 ? (
         <p className="py-8 text-center text-sm text-gray-400">Brak rezerwacji na te zajęcia.</p>
       ) : (
-        <div className="divide-y rounded-xl border bg-white overflow-hidden">
+        <div className="divide-y rounded-b2b border bg-white overflow-hidden">
           {sorted.map((entry) => (
             <RosterRow
               key={entry.booking_id}
@@ -468,7 +468,7 @@ export default function FrontDeskRosterPage() {
           <Button className="flex-1" onClick={() => setIsAddOpen(true)}>
             Dodaj uczestnika
           </Button>
-          <Button variant="outline" className="flex-1" asChild>
+          <Button size="action" variant="outline" className="flex-1" asChild>
             <Link href={`/konto/partner/studio/${studioId}/front-desk/sell-pass`}>
               Sprzedaj karnet
             </Link>
@@ -518,7 +518,7 @@ export default function FrontDeskRosterPage() {
                     <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
                       Klienci studia
                     </p>
-                    <div className="rounded-xl border bg-white overflow-hidden divide-y">
+                    <div className="rounded-b2b border bg-white overflow-hidden divide-y">
                       {searchResults.studio_clients.map((c) => (
                         <button
                           key={c.user_id}
@@ -549,7 +549,7 @@ export default function FrontDeskRosterPage() {
                     <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
                       Inne konta joga.yoga
                     </p>
-                    <div className="rounded-xl border bg-white overflow-hidden divide-y">
+                    <div className="rounded-b2b border bg-white overflow-hidden divide-y">
                       {searchResults.other_accounts.map((c) => (
                         <button
                           key={c.user_id}
@@ -588,7 +588,7 @@ export default function FrontDeskRosterPage() {
                       <button
                         onClick={createNewUser}
                         disabled={!query.includes("@")}
-                        className="flex w-full items-center gap-2 rounded-xl border px-4 py-3.5 text-left text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+                        className="flex w-full items-center gap-2 rounded-b2b border px-4 py-3.5 text-left text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
                       >
                         + Nowy użytkownik — podaj email
                       </button>
@@ -669,6 +669,7 @@ export default function FrontDeskRosterPage() {
                       )}
 
                       <Button
+                        size="action"
                         className="w-full"
                         variant="green"
                         disabled={
@@ -686,6 +687,7 @@ export default function FrontDeskRosterPage() {
                 )}
 
                 <Button
+                  size="action"
                   variant="outline"
                   className="w-full"
                   onClick={() => {

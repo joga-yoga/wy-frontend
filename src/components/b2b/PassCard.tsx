@@ -74,7 +74,7 @@ export function PassCard({
   return (
     <div
       className={cn(
-        "rounded-xl border px-4 py-4",
+        "rounded-b2b border px-4 py-4",
         isCancelled ? "border-b2b-red-border bg-white" : "bg-white",
         isExpired && "bg-gray-50 opacity-80",
         className,

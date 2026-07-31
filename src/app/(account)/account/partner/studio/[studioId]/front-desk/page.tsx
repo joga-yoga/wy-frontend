@@ -108,7 +108,7 @@ export default function FrontDeskPage() {
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-b2b-amber-text">
             Do rozliczenia
           </h2>
-          <div className="divide-y rounded-xl border bg-white overflow-hidden">
+          <div className="divide-y rounded-b2b border bg-white overflow-hidden">
             {data.overdue.map((entry) => (
               <RosterRow
                 key={entry.booking_id}
@@ -137,7 +137,7 @@ export default function FrontDeskPage() {
               <Link
                 key={session.occurrence_id}
                 href={`/konto/partner/studio/${studioId}/front-desk/${session.occurrence_id}`}
-                className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition-colors hover:bg-gray-50"
+                className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3 transition-colors hover:bg-gray-50"
               >
                 <div className="w-12 shrink-0 font-mono text-sm text-gray-500">
                   {formatTime(session.start_time)}

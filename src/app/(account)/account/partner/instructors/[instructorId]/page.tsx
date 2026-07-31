@@ -148,7 +148,7 @@ export default function RosterInstructorDetailPage() {
           )}
         </div>
 
-        <div className="flex items-start gap-3 rounded-xl border bg-gray-50 px-4 py-3.5 text-left">
+        <div className="flex items-start gap-3 rounded-b2b border bg-gray-50 px-4 py-3.5 text-left">
           <Lock size={16} className="mt-0.5 shrink-0 text-gray-400" />
           <p className="text-sm text-gray-600">
             Profil {rosterItem.name.split(" ")[0]} jest przejęty i zarządzany samodzielnie. Edycja
@@ -161,7 +161,7 @@ export default function RosterInstructorDetailPage() {
             href={`/instruktor/${rosterItem.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-xl border bg-white px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-between rounded-b2b border bg-white px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
           >
             <span className="text-sm font-semibold text-gray-900">Zobacz profil publiczny</span>
             <span className="text-xs text-gray-400">joga.yoga/i/{rosterItem.slug}</span>

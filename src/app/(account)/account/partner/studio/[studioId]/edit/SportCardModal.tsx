@@ -413,7 +413,7 @@ export function SportCardModal({
 
         <DrawerFooter className={step === "pick" ? "" : "flex-row gap-2"}>
           {step === "pick" && (
-            <DrawerClose render={<Button variant="outline" className="w-full" />}>
+            <DrawerClose render={<Button size="action" variant="outline" className="w-full" />}>
               Anuluj
             </DrawerClose>
           )}

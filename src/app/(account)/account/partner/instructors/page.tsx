@@ -152,7 +152,7 @@ export default function InstructorsRosterPage() {
     <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
       <p className="px-1 text-sm text-gray-500">{countLine}</p>
 
-      <div className="rounded-xl border bg-white overflow-hidden divide-y">
+      <div className="rounded-b2b border bg-white overflow-hidden divide-y">
         {items.map((item) => {
           const chip = CHIP[item.row_state];
           const subtitle = subtitleFor(item);

@@ -51,7 +51,7 @@ export function StudioWorkspaceRows({
       <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
         {studioName} · Twoje studio
       </h2>
-      <div className="rounded-xl border bg-white overflow-hidden divide-y">
+      <div className="rounded-b2b border bg-white overflow-hidden divide-y">
         {/* R1 leads this row with the studio's own logo rather than a generic icon —
             it is the only row that is *about* a specific studio. */}
         <MenuRow

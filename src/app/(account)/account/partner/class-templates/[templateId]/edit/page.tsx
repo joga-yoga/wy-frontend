@@ -91,7 +91,7 @@ export default function EditTemplatePage() {
           scheduled, and until now the only route into the wizard was Grafik's "+", which
           then asked you to pick the template you were already looking at. */}
       <div className="mt-6 border-t pt-4">
-        <Button variant="outline" className="w-full" asChild>
+        <Button size="action" variant="outline" className="w-full" asChild>
           <Link href={`/konto/partner/grafiki-zajec/create?templateId=${params.templateId}`}>
             <CalendarPlus size={15} className="mr-1.5" />
             Dodaj do grafiku

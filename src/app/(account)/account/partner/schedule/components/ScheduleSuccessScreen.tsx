@@ -34,7 +34,7 @@ export function ScheduleSuccessScreen({
         <h2 className="text-xl font-bold text-gray-900">{headline}</h2>
         <p className="text-sm text-gray-500">{body}</p>
       </div>
-      <div className="w-full rounded-xl border bg-white px-4 py-3.5 text-left">
+      <div className="w-full rounded-b2b border bg-white px-4 py-3.5 text-left">
         <p className="text-sm font-semibold text-gray-900">{summary}</p>
         <p className="mt-0.5 text-xs text-gray-500">{summaryNote}</p>
       </div>

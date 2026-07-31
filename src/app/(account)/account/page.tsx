@@ -139,7 +139,7 @@ export default function AccountHubPage() {
 
         <Link
           href="/konto/rezerwacje"
-          className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
+          className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
         >
           {/* Rounded square, not a circle: F2 reserves circles for people. */}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
@@ -157,7 +157,7 @@ export default function AccountHubPage() {
             Twoje karnety
           </h2>
           {wallets.length === 0 ? (
-            <div className="rounded-xl border border-dashed bg-white px-4 py-4 text-center">
+            <div className="rounded-b2b border border-dashed bg-white px-4 py-4 text-center">
               <p className="text-sm text-gray-500">Nie masz jeszcze karnetu.</p>
               <Link href="/wyjazdy" className="text-sm font-semibold text-brand-green-700">
                 Znajdź studio
@@ -184,7 +184,7 @@ export default function AccountHubPage() {
           <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
             Konto
           </h2>
-          <div className="rounded-xl border bg-white overflow-hidden divide-y">
+          <div className="rounded-b2b border bg-white overflow-hidden divide-y">
             {/* Account settings sub-pages are out of this task's committed scope
                 (spec-b2b §7: "detailed B2C design is deferred") — rows are visual
                 only until a later plan builds their destinations. */}
@@ -227,7 +227,7 @@ export default function AccountHubPage() {
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
           <div className="mx-auto max-w-md">
-            <Button variant="green" className="w-full gap-2" asChild>
+            <Button size="action" variant="green" className="w-full gap-2" asChild>
               <Link href="/konto/partner" onClick={clearB2COrigin}>
                 <ArrowLeftRight size={16} />
                 Przełącz na konto partnera

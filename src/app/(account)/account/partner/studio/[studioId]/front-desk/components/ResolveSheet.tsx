@@ -109,7 +109,7 @@ export function ResolveSheet({
           <button
             onClick={() => run("attended", onMarkAttended)}
             disabled={busyKey !== null}
-            className="w-full rounded-xl border bg-white px-4 py-3.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
+            className="w-full rounded-b2b border bg-white px-4 py-3.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
           >
             Obecność ✓ · płatność później
           </button>
@@ -118,7 +118,7 @@ export function ResolveSheet({
           <button
             onClick={() => run("no_show", onMarkNoShow)}
             disabled={busyKey !== null}
-            className="w-full rounded-xl border border-b2b-red-border bg-white px-4 py-3.5 text-center text-sm font-medium text-b2b-red-solid hover:bg-b2b-red-bg disabled:opacity-60"
+            className="w-full rounded-b2b border border-b2b-red-border bg-white px-4 py-3.5 text-center text-sm font-medium text-b2b-red-solid hover:bg-b2b-red-bg disabled:opacity-60"
           >
             Nieobecność
           </button>

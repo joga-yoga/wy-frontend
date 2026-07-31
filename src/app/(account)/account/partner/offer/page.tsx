@@ -338,7 +338,7 @@ export default function OfferPage() {
             </DrawerClose>
           </div>
           <div className="space-y-3 p-4 pt-2">
-            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
               {OFFER_TYPE_ROWS.map(({ href, title, description, Icon, badgeClassName }) => (
                 <Link
                   key={href}
@@ -365,7 +365,7 @@ export default function OfferPage() {
             <Link
               href="/konto/partner/instruktorzy/create"
               onClick={() => setIsCreateMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-b2b-green-text">
                 <Users size={18} />
@@ -496,7 +496,7 @@ function OfferEmptyState() {
         <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Typy wydarzeń
         </h2>
-        <div className="rounded-xl border bg-white overflow-hidden divide-y">
+        <div className="rounded-b2b border bg-white overflow-hidden divide-y">
           {OFFER_TYPE_ROWS.map(({ href, title, description, Icon, badgeClassName }) => (
             <Link
               key={href}
@@ -552,7 +552,7 @@ function EventSection({
       <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</h2>
 
       {/* One bordered card per type, with the add row as its last row (A3). */}
-      <div className="divide-y overflow-hidden rounded-xl border bg-white">
+      <div className="divide-y overflow-hidden rounded-b2b border bg-white">
         {items.length === 0 ? (
           <p className="px-4 py-5 text-center text-sm text-gray-400">{emptyText}</p>
         ) : (

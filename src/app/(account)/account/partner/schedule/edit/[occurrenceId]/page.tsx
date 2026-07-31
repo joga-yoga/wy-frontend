@@ -319,7 +319,7 @@ export default function EditSessionPage() {
               onSelect={() => setScope("whole_series")}
             />
           </div>
-          <Button variant="green" className="w-full" onClick={() => setStep("form")}>
+          <Button size="action" variant="green" className="w-full" onClick={() => setStep("form")}>
             Dalej
           </Button>
         </div>
@@ -348,6 +348,7 @@ export default function EditSessionPage() {
               </Button>
             )}
             <Button
+              size="action"
               variant="green"
               className="flex-1"
               onClick={goToPreview}
@@ -397,6 +398,7 @@ export default function EditSessionPage() {
               </Button>
             )}
             <Button
+              size="action"
               variant="green"
               className="flex-1"
               onClick={goToPreview}
@@ -427,6 +429,7 @@ export default function EditSessionPage() {
               Wstecz
             </Button>
             <Button
+              size="action"
               variant="green"
               className="flex-1"
               onClick={handleCommit}

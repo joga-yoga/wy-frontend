@@ -134,11 +134,18 @@ export function InstructorProfileForm({
 
       <div className="sticky bottom-0 flex gap-3 border-t bg-background px-4 py-3">
         {onViewPublic && (
-          <Button type="button" variant="outline" className="flex-1" onClick={onViewPublic}>
+          <Button
+            size="action"
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={onViewPublic}
+          >
             Zobacz
           </Button>
         )}
         <Button
+          size="action"
           type="button"
           variant="green"
           className="flex-1"

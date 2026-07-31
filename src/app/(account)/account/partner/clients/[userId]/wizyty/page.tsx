@@ -72,7 +72,7 @@ export default function ClientVisitsPage() {
           <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
             {monthLabel(month)}
           </h2>
-          <div className="rounded-xl border bg-white overflow-hidden divide-y">
+          <div className="rounded-b2b border bg-white overflow-hidden divide-y">
             {visits.map((v) => (
               <ClientVisitRow key={v.booking_id} visit={v} />
             ))}

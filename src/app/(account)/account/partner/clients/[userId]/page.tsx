@@ -102,7 +102,7 @@ export default function ClientDetailPage() {
             <PassCard pass={client.wallet} />
           </Link>
         ) : (
-          <div className="rounded-xl border border-dashed bg-white px-4 py-4 text-center text-sm text-gray-400">
+          <div className="rounded-b2b border border-dashed bg-white px-4 py-4 text-center text-sm text-gray-400">
             Brak karnetu
           </div>
         )}
@@ -110,7 +110,7 @@ export default function ClientDetailPage() {
 
       {/* Outline, not green: the primary green is the desk's settle action. Selling from
           a profile is navigation into a flow, not the flow's own commit. */}
-      <Button variant="outline" className="w-full" asChild>
+      <Button size="action" variant="outline" className="w-full" asChild>
         <Link
           href={`/konto/partner/studio/${studio.id}/front-desk/sell-pass?userId=${client.user_id}&email=${encodeURIComponent(client.email)}`}
         >
@@ -125,7 +125,7 @@ export default function ClientDetailPage() {
         {client.recent_visits.length === 0 ? (
           <p className="px-1 text-sm text-gray-400">Brak wizyt.</p>
         ) : (
-          <div className="overflow-hidden rounded-xl border bg-white divide-y">
+          <div className="overflow-hidden rounded-b2b border bg-white divide-y">
             {client.recent_visits.map((v) => (
               <ClientVisitRow key={v.booking_id} visit={v} />
             ))}

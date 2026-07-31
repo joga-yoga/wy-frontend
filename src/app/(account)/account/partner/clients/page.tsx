@@ -121,7 +121,7 @@ export default function ClientsListPage() {
       )}
 
       {!isLoading && clients && clients.length > 0 && (
-        <div className="rounded-xl border bg-white overflow-hidden divide-y">
+        <div className="rounded-b2b border bg-white overflow-hidden divide-y">
           {clients.map((client) => {
             const chip = chipLabel(client.chip);
             const displayName = client.name || client.email;

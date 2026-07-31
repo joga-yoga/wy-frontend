@@ -218,7 +218,7 @@ export default function BookingsPage() {
             {filter === "all" && (
               <div className="flex flex-col items-center gap-3 pt-1">
                 <Link href="/konto/partner/oferta" className="w-full">
-                  <Button variant="green" className="w-full rounded-full">
+                  <Button size="action" variant="green" className="w-full rounded-full">
                     Dodaj pierwsze wydarzenie
                   </Button>
                 </Link>
@@ -247,7 +247,7 @@ export default function BookingsPage() {
               <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
                 {label}
               </h2>
-              <div className="divide-y rounded-xl border bg-white overflow-hidden">
+              <div className="divide-y rounded-b2b border bg-white overflow-hidden">
                 {groupRows.map((row) => {
                   if (row.kind === "inquiry") {
                     return (

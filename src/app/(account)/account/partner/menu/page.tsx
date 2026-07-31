@@ -75,7 +75,7 @@ export default function MenuPage() {
       {invitations.length > 0 && (
         <section className="space-y-2">
           <SectionLabel>Zaproszenia</SectionLabel>
-          <div className="divide-y rounded-xl border bg-white overflow-hidden">
+          <div className="divide-y rounded-b2b border bg-white overflow-hidden">
             {invitations.map((inv) => (
               <div key={inv.id} className="px-4 py-3 space-y-2">
                 <p className="text-sm font-medium text-gray-900">
@@ -129,7 +129,7 @@ export default function MenuPage() {
       {!isLoading && managedStudios.length >= 2 && (
         <section className="space-y-2">
           <SectionLabel>Twoje studia</SectionLabel>
-          <div className="rounded-xl border bg-white overflow-hidden divide-y">
+          <div className="rounded-b2b border bg-white overflow-hidden divide-y">
             {managedStudios.map((studio) => (
               <MenuRow
                 key={studio.id}
@@ -148,7 +148,7 @@ export default function MenuPage() {
           <SectionLabel>Studio</SectionLabel>
           <Link
             href="/konto/partner/studio/create"
-            className="flex items-center justify-center rounded-xl border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center rounded-b2b border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
           >
             <div>
               <p className="text-sm text-gray-500">Prowadzisz własne studio?</p>
@@ -163,7 +163,7 @@ export default function MenuPage() {
           <SectionLabel>Studio</SectionLabel>
           <Link
             href="/konto/partner/studio/create"
-            className="flex items-center justify-center rounded-xl border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center rounded-b2b border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
           >
             <div>
               <p className="text-sm text-gray-500">Prowadzisz studio jogi?</p>
@@ -175,7 +175,7 @@ export default function MenuPage() {
 
       <section className="space-y-2">
         <SectionLabel>Konto</SectionLabel>
-        <div className="rounded-xl border bg-white overflow-hidden divide-y">
+        <div className="rounded-b2b border bg-white overflow-hidden divide-y">
           <MenuRow
             href="/konto/partner/organizacja"
             title="Profil organizatora"
@@ -199,7 +199,7 @@ export default function MenuPage() {
           the switch is calm here, while B2C (which has none) gets the pinned button. */}
       <Link
         href="/konto?from=b2b"
-        className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-b2b-green-bg text-b2b-green-text">
           <ArrowLeftRight size={18} />

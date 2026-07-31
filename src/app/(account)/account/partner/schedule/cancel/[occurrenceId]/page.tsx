@@ -153,6 +153,7 @@ export default function CancelSessionPage() {
               Anuluj
             </Button>
             <Button
+              size="action"
               variant="green"
               className="flex-1"
               onClick={goToPreview}
@@ -188,6 +189,7 @@ export default function CancelSessionPage() {
               Wstecz
             </Button>
             <Button
+              size="action"
               className="flex-1"
               variant="danger"
               onClick={handleCommit}

@@ -154,7 +154,7 @@ export function SessionPanel({
       {/* A cancelled session keeps its notification count — a real field the mockup omits,
        * so it is restyled rather than dropped. */}
       {isCancelled && (
-        <div className="mt-5 rounded-xl border border-b2b-red-border bg-b2b-red-bg px-4 py-3">
+        <div className="mt-5 rounded-b2b border border-b2b-red-border bg-b2b-red-bg px-4 py-3">
           <p className="text-sm font-semibold text-b2b-red-text">Sesja odwołana</p>
           {occ.notified_count > 0 && (
             <p className="mt-0.5 text-xs text-b2b-red-text/80">

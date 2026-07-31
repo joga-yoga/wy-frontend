@@ -386,11 +386,18 @@ export function TemplateEditor({
           you opened by mistake except the browser's back. */}
       <div className="flex gap-3">
         {onCancel && (
-          <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
+          <Button
+            size="action"
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={onCancel}
+          >
             Anuluj
           </Button>
         )}
         <Button
+          size="action"
           variant="green"
           className="flex-1"
           onClick={handleSubmit}

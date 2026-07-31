@@ -197,6 +197,7 @@ function StudioRosterAddFlow() {
         </div>
 
         <Button
+          size="action"
           variant="green"
           className="w-full"
           disabled={!stubName.trim() || isSubmitting}
@@ -241,7 +242,7 @@ function StudioRosterAddFlow() {
             Znaleziono na joga.yoga
           </p>
 
-          <div className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5">
+          <div className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5">
             {lookup.found === "instructor" ? (
               lookup.image_id ? (
                 <WyImage
@@ -280,7 +281,13 @@ function StudioRosterAddFlow() {
             </div>
           </div>
 
-          <Button variant="green" className="w-full" disabled={isSubmitting} onClick={handleInvite}>
+          <Button
+            size="action"
+            variant="green"
+            className="w-full"
+            disabled={isSubmitting}
+            onClick={handleInvite}
+          >
             {isSubmitting
               ? "Wysyłam..."
               : lookup.claim_status === "claimed"
@@ -304,7 +311,7 @@ function StudioRosterAddFlow() {
         <div className="h-px flex-1 bg-gray-100" />
       </div>
 
-      <Button variant="outline" className="w-full" onClick={() => goToStubStep(null)}>
+      <Button size="action" variant="outline" className="w-full" onClick={() => goToStubStep(null)}>
         Dodaj bez zaproszenia (bez emaila)
       </Button>
     </div>

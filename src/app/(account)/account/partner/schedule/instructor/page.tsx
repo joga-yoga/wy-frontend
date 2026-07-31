@@ -165,7 +165,7 @@ export default function InstructorSchedulePage() {
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
         ) : dayOccurrences.length === 0 ? (
-          <div className="rounded-xl border border-dashed bg-gray-50 py-8 px-4 text-center space-y-2">
+          <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-2">
             <Coffee size={20} className="mx-auto text-gray-400" />
             <p className="text-sm text-gray-500">Wolne — dziś nie prowadzisz zajęć</p>
           </div>
@@ -176,7 +176,7 @@ export default function InstructorSchedulePage() {
             </p>
             {/* Same single-container-with-dividers treatment as the owner Grafik (C1):
              * `GrafikSessionCard` is a row and carries no border of its own. */}
-            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border bg-white">
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-b2b border bg-white">
               {dayOccurrences.map((occ) => (
                 <GrafikSessionCard
                   key={occ.id}

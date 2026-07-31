@@ -28,7 +28,7 @@ export function InfoNote({
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 rounded-xl border px-4 py-3",
+        "flex items-start gap-2.5 rounded-b2b border px-4 py-3",
         isAmber
           ? "border-b2b-amber-border bg-b2b-amber-bg text-b2b-amber-text"
           : "border-gray-200 bg-gray-50 text-gray-600",

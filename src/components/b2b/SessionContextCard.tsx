@@ -21,7 +21,7 @@ export function SessionContextCard({
   return (
     <div
       className={cn(
-        "flex gap-3 rounded-xl border bg-gray-50 px-3 py-3",
+        "flex gap-3 rounded-b2b border bg-gray-50 px-3 py-3",
         tone === "danger" && "border-b2b-red-border bg-b2b-red-bg",
       )}
     >

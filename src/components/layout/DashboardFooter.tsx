@@ -78,7 +78,12 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           {/* Use items-center for alignment */}
           {/* Render Create button if handler exists */}
           {onCreate && (
-            <Button variant="default" onClick={onCreate} className="w-full md:w-auto md:flex-none">
+            <Button
+              size="action"
+              variant="default"
+              onClick={onCreate}
+              className="w-full md:w-auto md:flex-none"
+            >
               <span className="inline-flex items-center">
                 {createIcon}
                 <span className="ml-2 hidden md:block">{createLabel}</span>
@@ -88,7 +93,12 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           )}
           {/* Render View Public button if href exists */}
           {isPublished && viewPublicHref && (
-            <Button variant="outline" asChild className="w-full md:w-auto md:flex-none">
+            <Button
+              size="action"
+              variant="outline"
+              asChild
+              className="w-full md:w-auto md:flex-none"
+            >
               <a href={viewPublicHref} target="_blank" rel="noopener noreferrer">
                 <span className="inline-flex items-center">
                   {viewPublicIcon}
@@ -101,6 +111,7 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           {/* Render Publish button only if not published */}
           {showPublishButton && onPublishToggle && !isPublished && (
             <Button
+              size="action"
               variant="outline"
               onClick={onPublishToggle}
               disabled={isPublishing}

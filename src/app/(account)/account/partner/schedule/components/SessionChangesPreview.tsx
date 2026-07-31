@@ -98,7 +98,7 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
               // draws greyed-out "Bez zmian" rows for untouched sessions before the cutoff, but
               // the preview endpoint does not return those — the same reassurance is given in
               // words by the note card the caller renders, rather than by faking rows.
-              className="rounded-xl border border-b2b-green-text/60 bg-white px-4 py-3 ring-1 ring-b2b-green-text/25"
+              className="rounded-b2b border border-b2b-green-text/60 bg-white px-4 py-3 ring-1 ring-b2b-green-text/25"
             >
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-gray-900">
@@ -150,7 +150,7 @@ export function SessionChangesPreview({ items, notificationSummary }: SessionCha
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="w-full rounded-xl border bg-white py-3 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+            className="w-full rounded-b2b border bg-white py-3 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
           >
             Pokaż wszystkie sesje ({sorted.length})
           </button>

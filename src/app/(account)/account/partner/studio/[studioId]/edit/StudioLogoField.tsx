@@ -48,7 +48,7 @@ export function StudioLogoField({
             <img
               src={previewUrl}
               alt=""
-              className="h-14 w-14 rounded-xl border bg-white object-contain"
+              className="h-14 w-14 rounded-b2b border bg-white object-contain"
             />
           ) : (
             <StudioLogoTile name={studioName || "Studio"} imageId={imageId} size={56} />

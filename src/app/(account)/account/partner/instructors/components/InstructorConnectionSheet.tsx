@@ -94,7 +94,7 @@ export function InstructorConnectionSheet({
               href={`/instruktor/${item.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition-colors hover:bg-gray-50"
+              className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3 transition-colors hover:bg-gray-50"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                 <UserRound size={18} />

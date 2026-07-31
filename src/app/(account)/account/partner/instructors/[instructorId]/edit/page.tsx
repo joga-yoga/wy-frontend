@@ -621,7 +621,7 @@ export default function InstructorProfileEditPage() {
           {/* Fixed bottom action bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 flex gap-2 safe-area-bottom">
             {slug && isPublished && (
-              <Button type="button" variant="outline" className="flex-1" asChild>
+              <Button size="action" type="button" variant="outline" className="flex-1" asChild>
                 <Link href={`/instruktor/${slug}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink size={15} className="mr-1.5" />
                   Zobacz profil
@@ -630,6 +630,7 @@ export default function InstructorProfileEditPage() {
             )}
             {!isPublished && (
               <Button
+                size="action"
                 type="button"
                 variant="outline"
                 className="flex-1"

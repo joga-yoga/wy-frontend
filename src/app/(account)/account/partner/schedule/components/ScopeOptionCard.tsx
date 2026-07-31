@@ -32,7 +32,7 @@ export function ScopeOptionCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        "flex w-full items-start gap-3 rounded-xl border bg-white px-4 py-3 text-left transition-colors",
+        "flex w-full items-start gap-3 rounded-b2b border bg-white px-4 py-3 text-left transition-colors",
         selected
           ? isDanger
             ? "border-b2b-red-solid ring-1 ring-b2b-red-solid"

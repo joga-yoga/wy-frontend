@@ -278,7 +278,7 @@ export default function CreateScheduleWizard() {
           </div>
 
           {filteredTemplates.length === 0 && !search ? (
-            <div className="rounded-xl border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
+            <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
               <p className="text-sm font-semibold text-gray-900">Najpierw utwórz szablon zajęć</p>
               <p className="text-xs text-gray-500">
                 {`Szablon to definicja zajęć (np. „Vinyasa Flow", 60 min).`}
@@ -292,7 +292,7 @@ export default function CreateScheduleWizard() {
             <div className="space-y-4">
               {/* Same single-container catalogue as U1, so the picker and the catalogue
                   read as the same list rather than two views of it. */}
-              <div className="divide-y overflow-hidden rounded-xl border bg-white">
+              <div className="divide-y overflow-hidden rounded-b2b border bg-white">
                 {filteredTemplates.map((t) => (
                   <button
                     key={t.id}
@@ -329,6 +329,7 @@ export default function CreateScheduleWizard() {
               </div>
 
               <Button
+                size="action"
                 variant="outline"
                 className="w-full"
                 onClick={() => setShowInlineCreate(true)}
@@ -426,7 +427,7 @@ export default function CreateScheduleWizard() {
             {previewOccs.slice(0, 4).map((occ, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border bg-white"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-b2b border bg-white"
               >
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">
@@ -475,6 +476,7 @@ export default function CreateScheduleWizard() {
               Zobacz grafik
             </Button>
             <Button
+              size="action"
               variant="outline"
               className="w-full"
               onClick={() => {

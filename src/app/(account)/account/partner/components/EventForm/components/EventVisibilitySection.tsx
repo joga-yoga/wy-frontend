@@ -37,6 +37,7 @@ export function EventVisibilitySection({ type, isToggling, onHide }: EventVisibi
           </p>
         </div>
         <Button
+          size="action"
           type="button"
           variant="outline"
           className="border-b2b-red-border text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid w-full sm:w-auto"

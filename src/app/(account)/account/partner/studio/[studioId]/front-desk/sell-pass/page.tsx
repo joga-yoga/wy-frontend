@@ -152,7 +152,7 @@ export default function SellPassPage() {
           </div>
           {isSearching && <p className="text-xs text-gray-400">Szukam...</p>}
           {results && (results.studio_clients.length > 0 || results.other_accounts.length > 0) && (
-            <div className="rounded-xl border bg-white overflow-hidden divide-y">
+            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
               {[...results.studio_clients, ...results.other_accounts].map((c) => (
                 <button
                   key={c.user_id}
@@ -184,7 +184,7 @@ export default function SellPassPage() {
                 onClick={() => setSelectedPassId(p.id)}
                 aria-pressed={selectedPassId === p.id}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 text-left transition-colors",
                   selectedPassId === p.id
                     ? "border-b2b-green-text ring-1 ring-b2b-green-text"
                     : "border-gray-200",
@@ -245,6 +245,7 @@ export default function SellPassPage() {
           )}
 
           <Button
+            size="action"
             variant="green"
             className="w-full"
             disabled={!selectedPassId || isSubmitting}

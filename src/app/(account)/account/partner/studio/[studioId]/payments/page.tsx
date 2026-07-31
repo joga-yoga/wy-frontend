@@ -4,6 +4,8 @@ import { CreditCard } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { InfoNote } from "@/components/b2b/InfoNote";
+import { PinnedFooter } from "@/components/b2b/PinnedFooter";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -154,7 +156,7 @@ export default function StudioPaymentsPage() {
             control asks the user to pick between two states; every one of these is
             locked, so the switch — which shows a state rather than offering a choice —
             is the honest control. */}
-        <div className="divide-y overflow-hidden rounded-xl border bg-white">
+        <div className="divide-y overflow-hidden rounded-b2b border bg-white">
           <PaymentMethodRow
             title="Gotówka na miejscu"
             subtitle="Płatność w studiu przed zajęciami"
@@ -177,7 +179,7 @@ export default function StudioPaymentsPage() {
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Bezpłatne odwołanie
         </h2>
-        <div className="space-y-4 rounded-xl border bg-white px-4 py-4">
+        <div className="space-y-4">
           <SegmentedToggle
             value={cancellationMode}
             onChange={setCancellationMode}
@@ -220,23 +222,21 @@ export default function StudioPaymentsPage() {
             </>
           )}
 
-          <p className="text-xs text-muted-foreground">
+          <InfoNote>
             Ta konfiguracja wyznacza termin bezpłatnego odwołania i zasadę wejść z karnetu przy
-            nieobecności — nie ma osobnego ustawienia.
-          </p>
+            nieobecności. Przy &bdquo;Zawsze bezpłatne&rdquo; wejście nigdy nie przepada.
+          </InfoNote>
         </div>
       </section>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background px-4 py-3">
-        <div className="mx-auto flex max-w-lg gap-3">
-          <Button variant="outline" className="flex-1" onClick={() => router.back()}>
-            Anuluj
-          </Button>
-          <Button variant="green" className="flex-1" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Zapisywanie..." : "Zapisz"}
-          </Button>
-        </div>
-      </div>
+      <PinnedFooter>
+        <Button variant="outline" size="action" onClick={() => router.back()}>
+          Anuluj
+        </Button>
+        <Button variant="green" size="action" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Zapisywanie..." : "Zapisz"}
+        </Button>
+      </PinnedFooter>
     </div>
   );
 }
