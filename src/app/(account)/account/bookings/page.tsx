@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Mountain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { IoChevronForward } from "react-icons/io5";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { useAuth } from "@/context/AuthContext";
@@ -19,10 +20,32 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 
 const FUNDING_LABEL: Record<string, string> = {
   drop_in: "wejście jednorazowe",
-  use_pass: "karnet",
+  use_pass: "Karnet · 1 wejście",
   sport_card: "karta sportowa",
-  buy_and_use: "kup i użyj karnetu",
+  buy_and_use: "Karnet · 1 wejście",
 };
+
+/**
+ * The server sends `"unknown"` when a booking's funding cannot be resolved. Rendering it
+ * raw leaked the English literal "unknown" into a Polish UI — the chip fell through to
+ * the value because this map, unlike the B2B one, never had an entry for it. There is no
+ * honest label for "we don't know", so the chip is simply omitted.
+ */
+function fundingLabel(funding: string | null): string | null {
+  if (!funding || funding === "unknown") return null;
+  return FUNDING_LABEL[funding] ?? null;
+}
+
+/** F4 writes "dziś" / "śr 15 lip" under the time — recency beats a bare date. */
+function relativeDay(date: Date): string {
+  const today = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOfDay(date) - startOfDay(today)) / 86_400_000);
+  if (days === 0) return "dziś";
+  if (days === 1) return "jutro";
+  if (days === -1) return "wczoraj";
+  return date.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" });
+}
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleDateString("pl-PL", {
@@ -33,40 +56,74 @@ function formatDateTime(iso: string): string {
   });
 }
 
+/**
+ * A class booking (F4) — time-led, with a coloured left bar, exactly like Grafik's session
+ * rows. The two lists describe the same events from opposite sides of the counter, so
+ * they should read the same way.
+ */
 function BookingRow({ booking, dimmed }: { booking: MyBookingItem; dimmed: boolean }) {
   const isPass = booking.funding === "use_pass" || booking.funding === "buy_and_use";
+  const start = booking.start_time ? new Date(booking.start_time) : null;
+  const label = fundingLabel(booking.funding);
+
   return (
-    <div
-      className={cn("flex items-center justify-between gap-3 px-4 py-3", dimmed && "opacity-50")}
-    >
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-gray-900">{booking.event_title}</p>
-        <p className="truncate text-xs text-gray-500">
-          {booking.start_time && formatDateTime(booking.start_time)}
-          {booking.studio_name ? ` · ${booking.studio_name}` : ""}
-        </p>
+    <div className={cn("flex items-stretch gap-3 px-4 py-3", dimmed && "opacity-50")}>
+      <div className="w-14 shrink-0 pt-0.5 text-right">
+        <div className="text-sm font-bold leading-none text-gray-900">
+          {start ? start.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }) : "—"}
+        </div>
+        {start && (
+          <div className="mt-1 text-[11px] leading-none text-gray-400">{relativeDay(start)}</div>
+        )}
       </div>
-      {booking.funding && (
-        <StatusChip tone={isPass ? "green" : "gray"} className="shrink-0">
-          {isPass ? "Karnet" : (FUNDING_LABEL[booking.funding] ?? booking.funding)}
-        </StatusChip>
-      )}
+
+      {/* The bar is what makes a row scannable as "a class" at a glance. */}
+      <span className="w-0.5 shrink-0 rounded-full bg-class-green-500" aria-hidden />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-gray-900">{booking.event_title}</p>
+        {booking.studio_name && (
+          <p className="truncate text-xs text-gray-500">{booking.studio_name}</p>
+        )}
+        {label && (
+          <div className="mt-1">
+            <StatusChip tone={isPass ? "green" : "gray"}>{label}</StatusChip>
+          </div>
+        )}
+      </div>
+
+      <IoChevronForward className="h-4 w-4 shrink-0 self-center text-gray-300" />
     </div>
   );
 }
 
+/**
+ * A trip or workshop (F4). Deliberately *not* shaped like a class row: these are
+ * inquiries spanning days, so a start time in a gutter would be noise, and the status
+ * ("Zapytanie wysłane" vs "Potwierdzone") is the thing being tracked.
+ */
 function InquiryRow({ inquiry }: { inquiry: MyInquiryItem }) {
+  const isConfirmed = inquiry.status === "handled";
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-gray-900">{inquiry.event_title}</p>
+    <div className="flex items-center gap-3 px-4 py-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-class-sand-500/25 text-class-sand-700">
+        <Mountain size={18} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-gray-900">{inquiry.event_title}</p>
         <p className="truncate text-xs text-gray-500">
           {inquiry.event_type ? EVENT_TYPE_LABELS[inquiry.event_type] : null}
         </p>
+        <p
+          className={cn(
+            "mt-0.5 text-xs font-semibold",
+            isConfirmed ? "text-b2b-green-text" : "text-b2b-amber-text",
+          )}
+        >
+          {isConfirmed ? "Potwierdzone" : "Zapytanie wysłane"}
+        </p>
       </div>
-      <StatusChip tone={inquiry.status === "handled" ? "green" : "amber"} className="shrink-0">
-        {inquiry.status === "handled" ? "Potwierdzone" : "Zapytanie wysłane"}
-      </StatusChip>
+      <IoChevronForward className="h-4 w-4 shrink-0 text-gray-300" />
     </div>
   );
 }
@@ -120,17 +177,15 @@ export default function MyBookingsPage() {
 
   return (
     <div className="min-h-[100dvh] bg-background">
-      <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background px-4">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b bg-background px-4">
         <button
           onClick={() => router.back()}
           aria-label="Wróć"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
         >
           <ChevronLeft size={20} />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-gray-900">
-          Rezerwacje
-        </h1>
+        <h1 className="truncate text-xl font-bold text-gray-900">Rezerwacje</h1>
       </header>
 
       <div className="max-w-md mx-auto px-4 py-5 space-y-6">
