@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
 import {
@@ -52,6 +52,7 @@ import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 import { formatDateRange } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
+import { isPastEvent, sortForOffer } from "./eventKind";
 import { BaseEvent, DashboardItem } from "./offerConfig";
 import { OfferEventRow } from "./OfferEventRow";
 
@@ -118,9 +119,16 @@ export default function OfferPage() {
   const [showOrganizerLabels, setShowOrganizerLabels] = useState(false);
 
   const { toast } = useToast();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
+  // One list, so the sort can actually order the whole offer rather than four slices of
+  // two. Classes only join it when the feature is on.
+  const allItems = useMemo(
+    () => [...retreats, ...workshops, ...courses, ...(areClassesEnabled ? classes : [])],
+    [retreats, workshops, courses, classes, areClassesEnabled],
+  );
   const { isCreateMenuOpen, setIsCreateMenuOpen } = useOfferCreateMenu();
 
   const hasAnyEvents =
@@ -387,53 +395,11 @@ export default function OfferPage() {
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-4 space-y-6">
           {hasAnyEvents ? (
-            <>
-              {/* Wyjazdy */}
-              <EventSection
-                title="Wyjazdy"
-                emptyText="Brak wyjazdów"
-                items={retreats.slice(0, 2)}
-                createPath="/konto/partner/wyjazdy/create"
-                createLabel="Dodaj wyjazd"
-                cardProps={cardProps}
-                getOrganizerLabel={getOrganizerLabel}
-              />
-
-              {/* Wydarzenia */}
-              <EventSection
-                title="Wydarzenia"
-                emptyText="Brak wydarzeń"
-                items={workshops.slice(0, 2)}
-                createPath="/konto/partner/wydarzenia/create"
-                createLabel="Dodaj wydarzenie"
-                cardProps={cardProps}
-                getOrganizerLabel={getOrganizerLabel}
-              />
-
-              {/* Kursy */}
-              <EventSection
-                title="Kursy"
-                emptyText="Brak kursów"
-                items={courses.slice(0, 2)}
-                createPath="/konto/partner/kursy/create"
-                createLabel="Dodaj kurs"
-                cardProps={cardProps}
-                getOrganizerLabel={getOrganizerLabel}
-              />
-
-              {/* Zajęcia */}
-              {areClassesEnabled && (
-                <EventSection
-                  title="Zajęcia"
-                  emptyText="Brak zajęć"
-                  items={classes.slice(0, 2)}
-                  createPath="/konto/partner/zajecia/create"
-                  createLabel="Dodaj zajęcia"
-                  cardProps={cardProps}
-                  getOrganizerLabel={getOrganizerLabel}
-                />
-              )}
-            </>
+            <OfferList
+              items={allItems}
+              cardProps={cardProps}
+              getOrganizerLabel={getOrganizerLabel}
+            />
           ) : (
             <OfferEmptyState />
           )}
@@ -524,39 +490,53 @@ function OfferEmptyState() {
   );
 }
 
-// ─── EventSection (Wszystkie view) ────────────────────────────────────────────
+// ─── OfferList ────────────────────────────────────────────────────────────────
 
-function EventSection({
-  title,
-  emptyText,
+/**
+ * One list for the whole offer, replacing four per-type sections that each showed two
+ * items behind a "Pokaż wszystkie".
+ *
+ * The sections were doing two jobs: telling you what a row was, and keeping the page
+ * short. The first is now the row's own badge and thumbnail tint; the second was costing
+ * more than it saved — a partner with five wyjazdy could see two of them, and the only
+ * way to compare across types was to expand all four groups.
+ */
+function OfferList({
   items,
-  createPath,
-  createLabel,
   cardProps,
   getOrganizerLabel,
 }: {
-  title: string;
-  emptyText: string;
   items: DashboardItem[];
-  createPath: string;
-  createLabel: string;
   cardProps: OfferRowActions;
   getOrganizerLabel?: (id: string) => string | undefined;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const visible = isExpanded ? items : items.slice(0, VISIBLE_PER_SECTION);
-  const hiddenCount = items.length - visible.length;
+  const { setIsCreateMenuOpen } = useOfferCreateMenu();
+  const [showArchive, setShowArchive] = useState(false);
+
+  const { live, past } = useMemo(() => {
+    const live: DashboardItem[] = [];
+    const past: DashboardItem[] = [];
+    for (const item of items) (isPastEvent(item) ? past : live).push(item);
+    return {
+      live: sortForOffer(live),
+      // Most-recently-finished first: the archive is read backwards from today.
+      past: [...past].sort(
+        (a, b) =>
+          new Date(b.end_date ?? b.start_date ?? 0).getTime() -
+          new Date(a.end_date ?? a.start_date ?? 0).getTime(),
+      ),
+    };
+  }, [items]);
 
   return (
-    <section className="space-y-2">
-      <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</h2>
-
-      {/* One bordered card per type, with the add row as its last row (A3). */}
+    <div className="space-y-4">
       <div className="divide-y overflow-hidden rounded-b2b border bg-white">
-        {items.length === 0 ? (
-          <p className="px-4 py-5 text-center text-sm text-gray-400">{emptyText}</p>
+        {live.length === 0 ? (
+          <p className="px-4 py-5 text-center text-sm text-gray-400">
+            Brak nadchodzących wydarzeń.
+          </p>
         ) : (
-          visible.map((event) => (
+          live.map((event) => (
             <OfferEventRow
               key={event.id}
               event={event}
@@ -566,26 +546,49 @@ function EventSection({
           ))
         )}
 
-        {/* Expands in place rather than navigating: with the filter bar gone there is no pill to
-         * come back to, so a single-type route would be a dead end. */}
-        {hiddenCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setIsExpanded(true)}
-            className="w-full px-4 py-3 text-center text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50"
-          >
-            Pokaż wszystkie ({items.length})
-          </button>
-        )}
-
-        <Link
-          href={createPath}
-          className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-b2b-green-text transition-colors hover:bg-gray-50"
+        {/* The add row opens the type picker rather than linking to one type — with the
+            sections gone there is no longer a type in context to infer. */}
+        <button
+          type="button"
+          onClick={() => setIsCreateMenuOpen(true)}
+          className="flex w-full items-center justify-center gap-1.5 px-4 py-3.5 text-sm font-semibold text-b2b-green-strong transition-colors hover:bg-gray-50"
         >
           <Plus size={16} />
-          {createLabel}
-        </Link>
+          Dodaj wydarzenie
+        </button>
       </div>
-    </section>
+
+      {/* Archive. Collapsed by default: past events are worth keeping and not worth
+          scrolling past every time the partner opens the tab. */}
+      {past.length > 0 && (
+        <section className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setShowArchive((v) => !v)}
+            aria-expanded={showArchive}
+            className="flex w-full items-center justify-between px-1 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400"
+          >
+            <span>Archiwum · {past.length}</span>
+            <ChevronRight
+              size={16}
+              className={cn("transition-transform", showArchive && "rotate-90")}
+            />
+          </button>
+
+          {showArchive && (
+            <div className="divide-y overflow-hidden rounded-b2b border bg-white">
+              {past.map((event) => (
+                <OfferEventRow
+                  key={event.id}
+                  event={event}
+                  {...cardProps}
+                  organizerLabel={getOrganizerLabel?.(event.id)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+    </div>
   );
 }

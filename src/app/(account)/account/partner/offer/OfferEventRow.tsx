@@ -4,6 +4,7 @@ import { MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { IoChevronForward } from "react-icons/io5";
 
+import { WyImage } from "@/components/custom/WyImage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,22 +25,8 @@ import {
 import { formatDateRange } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
+import { EVENT_KIND } from "./eventKind";
 import type { DashboardItem } from "./offerConfig";
-
-/** Per-type tile tint, reusing the existing class-colour tokens rather than new literals. */
-const KIND_TILE: Record<DashboardItem["kind"], string> = {
-  retreat: "bg-class-teal-500/15 text-class-teal-700",
-  workshop: "bg-class-sand-500/25 text-class-sand-700",
-  course: "bg-class-lavender-500/20 text-class-lavender-700",
-  class: "bg-class-green-500/15 text-class-green-700",
-};
-
-const KIND_LOGO: Record<DashboardItem["kind"], string> = {
-  retreat: "/images/logo/logo-retreats.png",
-  workshop: "/images/logo/logo-workshops.png",
-  course: "/images/logo/logo-courses.png",
-  class: "/images/logo/logo-workshops.png",
-};
 
 export function eventStatusLabel(event: DashboardItem): { text: string; className: string } {
   if (!event.is_public) return { text: "Szkic", className: "text-gray-500" };
@@ -99,6 +86,8 @@ export function OfferEventRow({
 }) {
   const status = eventStatusLabel(event);
   const isPast = status.text === "Minęło";
+  const kind = EVENT_KIND[event.kind];
+  const coverId = event.image_ids?.[0] ?? event.image_id ?? null;
 
   return (
     <div className={cn("relative", isPast && "opacity-60")}>
@@ -106,17 +95,32 @@ export function OfferEventRow({
         href={editLink(event)}
         className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50"
       >
-        <span
-          className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-            KIND_TILE[event.kind],
-          )}
-        >
-          <img src={KIND_LOGO[event.kind]} className="h-[18px] w-[18px]" alt="" />
-        </span>
+        {/* The event's own photo, which the user calls critical: a partner scanning their
+            offer recognises the picture before the title. The coloured type tile is the
+            fallback for events that have none, not the default. */}
+        {coverId ? (
+          <WyImage
+            src={coverId}
+            alt=""
+            width={92}
+            height={92}
+            className="h-[46px] w-[46px] shrink-0 rounded-[14px] object-cover"
+          />
+        ) : (
+          <span
+            className={cn(
+              "flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px]",
+              kind.tile,
+            )}
+          >
+            <kind.Icon size={22} />
+          </span>
+        )}
 
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold leading-snug text-gray-900">
+          {/* Two lines maximum. Event titles are user-written and some run very long;
+              a four-line title pushes its own metadata off the row it belongs to. */}
+          <span className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900">
             {event.title}
           </span>
           {/* One wrapping meta sentence, as drawn: date · status. A3 also shows a reservation
@@ -125,20 +129,32 @@ export function OfferEventRow({
             {event.start_date && <>{formatDateRange(event.start_date, event.end_date)} · </>}
             <span className={cn("font-medium", status.className)}>{status.text}</span>
           </span>
-          {organizerLabel && (
-            <span className="mt-1.5 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
-              jako: {organizerLabel}
+          {/* With the per-type sections gone, the row has to carry its own type. The tile
+              behind a photo is invisible, so the badge is what actually guarantees it. */}
+          <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                "inline-block rounded-full px-2 py-0.5 text-[11px] font-bold",
+                kind.badge,
+              )}
+            >
+              {kind.label}
             </span>
-          )}
+            {organizerLabel && (
+              <span className="inline-block max-w-[55%] truncate rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
+                jako: {organizerLabel}
+              </span>
+            )}
+          </span>
         </span>
 
-        <span className="flex shrink-0 items-center self-center pl-8 text-gray-300">
+        <span className="flex shrink-0 items-start pt-3 pl-8 text-gray-300">
           <IoChevronForward className="h-5 w-5" />
         </span>
       </Link>
 
       {/* Sits above the row link rather than inside it, so opening the menu never navigates. */}
-      <div className="absolute right-9 top-1/2 -translate-y-1/2">
+      <div className="absolute right-9 top-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
