@@ -202,14 +202,14 @@ function HeroSection({
         className="object-cover object-center"
         sizes="100vw"
       />
-      <div className="relative flex h-full flex-col items-center px-[75px] pt-[68px] md:px-[120px] md:py-20">
+      <div className="relative flex h-full flex-col items-center px-[75px] pt-[141px] md:px-[120px] md:py-20">
         <JogaYogaLogo
           variant="on-dark"
           size="desktop"
-          className="[&_img:first-child]:!size-8 [&_img:last-child]:!h-[22px] [&_img:last-child]:!w-[88px] md:[&_img:first-child]:!size-[65px] md:[&_img:last-child]:!h-[43px] md:[&_img:last-child]:!w-[175px]"
+          className="order-2 mt-[45px] !flex-col-reverse !gap-2 [&_img:first-child]:!size-8 [&_img:last-child]:!h-[22px] [&_img:last-child]:!w-[88px] md:order-none md:mt-0 md:!flex-col md:!gap-3 md:[&_img:first-child]:!size-[65px] md:[&_img:last-child]:!h-[43px] md:[&_img:last-child]:!w-[175px]"
         />
 
-        <div className="mt-[75px] flex w-full flex-col items-center text-center text-white md:mt-16 md:flex-row md:justify-center md:gap-[120px] md:text-left">
+        <div className="order-1 flex w-full flex-col items-center text-center text-white md:order-none md:mt-16 md:flex-row md:justify-center md:gap-[120px] md:text-left">
           <div className="w-[252px] md:w-[357px]">
             <h1 className="text-[32px] font-semibold leading-[30px] tracking-[-0.64px] md:text-[46px] md:leading-[50px] md:tracking-[-1.38px]">
               Tworzenie strony nauczyciela jogi

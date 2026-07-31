@@ -113,7 +113,7 @@ function ImportRetreatForm({ id }: { id: "mobile" | "desktop" }) {
         router.push(AUTH_IMPORT_RETREAT_HREF);
       }}
       className="flex w-full flex-col gap-4 md:w-[520px]"
-      inputClassName="h-9 rounded-xl border-[#71717A] bg-white px-3 text-[12px] placeholder:text-[#D4D4D8] md:h-11 md:p-[10px] md:text-[18px]"
+      inputClassName="h-9 rounded-md border-[#71717A] bg-white px-3 text-[12px] placeholder:text-[#D4D4D8] md:h-11 md:p-[10px] md:text-[18px]"
       buttonClassName="h-[34px] w-full rounded-[22px] text-[15px] font-normal md:h-[43px] md:text-[20px]"
     />
   );
@@ -330,7 +330,7 @@ function ExamplesSection({ events }: { events: Event[] }) {
         </div>
       ) : (
         <p className="mt-6 text-center text-[15px] text-[#757580]">
-          Wkrótce pojawią się tutaj pierwsze wyjazdy.
+          Wkrótce pojawią się tutaj pierwsze wyjazdy
         </p>
       )}
     </section>

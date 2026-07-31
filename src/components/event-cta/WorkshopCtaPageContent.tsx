@@ -37,22 +37,22 @@ const AUTH_IMPORT_WORKSHOP_HREF = `/profile/login?next=${encodeURIComponent(CREA
 const processSteps: CtaProcessStep[] = [
   {
     title: "Konto organizatora",
-    description: "Profil pozwala zarządzać wydarzeniami, zapisami i danymi kontaktowymi.",
+    description: "Profil pozwala zarządzać wydarzeniami, zapisami i danymi kontaktowymi",
     icon: AccountProcessIcon,
   },
   {
     title: "Uzupełnienie wydarzenia",
-    description: "Opis, termin, miejsce, cena, prowadzący i zdjęcia trafiają do jednej struktury.",
+    description: "Opis, termin, miejsce, cena, prowadzący i zdjęcia trafiają do jednej struktury",
     icon: SparklesProcessIcon,
   },
   {
     title: "Edycja szczegółów",
-    description: "Organizator aktualizuje opis, terminy, cenę, limit miejsc i sposób zapisów.",
+    description: "Organizator aktualizuje opis, terminy, cenę, limit miejsc i sposób zapisów",
     icon: EditProcessIcon,
   },
   {
     title: "Publikacja",
-    description: "Uczestnicy widzą wydarzenie w kalendarzu i mogą przejść do zapisów.",
+    description: "Uczestnicy widzą wydarzenie w kalendarzu i mogą przejść do zapisów",
     icon: PublishProcessIcon,
   },
 ];
@@ -109,14 +109,14 @@ function WorkshopSourceUrlForm({ id }: { id: "mobile" | "desktop" }) {
       label="Link do strony wydarzenia"
       placeholder="Wklej link do swojego wydarzenia"
       buttonLabel="Utwórz stronę wydarzenia"
-      emptyError="Wklej link do strony swojego wydarzenia."
+      emptyError="Wklej link do strony swojego wydarzenia"
       invalidError="Wpisz prawidłowy adres URL, np. https://twoja-strona.pl/wydarzenie"
       onValidSubmit={(url) => {
         savePendingEventImport("workshop", url);
         router.push(AUTH_IMPORT_WORKSHOP_HREF);
       }}
-      className="flex w-full flex-col gap-3 md:gap-6"
-      inputClassName="h-9 rounded-xl border-[#71717A] bg-white px-3 text-[12px] placeholder:text-[#D4D4D8] md:h-11 md:p-[10px] md:text-[18px]"
+      className="flex w-full flex-col gap-4 md:gap-6"
+      inputClassName="h-9 rounded-m border-[#71717A] bg-white px-3 text-[12px] placeholder:text-[#D4D4D8] md:h-11 md:p-[10px] md:text-[18px]"
       buttonClassName="h-[34px] w-full rounded-[22px] text-[15px] font-normal md:h-[44px] md:text-[20px]"
     />
   );
@@ -158,10 +158,17 @@ function HeroSection() {
         </div>
       </section>
 
-      <SectionDivider />
-
-      <div className="px-8 md:hidden">
-        <WorkshopSourceUrlForm id="mobile" />
+      <div className="px-8 pt-6 md:hidden">
+        <h2 className="text-[20px] font-medium leading-[30px] text-[#3F3F46]">
+          Masz już stronę wydarzenia?
+        </h2>
+        <p className="mt-1 text-[15px] leading-5 text-[#71717A]">
+          Wklej link, a joga.yoga przygotuje szkic strony wydarzenia na podstawie istniejących
+          informacji
+        </p>
+        <div className="mt-4">
+          <WorkshopSourceUrlForm id="mobile" />
+        </div>
       </div>
     </>
   );
@@ -177,14 +184,14 @@ function ProcessSection() {
         id="workshop-process-title"
         className="text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:text-[30px]"
       >
-        Co dzieje się po utworzeniu strony:
+        Co dalej
       </h2>
       <ProcessSteps
         steps={processSteps}
         className="mt-6 grid gap-6 md:grid-cols-4 md:gap-6"
         itemClassName="gap-4 md:items-center"
         titleClassName="text-[18px] font-medium leading-6 text-[#27272A] md:text-[20px] md:leading-[30px]"
-        descriptionClassName="text-[15px] leading-5 text-[#71717A] md:text-[18px] md:font-medium md:leading-7"
+        descriptionClassName="text-[18px] leading-5 text-[#71717A] md:text-[18px] md:font-medium md:leading-7"
       />
     </section>
   );
@@ -237,7 +244,7 @@ function BenefitsSection() {
         id="workshop-benefits-title"
         className="px-8 text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:px-24 md:text-[30px]"
       >
-        Strona wydarzenia na joga.yoga to:
+        Jakie masz z tego korzyści
       </h2>
       <div className="mt-4 rounded-[24px] bg-[#F2F2F3] px-8 py-8 md:mx-24 md:mt-9 md:grid md:h-[545.5px] md:grid-cols-2 md:gap-6 md:p-8">
         <div className="grid gap-6 md:block">
@@ -271,7 +278,7 @@ function BenefitsSection() {
           />
           <BenefitCopy
             title="Mniej pytań przed zapisami"
-            description="Najważniejsze informacje są dostępne w jednym miejscu: dla kogo jest wydarzenie, co zabrać, ile kosztuje i kto prowadzi."
+            description="Najważniejsze informacje są dostępne w jednym miejscu: dla kogo jest wydarzenie, co zabrać, ile kosztuje i kto prowadzi"
           />
           <InstagramProofCard />
           <BenefitCopy
@@ -333,7 +340,7 @@ function ExamplesSection({ events }: { events: Event[] }) {
         </div>
       ) : (
         <p className="mt-6 text-[15px] text-[#757580]">
-          Wkrótce pojawią się tutaj pierwsze wydarzenia.
+          Wkrótce pojawią się tutaj pierwsze wydarzenia
         </p>
       )}
     </section>
