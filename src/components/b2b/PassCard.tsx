@@ -1,5 +1,5 @@
 import { StatusChip } from "@/components/b2b/StatusChip";
-import { plural, wejscia } from "@/lib/polishPlural";
+import { plural, wejscGenitive, wejscia } from "@/lib/polishPlural";
 import { cn } from "@/lib/utils";
 
 export type PassState = "active" | "used" | "expired" | "cancelled";
@@ -150,7 +150,7 @@ export function PassCard({
             </div>
             <div className="mt-2 flex items-center justify-between text-xs">
               {isUsed ? (
-                <span className="text-gray-400">0 z {wejscia(total)}</span>
+                <span className="text-gray-400">0 z {wejscGenitive(total)}</span>
               ) : (
                 <span className="font-semibold text-b2b-green-text">
                   Zostały {wejscia(left)} z {total}

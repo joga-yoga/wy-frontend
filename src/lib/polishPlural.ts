@@ -41,6 +41,16 @@ export function wejscia(n: number): string {
   return `${n} ${plural(n, "wejście", "wejścia", "wejść")}`;
 }
 
+/**
+ * "z 1 wejścia", "z 8 wejść" — the *genitive* after "z" ("out of").
+ *
+ * Not the same form as `wejscia`: "0 z 1 wejście" is wrong, because everything after "z"
+ * declines. Singular takes the genitive singular, everything else the genitive plural.
+ */
+export function wejscGenitive(n: number): string {
+  return `${n} ${Math.abs(n) === 1 ? "wejścia" : "wejść"}`;
+}
+
 /** "1 wizyta", "3 wizyty", "7 wizyt" — visit history (K4). */
 export function wizyty(n: number): string {
   return `${n} ${plural(n, "wizyta", "wizyty", "wizyt")}`;
