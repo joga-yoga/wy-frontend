@@ -4,7 +4,7 @@ import { Pencil } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { InstructorAvatar } from "@/components/common/InstructorAvatar";
-import { COLOR_SWATCH_MAP, DEFAULT_BAR } from "@/lib/classColors";
+import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
@@ -49,16 +49,17 @@ function fillToneClass(state: PrimaryState): string {
 }
 
 /**
- * One session row in Grafik (mockup A1).
+ * One session card in Grafik.
  *
- * Renders as a **row, not a card**: the parent wraps the day's rows in one bordered container
- * with dividers between them, which is how A1 draws it. So this component owns no outer
- * border, rounding or shadow. Previously it was a standalone card with a colored border and
- * gaps between cards, which was the largest visual difference from the prototype.
+ * Deliberately built on the **public studio schedule's** `SessionCard` geometry
+ * (`(public)/studio/[slug]/schedule/components/SessionCard.tsx`) so the partner sees the
+ * same object drawn the same way as their customers do: a separated, rounded card carrying
+ * the class colour on its own border, a wide centred time column, a `w-1` colour bar, and a
+ * gray-500 chevron. It previously rendered as a borderless row inside one shared bordered
+ * container, which read as a completely different component.
  *
- * Layout: time + duration column, a thin bar carrying the class color, title and who/where,
- * then the fill badge in its own right-hand column before the chevron. The badge reads bare
- * ("9/12"), not "9/12 zapisanych".
+ * The one B2B-only addition is the availability counter — the bare `9/12` fill badge, which
+ * is owner information the public card has no equivalent of.
  */
 export function GrafikSessionCard({
   occ,
@@ -79,8 +80,9 @@ export function GrafikSessionCard({
   const isDimmed = isCancelled || isPast;
 
   const color = occ.color as keyof typeof COLOR_SWATCH_MAP | null | undefined;
-  // A finished or cancelled session keeps its slot but drops its color, so the row reads as
-  // settled rather than as another live class.
+  // A finished or cancelled session keeps its slot but drops its colour, so the card reads as
+  // settled rather than as another live class — same rule the public card applies.
+  const borderClass = !isDimmed && color ? COLOR_BORDER_MAP[color] : DEFAULT_BORDER;
   const barClass = !isDimmed && color ? COLOR_SWATCH_MAP[color] : DEFAULT_BAR;
 
   return (
@@ -92,31 +94,32 @@ export function GrafikSessionCard({
         if (e.key === "Enter" || e.key === " ") onClick(occ);
       }}
       className={cn(
-        "flex cursor-pointer items-stretch gap-3 px-3 py-3 transition-colors hover:bg-gray-50",
+        "flex cursor-pointer items-stretch gap-3 overflow-hidden rounded-xl border-[1.5px] bg-white px-3 py-2.5 transition-colors hover:bg-gray-50",
+        borderClass,
         isDimmed && "opacity-60",
       )}
     >
-      <div className="flex w-14 shrink-0 flex-col items-start justify-center gap-0.5">
+      <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
         <span
           className={cn(
-            "text-[17px] font-bold leading-tight",
+            "text-xl font-semibold",
             isDimmed ? "text-gray-400" : "text-gray-900",
             isCancelled && "line-through",
           )}
         >
           {formatTime(occ.start_time)}
         </span>
-        <span className="text-xs text-gray-400">
+        <span className="text-sm text-gray-400">
           {formatDurationMinutes(occ.start_time, occ.end_time)}
         </span>
       </div>
 
-      <div className={cn("w-[3px] shrink-0 self-stretch rounded-full", barClass)} />
+      <div className={cn("w-1 shrink-0 self-stretch rounded-full", barClass)} />
 
-      <div className="min-w-0 flex-1 self-center">
+      <div className="min-w-0 flex-1 self-center py-0.5">
         <p
           className={cn(
-            "text-[15px] font-semibold leading-snug",
+            "truncate text-md font-semibold",
             isDimmed ? "text-gray-400" : "text-gray-900",
             isCancelled && "line-through",
           )}
@@ -131,10 +134,10 @@ export function GrafikSessionCard({
             <InstructorAvatar
               name={occ.instructor_name}
               imageId={occ.instructor_image_id}
-              size={18}
+              size={20}
             />
             {/* Instructor before room, as drawn ("Oleg · Sala 1"). */}
-            <span className="truncate text-[13px] text-gray-500">
+            <span className="truncate text-sm text-gray-500">
               {[occ.instructor_name, occ.room_name].filter(Boolean).join(" · ")}
             </span>
           </div>
@@ -144,7 +147,7 @@ export function GrafikSessionCard({
           !isPast &&
           context === "instructor" &&
           (occ.studio_name || occ.room_name) && (
-            <p className="mt-1 truncate text-[13px] text-gray-500">
+            <p className="mt-1 truncate text-sm text-gray-500">
               {[occ.studio_name, occ.room_name].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -179,8 +182,11 @@ export function GrafikSessionCard({
         </div>
       ) : null}
 
-      <div className="flex w-5 shrink-0 items-center text-gray-300">
-        {!isDimmed && <IoChevronForward className="h-5 w-5" />}
+      {/* Unlike the public card, the chevron stays on past and cancelled sessions: in Grafik
+       * they are still openable (attendance list, reconciliation), so hiding it would say
+       * "not tappable" about a row that is. */}
+      <div className="flex shrink-0 items-center text-gray-500">
+        <IoChevronForward className="h-5 w-5" />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import type { DayStripHandle } from "../components/DayStrip";
@@ -27,17 +28,6 @@ function getMonday(d: Date): Date {
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function formatWeekRangeLabel(weekStart: Date): string {
-  const end = new Date(weekStart);
-  end.setDate(end.getDate() + 6);
-  const startDay = weekStart.getDate();
-  const endDay = end.getDate();
-  const startMonth = weekStart.toLocaleDateString("pl-PL", { month: "long" });
-  const endMonth = end.toLocaleDateString("pl-PL", { month: "long" });
-  if (startMonth !== endMonth) return `${startDay} ${startMonth} – ${endDay} ${endMonth}`;
-  return `${startDay} – ${endDay} ${startMonth}`;
 }
 
 function formatTime(iso: string): string {
@@ -127,29 +117,28 @@ export default function InstructorSchedulePage() {
     setWeekStart(d);
   }
 
-  return (
-    <div className="p-4 mx-auto max-w-lg min-h-screen">
-      <GrafikContextChips />
+  /** Same day-at-a-time stepping as the owner Grafik, rolling into the neighbouring week
+   * at the edges. */
+  const shiftDay = useCallback((direction: 1 | -1) => {
+    setSelectedDayIndex((current) => {
+      const next = current + direction;
+      if (next < 0) {
+        dayStripRef.current?.goToPreviousWeek();
+        return 6;
+      }
+      if (next > 6) {
+        dayStripRef.current?.goToNextWeek();
+        return 0;
+      }
+      return next;
+    });
+  }, []);
 
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-base font-semibold text-gray-900 capitalize">
-          {formatWeekRangeLabel(weekStart)}
-        </span>
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={() => dayStripRef.current?.goToPreviousWeek()}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => dayStripRef.current?.goToNextWeek()}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      </div>
+  const daySwipe = useHorizontalSwipe(shiftDay);
+
+  return (
+    <div className="mx-auto flex min-h-[calc(100dvh-var(--dashboard-header-h)-7rem)] max-w-lg flex-col px-4 pt-4 md:min-h-[calc(100dvh-var(--dashboard-header-h))]">
+      <GrafikContextChips />
 
       <DayStrip
         ref={dayStripRef}
@@ -161,7 +150,32 @@ export default function InstructorSchedulePage() {
         onShiftWeek={shiftWeek}
       />
 
-      <div className="mt-4">
+      {/* Selected-day title + day chevrons below the strip, matching the owner Grafik. */}
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <span className="truncate text-lg font-bold capitalize text-gray-900">
+          {formatDayHeader(selectedDate)}
+        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={() => shiftDay(-1)}
+            aria-label="Poprzedni dzień"
+            className="rounded p-1 hover:bg-gray-100"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={() => shiftDay(1)}
+            aria-label="Następny dzień"
+            className="rounded p-1 hover:bg-gray-100"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* `flex-1` + the page's bottom padding so the swipe area covers the whitespace under
+       * a short day, not just the cards. */}
+      <div className="mt-4 flex-1 pb-4" {...daySwipe}>
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
         ) : dayOccurrences.length === 0 ? (
@@ -170,22 +184,16 @@ export default function InstructorSchedulePage() {
             <p className="text-sm text-gray-500">Wolne — dziś nie prowadzisz zajęć</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            <p className="text-[15px] font-semibold text-gray-900">
-              {formatDayHeader(selectedDate)}
-            </p>
-            {/* Same single-container-with-dividers treatment as the owner Grafik (C1):
-             * `GrafikSessionCard` is a row and carries no border of its own. */}
-            <div className="divide-y divide-gray-100 overflow-hidden rounded-b2b border bg-white">
-              {dayOccurrences.map((occ) => (
-                <GrafikSessionCard
-                  key={occ.id}
-                  occ={occ}
-                  onClick={setPanelOcc}
-                  context="instructor"
-                />
-              ))}
-            </div>
+          // Separated cards, same as the owner Grafik and the public studio schedule.
+          <div className="space-y-2">
+            {dayOccurrences.map((occ) => (
+              <GrafikSessionCard
+                key={occ.id}
+                occ={occ}
+                onClick={setPanelOcc}
+                context="instructor"
+              />
+            ))}
           </div>
         )}
       </div>

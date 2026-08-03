@@ -335,7 +335,7 @@ export default function OfferPage() {
         <DrawerContent className="sm:mx-auto sm:max-w-2xl">
           <div className="flex items-start justify-between px-4 pt-4">
             <div className="min-w-0 pr-3">
-              <DrawerTitle className="text-2xl">Co chcesz dodać?</DrawerTitle>
+              <DrawerTitle className="text-2xl font-semibold">Co chcesz dodać?</DrawerTitle>
               <DrawerDescription className="mt-0.5">Wybierz typ ogłoszenia.</DrawerDescription>
             </div>
             <DrawerClose

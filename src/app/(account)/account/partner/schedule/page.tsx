@@ -34,28 +34,6 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/**
- * "13 – 19 lipca", "28 lipca – 3 sierpnia".
- *
- * Formats day+month together rather than the month alone, because Polish needs the genitive
- * ("lipca") and `{ month: "long" }` on its own yields the nominative ("lipiec"). The old
- * version produced "27 Lipiec – 2 Sierpień" once a CSS `capitalize` was applied on top.
- */
-function formatWeekRangeLabel(weekStart: Date): string {
-  const end = new Date(weekStart);
-  end.setDate(end.getDate() + 6);
-
-  const dayMonth = (d: Date) => d.toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
-  const sameMonth = weekStart.getMonth() === end.getMonth();
-  const sameYear = weekStart.getFullYear() === end.getFullYear();
-
-  if (!sameYear) {
-    return `${dayMonth(weekStart)} ${weekStart.getFullYear()} – ${dayMonth(end)} ${end.getFullYear()}`;
-  }
-  if (!sameMonth) return `${dayMonth(weekStart)} – ${dayMonth(end)}`;
-  return `${weekStart.getDate()} – ${dayMonth(end)}`;
-}
-
 /** "Poniedziałek, 13 lipca" — full month, capitalized weekday, as drawn in A1. */
 function formatDayHeader(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -164,6 +142,14 @@ export default function SchedulePage() {
   const selectedDay = days[selectedDayIndex];
   const hasAnySessions = days.some((d) => d.session_count > 0);
 
+  // Derived from the strip's own state rather than from `days[selectedDayIndex].date`, so the
+  // header title stays correct (and stable) while a week is still loading or came back empty.
+  const selectedDate = useMemo(() => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + selectedDayIndex);
+    return formatDate(d);
+  }, [weekStart, selectedDayIndex]);
+
   const dayStripRef = useRef<DayStripHandle>(null);
   const stickySentinelRef = useRef<HTMLDivElement>(null);
   const [isStuck, setIsStuck] = useState(false);
@@ -185,36 +171,38 @@ export default function SchedulePage() {
     setWeekStart(d);
   }
 
-  function jumpToToday() {
-    const today = new Date();
-    setWeekStart(getMonday(today));
-    const dow = today.getDay();
-    setSelectedDayIndex(dow === 0 ? 6 : dow - 1);
-  }
+  /** Moves one day, rolling into the neighbouring week at the edges so neither the swipe
+   * nor the chevrons ever dead-end on Monday or Sunday. Shared by both so the two controls
+   * cannot drift apart. */
+  const shiftDay = useCallback((direction: 1 | -1) => {
+    setSelectedDayIndex((current) => {
+      const next = current + direction;
+      if (next < 0) {
+        dayStripRef.current?.goToPreviousWeek();
+        return 6;
+      }
+      if (next > 6) {
+        dayStripRef.current?.goToNextWeek();
+        return 0;
+      }
+      return next;
+    });
+  }, []);
 
-  /** Swiping the day content moves one day, rolling into the neighbouring week at the
-   * edges so the gesture never dead-ends on Monday or Sunday. */
-  const daySwipe = useHorizontalSwipe((direction) => {
-    const next = selectedDayIndex + direction;
-    if (next < 0) {
-      dayStripRef.current?.goToPreviousWeek();
-      setSelectedDayIndex(6);
-    } else if (next > 6) {
-      dayStripRef.current?.goToNextWeek();
-      setSelectedDayIndex(0);
-    } else {
-      setSelectedDayIndex(next);
-    }
-  });
+  const daySwipe = useHorizontalSwipe(shiftDay);
 
   return (
-    <div className="p-4 mx-auto max-w-lg min-h-screen">
+    // Sized to exactly fill the viewport rather than `min-h-screen`: the sticky header
+    // (--dashboard-header-h) and the layout's pb-28 tab-bar gutter both sit *outside* this
+    // element, so a full 100dvh here made every day scroll by ~176px even when it held one
+    // session. Flex column so the day content below can claim the leftover height.
+    <div className="mx-auto flex min-h-[calc(100dvh-var(--dashboard-header-h)-7rem)] max-w-lg flex-col px-4 pt-0 md:min-h-[calc(100dvh-var(--dashboard-header-h))]">
       <GrafikContextChips />
 
       {reconciliation.sessionCount > 0 && (
         <Link
           href="/konto/partner/rozliczenia"
-          className="mb-4 flex items-center justify-between rounded-b2b border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
+          className="mb-4 flex items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
         >
           <span className="flex items-center gap-2">
             <AlertCircle size={16} />
@@ -239,36 +227,6 @@ export default function SchedulePage() {
         className="sticky z-30 -mx-4 bg-background px-4 pb-2"
         style={{ top: "var(--dashboard-header-h)" }}
       >
-        <div className="flex items-center justify-between py-2">
-          <span className="text-base font-semibold text-gray-900">
-            {formatWeekRangeLabel(weekStart)}
-          </span>
-          {/* "Dziś" belongs with the week chevrons, not with the title — it is week
-           * navigation, not a label. */}
-          <div className="flex shrink-0 items-center gap-1">
-            {/* <button
-              onClick={jumpToToday}
-              className="mr-1 rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50"
-            >
-              Dziś
-            </button> */}
-            <button
-              onClick={() => dayStripRef.current?.goToPreviousWeek()}
-              aria-label="Poprzedni tydzień"
-              className="rounded p-1 hover:bg-gray-100"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={() => dayStripRef.current?.goToNextWeek()}
-              aria-label="Następny tydzień"
-              className="rounded p-1 hover:bg-gray-100"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-
         <DayStrip
           ref={dayStripRef}
           weekStart={weekStart}
@@ -278,12 +236,42 @@ export default function SchedulePage() {
           onSelectDay={setSelectedDayIndex}
           onShiftWeek={shiftWeek}
         />
+
+        {/* Title row sits *below* the strip and names the selected day, not the week range —
+         * the strip itself already shows which week you are in, so repeating it above was
+         * the less useful of the two labels. Type matches the public studio schedule's day
+         * header. The chevrons move by one day to agree with the title they sit beside;
+         * whole weeks are still reachable by swiping the strip (and by rolling past Sunday). */}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <span className="truncate text-lg font-bold capitalize text-gray-900">
+            {formatDayHeader(selectedDate)}
+          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              onClick={() => shiftDay(-1)}
+              aria-label="Poprzedni dzień"
+              className="rounded p-1 hover:bg-gray-100"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => shiftDay(1)}
+              aria-label="Następny dzień"
+              className="rounded p-1 hover:bg-gray-100"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
         {/* Hairline only once stuck, so the unscrolled page looks unchanged. */}
         {isStuck && <div className="-mx-4 mt-2 h-px bg-gray-200" />}
       </div>
 
-      {/* Day content — swipeable left/right to change day */}
-      <div className="mt-4" {...daySwipe}>
+      {/* Day content — swipeable left/right to change day. `flex-1` so it claims all the
+       * leftover height: the gesture used to be dead above the whitespace under a short day,
+       * because the handlers only covered the cards themselves. It carries the page's bottom
+       * padding too (rather than the container) so that gutter is swipeable as well. */}
+      <div className="mt-4 flex-1 pb-4" {...daySwipe}>
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
         ) : !hasAnySessions ? (
@@ -320,19 +308,12 @@ export default function SchedulePage() {
             )}
           </div>
         ) : selectedDay ? (
-          <div className="space-y-3">
-            {/* Day header. A1 shows no session count here — the strip's dots already carry
-             * which days have sessions, so a second count is noise. */}
-            <p className="text-[15px] font-semibold text-gray-900">
-              {formatDayHeader(selectedDay.date)}
-            </p>
-
-            {/* One bordered container with dividers, not a stack of separate cards (A1). */}
-            <div className="divide-y divide-gray-100 overflow-hidden rounded-b2b border bg-white">
-              {selectedDay.occurrences.map((occ) => (
-                <GrafikSessionCard key={occ.id} occ={occ} onClick={setPanelOcc} />
-              ))}
-            </div>
+          // Separated cards, as on the public studio schedule — the day is already named by
+          // the header row above, so no title repeats here.
+          <div className="space-y-2">
+            {selectedDay.occurrences.map((occ) => (
+              <GrafikSessionCard key={occ.id} occ={occ} onClick={setPanelOcc} />
+            ))}
           </div>
         ) : null}
       </div>

@@ -147,14 +147,10 @@ export function OfferEventRow({
             )}
           </span>
         </span>
-
-        <span className="flex shrink-0 items-start pt-3 pl-8 text-gray-300">
-          <IoChevronForward className="h-5 w-5" />
-        </span>
       </Link>
 
       {/* Sits above the row link rather than inside it, so opening the menu never navigates. */}
-      <div className="absolute right-9 top-3">
+      <div className="absolute right-2 top-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
