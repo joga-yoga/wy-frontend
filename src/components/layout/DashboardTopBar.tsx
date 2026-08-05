@@ -4,8 +4,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition } from "react";
 import { IoChevronBack, IoClose } from "react-icons/io5";
 
-import { LinkWithBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/link";
-import { useNavigationBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/navigation-block";
+import { LinkWithBlocker } from "@/app/account/partner/components/EventForm/block-navigation/link";
+import { useNavigationBlocker } from "@/app/account/partner/components/EventForm/block-navigation/navigation-block";
 import { TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { LogoFooter } from "@/components/layout/Footer";
 import { HeaderAvatar } from "@/components/layout/HeaderAvatar";

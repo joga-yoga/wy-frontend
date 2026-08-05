@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
-import { LinkWithBlocker } from "@/app/(account)/account/partner/components/EventForm/block-navigation/link";
+import { LinkWithBlocker } from "@/app/account/partner/components/EventForm/block-navigation/link";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
