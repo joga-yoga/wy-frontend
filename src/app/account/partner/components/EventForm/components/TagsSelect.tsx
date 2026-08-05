@@ -2,10 +2,9 @@
 
 import { Control, Controller, FieldErrors } from "react-hook-form";
 
+import { PREDEFINED_TAGS } from "@/components/custom/TagsSelect";
 import { EventFormData } from "@/lib/schemas/event";
 import { cn } from "@/lib/utils";
-
-import { PREDEFINED_TAGS } from "../../../../../../../components/custom/TagsSelect/TagsSection.types";
 
 interface TagsSelectProps {
   control: Control<EventFormData>;
