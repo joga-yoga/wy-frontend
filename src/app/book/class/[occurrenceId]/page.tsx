@@ -224,7 +224,11 @@ function FundingScreen({
         color={detail.color}
         instructor={
           detail.instructor
-            ? { name: detail.instructor.name, imageId: detail.instructor.image_id }
+            ? {
+                id: detail.instructor.id,
+                name: detail.instructor.name,
+                imageId: detail.instructor.image_id,
+              }
             : null
         }
       />
@@ -562,7 +566,7 @@ function BookClassContent() {
 
   useEffect(() => {
     if (authLoading || user) return;
-    router.replace(`/profile/login?next=${encodeURIComponent(pathname)}`);
+    router.replace(`/account/login?next=${encodeURIComponent(pathname)}`);
   }, [authLoading, user, router, pathname]);
 
   useEffect(() => {

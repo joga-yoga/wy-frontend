@@ -94,6 +94,12 @@
     }
 }
 
+@media (width >= 48rem) {
+    :root {
+        --dashboard-header-h: 5rem;
+    }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -132,6 +138,10 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    /* The design HTML's card radius (`.card{border-radius:18px}`). Tailwind's rounded-xl
+     * is 12px, which is what every container in the panel had been using. */
+    --radius-b2b: 18px;
+
     --color-brand-green: var(--brand-green);
     --color-brand-green-700: var(--brand-green-700);
     --color-brand-yellow: var(--brand-yellow);
@@ -139,6 +149,20 @@
     --color-brand-red: var(--brand-red);
     --color-brand-blue: var(--brand-blue);
     --color-brand-pink: var(--brand-pink);
+
+    --color-b2b-green-bg: var(--b2b-green-bg);
+    --color-b2b-green-strong: var(--b2b-green-strong);
+    --color-b2b-green-border: var(--b2b-green-border);
+    --color-b2b-green-text: var(--b2b-green-text);
+    --color-b2b-amber-bg: var(--b2b-amber-bg);
+    --color-b2b-amber-border: var(--b2b-amber-border);
+    --color-b2b-amber-text: var(--b2b-amber-text);
+    --color-b2b-red-bg: var(--b2b-red-bg);
+    --color-b2b-red-border: var(--b2b-red-border);
+    --color-b2b-red-text: var(--b2b-red-text);
+    --color-b2b-red-solid: var(--b2b-red-solid);
+    --color-b2b-blue-bg: var(--b2b-blue-bg);
+    --color-b2b-blue-text: var(--b2b-blue-text);
     --color-gray-50: var(--gray-50);
     --color-gray-100: var(--gray-100);
     --color-gray-200: var(--gray-200);
@@ -303,6 +327,48 @@
     --brand-red: oklch(0.63 0.201 25.14);
     --brand-blue: oklch(0.66 0.18 262.89);
     --brand-pink: oklch(0.61 0.21 330.72);
+
+    /* Mirrors DashboardTopBar's h-16 / md:h-20 so sticky sub-headers (Grafik's week nav +
+     * day strip) can offset from the header instead of hard-coding `top-16`. Keep the two
+     * in sync — the header's subtitle is absolutely positioned precisely so that adding
+     * one cannot change its height and desync this value. */
+    --dashboard-header-h: 4rem;
+
+    /* Height of BottomTabBar's mobile bar: its 8px top padding + the 67px pill + its own
+     * bottom padding, which is max(16px, safe-area). Anything floating above the bar (the
+     * Grafik add button, pinned footers) offsets from this instead of hard-coding a number —
+     * the add button previously sat at bottom-6 and was overlapped by the bar. */
+    --bottom-tab-h: calc(75px + max(16px, env(safe-area-inset-bottom)));
+
+    /* B2B panel palette — the desaturated tints the partner-panel prototypes use.
+     * Deliberately NOT Tailwind's defaults: `emerald-50` is #ECFDF5, visibly lighter
+     * and cooler than the design's #E7F3EB, which is what made chip/icon backgrounds
+     * read as washed out. Every value below was sampled from the prototype PNGs in
+     * .plans/b2b-partner-shell/mockups/ rather than eyeballed.
+     * Semantics: green = done/connected, amber = money or verification pending,
+     * red = cancelled/void/destructive. */
+    --b2b-green-bg: #e7f3eb;
+    --b2b-green-border: #d4e3d9;
+    --b2b-green-text: var(--brand-green-700); /* sampled #4F8A63 == brand-green-700 */
+    /* The design HTML's `--brand-text`. Deliberately darker than --b2b-green-text: that
+     * one is the *fill* colour (buttons, bars), and at #4F8A63 it is too light to read
+     * as text on the #E7F3EB tint. Chips, tinted-tile icons and inline green links use
+     * this instead. */
+    --b2b-green-strong: #396a49;
+
+    --b2b-amber-bg: #fcf3e2;
+    --b2b-amber-border: #ead9af;
+    --b2b-amber-text: #74540e;
+
+    --b2b-red-bg: #f3e8ea;
+    --b2b-red-border: #d8a5a5;
+    --b2b-red-text: #6b3a45;
+    --b2b-red-solid: #b0534f; /* solid destructive button fill (S9 "Odwołaj sesję") */
+
+    /* "Zmienione" in the change preview (S5-S7). A fourth, informational tone: a modification
+     * is neither good news (green) nor a loss (red). Sampled from the prototype. */
+    --b2b-blue-bg: #e7edf4;
+    --b2b-blue-text: #3e556e;
     --gray-50: oklch(0.9851 0 0);
     --gray-100: oklch(0.9614 0.0013 286.38);
     --gray-200: oklch(0.9197 0.004 286.32);
@@ -377,4 +443,34 @@
     --brand-red: oklch(0.63 0.201 25.14);
     --brand-blue: oklch(0.66 0.18 262.89);
     --brand-pink: oklch(0.61 0.21 330.72);
+
+    /* B2B panel palette — the desaturated tints the partner-panel prototypes use.
+     * Deliberately NOT Tailwind's defaults: `emerald-50` is #ECFDF5, visibly lighter
+     * and cooler than the design's #E7F3EB, which is what made chip/icon backgrounds
+     * read as washed out. Every value below was sampled from the prototype PNGs in
+     * .plans/b2b-partner-shell/mockups/ rather than eyeballed.
+     * Semantics: green = done/connected, amber = money or verification pending,
+     * red = cancelled/void/destructive. */
+    --b2b-green-bg: #e7f3eb;
+    --b2b-green-border: #d4e3d9;
+    --b2b-green-text: var(--brand-green-700); /* sampled #4F8A63 == brand-green-700 */
+    /* The design HTML's `--brand-text`. Deliberately darker than --b2b-green-text: that
+     * one is the *fill* colour (buttons, bars), and at #4F8A63 it is too light to read
+     * as text on the #E7F3EB tint. Chips, tinted-tile icons and inline green links use
+     * this instead. */
+    --b2b-green-strong: #396a49;
+
+    --b2b-amber-bg: #fcf3e2;
+    --b2b-amber-border: #ead9af;
+    --b2b-amber-text: #74540e;
+
+    --b2b-red-bg: #f3e8ea;
+    --b2b-red-border: #d8a5a5;
+    --b2b-red-text: #6b3a45;
+    --b2b-red-solid: #b0534f; /* solid destructive button fill (S9 "Odwołaj sesję") */
+
+    /* "Zmienione" in the change preview (S5-S7). A fourth, informational tone: a modification
+     * is neither good news (green) nor a loss (red). Sampled from the prototype. */
+    --b2b-blue-bg: #e7edf4;
+    --b2b-blue-text: #3e556e;
 }

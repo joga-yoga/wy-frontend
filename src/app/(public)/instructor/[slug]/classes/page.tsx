@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import { classCountLabel } from "@/app/(public)/studio/[slug]/classes/types";
 import { BackButton } from "@/components/common/BackButton";
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getInstructor } from "@/lib/api/getInstructor";
 import { getInstructorClassTemplates } from "@/lib/api/getInstructorClassTemplates";
@@ -73,7 +73,12 @@ export default async function InstructorClassesPage({ params }: Props) {
         <p className="mt-1 text-sm text-gray-500">{classCountLabel(total)}</p>
 
         <Link href={`/instruktor/${slug}`} className="mt-3 flex items-center gap-2">
-          <InstructorAvatar name={instructor.name} imageId={instructor.image_id} size={32} />
+          <HashedAvatar
+            seed={instructor.id}
+            name={instructor.name}
+            imageId={instructor.image_id}
+            size={32}
+          />
           <span className="truncate text-sm font-medium text-gray-700">{instructor.name}</span>
         </Link>
       </div>

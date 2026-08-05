@@ -37,7 +37,10 @@ export async function generateMetadata(
       description,
       path: `/instruktor/${slug}`,
       image: imageUrl || undefined,
-      noIndex: !instructor.is_published,
+      // Unclaimed placeholder profiles stay fully visible on the site (studio/event/
+      // session pages, and this page itself) but are kept out of search indexing until
+      // the real person claims them — see .plans/instructor-profile-permissions/.
+      noIndex: !instructor.is_published || !instructor.is_claimed,
     }),
   };
 }
@@ -63,7 +66,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
 
   return (
     <>
-      {data.instructor.is_published && (
+      {data.instructor.is_published && data.instructor.is_claimed && (
         <JsonLd
           data={buildInstructorJsonLd({
             path: `/instruktor/${slug}`,

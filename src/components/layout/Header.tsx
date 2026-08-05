@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
-import { LinkWithBlocker } from "@/app/profile/(dashboard)/components/EventForm/block-navigation/link";
+import { LinkWithBlocker } from "@/app/account/partner/components/EventForm/block-navigation/link";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -14,7 +14,6 @@ import { useEventsFilter } from "@/context/EventsFilterContext";
 import { type NavigationOriginRecord, readNavigationOrigin } from "@/lib/navigation-origin";
 import { cn } from "@/lib/utils";
 
-import { WyImage } from "../custom/WyImage";
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
 import LogoBlackIcon from "../icons/LogoBlackIcon";
 import { LogoFooter } from "./Footer";
@@ -43,7 +42,7 @@ interface ProfileHeaderProps {
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true }) => {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
-  const logoHref = pathname === "/profile" ? "/" : "/profile";
+  const logoHref = pathname === "/account/partner" ? "/" : "/account/partner";
 
   return (
     <header
@@ -59,7 +58,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
 
         <div className="flex items-center gap-4">
           {user && (
-            <LinkWithBlocker href="/profile/partner">
+            <LinkWithBlocker href="/account/partner/partner">
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
@@ -100,8 +99,11 @@ export const PublicHeader = () => {
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
+  // Public pages lead into B2C (spec-b2b §2/§7) — the mode is derivable from the
+  // route, and the pinned switch inside /account is how a partner reaches B2B from
+  // here, not this icon directly.
   const accountHref =
-    mounted && user ? "/profile" : `/profile/login?next=${encodeURIComponent(pathname)}`;
+    mounted && user ? "/account" : `/account/login?next=${encodeURIComponent(pathname)}`;
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);
@@ -249,20 +251,13 @@ export const PublicHeader = () => {
           )}
 
           <Link href={accountHref} passHref className="flex items-center justify-center">
+            {/* Partner is auth/back-office only (spec-b2b §6) — nothing public,
+                including this header, renders from it. A generic account icon
+                stands in until B2C grows its own avatar. */}
             <button aria-label="Account">
-              {user?.partner?.image_id ? (
-                <WyImage
-                  src={user.partner.image_id}
-                  alt="Partner Avatar"
-                  className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover"
-                  width={128}
-                  height={128}
-                />
-              ) : (
-                <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
-                  <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
-                </div>
-              )}
+              <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+                <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
+              </div>
             </button>
           </Link>
         </div>

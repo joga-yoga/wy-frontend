@@ -21,11 +21,15 @@ interface HashedAvatarProps {
   size: number;
   className?: string;
   imageFit?: "cover" | "contain";
+  /** Precomputed fallback letters, for callers with better initials logic than a
+   * whitespace split — e.g. `personInitials`, which also handles email-only users. */
+  initialsOverride?: string;
 }
 
 /** Circle or (via `className`) rounded-square fallback avatar: photo when available,
  * otherwise a filled `--color-class-{hue}-700` circle with white initials, hue from a
- * stable hash of `seed`. Used for instructor rows and studio-logo fallbacks (T07). */
+ * stable hash of `seed`. The one avatar component for instructors, users/clients, and
+ * studio-logo fallbacks — reuse this instead of another one-off initials circle. */
 export function HashedAvatar({
   seed,
   name,
@@ -33,6 +37,7 @@ export function HashedAvatar({
   size,
   className,
   imageFit = "cover",
+  initialsOverride,
 }: HashedAvatarProps) {
   const hue = hashSeedToClassColor(seed);
 
@@ -57,7 +62,7 @@ export function HashedAvatar({
           className="flex h-full w-full items-center justify-center font-semibold text-white"
           style={{ fontSize: Math.round(size * 0.35) }}
         >
-          {initials(name)}
+          {initialsOverride ?? initials(name)}
         </span>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -17,7 +18,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { axiosInstance } from "@/lib/axiosInstance";
+import { useAuth } from "@/context/AuthContext";
+import { loginRedirectHref, submitInquiry } from "@/lib/inquiries";
 
 import { EventDetail } from "../types";
 
@@ -43,6 +45,9 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   onOpenChange,
   project,
 }) => {
+  const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -56,16 +61,23 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   });
 
   const onSubmit = async (data: BookingFormData) => {
+    // Sending an inquiry requires an account. Bounce through login and come back.
+    if (!user) {
+      router.push(loginRedirectHref(pathname));
+      return;
+    }
+
     try {
       setSubmitState("loading");
       setErrorMessage("");
 
-      await axiosInstance.post("/orders", {
+      // Inquiries are auth-linked now; the sender's identity comes from the session,
+      // so email/name are no longer submitted.
+      await submitInquiry({
+        kind: "reservation",
         event_id: event.id,
-        email: data.email,
         preferred_contact: data.preferredContact,
-        customer_name: data.fullName,
-        customer_note: `${data.customerNote || "Brak uwag"}`,
+        message: data.customerNote || "Brak uwag",
       });
 
       setSubmitState("success");

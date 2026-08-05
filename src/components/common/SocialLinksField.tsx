@@ -89,7 +89,7 @@ export function SocialLinksField({ value, onChange }: SocialLinksFieldProps) {
           onBlur={handleAdd}
           placeholder="Wklej link, np. instagram.com/twojestudio"
         />
-        <Button type="button" variant="outline" onClick={handleAdd}>
+        <Button type="button" size="action" variant="outline" onClick={handleAdd}>
           Dodaj
         </Button>
       </div>

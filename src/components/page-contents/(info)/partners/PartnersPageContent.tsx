@@ -155,7 +155,7 @@ export const PartnersPageContent = async () => {
               <p className="mx-auto max-w-[260px] text-center text-lg font-medium leading-[22px] text-gray-100 lg:mx-0 lg:max-w-xl lg:text-left lg:text-2xl lg:leading-6 lg:text-gray-700">
                 To zajmie tylko kilka minut, ale zwiększy Twoją widoczność
               </p>
-              <Link href={"/profile"} className="lg:hidden">
+              <Link href={"/account/partner"} className="lg:hidden">
                 <Button
                   size="lg"
                   className="mt-2 h-12 w-full bg-white !text-[22px] !font-medium !leading-[30px] text-black duration-200 hover:bg-white/90 lg:w-auto"
@@ -180,7 +180,7 @@ export const PartnersPageContent = async () => {
                 </div>
               </div>
             ))}
-            <Link href={"/profile"}>
+            <Link href={"/account/partner"}>
               <Button
                 size="cta"
                 variant="cta"
@@ -372,7 +372,7 @@ export const PartnersPageContent = async () => {
                     Nie musisz być wielki, by zacząć
                   </span>
                 </div>
-                <Link href={"/profile"}>
+                <Link href={"/account/partner"}>
                   <Button
                     size="lg"
                     className="h-12 w-full bg-gray-600 !text-[22px] !font-medium !leading-[30px] text-white hover:bg-gray-600/90"

@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from "react";
 import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5";
 
 import { CancellationChip } from "@/components/booking/CancellationChip";
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { StudioCard } from "@/components/common/StudioCard";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
@@ -374,7 +374,12 @@ function InstructorSection({
 
   const row = (
     <div className="flex items-center gap-3">
-      <InstructorAvatar name={instructor.name} imageId={instructor.image_id} size={48} />
+      <HashedAvatar
+        seed={instructor.id}
+        name={instructor.name}
+        imageId={instructor.image_id}
+        size={48}
+      />
       <div className="min-w-0 flex-1">
         {showInstructorChange && detail.previous_instructor_name && (
           <p className="truncate text-sm text-gray-400 line-through">

@@ -1,13 +1,15 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { BookingDrawerShell } from "@/components/booking/BookingDrawerShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { axiosInstance } from "@/lib/axiosInstance";
+import { useAuth } from "@/context/AuthContext";
+import { loginRedirectHref, submitInquiry } from "@/lib/inquiries";
 import { cn } from "@/lib/utils";
 
 const FIELD_CLASS_NAME =
@@ -30,6 +32,9 @@ export function InstructorContactDrawer({
   instructorId,
   instructorName,
 }: InstructorContactDrawerProps) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -53,12 +58,17 @@ export function InstructorContactDrawer({
     event.preventDefault();
     if (!email.trim() || !message.trim()) return;
 
+    if (!user) {
+      router.push(loginRedirectHref(pathname));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await axiosInstance.post("/utils/contact/instructor", {
+      await submitInquiry({
+        kind: "question",
         instructor_id: instructorId,
-        email: email.trim(),
-        contact_info: phone.trim() || undefined,
+        preferred_contact: phone.trim() || undefined,
         message: message.trim(),
       });
       setState("success");

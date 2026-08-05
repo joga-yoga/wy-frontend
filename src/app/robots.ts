@@ -5,7 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: "/profile/",
+      // The whole account area is private.
+      disallow: ["/account/"],
     },
     sitemap: "https://joga.yoga/sitemap.xml",
   };

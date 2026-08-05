@@ -1,27 +1,74 @@
 "use client";
 
-import { LayoutGroup, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IoHomeOutline, IoPersonOutline } from "react-icons/io5";
-import { PiFlowerLotus } from "react-icons/pi";
+import { useEffect, useState } from "react";
+import {
+  IoCalendarOutline,
+  IoFileTrayOutline,
+  IoMenuOutline,
+  IoPricetagOutline,
+} from "react-icons/io5";
 
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
+import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 
-const MAIN_TAB_PATHS = ["/profile", "/profile/offer", "/profile/account"] as const;
+/** Every path a tab can point to — used by the layout to decide when to reserve
+ * space for the fixed bar, independent of which tabs are currently conditional. */
+export const TAB_PATHS = [
+  "/account/partner/schedule",
+  "/account/partner/bookings",
+  "/account/partner/offer",
+  "/account/partner/menu",
+] as const;
 
-type TabPath = (typeof MAIN_TAB_PATHS)[number];
+type TabPath = (typeof TAB_PATHS)[number];
 
-const tabs: { path: TabPath; label: string; Icon: React.ElementType }[] = [
-  { path: "/profile", label: "Aktywność", Icon: IoHomeOutline },
-  { path: "/profile/offer", label: "Oferta", Icon: PiFlowerLotus },
-  { path: "/profile/account", label: "Konto", Icon: IoPersonOutline },
-];
+type Tab = { path: TabPath; label: string; Icon: React.ElementType };
 
+const REZERWACJE: Tab = {
+  path: "/account/partner/bookings",
+  label: "Rezerwacje",
+  Icon: IoFileTrayOutline,
+};
+const OFERTA: Tab = { path: "/account/partner/offer", label: "Oferta", Icon: IoPricetagOutline };
+const MENU: Tab = { path: "/account/partner/menu", label: "Menu", Icon: IoMenuOutline };
+const GRAFIK: Tab = { path: "/account/partner/schedule", label: "Grafik", Icon: IoCalendarOutline };
+
+/**
+ * Tabs materialize from what the partner actually has — never a role/entity switcher
+ * (spec-b2b §3). Grafik is absent for a partner with no managed studio and no
+ * accepted teaching link; Rezerwacje/Oferta/Menu are always present, differing only
+ * in their empty state (content lands in T09-T12).
+ *
+ * Active state is color + weight only, no pill background — matches the
+ * brand-green-accent, minimal-chrome language of `SegmentedToggle` and the newer
+ * booking-flow screens rather than the old 3-tab bar's dark pill.
+ */
 export function BottomTabBar() {
   const pathname = usePathname();
+  const { capabilities } = usePartnerCapabilities();
+  const [hasOverdue, setHasOverdue] = useState(false);
 
-  if (!MAIN_TAB_PATHS.includes(pathname as TabPath)) return null;
+  const hasGrafik = Boolean(
+    capabilities &&
+      (capabilities.managedStudios.length > 0 || capabilities.teachingStudios.length > 0),
+  );
+
+  // Amber dot on the Grafik icon whenever reconciliation has anything pending —
+  // visible cross-tab (reception-desk §5), not just while Grafik itself is open.
+  useEffect(() => {
+    if (!hasGrafik) return;
+    axiosInstance
+      .get<{ total: number }>("/partner/reconciliation")
+      .then(({ data }) => setHasOverdue(data.total > 0))
+      .catch(() => setHasOverdue(false));
+  }, [hasGrafik]);
+
+  const tabs: Tab[] = hasGrafik ? [GRAFIK, REZERWACJE, OFERTA, MENU] : [REZERWACJE, OFERTA, MENU];
+
+  if (!(TAB_PATHS as readonly string[]).includes(pathname)) return null;
 
   return (
     <>
@@ -30,68 +77,25 @@ export function BottomTabBar() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pt-2"
         style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
       >
-        <div className="bg-white shadow-[0_4px_24px_rgba(0,0,0,0.12)] rounded-[16px] flex w-full p-1.5 gap-1">
-          <LayoutGroup id="bottom-tab-bar">
-            {tabs.map(({ path, label, Icon }) => {
-              const isActive = pathname === path;
-              return (
-                <Link
-                  key={path}
-                  href={path}
-                  className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2 rounded-[13px] tap-highlight-transparent"
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="tab-pill"
-                      className="absolute inset-0 bg-gray-100 rounded-[13px]"
-                      transition={{ type: "spring", stiffness: 380, damping: 32, mass: 1 }}
-                    />
-                  )}
-                  <Icon
-                    size={22}
-                    className={cn("relative z-10", isActive ? "text-gray-900" : "text-gray-400")}
-                  />
-                  <span
-                    className={cn(
-                      "relative z-10 text-[11px] font-medium leading-none",
-                      isActive ? "text-gray-900" : "text-gray-400",
-                    )}
-                  >
-                    {label}
-                  </span>
-                </Link>
-              );
-            })}
-          </LayoutGroup>
-        </div>
-      </nav>
-
-      {/* Desktop: left sidebar */}
-      <aside className="hidden md:flex flex-col w-52 shrink-0 sticky top-20 h-[calc(100dvh-5rem)] border-r bg-background p-3 gap-1">
-        <LayoutGroup id="sidebar-tab-bar">
+        <div className="bg-white shadow-[0_4px_24px_rgba(0,0,0,0.12)] rounded-[16px] flex w-full p-1.5 gap-1 border border-gray-100">
           {tabs.map(({ path, label, Icon }) => {
             const isActive = pathname === path;
             return (
               <Link
                 key={path}
                 href={path}
-                className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                className="flex flex-1 flex-col items-center justify-center gap-1 py-2 rounded-[13px] tap-highlight-transparent"
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="sidebar-pill"
-                    className="absolute inset-0 bg-gray-100 rounded-xl"
-                    transition={{ type: "spring", stiffness: 380, damping: 32, mass: 1 }}
-                  />
-                )}
-                <Icon
-                  size={20}
-                  className={cn("relative z-10", isActive ? "text-gray-900" : "text-gray-400")}
-                />
+                <span className="relative">
+                  <Icon size={22} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
+                  {path === GRAFIK.path && hasOverdue && (
+                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-b2b-amber-text" />
+                  )}
+                </span>
                 <span
                   className={cn(
-                    "relative z-10 text-sm font-medium",
-                    isActive ? "text-gray-900" : "text-gray-400",
+                    "text-[11px] leading-none",
+                    isActive ? "font-semibold text-gray-900" : "font-medium text-gray-400",
                   )}
                 >
                   {label}
@@ -99,7 +103,32 @@ export function BottomTabBar() {
               </Link>
             );
           })}
-        </LayoutGroup>
+        </div>
+      </nav>
+
+      {/* Desktop: left sidebar */}
+      <aside className="hidden md:flex flex-col w-52 shrink-0 sticky top-20 h-[calc(100dvh-5rem)] border-r bg-background p-3 gap-1">
+        {tabs.map(({ path, label, Icon }) => {
+          const isActive = pathname === path;
+          return (
+            <Link key={path} href={path} className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
+              <span className="relative">
+                <Icon size={20} className={isActive ? "text-brand-green-700" : "text-gray-400"} />
+                {path === GRAFIK.path && hasOverdue && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-b2b-amber-text" />
+                )}
+              </span>
+              <span
+                className={cn(
+                  "text-sm",
+                  isActive ? "font-semibold text-gray-900" : "font-medium text-gray-400",
+                )}
+              >
+                {label}
+              </span>
+            </Link>
+          );
+        })}
       </aside>
     </>
   );

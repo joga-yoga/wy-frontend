@@ -86,7 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await axiosInstance.get("/me");
-      setUser((prevUser) => ({ ...response.data, name: prevUser?.name }));
+      // The server's name wins, falling back to whatever the token carried. This used
+      // to be `name: prevUser?.name` unconditionally, which *discarded* the name /me
+      // returns — written before `User.name` existed on the backend, so the JWT was the
+      // only source. It has been the real source since; the B2C profile showed an email
+      // where the database had "Basia Adamska".
+      setUser((prevUser) => ({ ...response.data, name: response.data.name ?? prevUser?.name }));
 
       // Partner data (name, photo) is only available once /me resolves, so
       // sync the Mixpanel profile here; no-ops without analytics consent.

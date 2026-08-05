@@ -369,6 +369,28 @@ export function formatDateStartWithTimeCompact(dateStr: string | Date | null | u
 }
 
 /**
+ * "1 Month" as a calendar-month rollover, clamped at month end (e.g. Jan 31 → Feb 28/29)
+ * rather than JS's native date-overflow behavior (which would roll Jan 31 + 1 month into
+ * March).
+ */
+export function addCalendarMonthClamped(d: Date): Date {
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const targetMonth = month + 1;
+  const daysInTargetMonth = new Date(year, targetMonth + 1, 0).getDate();
+  return new Date(year, targetMonth, Math.min(d.getDate(), daysInTargetMonth));
+}
+
+/**
+ * Formats a Date as a local `YYYY-MM-DD` string using its local calendar components —
+ * unlike `toISOString().slice(0, 10)`, which converts to UTC first and can silently roll
+ * the date back a day for any UTC+ timezone (e.g. Poland) on a local-midnight `Date`.
+ */
+export function formatDateYMD(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
  * Calculates the duration in hours between two dates.
  * @param startDateStr The start date as an ISO 8601 string (e.g., "2025-07-06T12:00:00Z"). Can be undefined or null.
  * @param endDateStr The end date as an ISO 8601 string (e.g., "2025-07-07T13:00:00Z"). Can be undefined or null.

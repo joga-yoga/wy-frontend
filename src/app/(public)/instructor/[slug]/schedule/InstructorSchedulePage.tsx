@@ -12,7 +12,7 @@ import {
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
 import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
 import type { PublicScheduleDaySummary } from "@/app/(public)/studio/[slug]/schedule/types";
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 import type { InstructorPublic } from "@/types/instructor";
@@ -62,7 +62,12 @@ function findEarliestDayIndexForClass(
 function ScheduleHeaderIdentity({ instructor }: { instructor: InstructorPublic }) {
   return (
     <Link href={`/instruktor/${instructor.slug}`} className="flex items-start gap-3 px-4 pt-4">
-      <InstructorAvatar name={instructor.name} imageId={instructor.image_id} size={60} />
+      <HashedAvatar
+        seed={instructor.id}
+        name={instructor.name}
+        imageId={instructor.image_id}
+        size={60}
+      />
       <div className="min-w-0 pt-[6px]">
         <p className=" font-bold leading-tight text-gray-900 text-lg">{instructor.name}</p>
         <p className="mt-0.5 truncate text-sm text-gray-500">nauczyciel jogi</p>
