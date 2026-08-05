@@ -151,22 +151,12 @@ export function GrafikSessionCard({
           {occ.template_title}
         </p>
 
-        {/* Live state (spec §2.1/§10) takes over the context line entirely — it's the most
-         * time-critical fact about the card while it applies. */}
-        {isLive && (
-          <p className="mt-0.5 text-[13px] font-medium text-b2b-green-text">
-            Trwa · do {formatTime(occ.end_time)}
-            {occ.unresolved_count > 0 && (
-              <span className="text-b2b-amber-text"> · {occ.unresolved_count} czeka</span>
-            )}
-          </p>
-        )}
+        {isPast && !isCancelled && <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>}
 
-        {!isLive && isPast && !isCancelled && (
-          <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>
-        )}
-
-        {!isLive && !isCancelled && !isPast && context === "owner" && occ.instructor_name && (
+        {/* Instructor/studio stays visible even while live — it used to be replaced
+         * entirely by the "Trwa" line below, which hid who's teaching or which studio
+         * right when someone glancing at the card most needs that context. */}
+        {!isCancelled && !isPast && context === "owner" && occ.instructor_name && (
           <div className="mt-1 flex items-center gap-1.5">
             <HashedAvatar
               seed={occ.instructor_id ?? occ.instructor_name}
@@ -181,8 +171,7 @@ export function GrafikSessionCard({
           </div>
         )}
 
-        {!isLive &&
-          !isCancelled &&
+        {!isCancelled &&
           !isPast &&
           context === "instructor" &&
           (occ.studio_name || occ.room_name) && (
@@ -190,6 +179,17 @@ export function GrafikSessionCard({
               {[occ.studio_name, occ.room_name].filter(Boolean).join(" · ")}
             </p>
           )}
+
+        {/* Live state (spec §2.1/§10) — now a second line below the instructor/studio
+         * info, not a replacement for it. */}
+        {isLive && (
+          <p className="mt-1 text-[13px] font-medium text-b2b-green-text">
+            Trwa · do {formatTime(occ.end_time)}
+            {occ.unresolved_count > 0 && (
+              <span className="text-b2b-amber-text"> · {occ.unresolved_count} czeka</span>
+            )}
+          </p>
+        )}
 
         {(isCancelled || occ.is_modified) && (
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">

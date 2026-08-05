@@ -9,9 +9,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { addCalendarMonthClamped, formatDateYMD } from "@/lib/formatDateRange";
 import { isFewForm, plural } from "@/lib/polishPlural";
 
-import { ScheduleRecurrenceForm } from "../../../class-schedules/components/ScheduleRecurrenceForm";
+import {
+  type EndDateMode,
+  ScheduleRecurrenceForm,
+} from "../../../class-schedules/components/ScheduleRecurrenceForm";
 import type { RoomOption } from "../../../class-schedules/types";
 import { InstructorPicker, type PickableInstructor } from "../../components/InstructorPicker";
 import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
@@ -144,6 +148,7 @@ export default function EditSessionPage() {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [endDateMode, setEndDateMode] = useState<EndDateMode>("endless");
 
   const [previewResponse, setPreviewResponse] = useState<SessionEditPreviewResponse | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -165,8 +170,8 @@ export default function EditSessionPage() {
         setCapacity(sd.capacity != null ? String(sd.capacity) : "");
         setInstructorId(sd.instructor_id ?? "");
 
-        const sessionDate = new Date(sd.calendar_date + "T00:00:00");
-        setFromDate(sessionDate);
+        // `fromDate` is derived separately below (it depends on `scope`, which isn't chosen
+        // yet at this point — the scope step comes first).
 
         // Pre-fill the real series pattern — not the tapped occurrence's single
         // day-of-week, which silently collapsed a Mon/Wed/Fri series to whichever day
@@ -176,9 +181,15 @@ export default function EditSessionPage() {
         // `parse_recurrence`'s docstring — no other FREQ is generated or understood).
         setSelectedDays(sd.recurrence_days ?? []);
 
-        // Pre-fill series end date from UNTIL
+        // Pre-fill series end date from UNTIL, and derive which end-date mode that implies —
+        // without this, an endless series (no UNTIL) hydrated `toDate` to `undefined` and the
+        // old single-Calendar UI showed an empty, unselected "Wybierz datę" placeholder, reading
+        // as broken rather than intentionally endless.
         if (sd.series_to_date) {
           setToDate(new Date(sd.series_to_date + "T00:00:00"));
+          setEndDateMode("custom");
+        } else {
+          setEndDateMode("endless");
         }
 
         // Skip scope step for non-recurring (one-off) series
@@ -190,6 +201,20 @@ export default function EditSessionPage() {
       .catch(() => toast({ description: "Nie udało się załadować sesji.", variant: "destructive" }))
       .finally(() => setIsLoadingDetail(false));
   }, [params.occurrenceId, toast]);
+
+  // The (disabled, display-only) start date depends on scope: "this and following" starts
+  // from the tapped occurrence, but "whole series" starts from the series' actual first
+  // upcoming occurrence — which is not necessarily the one the caller tapped into if they
+  // opened the edit screen from a mid-series session. Re-derives whenever `scope` changes
+  // rather than only once at hydration, since the scope step is chosen after this data loads.
+  useEffect(() => {
+    if (!sessionDetail) return;
+    const dateStr =
+      scope === "whole_series"
+        ? (sessionDetail.series_from_date ?? sessionDetail.calendar_date)
+        : sessionDetail.calendar_date;
+    setFromDate(new Date(dateStr + "T00:00:00"));
+  }, [scope, sessionDetail]);
 
   // The "Prowadzący" picker draws from the studio roster, not the partner's own
   // instructors — Zastępstwo explicitly needs pending-link instructors to be
@@ -250,8 +275,17 @@ export default function EditSessionPage() {
         payload.frequency = "WEEKLY";
         payload.days = selectedDays;
       }
-      if (toDate) {
-        payload.to_date = toDate.toISOString().slice(0, 10);
+      // `to_date` follows the request schema's omit-vs-null contract: omitting the key keeps
+      // whatever the series already has, so "Bezterminowo" must send an explicit `null` to
+      // actually clear an existing end date, not just skip the field.
+      if (endDateMode === "endless") {
+        payload.to_date = null;
+      } else if (endDateMode === "1month") {
+        if (fromDate) {
+          payload.to_date = formatDateYMD(addCalendarMonthClamped(fromDate));
+        }
+      } else if (toDate) {
+        payload.to_date = formatDateYMD(toDate);
       }
     }
 
@@ -392,9 +426,6 @@ export default function EditSessionPage() {
                 ? { id: sessionDetail.instructor_id, name: sessionDetail.instructor_name }
                 : null
             }
-            studios={[]}
-            studioId={sessionDetail.studio_id ?? ""}
-            onStudioChange={() => {}}
             rooms={rooms}
             roomId={roomId}
             onRoomChange={setRoomId}
@@ -409,9 +440,11 @@ export default function EditSessionPage() {
             onToggleDay={toggleDay}
             fromDate={fromDate}
             onFromDateChange={setFromDate}
-            disableFromDate={scope !== "this_and_future"}
+            disableFromDate
             toDate={toDate}
             onToDateChange={setToDate}
+            endDateMode={endDateMode}
+            onEndDateModeChange={setEndDateMode}
             startTime={startTime}
             onStartTimeChange={setStartTime}
             // One session has no recurrence to speak of (S3).

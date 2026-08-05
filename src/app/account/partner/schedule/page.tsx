@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Calendar, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { AlertCircle, Calendar, ChevronLeft, ChevronRight, Coffee, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -16,9 +16,9 @@ import { cn } from "@/lib/utils";
 
 import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
-import { GrafikContextChips } from "./components/GrafikContextChips";
+import { GrafikContextChips, INSTRUCTOR_VIEW_PARAM } from "./components/GrafikContextChips";
 import { GrafikSessionCard } from "./components/GrafikSessionCard";
-import type { ScheduleDaySummary, ScheduleOccurrence, ScheduleWeekResponse } from "./types";
+import type { ScheduleOccurrence, ScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
   const date = new Date(d);
@@ -51,26 +51,39 @@ export default function SchedulePage() {
   const { capabilities, isLoading: isLoadingCapabilities } = usePartnerCapabilities();
   const { studio: currentStudio } = useCurrentStudio();
 
-  // Grafik is absent entirely for events-only/fresh partners and, for teaching-only
-  // partners, is the read-only variant — never this managed-owner view (spec-b2b §3).
+  // One page, two modes, switched by `?studio_id=` (a real studio id → owner Grafik for
+  // that studio; the `INSTRUCTOR_VIEW_PARAM` sentinel → the read-only "Mój grafik" view of
+  // the partner's own sessions) — was two separate routes/page components until this
+  // was consolidated so the Grafik switcher never needs to leave the page.
+  const studioParam = searchParams.get("studio_id") ?? "";
+  const isInstructorView = studioParam === INSTRUCTOR_VIEW_PARAM;
+
+  // Route to wherever the partner actually has something to see: no managed studio at all
+  // sends them to "Mój grafik" (if they teach anywhere) or Rezerwacje (if not); asking for
+  // "Mój grafik" without any teaching link bounces back to the owner view (spec-b2b §3).
   useEffect(() => {
     if (isLoadingCapabilities || !capabilities) return;
+    if (isInstructorView) {
+      if (capabilities.teachingStudios.length === 0) {
+        router.replace("/account/partner/schedule");
+      }
+      return;
+    }
     if (capabilities.managedStudios.length > 0) return;
     router.replace(
       capabilities.teachingStudios.length > 0
-        ? "/account/partner/schedule/instructor"
+        ? `/account/partner/schedule?studio_id=${INSTRUCTOR_VIEW_PARAM}`
         : "/account/partner/bookings",
     );
-  }, [isLoadingCapabilities, capabilities, router]);
+  }, [isLoadingCapabilities, capabilities, isInstructorView, router]);
 
-  const studioParam = searchParams.get("studio_id") ?? "";
-  const [studioId, setStudioId] = useState(studioParam);
+  const [studioId, setStudioId] = useState(isInstructorView ? "" : studioParam);
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
   const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
     const today = new Date().getDay();
     return today === 0 ? 6 : today - 1;
   });
-  const [days, setDays] = useState<ScheduleDaySummary[]>([]);
+  const [occurrences, setOccurrences] = useState<ScheduleOccurrence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [reconciliation, setReconciliation] = useState<{
     sessionCount: number;
@@ -78,18 +91,24 @@ export default function SchedulePage() {
     studioName: string | null;
   }>({ sessionCount: 0, showStudioLabels: false, studioName: null });
 
+  // Studio comes from `managedStudios` (`is_owner=True` links only, same source the
+  // add-session flow uses) — irrelevant in instructor view, where sessions can span
+  // several studios.
   useEffect(() => {
-    axiosInstance
-      .get<{ id: string; name: string }[]>("/studios")
-      .then((r) => {
-        if (!studioId && r.data?.length) setStudioId(r.data[0].id);
-      })
-      .catch(() => {});
-  }, [studioId]);
+    if (isInstructorView) return;
+    if (!capabilities) return;
+    const match = studioParam && capabilities.managedStudios.find((s) => s.id === studioParam);
+    if (match) {
+      setStudioId(match.id);
+    } else if (!studioId && capabilities.managedStudios.length > 0) {
+      setStudioId(capabilities.managedStudios[0].id);
+    }
+  }, [isInstructorView, capabilities, studioParam, studioId]);
 
   // The reconciliation strip is global across every studio the partner manages and
   // independent of the selected Grafik chip (reception-desk §5) — it must not read
-  // as "nothing to do" just because a different studio is the current context.
+  // as "nothing to do" just because a different studio is the current context. Not shown
+  // at all in instructor view (read-only, no owner actions to take from here).
   useEffect(() => {
     axiosInstance
       .get<{
@@ -119,34 +138,67 @@ export default function SchedulePage() {
   }, []);
 
   const fetchWeek = useCallback(() => {
+    if (isInstructorView) {
+      setIsLoading(true);
+      axiosInstance
+        .get<ScheduleOccurrence[]>("/class-grafik/instructor", {
+          params: { week_start: formatDate(weekStart) },
+        })
+        .then((r) => setOccurrences(r.data ?? []))
+        .catch(() =>
+          toast({ description: "Nie udało się załadować grafiku.", variant: "destructive" }),
+        )
+        .finally(() => setIsLoading(false));
+      return;
+    }
     if (!studioId) return;
     setIsLoading(true);
     axiosInstance
       .get<ScheduleWeekResponse>("/class-grafik/week", {
         params: { studio_id: studioId, week_start: formatDate(weekStart) },
       })
-      .then((r) => setDays(r.data.days))
+      .then((r) => setOccurrences(r.data.days.flatMap((d) => d.occurrences)))
       .catch(() =>
         toast({ description: "Nie udało się załadować grafiku.", variant: "destructive" }),
       )
       .finally(() => setIsLoading(false));
-  }, [studioId, weekStart, toast]);
+  }, [isInstructorView, studioId, weekStart, toast]);
 
   useEffect(() => {
     fetchWeek();
   }, [fetchWeek]);
 
-  const sessionCounts = useMemo(() => days.map((d) => d.session_count), [days]);
-  const selectedDay = days[selectedDayIndex];
-  const hasAnySessions = days.some((d) => d.session_count > 0);
+  const weekDates = useMemo(() => {
+    const dates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      dates.push(formatDate(d));
+    }
+    return dates;
+  }, [weekStart]);
 
-  // Derived from the strip's own state rather than from `days[selectedDayIndex].date`, so the
-  // header title stays correct (and stable) while a week is still loading or came back empty.
-  const selectedDate = useMemo(() => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + selectedDayIndex);
-    return formatDate(d);
-  }, [weekStart, selectedDayIndex]);
+  const sessionCounts = useMemo(() => {
+    const counts = Array(7).fill(0);
+    for (const occ of occurrences) {
+      const idx = weekDates.indexOf(occ.calendar_date);
+      if (idx >= 0) counts[idx]++;
+    }
+    return counts;
+  }, [occurrences, weekDates]);
+
+  const hasAnySessions = occurrences.length > 0;
+
+  // Derived from the strip's own state rather than from fetched data, so the header title
+  // stays correct (and stable) while a week is still loading or came back empty.
+  const selectedDate = useMemo(
+    () => weekDates[selectedDayIndex] ?? formatDate(weekStart),
+    [weekDates, selectedDayIndex, weekStart],
+  );
+  const dayOccurrences = useMemo(
+    () => occurrences.filter((o) => o.calendar_date === selectedDate),
+    [occurrences, selectedDate],
+  );
 
   const dayStripRef = useRef<DayStripHandle>(null);
   const stickySentinelRef = useRef<HTMLDivElement>(null);
@@ -271,60 +323,77 @@ export default function SchedulePage() {
        * because the handlers only covered the cards themselves. It carries the page's bottom
        * padding too (rather than the container) so that gutter is swipeable as well. */}
       <div
-        className={cn("mt-0 flex-1", reconciliation.sessionCount > 0 ? "pb-24" : "pb-4")}
+        className={cn(
+          "mt-0 flex-1",
+          !isInstructorView && reconciliation.sessionCount > 0 ? "pb-24" : "pb-4",
+        )}
         {...daySwipe}
       >
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
-        ) : !hasAnySessions ? (
+        ) : !hasAnySessions && !isInstructorView ? (
           <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
             <Calendar size={24} className="mx-auto text-gray-400" />
             <p className="text-sm font-semibold text-gray-900">Grafik jest pusty</p>
             <p className="text-xs text-gray-500">
               Dodaj pierwsze zajęcia, żeby zbudować cotygodniowy grafik.
             </p>
-            <Link href="/account/partner/class-schedules/create">
+            <Link href={`/account/partner/class-schedules/create?studio_id=${studioId}`}>
               <Button variant="outline" size="sm">
                 <Plus size={14} className="mr-1" />
                 Dodaj zajęcia
               </Button>
             </Link>
           </div>
-        ) : selectedDay && selectedDay.session_count === 0 ? (
-          <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
-            <Calendar size={20} className="mx-auto text-gray-400" />
-            {selectedDay.date < formatDate(new Date()) ? (
-              <p className="text-sm text-gray-500">Nie było zajęć w ten dzień</p>
-            ) : (
-              <>
-                <p className="text-sm text-gray-500">
-                  Brak zajęć w {formatDayHeader(selectedDay.date).split(",")[0]}
-                </p>
-                <Link href="/account/partner/class-schedules/create">
-                  <Button variant="outline" size="sm">
-                    <Plus size={14} className="mr-1" />
-                    Dodaj zajęcia
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        ) : selectedDay ? (
+        ) : dayOccurrences.length === 0 ? (
+          isInstructorView ? (
+            <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-2">
+              <Coffee size={20} className="mx-auto text-gray-400" />
+              <p className="text-sm text-gray-500">Wolne — dziś nie prowadzisz zajęć</p>
+            </div>
+          ) : (
+            <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
+              <Calendar size={20} className="mx-auto text-gray-400" />
+              {selectedDate < formatDate(new Date()) ? (
+                <p className="text-sm text-gray-500">Nie było zajęć w ten dzień</p>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-500">
+                    Brak zajęć w {formatDayHeader(selectedDate).split(",")[0]}
+                  </p>
+                  <Link href={`/account/partner/class-schedules/create?studio_id=${studioId}`}>
+                    <Button variant="outline" size="sm">
+                      <Plus size={14} className="mr-1" />
+                      Dodaj zajęcia
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          )
+        ) : (
           // Separated cards, as on the public studio schedule — the day is already named by
           // the header row above, so no title repeats here.
           <div className="space-y-2">
-            {selectedDay.occurrences.map((occ) => (
-              <GrafikSessionCard key={occ.id} occ={occ} onClick={goToSession} now={now} />
+            {dayOccurrences.map((occ) => (
+              <GrafikSessionCard
+                key={occ.id}
+                occ={occ}
+                onClick={goToSession}
+                context={isInstructorView ? "instructor" : "owner"}
+                now={now}
+              />
             ))}
           </div>
-        ) : null}
+        )}
       </div>
 
       {/* Reconciliation entry (spec §2.2) — pinned right above the bottom tab bar rather than
        * flowing with the day list: a class starting in eight minutes outranks an idle-moment
        * task for top-of-screen position, but a strip that only happens to land near the bottom
-       * on a short day (and collides with the fixed add button) reads as broken, not deprioritized. */}
-      {reconciliation.sessionCount > 0 && (
+       * on a short day (and collides with the fixed add button) reads as broken, not deprioritized.
+       * Owner view only — instructor view is read-only, no reconciliation action to take here. */}
+      {!isInstructorView && reconciliation.sessionCount > 0 && (
         <Link
           href="/account/partner/reconciliation"
           className="fixed inset-x-4 bottom-[calc(var(--bottom-tab-h)+0.5rem)] z-30 mx-auto flex h-14 max-w-lg items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 text-sm font-medium text-b2b-amber-text shadow-md transition-opacity hover:opacity-90 md:bottom-6"
@@ -344,19 +413,22 @@ export default function SchedulePage() {
        * sessions, which is exactly when adding one matters most. Offsets from
        * --bottom-tab-h (a Tailwind class, not an inline style, so the md: override still
        * wins) because at md: the tab bar becomes a sidebar and the offset is unnecessary.
-       * Bumped higher still when the reconciliation strip is showing, so the two never cross. */}
-      <Link
-        href="/account/partner/class-schedules/create"
-        aria-label="Dodaj zajęcia"
-        className={cn(
-          "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",
-          reconciliation.sessionCount > 0
-            ? "bottom-[calc(var(--bottom-tab-h)+5rem)] md:bottom-24"
-            : "bottom-[calc(var(--bottom-tab-h)+1rem)] md:bottom-6",
-        )}
-      >
-        <Plus size={24} />
-      </Link>
+       * Bumped higher still when the reconciliation strip is showing, so the two never cross.
+       * Owner view only — instructor view is read-only, there is nothing to add from here. */}
+      {!isInstructorView && (
+        <Link
+          href={`/account/partner/class-schedules/create?studio_id=${studioId}`}
+          aria-label="Dodaj zajęcia"
+          className={cn(
+            "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",
+            reconciliation.sessionCount > 0
+              ? "bottom-[calc(var(--bottom-tab-h)+5rem)] md:bottom-24"
+              : "bottom-[calc(var(--bottom-tab-h)+1rem)] md:bottom-6",
+          )}
+        >
+          <Plus size={24} />
+        </Link>
+      )}
     </div>
   );
 }

@@ -16,13 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { addCalendarMonthClamped } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
 import {
   InstructorPicker,
   type PickableInstructor,
 } from "../../schedule/components/InstructorPicker";
-import type { RoomOption, StudioOption } from "../types";
+import type { RoomOption } from "../types";
 
 export type EndDateMode = "endless" | "1month" | "custom";
 
@@ -45,11 +46,6 @@ interface ScheduleRecurrenceFormProps {
   templateDate?: string | null;
   templateInstructor?: { id?: string | null; name: string; imageId?: string | null } | null;
   onChangeTemplate?: () => void; // if undefined → hide the "Zmień" button
-
-  // Studio (shown only when studios.length > 1)
-  studios: StudioOption[];
-  studioId: string;
-  onStudioChange: (id: string) => void;
 
   // Rooms (shown when rooms.length > 0)
   rooms: RoomOption[];
@@ -101,9 +97,6 @@ export function ScheduleRecurrenceForm({
   templateDate,
   templateInstructor,
   onChangeTemplate,
-  studios,
-  studioId,
-  onStudioChange,
   rooms,
   roomId,
   onRoomChange,
@@ -150,24 +143,6 @@ export function ScheduleRecurrenceForm({
           </button>
         )}
       </div>
-
-      {studios.length > 1 && (
-        <div>
-          <Label>Studio</Label>
-          <Select value={studioId} onValueChange={onStudioChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Wybierz studio" />
-            </SelectTrigger>
-            <SelectContent>
-              {studios.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
 
       {/* Recurrence. Hidden for a single-session edit — frequency/days/date-range do not
        * apply to one occurrence, and offering them invites the costly mistake of rewriting a
@@ -254,7 +229,7 @@ export function ScheduleRecurrenceForm({
             <div>
               <Label>Do dnia</Label>
               <SegmentedToggle
-                className="mt-1 mb-0"
+                className="mt-1"
                 columns={3}
                 value={endDateMode}
                 onChange={onEndDateModeChange}
@@ -279,6 +254,11 @@ export function ScheduleRecurrenceForm({
                     <Calendar mode="single" selected={toDate} onSelect={onToDateChange} />
                   </PopoverContent>
                 </Popover>
+              )}
+              {endDateMode === "1month" && fromDate && (
+                <p className="text-xs text-gray-500">
+                  do {addCalendarMonthClamped(fromDate).toLocaleDateString("pl-PL")}
+                </p>
               )}
             </div>
           )}

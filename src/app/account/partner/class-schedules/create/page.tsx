@@ -6,9 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { COLOR_SWATCH_MAP } from "@/lib/classColors";
+import { addCalendarMonthClamped } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
@@ -20,19 +22,7 @@ import type {
   RoomOption,
   ScheduleCreatePayload,
   SchedulePreviewResponse,
-  StudioOption,
 } from "../types";
-
-/** "1 Month" as a calendar-month rollover, clamped at month end (e.g. Jan 31 → Feb 28/29)
- * rather than JS's native date-overflow behavior (which would roll Jan 31 + 1 month into
- * March). */
-function addCalendarMonthClamped(d: Date): Date {
-  const year = d.getFullYear();
-  const month = d.getMonth();
-  const targetMonth = month + 1;
-  const daysInTargetMonth = new Date(year, targetMonth + 1, 0).getDate();
-  return new Date(year, targetMonth, Math.min(d.getDate(), daysInTargetMonth));
-}
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -66,6 +56,7 @@ export default function CreateScheduleWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { capabilities } = usePartnerCapabilities();
 
   const [step, setStep] = useState<Step>("select");
   const [templates, setTemplates] = useState<ClassTemplate[]>([]);
@@ -75,7 +66,6 @@ export default function CreateScheduleWizard() {
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   // Step 2
-  const [studios, setStudios] = useState<StudioOption[]>([]);
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [studioId, setStudioId] = useState("");
   const [roomId, setRoomId] = useState("");
@@ -86,7 +76,7 @@ export default function CreateScheduleWizard() {
   const [selectedDays, setSelectedDays] = useState<string[]>(["MO"]);
   const [fromDate, setFromDate] = useState<Date | undefined>(() => new Date());
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
-  const [endDateMode, setEndDateMode] = useState<EndDateMode>("custom");
+  const [endDateMode, setEndDateMode] = useState<EndDateMode>("endless");
   const [startTime, setStartTime] = useState("09:00");
 
   // Step 3
@@ -103,14 +93,23 @@ export default function CreateScheduleWizard() {
       .get<ClassTemplate[]>("/class-templates")
       .then((r) => setTemplates(r.data ?? []))
       .catch(() => {});
-    axiosInstance
-      .get<StudioOption[]>("/studios")
-      .then((r) => {
-        setStudios(r.data ?? []);
-        if (r.data?.length === 1) setStudioId(r.data[0].id);
-      })
-      .catch(() => {});
   }, []);
+
+  // Studio comes from the same source as the top-level Grafik switcher
+  // (`managedStudios`, `is_owner=True` links only) — not the flow's own picker, which used to
+  // fetch every studio the partner has *any* link to, disagreeing with the switcher whenever a
+  // non-owner link existed. The "+" button on the Grafik pages already carries the active
+  // studio via `?studio_id=`; fall back to the partner's one managed studio otherwise.
+  useEffect(() => {
+    if (!capabilities) return;
+    const requested = searchParams.get("studio_id");
+    const match = requested && capabilities.managedStudios.find((s) => s.id === requested);
+    if (match) {
+      setStudioId(match.id);
+    } else if (capabilities.managedStudios.length === 1) {
+      setStudioId(capabilities.managedStudios[0].id);
+    }
+  }, [capabilities, searchParams]);
 
   useEffect(() => {
     if (!studioId) {
@@ -414,9 +413,6 @@ export default function CreateScheduleWizard() {
               selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""
             }`}
             onChangeTemplate={() => setStep("select")}
-            studios={studios}
-            studioId={studioId}
-            onStudioChange={setStudioId}
             rooms={rooms}
             roomId={roomId}
             onRoomChange={setRoomId}
@@ -536,7 +532,7 @@ export default function CreateScheduleWizard() {
                 setShowInlineCreate(false);
                 setFromDate(new Date());
                 setToDate(undefined);
-                setEndDateMode("custom");
+                setEndDateMode("endless");
                 setPreviewOccs([]);
               }}
             >

@@ -78,7 +78,6 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
   if (pathname.startsWith("/account/partner/class-templates/") && pathname.endsWith("/edit"))
     return "Edytuj szablon";
   if (pathname === "/account/partner/class-schedules/create") return "Dodaj zajęcia";
-  if (pathname === "/account/partner/schedule/instructor") return "Mój grafik";
   if (pathname.startsWith("/account/partner/schedule/edit/")) {
     // Zastępstwo enters the same edit pipeline through a different door (S8), and its
     // header names that door rather than the pipeline.
@@ -89,7 +88,6 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
 }
 
 function getBackHref(pathname: string, searchParams: URLSearchParams): string | undefined {
-  if (pathname === "/account/partner/schedule/instructor") return "/account/partner/schedule";
   if (pathname.startsWith("/account/partner/schedule/edit/")) return "/account/partner/schedule";
   if (pathname.startsWith("/account/partner/schedule/cancel/")) return "/account/partner/schedule";
   if (pathname === "/account/partner/class-schedules/create") return "/account/partner/schedule";

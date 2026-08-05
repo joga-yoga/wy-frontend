@@ -62,6 +62,10 @@ export interface SessionDetailResponse {
   role: "owner" | "instructor";
   is_recurring: boolean;
   series_to_date?: string | null;
+  /** First upcoming, non-cancelled, non-individually-customised occurrence of this series —
+   * what a "whole series" edit actually starts from, which is not necessarily the occurrence
+   * the caller tapped into. Null when the series has no eligible occurrence left. */
+  series_from_date?: string | null;
   recurrence_frequency?: string | null;
   recurrence_days?: string[];
   /** People notified of the cancellation — 0 unless `status === "cancelled"`. */
