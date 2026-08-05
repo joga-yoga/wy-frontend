@@ -13,6 +13,7 @@ import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
@@ -52,6 +53,8 @@ function StudioRosterAddFlow() {
 
   const [stubName, setStubName] = useState("");
   const [stubEmail, setStubEmail] = useState("");
+  const [stubShortBio, setStubShortBio] = useState("");
+  const [stubDescription, setStubDescription] = useState("");
   const [stubImageId, setStubImageId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [notFoundEmail, setNotFoundEmail] = useState<string | null>(null);
@@ -119,6 +122,8 @@ function StudioRosterAddFlow() {
         name: stubName.trim(),
         email: stubEmail.trim() || undefined,
         image_id: stubImageId || undefined,
+        short_bio: stubShortBio.trim() || undefined,
+        description: stubDescription.trim() || undefined,
         studio_id: studio.id,
       });
       toast({
@@ -196,6 +201,34 @@ function StudioRosterAddFlow() {
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="stub-short-bio">
+            Krótki opis{" "}
+            <span className="text-muted-foreground text-xs font-normal">
+              (maks. 200 znaków, opcjonalnie)
+            </span>
+          </Label>
+          <Textarea
+            id="stub-short-bio"
+            rows={2}
+            maxLength={200}
+            value={stubShortBio}
+            onChange={(e) => setStubShortBio(e.target.value)}
+            placeholder="np. Certyfikowana instruktorka Hatha i Vinyasy"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="stub-description">Pełny opis (opcjonalnie)</Label>
+          <Textarea
+            id="stub-description"
+            rows={4}
+            value={stubDescription}
+            onChange={(e) => setStubDescription(e.target.value)}
+            placeholder="np. Doświadczenie, styl prowadzenia zajęć..."
+          />
+        </div>
+
         <Button
           size="action"
           variant="green"
@@ -213,7 +246,7 @@ function StudioRosterAddFlow() {
         {stubEmail.trim() && (
           <p className="text-center text-xs text-gray-400 leading-relaxed">
             Do czasu przejęcia profilu przez {stubName.trim().split(" ")[0] || "instruktora"} możesz
-            uzupełniać i edytować wszystkie jego dane.
+            uzupełnić tylko podstawowe dane. Pełny profil uzupełni instruktor po przejęciu.
           </p>
         )}
       </div>

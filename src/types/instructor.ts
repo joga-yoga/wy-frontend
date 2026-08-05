@@ -73,6 +73,9 @@ export interface InstructorPublic {
   yoga_styles: InstructorYogaStyle[];
   social_links: SocialLinkOut[];
   is_published: boolean;
+  // Genuinely self-claimed vs. a placeholder the organizing partner manages but the real
+  // person hasn't claimed yet — used to keep unclaimed profiles out of search indexing.
+  is_claimed: boolean;
   created_at: string;
   updated_at: string;
 }

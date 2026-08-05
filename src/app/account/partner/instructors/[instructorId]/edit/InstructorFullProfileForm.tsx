@@ -334,7 +334,9 @@ export function InstructorFullProfileForm({
                 <FormItem>
                   <FormLabel>E-mail instruktora *</FormLabel>
                   <FormDescription>
-                    Wymagany do przejęcia profilu. Nie wyświetlamy go publicznie.
+                    Ten profil jest już widoczny publicznie, ale możesz uzupełnić tylko podstawowe
+                    dane. Zaproś instruktora e-mailem, aby mógł przejąć profil i uzupełnić go w
+                    pełni (zdjęcia, style jogi, certyfikaty i więcej).
                   </FormDescription>
                   <FormControl>
                     <Input {...field} type="email" placeholder="instruktor@example.com" />
@@ -468,138 +470,148 @@ export function InstructorFullProfileForm({
             )}
           />
 
-          <Separator />
+          {/* Everything below is profile *content* beyond the essentials (name, photo,
+           * short bio, description, email) — for a profile the partner manages but hasn't
+           * personally claimed, only the essentials are theirs to fill in. The real person
+           * fills in the rest once they claim it. See
+           * .plans/instructor-profile-permissions/. */}
+          {isOwnClaimedInstructor && (
+            <>
+              <Separator />
 
-          <FormField
-            control={form.control}
-            name="photo_ids"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Galeria zdjęć</FormLabel>
-                <FormDescription>
-                  Pomagają uczestnikom poznać instruktora — zdjęcia z zajęć, treningów lub wydarzeń
-                </FormDescription>
-                <InstructorPhotoGallery
-                  value={(field.value ?? []) as string[]}
-                  onChange={field.onChange}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="photo_ids"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Galeria zdjęć</FormLabel>
+                    <FormDescription>
+                      Pomagają uczestnikom poznać instruktora — zdjęcia z zajęć, treningów lub
+                      wydarzeń
+                    </FormDescription>
+                    <InstructorPhotoGallery
+                      value={(field.value ?? []) as string[]}
+                      onChange={field.onChange}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <Separator />
+              <Separator />
 
-          <FormField
-            control={form.control}
-            name="languages"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Języki prowadzenia zajęć</FormLabel>
-                <FormDescription>
-                  Uczestnicy filtrują wydarzenia po języku — zaznacz wszystkie, w których prowadzisz
-                  zajęcia
-                </FormDescription>
-                <FormControl>
-                  <LanguageMultiSelect
-                    value={(field.value ?? []) as string[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="languages"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Języki prowadzenia zajęć</FormLabel>
+                    <FormDescription>
+                      Uczestnicy filtrują wydarzenia po języku — zaznacz wszystkie, w których
+                      prowadzisz zajęcia
+                    </FormDescription>
+                    <FormControl>
+                      <LanguageMultiSelect
+                        value={(field.value ?? []) as string[]}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="cities"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Lokalizacje</FormLabel>
-                <FormDescription>
-                  Pomagają uczestnikom znaleźć Cię w wyszukiwaniu — dodaj miasta, w których
-                  regularnie uczysz
-                </FormDescription>
-                <FormControl>
-                  <CitySearchField
-                    value={(field.value ?? []) as CityItem[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="cities"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lokalizacje</FormLabel>
+                    <FormDescription>
+                      Pomagają uczestnikom znaleźć Cię w wyszukiwaniu — dodaj miasta, w których
+                      regularnie uczysz
+                    </FormDescription>
+                    <FormControl>
+                      <CitySearchField
+                        value={(field.value ?? []) as CityItem[]}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <Separator />
+              <Separator />
 
-          <FormField
-            control={form.control}
-            name="yoga_styles"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Style jogi</FormLabel>
-                <FormDescription>
-                  Widoczne na profilu i w filtrach wyszukiwania — zaznacz style, w których się
-                  specjalizujesz
-                </FormDescription>
-                <FormControl>
-                  <YogaStyleSelector
-                    value={(field.value ?? []) as InstructorYogaStyleIn[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="yoga_styles"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Style jogi</FormLabel>
+                    <FormDescription>
+                      Widoczne na profilu i w filtrach wyszukiwania — zaznacz style, w których się
+                      specjalizujesz
+                    </FormDescription>
+                    <FormControl>
+                      <YogaStyleSelector
+                        value={(field.value ?? []) as InstructorYogaStyleIn[]}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <Separator />
+              <Separator />
 
-          <FormField
-            control={form.control}
-            name="certificates"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Certyfikaty i ukończone szkolenia</FormLabel>
-                <FormDescription>
-                  Budują wiarygodność i zaufanie uczestników — dodaj ukończone kursy, szkolenia
-                  nauczycielskie i certyfikaty
-                </FormDescription>
-                <FormControl>
-                  <CertificatesField
-                    value={(field.value ?? []) as CertificateItem[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="certificates"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Certyfikaty i ukończone szkolenia</FormLabel>
+                    <FormDescription>
+                      Budują wiarygodność i zaufanie uczestników — dodaj ukończone kursy, szkolenia
+                      nauczycielskie i certyfikaty
+                    </FormDescription>
+                    <FormControl>
+                      <CertificatesField
+                        value={(field.value ?? []) as CertificateItem[]}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <Separator />
+              <Separator />
 
-          <FormField
-            control={form.control}
-            name="social_links"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Media społecznościowe</FormLabel>
-                <FormDescription>
-                  Wklej linki do Instagrama, Facebooka i innych profili — pojawią się jako ikony na
-                  publicznym profilu
-                </FormDescription>
-                <FormControl>
-                  <SocialLinksField
-                    value={(field.value ?? []) as SocialLinkValue[]}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="social_links"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Media społecznościowe</FormLabel>
+                    <FormDescription>
+                      Wklej linki do Instagrama, Facebooka i innych profili — pojawią się jako ikony
+                      na publicznym profilu
+                    </FormDescription>
+                    <FormControl>
+                      <SocialLinksField
+                        value={(field.value ?? []) as SocialLinkValue[]}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
 
           <Separator />
 
