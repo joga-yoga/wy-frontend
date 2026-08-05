@@ -134,6 +134,7 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
             // primary save action in the brand green. The indigo shadow was left over
             // from a palette this product does not use.
             <Button
+              size="action"
               variant="green"
               onClick={() => {
                 onUpdate();

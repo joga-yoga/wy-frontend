@@ -9,7 +9,11 @@ import { useNavigationBlocker } from "@/app/(account)/account/partner/components
 import { TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { LogoFooter } from "@/components/layout/Footer";
 import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
-import { usePageSubtitle, usePageTitleOverride } from "@/context/PageHeaderContext";
+import {
+  usePageHeaderAction,
+  usePageSubtitle,
+  usePageTitleOverride,
+} from "@/context/PageHeaderContext";
 
 const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
 
@@ -53,8 +57,8 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
   // sell-pass must be tested before the roster pattern — it also matches `/front-desk/<seg>`.
   if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/sell-pass$/.test(pathname))
     return "Sprzedaj karnet";
-  if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/[^/]+$/.test(pathname))
-    return "Lista obecności";
+  // The session screen (spec §3) titles itself by class name via `useSetPageTitle` once its
+  // own data loads — no static fallback here, same pattern as the instructor detail screen.
   if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty"))
     return "Historia wizyt";
   if (/^\/konto\/partner\/klienci\/[^/]+$/.test(pathname)) return "Klient";
@@ -212,6 +216,7 @@ export function DashboardTopBar() {
   // name. The map still covers every screen that has a fixed title.
   const title = titleOverride ?? getPageTitle(pathname, searchParams);
   const subtitle = usePageSubtitle();
+  const headerAction = usePageHeaderAction();
 
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-3 bg-background px-4 md:h-20 md:px-6">
@@ -237,6 +242,7 @@ export function DashboardTopBar() {
               )}
             </div>
           )}
+          {headerAction}
         </>
       )}
     </header>

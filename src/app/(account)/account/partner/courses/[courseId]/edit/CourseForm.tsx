@@ -358,7 +358,7 @@ export function CourseForm({ routeId }: CourseFormProps) {
       <main className="min-h-screen bg-muted px-4 py-8">
         <div className="mx-auto max-w-[600px] rounded-lg border bg-background p-6">
           <p className="text-base font-semibold">{loadError}</p>
-          <Button className="mt-4" onClick={() => router.refresh()}>
+          <Button size="action" className="mt-4" onClick={() => router.refresh()}>
             Spróbuj ponownie
           </Button>
         </div>

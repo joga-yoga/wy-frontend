@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { ClientVisitRow } from "@/components/b2b/ClientVisitRow";
 import { PassCard } from "@/components/b2b/PassCard";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
@@ -79,9 +80,12 @@ export default function ClientDetailPage() {
       {/* K2's identity block. `personLabel` returns a secondary only when it is not the
           primary — the duplicate-email slip this exact screen shipped once already. */}
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-          {personInitials(client.name, client.email)}
-        </div>
+        <HashedAvatar
+          seed={client.user_id}
+          name={label.primary}
+          initialsOverride={personInitials(client.name, client.email)}
+          size={48}
+        />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold text-gray-900">{label.primary}</h1>
           <p className="truncate text-xs text-gray-500">

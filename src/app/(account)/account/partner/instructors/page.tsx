@@ -7,7 +7,7 @@ import { IoChevronForward } from "react-icons/io5";
 
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { StatusChip } from "@/components/b2b/StatusChip";
-import { WyImage } from "@/components/custom/WyImage";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -50,25 +50,6 @@ function subtitleFor(item: StudioRosterItem): { text: string; amber: boolean } {
     case "no_account":
       return { text: "Zaproszenie niewysłane — dodaj email", amber: true };
   }
-}
-
-function Avatar({ name, imageId }: { name: string; imageId: string | null }) {
-  if (imageId) {
-    return (
-      <WyImage
-        src={imageId}
-        alt={name}
-        width={44}
-        height={44}
-        className="h-11 w-11 shrink-0 rounded-full object-cover"
-      />
-    );
-  }
-  return (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-      {name.charAt(0).toUpperCase()}
-    </div>
-  );
 }
 
 export default function InstructorsRosterPage() {
@@ -158,7 +139,7 @@ export default function InstructorsRosterPage() {
           const subtitle = subtitleFor(item);
           const body = (
             <>
-              <Avatar name={item.name} imageId={item.image_id} />
+              <HashedAvatar seed={item.id} name={item.name} imageId={item.image_id} size={44} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
                 <p

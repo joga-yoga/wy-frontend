@@ -39,7 +39,7 @@ export function ScheduleSuccessScreen({
         <p className="mt-0.5 text-xs text-gray-500">{summaryNote}</p>
       </div>
       {/* Black, not green: this is a way out, not another commitment. */}
-      <Button className="w-full" onClick={() => router.push("/konto/partner/grafik")}>
+      <Button size="action" className="w-full" onClick={() => router.push("/konto/partner/grafik")}>
         Wróć do grafiku
       </Button>
     </div>

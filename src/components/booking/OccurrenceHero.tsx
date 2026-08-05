@@ -1,4 +1,4 @@
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { type ClassColor, COLOR_BORDER_MAP, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +26,7 @@ interface OccurrenceHeroProps {
   endTime: string;
   durationMinutes?: number | null;
   color?: ClassColor | null;
-  instructor?: { name: string; imageId?: string | null } | null;
+  instructor?: { id?: string; name: string; imageId?: string | null } | null;
   /** Confirmation card sizing (§6) — smaller, never shows the instructor row. */
   compact?: boolean;
   className?: string;
@@ -84,7 +84,12 @@ export function OccurrenceHero({
           </p>
           {!compact && instructor && (
             <div className="mt-3.5 flex items-center gap-2.5">
-              <InstructorAvatar name={instructor.name} imageId={instructor.imageId} size={30} />
+              <HashedAvatar
+                seed={instructor.id ?? instructor.name}
+                name={instructor.name}
+                imageId={instructor.imageId}
+                size={30}
+              />
               <span className="text-sm font-semibold text-gray-700">{instructor.name}</span>
             </div>
           )}

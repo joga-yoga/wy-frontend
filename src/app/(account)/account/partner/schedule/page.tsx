@@ -6,19 +6,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { sesje } from "@/lib/polishPlural";
+import { cn } from "@/lib/utils";
 
 import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { GrafikContextChips } from "./components/GrafikContextChips";
 import { GrafikSessionCard } from "./components/GrafikSessionCard";
-import { SessionPanel } from "./components/SessionPanel";
 import type { ScheduleDaySummary, ScheduleOccurrence, ScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -73,7 +72,6 @@ export default function SchedulePage() {
   });
   const [days, setDays] = useState<ScheduleDaySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [panelOcc, setPanelOcc] = useState<ScheduleOccurrence | null>(null);
   const [reconciliation, setReconciliation] = useState<{
     sessionCount: number;
     showStudioLabels: boolean;
@@ -154,6 +152,14 @@ export default function SchedulePage() {
   const stickySentinelRef = useRef<HTMLDivElement>(null);
   const [isStuck, setIsStuck] = useState(false);
 
+  // The live window (spec §2.1) must re-evaluate while the screen stays open, not just on
+  // load — a card should go live and stop being live without a reload.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     const sentinel = stickySentinelRef.current;
     if (!sentinel) return;
@@ -191,6 +197,15 @@ export default function SchedulePage() {
 
   const daySwipe = useHorizontalSwipe(shiftDay);
 
+  // Tapping a card navigates straight to the session screen (spec §1) — no intermediate
+  // drawer. Legacy null-studio_id occurrences fall back to the studio this Grafik is already
+  // showing (research finding F), or the link would break for ~35 of 45 dev schedules.
+  function goToSession(occ: ScheduleOccurrence) {
+    const targetStudioId = occ.studio_id ?? currentStudio?.id ?? studioId;
+    if (!targetStudioId) return;
+    router.push(`/konto/partner/studio/${targetStudioId}/front-desk/${occ.id}`);
+  }
+
   return (
     // Sized to exactly fill the viewport rather than `min-h-screen`: the sticky header
     // (--dashboard-header-h) and the layout's pb-28 tab-bar gutter both sit *outside* this
@@ -198,22 +213,6 @@ export default function SchedulePage() {
     // session. Flex column so the day content below can claim the leftover height.
     <div className="mx-auto flex min-h-[calc(100dvh-var(--dashboard-header-h)-7rem)] max-w-lg flex-col px-4 pt-0 md:min-h-[calc(100dvh-var(--dashboard-header-h))]">
       <GrafikContextChips />
-
-      {reconciliation.sessionCount > 0 && (
-        <Link
-          href="/konto/partner/rozliczenia"
-          className="mb-4 flex items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 py-3 text-sm font-medium text-b2b-amber-text transition-opacity hover:opacity-90"
-        >
-          <span className="flex items-center gap-2">
-            <AlertCircle size={16} />
-            {sesje(reconciliation.sessionCount)} do rozliczenia
-            {reconciliation.showStudioLabels && reconciliation.studioName && (
-              <> · {reconciliation.studioName}</>
-            )}
-          </span>
-          <ChevronRight size={16} />
-        </Link>
-      )}
 
       {/* Sentinel: while it is still on screen the block above hasn't pinned yet. Must sit
        * *before* the sticky element — once stuck, the sticky element itself never leaves the
@@ -224,7 +223,7 @@ export default function SchedulePage() {
        * --dashboard-header-h rather than a literal top-16 keeps this correct at md:,
        * where the header grows to 5rem. */}
       <div
-        className="sticky z-30 -mx-4 bg-background px-4 pb-2"
+        className="sticky z-30 -mx-4 bg-background px-4 pb-3"
         style={{ top: "var(--dashboard-header-h)" }}
       >
         <DayStrip
@@ -242,7 +241,7 @@ export default function SchedulePage() {
          * the less useful of the two labels. Type matches the public studio schedule's day
          * header. The chevrons move by one day to agree with the title they sit beside;
          * whole weeks are still reachable by swiping the strip (and by rolling past Sunday). */}
-        <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex items-center justify-between gap-3 pt-3">
           <span className="truncate text-lg font-bold capitalize text-gray-900">
             {formatDayHeader(selectedDate)}
           </span>
@@ -271,7 +270,10 @@ export default function SchedulePage() {
        * leftover height: the gesture used to be dead above the whitespace under a short day,
        * because the handlers only covered the cards themselves. It carries the page's bottom
        * padding too (rather than the container) so that gutter is swipeable as well. */}
-      <div className="mt-4 flex-1 pb-4" {...daySwipe}>
+      <div
+        className={cn("mt-0 flex-1", reconciliation.sessionCount > 0 ? "pb-24" : "pb-4")}
+        {...daySwipe}
+      >
         {isLoading ? (
           <p className="text-center text-gray-400 py-8">Ładowanie...</p>
         ) : !hasAnySessions ? (
@@ -312,38 +314,49 @@ export default function SchedulePage() {
           // the header row above, so no title repeats here.
           <div className="space-y-2">
             {selectedDay.occurrences.map((occ) => (
-              <GrafikSessionCard key={occ.id} occ={occ} onClick={setPanelOcc} />
+              <GrafikSessionCard key={occ.id} occ={occ} onClick={goToSession} now={now} />
             ))}
           </div>
         ) : null}
       </div>
 
+      {/* Reconciliation entry (spec §2.2) — pinned right above the bottom tab bar rather than
+       * flowing with the day list: a class starting in eight minutes outranks an idle-moment
+       * task for top-of-screen position, but a strip that only happens to land near the bottom
+       * on a short day (and collides with the fixed add button) reads as broken, not deprioritized. */}
+      {reconciliation.sessionCount > 0 && (
+        <Link
+          href="/konto/partner/rozliczenia"
+          className="fixed inset-x-4 bottom-[calc(var(--bottom-tab-h)+0.5rem)] z-30 mx-auto flex h-14 max-w-lg items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 text-sm font-medium text-b2b-amber-text shadow-md transition-opacity hover:opacity-90 md:bottom-6"
+        >
+          <span className="flex items-center gap-2">
+            <AlertCircle size={16} />
+            {sesje(reconciliation.sessionCount)} do rozliczenia
+            {reconciliation.showStudioLabels && reconciliation.studioName && (
+              <> · {reconciliation.studioName}</>
+            )}
+          </span>
+          <ChevronRight size={16} />
+        </Link>
+      )}
+
       {/* Fixed add button. Always rendered — it used to be hidden whenever the week had no
        * sessions, which is exactly when adding one matters most. Offsets from
        * --bottom-tab-h (a Tailwind class, not an inline style, so the md: override still
-       * wins) because at md: the tab bar becomes a sidebar and the offset is unnecessary. */}
+       * wins) because at md: the tab bar becomes a sidebar and the offset is unnecessary.
+       * Bumped higher still when the reconciliation strip is showing, so the two never cross. */}
       <Link
         href="/konto/partner/grafiki-zajec/create"
         aria-label="Dodaj zajęcia"
-        className="fixed bottom-[calc(var(--bottom-tab-h)+1rem)] right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800 md:bottom-6"
+        className={cn(
+          "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",
+          reconciliation.sessionCount > 0
+            ? "bottom-[calc(var(--bottom-tab-h)+5rem)] md:bottom-24"
+            : "bottom-[calc(var(--bottom-tab-h)+1rem)] md:bottom-6",
+        )}
       >
         <Plus size={24} />
       </Link>
-
-      {/* Session panel (S1) */}
-      <Drawer open={!!panelOcc} onOpenChange={(open) => !open && setPanelOcc(null)} showSwipeHandle>
-        <DrawerContent className="sm:mx-auto sm:max-w-lg">
-          {panelOcc && (
-            <SessionPanel
-              occ={panelOcc}
-              // Legacy schedules can have a null studio_id (the column post-dates them), which
-              // would silently hide "Lista obecności". Fall back to the studio this Grafik is
-              // already showing. Backfilling the column belongs to `classes-schedule`.
-              fallbackStudioId={currentStudio?.id ?? studioId ?? null}
-            />
-          )}
-        </DrawerContent>
-      </Drawer>
     </div>
   );
 }

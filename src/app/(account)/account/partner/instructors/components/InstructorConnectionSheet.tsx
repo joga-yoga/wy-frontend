@@ -5,7 +5,7 @@ import { IoChevronForward } from "react-icons/io5";
 
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { StatusChip } from "@/components/b2b/StatusChip";
-import { WyImage } from "@/components/custom/WyImage";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,19 +50,7 @@ export function InstructorConnectionSheet({
     <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
       <DrawerContent className="sm:mx-auto sm:max-w-md">
         <div className="flex items-start gap-3 px-4 pt-2 pb-4">
-          {item.image_id ? (
-            <WyImage
-              src={item.image_id}
-              alt={item.name}
-              width={48}
-              height={48}
-              className="h-12 w-12 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-              {item.name.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <HashedAvatar seed={item.id} name={item.name} imageId={item.image_id} size={48} />
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <DrawerTitle className="min-w-0 flex-1 truncate text-base font-bold text-gray-900">

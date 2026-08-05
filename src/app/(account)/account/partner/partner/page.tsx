@@ -573,10 +573,11 @@ export default function PartnerProfilePage() {
               {selectedLocation && selectedGooglePlaceId && (
                 <>
                   <Button
+                    size="action"
                     type="button"
                     onClick={handleCollectReviews}
                     disabled={isCollectingReviews || isSubmitting || !selectedGooglePlaceId}
-                    className="w-full h-10 bg-b2b-green-text hover:bg-b2b-green-text text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="w-full bg-b2b-green-text hover:bg-b2b-green-text text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {isCollectingReviews ? (
                       <>

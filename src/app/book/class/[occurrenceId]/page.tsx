@@ -224,7 +224,11 @@ function FundingScreen({
         color={detail.color}
         instructor={
           detail.instructor
-            ? { name: detail.instructor.name, imageId: detail.instructor.image_id }
+            ? {
+                id: detail.instructor.id,
+                name: detail.instructor.name,
+                imageId: detail.instructor.image_id,
+              }
             : null
         }
       />

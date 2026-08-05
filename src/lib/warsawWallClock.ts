@@ -36,3 +36,14 @@ export function isAtOrPastWarsawWallClock(iso: string, now: Date): boolean {
 export function isPastWarsawWallClock(iso: string, now: Date): boolean {
   return toWarsawWallClockIso(now) > stripTimezoneSuffix(iso);
 }
+
+/** Today's calendar date in Europe/Warsaw, as "YYYY-MM-DD" — for the live-window check
+ * (spec §2.1), which must not drift from the wall-clock the rest of this file assumes. */
+export function warsawCalendarDate(now: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Warsaw",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}

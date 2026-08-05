@@ -421,13 +421,18 @@ export function SportCardModal({
             <>
               <Button
                 variant="outline"
-                size="icon"
-                className="shrink-0"
+                size="action"
+                className="w-12 shrink-0 px-0"
                 onClick={() => setStep("pick")}
               >
                 <ArrowLeft className="size-5" />
               </Button>
-              <Button onClick={handleSavePredefined} disabled={isSaving} className="flex-1">
+              <Button
+                size="action"
+                onClick={handleSavePredefined}
+                disabled={isSaving}
+                className="flex-1"
+              >
                 {isSaving ? "Zapisuję..." : "Dodaj kartę"}
               </Button>
             </>
@@ -436,13 +441,18 @@ export function SportCardModal({
             <>
               <Button
                 variant="outline"
-                size="icon"
-                className="shrink-0"
+                size="action"
+                className="w-12 shrink-0 px-0"
                 onClick={() => setStep("pick")}
               >
                 <ArrowLeft className="size-5" />
               </Button>
-              <Button onClick={handleSaveCustom} disabled={isSaving} className="flex-1">
+              <Button
+                size="action"
+                onClick={handleSaveCustom}
+                disabled={isSaving}
+                className="flex-1"
+              >
                 {isSaving ? "Zapisuję..." : "Zapisz kartę"}
               </Button>
             </>

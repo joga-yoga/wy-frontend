@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 
 import { PassCard } from "@/components/b2b/PassCard";
 import { StatusChip } from "@/components/b2b/StatusChip";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { SetLastMode } from "@/components/layout/SetLastMode";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -115,9 +116,12 @@ export default function AccountHubPage() {
 
       <div className="max-w-md mx-auto px-4 py-5 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-600">
-            {personInitials(user?.name, user?.email ?? "")}
-          </div>
+          <HashedAvatar
+            seed={user?.id ?? identity.primary}
+            name={identity.primary}
+            initialsOverride={personInitials(user?.name, user?.email ?? "")}
+            size={56}
+          />
           {/* `personLabel` returns a secondary only when it differs from the primary, so
               a user with no name shows their email once rather than twice. */}
           <div className="min-w-0">

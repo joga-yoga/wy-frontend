@@ -1,9 +1,9 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   BookingOptionsResponse,
@@ -11,29 +11,28 @@ import type {
   SportCardOption,
 } from "@/app/book/class/[occurrenceId]/types";
 import { StatusChip } from "@/components/b2b/StatusChip";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { useSetPageSubtitle } from "@/context/PageHeaderContext";
+import {
+  useSetPageHeaderAction,
+  useSetPageSubtitle,
+  useSetPageTitle,
+} from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import { personInitials, personLabel, personSortKey } from "@/lib/personDisplay";
-import { plural } from "@/lib/polishPlural";
+import { osoby, plural } from "@/lib/polishPlural";
 import { cn } from "@/lib/utils";
 
+import type { SessionDetailResponse } from "../../../../schedule/types";
 import { ResolveSheet } from "../components/ResolveSheet";
-import { RosterRow } from "../components/RosterRow";
+import { RosterRow, RosterRowUndoStrip } from "../components/RosterRow";
+import { SessionOverflowMenu } from "../components/SessionOverflowMenu";
+import { isPendingEntry } from "../rosterGrouping";
 import type { FundingType, RosterEntry, WalkInCandidate, WalkInSearchResponse } from "../types";
-
-interface SessionHeader {
-  template_title: string;
-  calendar_date: string;
-  start_time: string;
-  end_time: string;
-  instructor_name: string | null;
-  room_name: string | null;
-}
 
 /** "dziś" / "wczoraj" / "12 lipca" — the desk cares which day relative to now. */
 function relativeDay(dateStr: string): string {
@@ -114,10 +113,19 @@ export default function FrontDeskRosterPage() {
   const { studioId, occurrenceId } = useParams<{ studioId: string; occurrenceId: string }>();
   const { toast } = useToast();
 
-  const [session, setSession] = useState<SessionHeader | null>(null);
+  const [session, setSession] = useState<SessionDetailResponse | null>(null);
   const [roster, setRoster] = useState<RosterEntry[] | null>(null);
   const [busyBookingId, setBusyBookingId] = useState<string | null>(null);
   const [resolveEntry, setResolveEntry] = useState<RosterEntry | null>(null);
+  // Rozstrzygnięte starts collapsed while Oczekuje is non-empty, and expands automatically
+  // once it empties (spec §4.2) — one-directional: it never re-collapses on its own once open.
+  const [isResolvedExpanded, setIsResolvedExpanded] = useState(false);
+  const [undoState, setUndoState] = useState<{
+    bookingId: string;
+    label: string;
+    amount: number | null;
+  } | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -132,19 +140,33 @@ export default function FrontDeskRosterPage() {
   const [selectedPassId, setSelectedPassId] = useState<string | null>(null);
   const [isSubmittingWalkIn, setIsSubmittingWalkIn] = useState(false);
 
-  // T1's header subtitle: "AcroYoga · dziś 18:05 · Oleg · Sala 1". null while loading, so the
-  // header shows the title alone rather than flashing partial context.
+  // Facts header (spec §3/§8): class name as the page title, the rest — "dziś 18:05 · Oleg ·
+  // Sala 1" — as the subtitle beneath it. null while loading, so the header shows nothing
+  // rather than flashing partial context. An instructor additionally gets the studio name
+  // (§8: "an instructor may teach at several") — an owner doesn't need it, they navigated
+  // from within a studio context already.
+  useSetPageTitle(session?.template_title ?? null);
   useSetPageSubtitle(
     session
       ? [
-          session.template_title,
           `${relativeDay(session.calendar_date)} ${formatTime(session.start_time)}`,
           session.instructor_name,
           session.room_name,
+          session.role === "instructor" ? session.studio_name : null,
         ]
           .filter(Boolean)
           .join(" · ")
       : null,
+  );
+  // Overflow menu (spec §7) — owner-only, and not on a cancelled session (view-only there).
+  useSetPageHeaderAction(
+    session && session.role === "owner" && session.status !== "cancelled" ? (
+      <SessionOverflowMenu
+        occurrenceId={occurrenceId}
+        recurrenceFrequency={session.recurrence_frequency}
+        recurrenceDays={session.recurrence_days}
+      />
+    ) : null,
   );
 
   const fetchRoster = useCallback(() => {
@@ -157,10 +179,23 @@ export default function FrontDeskRosterPage() {
   useEffect(() => {
     fetchRoster();
     axiosInstance
-      .get<SessionHeader>(`/class-sessions/${occurrenceId}`)
+      .get<SessionDetailResponse>(`/class-sessions/${occurrenceId}`)
       .then((r) => setSession(r.data))
       .catch(() => setSession(null));
   }, [fetchRoster, occurrenceId]);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
+
+  // Auto-expand Rozstrzygnięte once Oczekuje empties (spec §4.2) — never re-collapses on its
+  // own once open, so the desk's own manual toggle (if any) is never fought.
+  const oczekujeCount = roster?.filter(isPendingEntry).length ?? 0;
+  useEffect(() => {
+    if (roster !== null && oczekujeCount === 0) setIsResolvedExpanded(true);
+  }, [roster, oczekujeCount]);
 
   useEffect(() => {
     if (!isAddOpen || query.trim().length < 2) {
@@ -180,29 +215,53 @@ export default function FrontDeskRosterPage() {
     return () => clearTimeout(handle);
   }, [isAddOpen, query, studioId]);
 
+  // Undo (spec §6) persists until the next resolving action or 10s, whichever comes first —
+  // so every other resolving action below clears it before doing its own thing.
+  function clearUndo() {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = null;
+    setUndoState(null);
+  }
+
   async function resolveWith(action: string) {
     if (!resolveEntry) return;
+    clearUndo();
     await axiosInstance.post(`/bookings/${resolveEntry.booking_id}/${action}`);
     fetchRoster();
   }
 
   async function quickConfirm(entry: RosterEntry) {
     setBusyBookingId(entry.booking_id);
+    clearUndo();
     try {
-      await axiosInstance.post(`/bookings/${entry.booking_id}/mark-attended`);
+      await axiosInstance.post(`/bookings/${entry.booking_id}/confirm`);
       fetchRoster();
+      setUndoState({
+        bookingId: entry.booking_id,
+        label: personLabel(entry.user_name, entry.user_email).primary,
+        amount: entry.amount_owed ?? null,
+      });
+      undoTimerRef.current = setTimeout(() => setUndoState(null), 10_000);
+    } catch (err: unknown) {
+      // No optimistic mutation happened above, so there's nothing to roll back — just surface
+      // the error. The desk must never believe money was collected when it wasn't.
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Nie udało się potwierdzić.", variant: "destructive" });
     } finally {
       setBusyBookingId(null);
     }
   }
 
-  async function correctNoShow(entry: RosterEntry) {
-    setBusyBookingId(entry.booking_id);
+  async function undoConfirm() {
+    if (!undoState) return;
+    const { bookingId } = undoState;
+    setBusyBookingId(bookingId);
     try {
-      await axiosInstance.post(`/bookings/${entry.booking_id}/correct-no-show`);
+      await axiosInstance.post(`/bookings/${bookingId}/undo-confirm`);
       fetchRoster();
     } finally {
       setBusyBookingId(null);
+      clearUndo();
     }
   }
 
@@ -390,13 +449,18 @@ export default function FrontDeskRosterPage() {
           ? "Dodaj rezerwację z karty"
           : "Dodaj rezerwację";
 
-  const sorted = roster
-    ? [...roster].sort((a, b) =>
-        personSortKey(a.user_name, a.user_email).localeCompare(
-          personSortKey(b.user_name, b.user_email),
-          "pl-PL",
-        ),
-      )
+  const byPolishName = (a: RosterEntry, b: RosterEntry) =>
+    personSortKey(a.user_name, a.user_email).localeCompare(
+      personSortKey(b.user_name, b.user_email),
+      "pl-PL",
+    );
+  // Two groups (spec §4.1): `Oczekuje` — attendance unresolved or money/card still owed;
+  // `Rozstrzygnięte` — everything settled, confirmed attendance and recorded absences alike.
+  // Single-sourced with the row via `isPendingEntry` — three call sites re-deriving this is
+  // exactly what undercounted money owed once before.
+  const oczekujeGroup = roster ? [...roster].filter(isPendingEntry).sort(byPolishName) : [];
+  const rozstrzygnieteGroup = roster
+    ? [...roster].filter((e) => !isPendingEntry(e)).sort(byPolishName)
     : [];
   const zapisanych = roster?.length ?? 0;
   const obecnych = roster?.filter((e) => e.checked_in_at != null).length ?? 0;
@@ -406,6 +470,102 @@ export default function FrontDeskRosterPage() {
   const doRozliczenia =
     roster?.filter((e) => e.status !== "no_show" && (e.needs_settlement ?? e.is_overdue)).length ??
     0;
+
+  function renderRow(entry: RosterEntry) {
+    if (undoState && undoState.bookingId === entry.booking_id) {
+      return (
+        <RosterRowUndoStrip
+          key={entry.booking_id}
+          label={undoState.label}
+          amount={undoState.amount}
+          isBusy={busyBookingId === entry.booking_id}
+          onUndo={undoConfirm}
+        />
+      );
+    }
+    return (
+      <RosterRow
+        key={entry.booking_id}
+        entry={entry}
+        isBusy={busyBookingId === entry.booking_id}
+        onConfirm={() => quickConfirm(entry)}
+        onOpenResolve={() => setResolveEntry(entry)}
+      />
+    );
+  }
+
+  // Cancelled sessions render read-only (spec §3): facts header (via the top bar) plus this
+  // banner, no counters, no roster actions, no overflow beyond viewing. Applies regardless of
+  // role — the same message is correct whether the caller owns the studio or just teaches here.
+  if (session?.status === "cancelled") {
+    return (
+      <div className="mx-auto max-w-lg px-4 pb-8 pt-3">
+        <div className="rounded-b2b border border-b2b-red-border bg-b2b-red-bg px-4 py-3">
+          <p className="text-sm font-semibold text-b2b-red-text">Sesja odwołana</p>
+          {session.notified_count > 0 && (
+            <p className="mt-0.5 text-xs text-b2b-red-text/80">
+              Powiadomiliśmy {osoby(session.notified_count)}.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Read-only instructor variant (spec §8) — same skeleton, reduced: two counters, a flat
+  // alphabetical list with a neutral present/not-yet indicator, no funding anywhere (the
+  // backend's `InstructorRosterEntry` structurally can't carry it — nothing here to hide).
+  // Role-driven, not Grafik-variant-driven: a solo instructor-owner never reaches this branch,
+  // since T01's resolver resolves them to "owner" first.
+  if (session?.role === "instructor") {
+    const sortedForInstructor = roster ? [...roster].sort(byPolishName) : [];
+    const zapisanychInstr = roster?.length ?? 0;
+    const obecnychInstr = roster?.filter((e) => e.checked_in_at != null).length ?? 0;
+
+    return (
+      <div className="mx-auto max-w-lg px-4 pb-8 pt-3">
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="rounded-b2b border bg-white px-3 py-2.5 text-center">
+            <p className="text-xl font-bold text-gray-900">{zapisanychInstr}</p>
+            <p className="text-xs font-semibold text-gray-400">zapisanych</p>
+          </div>
+          <div className="rounded-b2b border bg-white px-3 py-2.5 text-center">
+            <p className="text-xl font-bold text-gray-900">{obecnychInstr}</p>
+            <p className="text-xs font-semibold text-gray-400">obecnych</p>
+          </div>
+        </div>
+
+        <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Uczestnicy
+        </p>
+        {roster === null ? (
+          <p className="py-8 text-center text-sm text-gray-400">Ładowanie...</p>
+        ) : roster.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400">Brak rezerwacji na te zajęcia.</p>
+        ) : (
+          <div className="divide-y rounded-b2b border bg-white overflow-hidden">
+            {sortedForInstructor.map((entry) => (
+              <div
+                key={entry.booking_id}
+                className="flex items-center justify-between gap-3 px-4 py-3.5"
+              >
+                <p className="min-w-0 truncate text-sm font-semibold text-gray-900">
+                  {personLabel(entry.user_name, entry.user_email).primary}
+                </p>
+                <StatusChip tone={entry.checked_in_at != null ? "green" : "gray"}>
+                  {entry.checked_in_at != null ? "Obecność ✓" : "Jeszcze nie"}
+                </StatusChip>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-6 px-1 text-xs text-gray-400">
+          To grafik studia. Obecność i płatności rozlicza właściciel.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-32 pt-3">
@@ -448,24 +608,47 @@ export default function FrontDeskRosterPage() {
       ) : roster.length === 0 ? (
         <p className="py-8 text-center text-sm text-gray-400">Brak rezerwacji na te zajęcia.</p>
       ) : (
-        <div className="divide-y rounded-b2b border bg-white overflow-hidden">
-          {sorted.map((entry) => (
-            <RosterRow
-              key={entry.booking_id}
-              entry={entry}
-              isBusy={busyBookingId === entry.booking_id}
-              onConfirm={() => quickConfirm(entry)}
-              onOpenResolve={() => setResolveEntry(entry)}
-              onCorrectNoShow={() => correctNoShow(entry)}
-            />
-          ))}
+        <div className="space-y-4">
+          {/* Oczekuje (spec §4.1) — never collapsed; check-in should only ever scan names
+           * that haven't arrived. */}
+          {oczekujeGroup.length > 0 && (
+            <div>
+              <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Oczekuje
+              </p>
+              <div className="divide-y rounded-b2b border bg-white overflow-hidden">
+                {oczekujeGroup.map(renderRow)}
+              </div>
+            </div>
+          )}
+
+          {rozstrzygnieteGroup.length > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setIsResolvedExpanded((v) => !v)}
+                className="mb-1.5 flex items-center gap-1 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400"
+              >
+                Rozstrzygnięte ({rozstrzygnieteGroup.length})
+                <ChevronDown
+                  size={14}
+                  className={cn("transition-transform", isResolvedExpanded && "rotate-180")}
+                />
+              </button>
+              {isResolvedExpanded && (
+                <div className="divide-y rounded-b2b border bg-white overflow-hidden">
+                  {rozstrzygnieteGroup.map(renderRow)}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {/* Pinned footer (reception-desk §2) — fade gradient, list scrolls under. */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8">
         <div className="mx-auto flex max-w-lg gap-2 px-4">
-          <Button className="flex-1" onClick={() => setIsAddOpen(true)}>
+          <Button size="action" className="flex-1" onClick={() => setIsAddOpen(true)}>
             Dodaj uczestnika
           </Button>
           <Button size="action" variant="outline" className="flex-1" asChild>
@@ -480,10 +663,10 @@ export default function FrontDeskRosterPage() {
         entry={resolveEntry}
         open={resolveEntry != null}
         onOpenChange={(open) => !open && setResolveEntry(null)}
-        onMarkPaid={() => resolveWith("mark-paid")}
-        onMarkCardOk={() => resolveWith("mark-card-ok")}
-        onMarkAttended={() => resolveWith("mark-attended")}
+        onConfirm={() => (resolveEntry ? quickConfirm(resolveEntry) : Promise.resolve())}
         onMarkNoShow={() => resolveWith("mark-no-show")}
+        onCorrectNoShow={() => resolveWith("correct-no-show")}
+        onDeskCancel={() => resolveWith("desk-cancel")}
       />
 
       <Drawer open={isAddOpen} onOpenChange={(open) => !open && resetAddFlow()} showSwipeHandle>
@@ -525,9 +708,12 @@ export default function FrontDeskRosterPage() {
                           onClick={() => selectCandidate(c)}
                           className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                         >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
-                            {personInitials(c.name, c.email)}
-                          </span>
+                          <HashedAvatar
+                            seed={c.user_id}
+                            name={personLabel(c.name, c.email).primary}
+                            initialsOverride={personInitials(c.name, c.email)}
+                            size={36}
+                          />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-gray-900">
                               {personLabel(c.name, c.email).primary}
@@ -556,9 +742,12 @@ export default function FrontDeskRosterPage() {
                           onClick={() => selectCandidate(c)}
                           className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                         >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
-                            {personInitials(c.name, c.email)}
-                          </span>
+                          <HashedAvatar
+                            seed={c.user_id}
+                            name={personLabel(c.name, c.email).primary}
+                            initialsOverride={personInitials(c.name, c.email)}
+                            size={36}
+                          />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-gray-900">
                               {personLabel(c.name, c.email).primary}

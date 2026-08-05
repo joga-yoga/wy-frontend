@@ -4,6 +4,7 @@ import { Check, CreditCard, Search } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
@@ -159,9 +160,12 @@ export default function SellPassPage() {
                   onClick={() => setCandidate(c)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
-                    {personInitials(c.name, c.email)}
-                  </span>
+                  <HashedAvatar
+                    seed={c.user_id}
+                    name={personLabel(c.name, c.email).primary}
+                    initialsOverride={personInitials(c.name, c.email)}
+                    size={36}
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-gray-900">
                       {personLabel(c.name, c.email).primary}

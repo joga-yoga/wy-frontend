@@ -39,14 +39,12 @@ export function eventStatusLabel(event: DashboardItem): { text: string; classNam
 
 export function editLink(item: DashboardItem) {
   if (item.kind === "workshop") return `/konto/partner/wydarzenia/${item.id}/edit`;
-  if (item.kind === "class") return `/konto/partner/zajecia/${item.id}/edit`;
   if (item.kind === "course") return `/konto/partner/kursy/${item.id}/edit`;
   return `/konto/partner/wyjazdy/${item.id}/edit`;
 }
 
 export function publicLink(item: DashboardItem): string | null {
   if (item.kind === "workshop") return `/wydarzenia/${item.slug}`;
-  if (item.kind === "class") return `/zajecia/${item.slug}`;
   if (item.kind === "course") return null;
   return `/wyjazdy/${item.slug}`;
 }

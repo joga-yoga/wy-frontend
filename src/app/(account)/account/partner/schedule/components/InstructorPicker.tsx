@@ -1,6 +1,6 @@
 "use client";
 
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { cn } from "@/lib/utils";
 
 export interface PickableInstructor {
@@ -68,7 +68,12 @@ export function InstructorPicker({
             >
               {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-b2b-green-text" />}
             </span>
-            <InstructorAvatar name={instructor.name} imageId={instructor.image_id} size={32} />
+            <HashedAvatar
+              seed={instructor.id}
+              name={instructor.name}
+              imageId={instructor.image_id}
+              size={32}
+            />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-gray-900">
                 {instructor.name}

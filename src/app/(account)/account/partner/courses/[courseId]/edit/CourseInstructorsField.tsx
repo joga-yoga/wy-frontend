@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
 
-import { WyImage } from "@/components/custom/WyImage";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { InstructorModal } from "@/components/instructors/InstructorModal";
 import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -16,15 +16,6 @@ interface CourseInstructorsFieldProps {
   errors: FieldErrors<CourseFormValues>;
   setValue: UseFormSetValue<CourseFormValues>;
   watch: UseFormWatch<CourseFormValues>;
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
 }
 
 export function CourseInstructorsField({ errors, setValue, watch }: CourseInstructorsFieldProps) {
@@ -83,19 +74,13 @@ export function CourseInstructorsField({ errors, setValue, watch }: CourseInstru
 
           return (
             <div key={instructor.id} className="flex min-h-12 items-center gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted text-base font-medium text-brand-green">
-                {instructor.image_id ? (
-                  <WyImage
-                    src={instructor.image_id}
-                    alt={instructor.name}
-                    width={44}
-                    height={44}
-                    className="size-11 rounded-full object-cover"
-                  />
-                ) : (
-                  initials(instructor.name)
-                )}
-              </div>
+              <HashedAvatar
+                seed={instructor.id}
+                name={instructor.name}
+                imageId={instructor.image_id}
+                size={44}
+                className="border"
+              />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-base font-semibold">{instructor.name}</div>
                 {!isOwned && (

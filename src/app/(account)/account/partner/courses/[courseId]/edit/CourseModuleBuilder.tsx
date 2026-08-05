@@ -103,26 +103,23 @@ export function CourseModuleBuilder({ modules, errors, onChange }: CourseModuleB
         </div>
         <div className="flex items-center gap-3 pt-1">
           <Button
+            size="action"
             type="button"
             variant="ghost"
-            className="h-10 px-0 text-base font-semibold"
+            className="px-0 text-base font-semibold"
             onClick={() => (editing.index != null ? remove(editing.index) : setEditing(null))}
           >
             <Trash2 className="size-4" />
             Usuń
           </Button>
           <div className="flex-1" />
-          <Button
-            type="button"
-            variant="secondary"
-            className="h-10 rounded-md px-4 text-base"
-            onClick={() => setEditing(null)}
-          >
+          <Button size="action" type="button" variant="secondary" onClick={() => setEditing(null)}>
             Anuluj
           </Button>
           <Button
+            size="action"
             type="button"
-            className="h-10 rounded-md bg-black px-4 text-base text-white hover:bg-black/90"
+            className="bg-black text-white hover:bg-black/90"
             onClick={saveEditing}
           >
             Gotowe

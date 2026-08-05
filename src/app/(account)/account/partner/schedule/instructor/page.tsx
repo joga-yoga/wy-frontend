@@ -1,11 +1,9 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Clock, Coffee, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coffee } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
@@ -28,11 +26,6 @@ function getMonday(d: Date): Date {
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function formatTime(iso: string): string {
-  const m = iso.match(/T(\d{2}):(\d{2})/);
-  return m ? `${m[1]}:${m[2]}` : iso;
 }
 
 /** "Poniedziałek, 13 lipca" — matches the owner Grafik's day header. */
@@ -68,7 +61,6 @@ export default function InstructorSchedulePage() {
   });
   const [occurrences, setOccurrences] = useState<ScheduleOccurrence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [panelOcc, setPanelOcc] = useState<ScheduleOccurrence | null>(null);
 
   const fetchWeek = useCallback(() => {
     setIsLoading(true);
@@ -111,6 +103,13 @@ export default function InstructorSchedulePage() {
 
   const dayStripRef = useRef<DayStripHandle>(null);
 
+  // The live window (spec §2.1) must re-evaluate while the screen stays open.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   function shiftWeek(deltaDays: number) {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + deltaDays);
@@ -135,6 +134,16 @@ export default function InstructorSchedulePage() {
   }, []);
 
   const daySwipe = useHorizontalSwipe(shiftDay);
+
+  // Tapping a card navigates straight to the session screen (spec §1) — same destination as
+  // the owner Grafik; T01's role resolver decides there whether this caller gets the owner
+  // screen (§3) or the read-only variant (§8). No fallback studio here (unlike the owner
+  // Grafik's `useCurrentStudio()`): an instructor's assignment carries its own studio_id, and
+  // there is no "current studio" concept to fall back to for a teaching-only partner.
+  function goToSession(occ: ScheduleOccurrence) {
+    if (!occ.studio_id) return;
+    router.push(`/konto/partner/studio/${occ.studio_id}/front-desk/${occ.id}`);
+  }
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-var(--dashboard-header-h)-7rem)] max-w-lg flex-col px-4 pt-4 md:min-h-[calc(100dvh-var(--dashboard-header-h))]">
@@ -190,54 +199,14 @@ export default function InstructorSchedulePage() {
               <GrafikSessionCard
                 key={occ.id}
                 occ={occ}
-                onClick={setPanelOcc}
+                onClick={goToSession}
                 context="instructor"
+                now={now}
               />
             ))}
           </div>
         )}
       </div>
-
-      <Drawer open={!!panelOcc} onOpenChange={(open) => !open && setPanelOcc(null)}>
-        <DrawerContent>
-          {panelOcc && (
-            <div className="px-4 pb-6">
-              <DrawerHeader className="px-0">
-                <DrawerTitle>{panelOcc.template_title}</DrawerTitle>
-                {panelOcc.studio_name && (
-                  <Badge variant="secondary" className="mt-1 text-[10px]">
-                    {panelOcc.studio_name}
-                  </Badge>
-                )}
-              </DrawerHeader>
-              <div className="space-y-3 mt-2">
-                <div className="flex items-center gap-3 text-sm">
-                  <Clock size={14} className="text-gray-400" />
-                  <span>
-                    {formatTime(panelOcc.start_time)} – {formatTime(panelOcc.end_time)}
-                  </span>
-                </div>
-                {panelOcc.room_name && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar size={14} className="text-gray-400" />
-                    <span>{panelOcc.room_name}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-sm">
-                  <Users size={14} className="text-gray-400" />
-                  <span>
-                    {panelOcc.fill_count}
-                    {panelOcc.capacity ? ` / ${panelOcc.capacity}` : ""} zapisanych
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 mt-6 flex items-center gap-1">
-                ℹ To grafik studia. Zmiany w sesji wprowadza właściciel / manager studia.
-              </p>
-            </div>
-          )}
-        </DrawerContent>
-      </Drawer>
     </div>
   );
 }

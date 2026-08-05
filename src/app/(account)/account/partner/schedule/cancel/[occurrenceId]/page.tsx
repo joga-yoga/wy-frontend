@@ -149,7 +149,11 @@ export default function CancelSessionPage() {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <Button variant="outline" onClick={() => router.push("/konto/partner/grafik")}>
+            <Button
+              size="action"
+              variant="outline"
+              onClick={() => router.push("/konto/partner/grafik")}
+            >
               Anuluj
             </Button>
             <Button
@@ -185,7 +189,7 @@ export default function CancelSessionPage() {
           </PreviewNoteCard>
 
           <div className="flex gap-3 pt-2">
-            <Button variant="outline" onClick={() => setStep("scope")}>
+            <Button size="action" variant="outline" onClick={() => setStep("scope")}>
               Wstecz
             </Button>
             <Button

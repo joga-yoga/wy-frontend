@@ -52,7 +52,7 @@ export function LanguageMultiSelect({ value, onChange }: Props) {
     <div className="space-y-2">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" type="button" className="w-full justify-start">
+          <Button size="action" variant="outline" type="button" className="w-full justify-start">
             Dodaj języki
           </Button>
         </PopoverTrigger>

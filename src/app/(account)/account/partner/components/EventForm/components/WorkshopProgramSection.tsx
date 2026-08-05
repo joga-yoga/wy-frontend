@@ -144,6 +144,7 @@ export const WorkshopProgramSection = ({
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
+                                  size="action"
                                   variant="outline"
                                   className={cn("w-full justify-start text-left font-normal")}
                                   onClick={() => focusTip("date")}

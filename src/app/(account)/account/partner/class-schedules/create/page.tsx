@@ -396,11 +396,12 @@ export default function CreateScheduleWizard() {
           />
           {/* Footer */}
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={() => setStep("select")}>
+            <Button size="action" variant="outline" onClick={() => setStep("select")}>
               <ArrowLeft size={14} className="mr-1" />
               Wstecz
             </Button>
             <Button
+              size="action"
               className="flex-1"
               onClick={goToPreview}
               disabled={!canAdvanceStep2 || isLoadingPreview}
@@ -449,11 +450,11 @@ export default function CreateScheduleWizard() {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={() => setStep("recurrence")}>
+            <Button size="action" variant="outline" onClick={() => setStep("recurrence")}>
               <ArrowLeft size={14} className="mr-1" />
               Wstecz
             </Button>
-            <Button className="flex-1" onClick={commit} disabled={isCommitting}>
+            <Button size="action" className="flex-1" onClick={commit} disabled={isCommitting}>
               {isCommitting ? "Tworzenie..." : "Utwórz grafik"}
             </Button>
           </div>
@@ -472,7 +473,11 @@ export default function CreateScheduleWizard() {
             tygodnia.
           </p>
           <div className="space-y-2 pt-4">
-            <Button className="w-full" onClick={() => router.push("/konto/partner/grafik")}>
+            <Button
+              size="action"
+              className="w-full"
+              onClick={() => router.push("/konto/partner/grafik")}
+            >
               Zobacz grafik
             </Button>
             <Button

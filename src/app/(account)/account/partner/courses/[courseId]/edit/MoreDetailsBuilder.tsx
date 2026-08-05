@@ -201,7 +201,12 @@ function TextEditor({
         spellCheck={false}
       />
       <div className="flex justify-end">
-        <Button type="button" className="bg-black text-white hover:bg-black/90" onClick={onDone}>
+        <Button
+          size="action"
+          type="button"
+          className="bg-black text-white hover:bg-black/90"
+          onClick={onDone}
+        >
           Gotowe
         </Button>
       </div>
@@ -233,7 +238,12 @@ function SkillLevelEditor({
         </SelectContent>
       </Select>
       <div className="flex justify-end">
-        <Button type="button" className="bg-black text-white hover:bg-black/90" onClick={onDone}>
+        <Button
+          size="action"
+          type="button"
+          className="bg-black text-white hover:bg-black/90"
+          onClick={onDone}
+        >
           Gotowe
         </Button>
       </div>

@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 
 import { SessionContextCard } from "@/components/b2b/SessionContextCard";
+import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -150,25 +151,15 @@ export function ScheduleRecurrenceForm({
       {showRecurrence && (
         <div>
           <Label>Częstotliwość</Label>
-          {/* Full-width, black-and-white, brand green only on the selected border. */}
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            {(["once", "weekly"] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => onFrequencyChange(f)}
-                aria-pressed={frequency === f}
-                className={cn(
-                  "rounded-lg border bg-white py-2 text-sm font-medium transition-colors",
-                  frequency === f
-                    ? "border-b2b-green-text text-b2b-green-text"
-                    : "border-gray-200 text-gray-500 hover:bg-gray-50",
-                )}
-              >
-                {f === "once" ? "Raz" : "Co tydzień"}
-              </button>
-            ))}
-          </div>
+          <SegmentedToggle
+            className="mt-1 mb-0"
+            value={frequency}
+            onChange={onFrequencyChange}
+            options={[
+              { label: "Raz", value: "once" },
+              { label: "Co tydzień", value: "weekly" },
+            ]}
+          />
         </div>
       )}
 
@@ -176,8 +167,9 @@ export function ScheduleRecurrenceForm({
         <div>
           <Label>Dni</Label>
           {/* Green *fill* here, not just a border — S4 draws it that way, and the circles are
-           * too small for a border alone to register. */}
-          <div className="mt-1 flex gap-1.5">
+           * too small for a border alone to register. Grid, not flex, so the row fills the
+           * full width edge-to-edge rather than clumping left with dead space on the right. */}
+          <div className="mt-1 grid grid-cols-7 gap-1.5">
             {DAYS.map((d) => (
               <button
                 key={d.key}
@@ -185,7 +177,7 @@ export function ScheduleRecurrenceForm({
                 onClick={() => onToggleDay(d.key)}
                 aria-pressed={selectedDays.includes(d.key)}
                 className={cn(
-                  "h-10 w-10 rounded-full text-xs font-medium transition-colors",
+                  "h-10 w-10 rounded-full text-xs font-medium transition-colors mx-auto",
                   selectedDays.includes(d.key)
                     ? "bg-b2b-green-text text-white"
                     : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
@@ -280,9 +272,9 @@ export function ScheduleRecurrenceForm({
                 <button
                   type="button"
                   onClick={() => onRoomChange("")}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] border-[1.5px] border-input text-gray-400 hover:text-gray-600"
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </button>
               )}
             </div>
@@ -314,9 +306,9 @@ export function ScheduleRecurrenceForm({
             <button
               type="button"
               onClick={() => onInstructorChange("")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] border-[1.5px] border-input text-gray-400 hover:text-gray-600"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           )}
         </div>

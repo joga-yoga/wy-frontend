@@ -4,7 +4,6 @@ import { Check, ChevronRight, Clock } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { HashedAvatar } from "@/components/common/HashedAvatar";
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
 import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
@@ -157,7 +156,8 @@ export function SessionCard({
 
           {!isCancelled && context === "studio" && occ.instructor_name && (
             <div className="mt-1 flex items-center gap-1.5">
-              <InstructorAvatar
+              <HashedAvatar
+                seed={occ.instructor_id ?? occ.instructor_name}
                 name={occ.instructor_name}
                 imageId={occ.instructor_image_id}
                 size={20}

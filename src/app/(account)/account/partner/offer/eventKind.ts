@@ -1,4 +1,4 @@
-import { GraduationCap, Mountain, Sparkles, Tag } from "lucide-react";
+import { GraduationCap, Mountain, Sparkles } from "lucide-react";
 
 import type { DashboardItem } from "./offerConfig";
 
@@ -32,12 +32,6 @@ export const EVENT_KIND = {
     Icon: GraduationCap,
     tile: "bg-class-lavender-500/20 text-class-lavender-700",
     badge: "bg-class-lavender-500/20 text-class-lavender-700",
-  },
-  class: {
-    label: "Zajęcia",
-    Icon: Tag,
-    tile: "bg-class-green-500/15 text-class-green-700",
-    badge: "bg-class-green-500/15 text-class-green-700",
   },
 } as const satisfies Record<DashboardItem["kind"], unknown>;
 

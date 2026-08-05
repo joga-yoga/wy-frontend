@@ -7,10 +7,12 @@ import { IoChevronForward } from "react-icons/io5";
 
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { StatusChip } from "@/components/b2b/StatusChip";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Input } from "@/components/ui/input";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { personInitials, personLabel } from "@/lib/personDisplay";
 import { osobyNom } from "@/lib/polishPlural";
 
 import type { ChipState, ClientChipOut, ClientListItem } from "./types";
@@ -132,9 +134,12 @@ export default function ClientsListPage() {
                 href={`/konto/partner/klienci/${client.user_id}?studioId=${studio.id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-                  {displayName.charAt(0).toUpperCase()}
-                </div>
+                <HashedAvatar
+                  seed={client.user_id}
+                  name={personLabel(client.name, client.email).primary}
+                  initialsOverride={personInitials(client.name, client.email)}
+                  size={44}
+                />
                 {/* K1 stacks these: name, then the chip on its own line, then the last
                     visit. The chip earns the space — an amber "Do zapłaty · 150 zł" is
                     how a debtor surfaces without anyone opening a profile. */}

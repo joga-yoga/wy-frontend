@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { WyImage } from "@/components/custom/WyImage";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +43,14 @@ export function HeaderAvatar() {
   useEffect(() => {
     axiosInstance
       .get<InstructorProfile[]>("/instructors")
-      .then((r) => setInstructor(r.data[0] ?? null))
+      .then((r) => {
+        // `/instructors` returns every instructor this partner manages, including stubs
+        // created for (and still only invited to) someone else's email. The header must
+        // only ever show the partner's own claimed persona — never a profile pending
+        // someone else's claim — so this mirrors the backend's own `get_self_instructor`
+        // rule: managed by this partner AND actually claimed.
+        setInstructor(r.data.find((i) => i.claimed_at !== null) ?? null);
+      })
       .catch(() => setInstructor(null));
   }, []);
 
@@ -80,18 +87,13 @@ export function HeaderAvatar() {
   return (
     <>
       <button onClick={openDrawer} aria-label="Twój profil instruktora" className="shrink-0">
-        {instructor?.image_id ? (
-          <WyImage
-            src={instructor.image_id}
-            alt={instructor.name}
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-full object-cover"
+        {instructor ? (
+          <HashedAvatar
+            seed={instructor.id}
+            name={instructor.name}
+            imageId={instructor.image_id}
+            size={40}
           />
-        ) : instructor ? (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-            {instructor.name.charAt(0).toUpperCase()}
-          </div>
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-300">
             <User size={18} />
@@ -120,19 +122,13 @@ export function HeaderAvatar() {
                 </button>
               </DrawerHeader>
               <div className="space-y-5 px-4 pb-6 text-center">
-                {instructor.image_id ? (
-                  <WyImage
-                    src={instructor.image_id}
-                    alt={instructor.name}
-                    width={96}
-                    height={96}
-                    className="mx-auto h-24 w-24 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 text-2xl font-semibold text-gray-500">
-                    {instructor.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <HashedAvatar
+                  seed={instructor.id}
+                  name={instructor.name}
+                  imageId={instructor.image_id}
+                  size={96}
+                  className="mx-auto"
+                />
                 <div>
                   <p className="text-lg font-semibold text-gray-900">{instructor.name}</p>
                   {instructor.yoga_styles.length > 0 && (

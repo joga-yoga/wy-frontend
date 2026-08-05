@@ -43,11 +43,12 @@ export function CourseDateField({ id, label, value, error, onChange }: CourseDat
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
+            size="action"
             id={id}
             type="button"
             variant="outline"
             className={cn(
-              "h-12 w-full justify-start rounded-md border-input px-3 text-left text-base font-normal shadow-sm",
+              "w-full justify-start text-left font-normal",
               !selected && "text-muted-foreground",
               error && "border-destructive",
             )}

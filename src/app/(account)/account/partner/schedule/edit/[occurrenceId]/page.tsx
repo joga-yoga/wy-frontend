@@ -342,7 +342,7 @@ export default function EditSessionPage() {
           />
           <div className="flex gap-3 pt-2">
             {sessionDetail.is_recurring && (
-              <Button variant="outline" onClick={() => setStep("scope")}>
+              <Button size="action" variant="outline" onClick={() => setStep("scope")}>
                 <ArrowLeft size={14} className="mr-1" />
                 Wstecz
               </Button>
@@ -392,7 +392,7 @@ export default function EditSessionPage() {
           />
           <div className="flex gap-3 pt-4">
             {sessionDetail.is_recurring && (
-              <Button variant="outline" onClick={() => setStep("scope")}>
+              <Button size="action" variant="outline" onClick={() => setStep("scope")}>
                 <ArrowLeft size={14} className="mr-1" />
                 Wstecz
               </Button>
@@ -425,7 +425,7 @@ export default function EditSessionPage() {
           <PreviewNoteCard icon={<Info size={15} />}>{scopeAssurance(scope)}</PreviewNoteCard>
 
           <div className="flex gap-3 pt-2">
-            <Button variant="outline" onClick={() => setStep("form")}>
+            <Button size="action" variant="outline" onClick={() => setStep("form")}>
               Wstecz
             </Button>
             <Button

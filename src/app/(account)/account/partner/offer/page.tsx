@@ -48,7 +48,6 @@ import {
 import { useOfferCreateMenu } from "@/context/OfferCreateMenuContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 import { formatDateRange } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
@@ -80,14 +79,12 @@ const getEventStatus = (event: BaseEvent) => {
 
 function editLink(item: DashboardItem) {
   if (item.kind === "workshop") return `/konto/partner/wydarzenia/${item.id}/edit`;
-  if (item.kind === "class") return `/konto/partner/zajecia/${item.id}/edit`;
   if (item.kind === "course") return `/konto/partner/kursy/${item.id}/edit`;
   return `/konto/partner/wyjazdy/${item.id}/edit`;
 }
 
 function publicLink(item: DashboardItem): string | null {
   if (item.kind === "workshop") return `/wydarzenia/${item.slug}`;
-  if (item.kind === "class") return `/zajecia/${item.slug}`;
   if (item.kind === "course") return null;
   return `/wyjazdy/${item.slug}`;
 }
@@ -110,7 +107,6 @@ function sortActiveFirst(items: DashboardItem[]): DashboardItem[] {
 export default function OfferPage() {
   const [retreats, setRetreats] = useState<DashboardItem[]>([]);
   const [workshops, setWorkshops] = useState<DashboardItem[]>([]);
-  const [classes, setClasses] = useState<DashboardItem[]>([]);
   const [courses, setCourses] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
@@ -122,17 +118,14 @@ export default function OfferPage() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const areClassesEnabled = useFeatureFlag(FEATURE_FLAGS.classes);
-  // One list, so the sort can actually order the whole offer rather than four slices of
-  // two. Classes only join it when the feature is on.
+  // One list, so the sort can actually order the whole offer rather than three slices of two.
   const allItems = useMemo(
-    () => [...retreats, ...workshops, ...courses, ...(areClassesEnabled ? classes : [])],
-    [retreats, workshops, courses, classes, areClassesEnabled],
+    () => [...retreats, ...workshops, ...courses],
+    [retreats, workshops, courses],
   );
   const { isCreateMenuOpen, setIsCreateMenuOpen } = useOfferCreateMenu();
 
-  const hasAnyEvents =
-    retreats.length > 0 || workshops.length > 0 || courses.length > 0 || classes.length > 0;
+  const hasAnyEvents = retreats.length > 0 || workshops.length > 0 || courses.length > 0;
 
   // Fetch events
   useEffect(() => {
@@ -149,22 +142,15 @@ export default function OfferPage() {
         .get<BaseEvent[]>("/courses")
         .then((r) => r.data.map((e) => ({ ...e, kind: "course" as const })))
         .catch(() => []),
-      areClassesEnabled
-        ? axiosInstance
-            .get<BaseEvent[]>("/classes")
-            .then((r) => r.data.map((e) => ({ ...e, kind: "class" as const })))
-            .catch(() => [])
-        : Promise.resolve([]),
     ])
-      .then(([r, w, co, c]) => {
+      .then(([r, w, co]) => {
         setRetreats(sortActiveFirst(r));
         setWorkshops(sortActiveFirst(w));
         setCourses(sortActiveFirst(co));
-        setClasses(sortActiveFirst(c));
 
         // "jako: X" chips (spec-b2b §4) — one call for every rendered id; the backend
         // tells us whether to show them at all (only once the partner has 2+ entities).
-        const eventIds = [...r, ...w, ...co, ...c].map((e) => e.id);
+        const eventIds = [...r, ...w, ...co].map((e) => e.id);
         if (eventIds.length > 0) {
           axiosInstance
             .post("/events/organizer-labels", { event_ids: eventIds })
@@ -176,7 +162,7 @@ export default function OfferPage() {
         }
       })
       .finally(() => setLoadingItems(false));
-  }, [areClassesEnabled]);
+  }, []);
 
   const getOrganizerLabel = useCallback(
     (id: string) => (showOrganizerLabels ? organizerLabels[id]?.join(" · ") : undefined),
@@ -191,20 +177,16 @@ export default function OfferPage() {
       const ep =
         itemToDelete.kind === "workshop"
           ? "/workshops"
-          : itemToDelete.kind === "class"
-            ? "/classes"
-            : itemToDelete.kind === "course"
-              ? "/courses"
-              : "/retreats";
+          : itemToDelete.kind === "course"
+            ? "/courses"
+            : "/retreats";
       await axiosInstance.delete(`${ep}/${itemToDelete.id}`);
       toast({ description: "Usunięto pomyślnie!" });
       if (itemToDelete.kind === "retreat")
         setRetreats((p) => p.filter((i) => i.id !== itemToDelete.id));
       else if (itemToDelete.kind === "workshop")
         setWorkshops((p) => p.filter((i) => i.id !== itemToDelete.id));
-      else if (itemToDelete.kind === "course")
-        setCourses((p) => p.filter((i) => i.id !== itemToDelete.id));
-      else setClasses((p) => p.filter((i) => i.id !== itemToDelete.id));
+      else setCourses((p) => p.filter((i) => i.id !== itemToDelete.id));
       setItemToDelete(null);
     } catch (error: any) {
       toast({
@@ -221,19 +203,16 @@ export default function OfferPage() {
       const ep =
         event.kind === "workshop"
           ? "/workshops"
-          : event.kind === "class"
-            ? "/classes"
-            : event.kind === "course"
-              ? "/courses"
-              : "/retreats";
+          : event.kind === "course"
+            ? "/courses"
+            : "/retreats";
       await axiosInstance.patch(`${ep}/${event.id}`, { is_public: false });
       toast({ description: "Ukryto pomyślnie!" });
       const updater = (p: DashboardItem[]) =>
         p.map((i) => (i.id === event.id ? { ...i, is_public: false } : i));
       if (event.kind === "retreat") setRetreats(updater);
       else if (event.kind === "workshop") setWorkshops(updater);
-      else if (event.kind === "course") setCourses(updater);
-      else setClasses(updater);
+      else setCourses(updater);
     } catch (error: any) {
       toast({
         description: `Nie udało się ukryć: ${error.response?.data?.detail || error.message}`,
@@ -247,11 +226,9 @@ export default function OfferPage() {
       const ep =
         event.kind === "workshop"
           ? "/workshops"
-          : event.kind === "class"
-            ? "/classes"
-            : event.kind === "course"
-              ? "/courses"
-              : "/retreats";
+          : event.kind === "course"
+            ? "/courses"
+            : "/retreats";
       const { data: full } = await axiosInstance.get(`${ep}/${event.id}`);
       let payload: any = {
         title: full.title,
@@ -302,11 +279,9 @@ export default function OfferPage() {
       const createPath =
         event.kind === "workshop"
           ? "/konto/partner/wydarzenia/create?duplicate=true"
-          : event.kind === "class"
-            ? "/konto/partner/zajecia/create?duplicate=true"
-            : event.kind === "course"
-              ? "/konto/partner/kursy/create?duplicate=true"
-              : "/konto/partner/wyjazdy/create?duplicate=true";
+          : event.kind === "course"
+            ? "/konto/partner/kursy/create?duplicate=true"
+            : "/konto/partner/wyjazdy/create?duplicate=true";
       router.push(createPath);
       toast({ description: "Duplikowanie..." });
     } catch (error: any) {
@@ -453,7 +428,7 @@ function OfferEmptyState() {
             udostępniania i zaczniemy zbierać rezerwacje.
           </p>
         </div>
-        <Button variant="green" className="rounded-full" onClick={() => setIsCreateMenuOpen(true)}>
+        <Button size="action" variant="green" onClick={() => setIsCreateMenuOpen(true)}>
           Dodaj wydarzenie
         </Button>
       </div>

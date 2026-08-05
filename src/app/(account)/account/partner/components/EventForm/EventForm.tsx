@@ -27,7 +27,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import {
-  classFormSchema,
   courseFormSchema,
   EventFormData,
   EventInitialData,
@@ -36,7 +35,6 @@ import {
 } from "@/lib/schemas/event";
 
 import { BlockBrowserNavigation, BlockerWhenDirty } from "./block-navigation/navigation-block";
-import { ClassForm } from "./components/ClassForm";
 import { CourseMetaSection } from "./components/CourseMetaSection";
 import { CourseModulesSection } from "./components/CourseModulesSection";
 import { EventDetailsSection } from "./components/EventDetailsSection";
@@ -64,13 +62,13 @@ interface EventFormProps {
   eventId?: string;
   initialData?: Partial<EventFormData>;
   onLoadingChange?: (isLoading: boolean) => void;
-  mode?: "retreat" | "workshop" | "class" | "course";
+  mode?: "retreat" | "workshop" | "course";
 }
 
 // 1. Helper function to prepare event payload
 const prepareEventPayload = (
   data: EventFormData,
-  mode: "retreat" | "workshop" | "class" | "course",
+  mode: "retreat" | "workshop" | "course",
 ): Partial<EventFormData> => {
   const payload: Omit<EventFormData, "start_date" | "end_date"> & {
     start_date: string | null | undefined;
@@ -130,15 +128,8 @@ const prepareEventPayload = (
     }
     payload.instructor_ids = data.instructor_ids ?? [];
     delete (payload as any).program;
-  } else if (mode !== "class") {
-    payload.instructor_ids = data.instructor_ids ?? [];
   } else {
-    delete (payload as any).instructor_ids;
-    delete (payload as any).occurrences;
-    delete (payload as any).start_date;
-    delete (payload as any).end_date;
-    delete (payload as any).location_id;
-    delete (payload as any).program;
+    payload.instructor_ids = data.instructor_ids ?? [];
   }
   return payload as Partial<EventFormData>; // Adjust cast if a more specific return type is defined
 };
@@ -152,30 +143,15 @@ export function EventForm({
   const { toast } = useToast();
   const router = useRouter();
   const isWorkshop = mode === "workshop";
-  const isClass = mode === "class";
   const isCourse = mode === "course";
   const isOccurrenceBased = isWorkshop;
-  const eventBaseApiPath = isWorkshop
-    ? "/workshops"
-    : isClass
-      ? "/classes"
-      : isCourse
-        ? "/courses"
-        : "/retreats";
+  const eventBaseApiPath = isWorkshop ? "/workshops" : isCourse ? "/courses" : "/retreats";
   const profileEditPath = isWorkshop
     ? `/konto/partner/wydarzenia`
-    : isClass
-      ? `/konto/partner/zajecia`
-      : isCourse
-        ? `/konto/partner/kursy`
-        : `/konto/partner/wyjazdy`;
-  const publicPath = isWorkshop
-    ? `/wydarzenia`
-    : isClass
-      ? `/zajecia`
-      : isCourse
-        ? `/kursy`
-        : `/wyjazdy`;
+    : isCourse
+      ? `/konto/partner/kursy`
+      : `/konto/partner/wyjazdy`;
+  const publicPath = isWorkshop ? `/wydarzenia` : isCourse ? `/kursy` : `/wyjazdy`;
   const isEditMode = !!eventId;
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -214,11 +190,9 @@ export function EventForm({
     resolver: yupResolver(
       mode === "workshop"
         ? (workshopFormSchema as yup.ObjectSchema<EventFormData>)
-        : mode === "class"
-          ? (classFormSchema as yup.ObjectSchema<EventFormData>)
-          : mode === "course"
-            ? (courseFormSchema as yup.ObjectSchema<EventFormData>)
-            : (retreatFormSchema as yup.ObjectSchema<EventFormData>),
+        : mode === "course"
+          ? (courseFormSchema as yup.ObjectSchema<EventFormData>)
+          : (retreatFormSchema as yup.ObjectSchema<EventFormData>),
     ),
     defaultValues: {
       title: "",
@@ -584,21 +558,17 @@ export function EventForm({
         setFetchError(
           mode === "workshop"
             ? "Nie udało się załadować danych wydarzenia. Spróbuj ponownie."
-            : mode === "class"
-              ? "Nie udało się załadować danych zajęć. Spróbuj ponownie."
-              : mode === "course"
-                ? "Nie udało się załadować danych kursu. Spróbuj ponownie."
-                : "Nie udało się załadować danych wyjazdu. Spróbuj ponownie.",
+            : mode === "course"
+              ? "Nie udało się załadować danych kursu. Spróbuj ponownie."
+              : "Nie udało się załadować danych wyjazdu. Spróbuj ponownie.",
         );
         toast({
           description:
             mode === "workshop"
               ? "Nie udało się załadować danych wydarzenia."
-              : mode === "class"
-                ? "Nie udało się załadować danych zajęć."
-                : mode === "course"
-                  ? "Nie udało się załadować danych kursu."
-                  : "Nie udało się załadować danych wyjazdu.",
+              : mode === "course"
+                ? "Nie udało się załadować danych kursu."
+                : "Nie udało się załadować danych wyjazdu.",
           variant: "destructive",
         });
       })
@@ -620,11 +590,9 @@ export function EventForm({
           description:
             mode === "workshop"
               ? "Wydarzenie zaktualizowane pomyślnie!"
-              : mode === "class"
-                ? "Zajęcia zaktualizowane pomyślnie!"
-                : mode === "course"
-                  ? "Kurs zaktualizowany pomyślnie!"
-                  : "Wyjazd zaktualizowany pomyślnie!",
+              : mode === "course"
+                ? "Kurs zaktualizowany pomyślnie!"
+                : "Wyjazd zaktualizowany pomyślnie!",
         });
         setCurrentIsPublic(submissionIsPublic);
         reset({ ...getValues(), slug: updatedEvent.data.slug });
@@ -636,11 +604,9 @@ export function EventForm({
           description:
             mode === "workshop"
               ? "Wydarzenie utworzone pomyślnie!"
-              : mode === "class"
-                ? "Zajęcia utworzone pomyślnie!"
-                : mode === "course"
-                  ? "Kurs utworzony pomyślnie!"
-                  : "Wyjazd utworzony pomyślnie!",
+              : mode === "course"
+                ? "Kurs utworzony pomyślnie!"
+                : "Wyjazd utworzony pomyślnie!",
         });
         setCurrentIsPublic(submissionIsPublic);
         router.push(`${profileEditPath}/${newEventId}/edit`);
@@ -657,7 +623,7 @@ export function EventForm({
       );
       toast({
         title: `Błąd ${isEditMode ? "aktualizacji" : "tworzenia"}`,
-        description: `Nie udało się ${isEditMode ? "zaktualizować" : "utworzyć"} ${mode === "workshop" ? "wydarzenia" : mode === "class" ? "zajęć" : mode === "course" ? "kursu" : "wyjazdu"}: ${errorMsg}`,
+        description: `Nie udało się ${isEditMode ? "zaktualizować" : "utworzyć"} ${mode === "workshop" ? "wydarzenia" : mode === "course" ? "kursu" : "wyjazdu"}: ${errorMsg}`,
         variant: "destructive",
       });
     }
@@ -683,7 +649,7 @@ export function EventForm({
         setCurrentIsPublic(true); // Successfully published and saved
         reset(getValues());
         toast({
-          description: `${mode === "workshop" ? "Wydarzenie" : mode === "class" ? "Zajęcia" : mode === "course" ? "Kurs" : "Wyjazd"} opublikowany/e i zmiany zapisane pomyślnie.`,
+          description: `${mode === "workshop" ? "Wydarzenie" : mode === "course" ? "Kurs" : "Wyjazd"} opublikowany/e i zmiany zapisane pomyślnie.`,
         });
         router.refresh();
 
@@ -717,7 +683,7 @@ export function EventForm({
         setCurrentIsPublic(false);
         setValue("is_public", false, { shouldDirty: false, shouldValidate: false });
         toast({
-          description: `${mode === "workshop" ? "Wydarzenie" : mode === "class" ? "Zajęcia" : mode === "course" ? "Kurs" : "Wyjazd"} ukryty/e pomyślnie.`,
+          description: `${mode === "workshop" ? "Wydarzenie" : mode === "course" ? "Kurs" : "Wyjazd"} ukryty/e pomyślnie.`,
         });
       } catch (error: any) {
         setValue("is_public", originalFormIsPublicValue, {
@@ -757,11 +723,9 @@ export function EventForm({
           description:
             mode === "workshop"
               ? "Nie można opublikować wydarzenia. Formularz zawiera błędy."
-              : mode === "class"
-                ? "Nie można opublikować zajęć. Formularz zawiera błędy."
-                : mode === "course"
-                  ? "Nie można opublikować kursu. Formularz zawiera błędy."
-                  : "Nie można opublikować wyjazdu. Formularz zawiera błędy.",
+              : mode === "course"
+                ? "Nie można opublikować kursu. Formularz zawiera błędy."
+                : "Nie można opublikować wyjazdu. Formularz zawiera błędy.",
           variant: "destructive",
           duration: 2000,
         });
@@ -974,7 +938,9 @@ export function EventForm({
     return (
       <div className="p-6 text-center">
         <p className="text-b2b-red-solid mb-4">{fetchError}</p>
-        <Button onClick={() => router.back()}>Wróć</Button>
+        <Button size="action" onClick={() => router.back()}>
+          Wróć
+        </Button>
       </div>
     );
   }
@@ -988,20 +954,7 @@ export function EventForm({
         id="event-form-wrapper"
       >
         <div className="flex flex-col event-form-section-gap max-w-3xl w-full mx-auto px-4 pb-12 md:mx-10 ">
-          {isClass ? (
-            <ClassForm
-              control={control}
-              register={register}
-              errors={errors}
-              watchedImageIds={watchedImageIds ?? []}
-              handleRemoveImage={handleRemoveImage}
-              handleImageSelected={handleImageSelected}
-              isUploadingImage={isUploadingImage}
-              directUploadError={directUploadError}
-              pendingImages={pendingImages.map((p) => p.file)}
-              handleSetCover={handleSetCover}
-            />
-          ) : isCourse ? (
+          {isCourse ? (
             <>
               <EventDetailsSection
                 project="workshops"
@@ -1167,21 +1120,13 @@ export function EventForm({
 
           {currentIsPublic && (
             <EventVisibilitySection
-              type={
-                mode === "workshop"
-                  ? "workshop"
-                  : mode === "class"
-                    ? "class"
-                    : mode === "course"
-                      ? "course"
-                      : "retreat"
-              }
+              type={mode === "workshop" ? "workshop" : mode === "course" ? "course" : "retreat"}
               isToggling={isTogglingVisibility}
               onHide={handleToggleVisibility}
             />
           )}
         </div>
-        <EventHelpBar mode={isClass || isCourse ? "workshop" : mode} />
+        <EventHelpBar mode={isCourse ? "workshop" : mode} />
       </div>
 
       <DashboardFooter
@@ -1189,18 +1134,14 @@ export function EventForm({
           isEditMode
             ? mode === "workshop"
               ? "Edytuj wydarzenie"
-              : mode === "class"
-                ? "Edytuj zajęcia"
-                : mode === "course"
-                  ? "Edytuj kurs"
-                  : "Edytuj wyjazd"
+              : mode === "course"
+                ? "Edytuj kurs"
+                : "Edytuj wyjazd"
             : mode === "workshop"
               ? "Utwórz nowe wydarzenie"
-              : mode === "class"
-                ? "Utwórz nowe zajęcia"
-                : mode === "course"
-                  ? "Utwórz nowy kurs"
-                  : "Utwórz nowy wyjazd"
+              : mode === "course"
+                ? "Utwórz nowy kurs"
+                : "Utwórz nowy wyjazd"
         }
         onCreate={!isEditMode ? handleSubmit(onSubmit) : undefined}
         createLabel={
@@ -1208,11 +1149,9 @@ export function EventForm({
             ? "Tworzenie..."
             : mode === "workshop"
               ? "Utwórz wydarzenie"
-              : mode === "class"
-                ? "Utwórz zajęcia"
-                : mode === "course"
-                  ? "Utwórz kurs"
-                  : "Utwórz wyjazd"
+              : mode === "course"
+                ? "Utwórz kurs"
+                : "Utwórz wyjazd"
         }
         createLabelShort={isSubmitting ? "Tworzenie..." : "Utwórz"}
         createIcon={
@@ -1235,21 +1174,17 @@ export function EventForm({
         publishButtonLabel={
           mode === "workshop"
             ? "Opublikuj wydarzenie"
-            : mode === "class"
-              ? "Opublikuj zajęcia"
-              : mode === "course"
-                ? "Opublikuj kurs"
-                : "Opublikuj wyjazd"
+            : mode === "course"
+              ? "Opublikuj kurs"
+              : "Opublikuj wyjazd"
         }
         publishButtonLabelShort="Opublikuj"
         unpublishButtonLabel={
           mode === "workshop"
             ? "Ukryj wydarzenie"
-            : mode === "class"
-              ? "Ukryj zajęcia"
-              : mode === "course"
-                ? "Ukryj kurs"
-                : "Ukryj wyjazd"
+            : mode === "course"
+              ? "Ukryj kurs"
+              : "Ukryj wyjazd"
         }
         unpublishButtonLabelShort="Ukryj"
         publishingButtonLabel="Zmieniam..."
@@ -1293,11 +1228,9 @@ export function EventForm({
             <AlertDialogDescription>
               {mode === "workshop"
                 ? "Czy na pewno chcesz opublikować to wydarzenie? Stanie się ono widoczne dla wszystkich użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane."
-                : mode === "class"
-                  ? "Czy na pewno chcesz opublikować te zajęcia? Staną się one widoczne dla wszystkich użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane."
-                  : mode === "course"
-                    ? "Czy na pewno chcesz opublikować ten kurs? Stanie się on widoczny dla wszystkich użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane."
-                    : "Czy na pewno chcesz opublikować ten wyjazd? Stanie się on widoczny dla wszystkich użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane."}
+                : mode === "course"
+                  ? "Czy na pewno chcesz opublikować ten kurs? Stanie się on widoczny dla wszystkich użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane."
+                  : "Czy na pewno chcesz opublikować ten wyjazd? Stanie się on widoczny dla wszystkich użytkowników. Wszelkie wprowadzone zmiany zostaną zapisane."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

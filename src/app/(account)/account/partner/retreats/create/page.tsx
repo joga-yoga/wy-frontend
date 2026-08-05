@@ -172,7 +172,7 @@ export default function CreateEventPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setView("prompt-input")} className="w-full">
+              <Button size="action" onClick={() => setView("prompt-input")} className="w-full">
                 Wybierz
               </Button>
             </CardContent>
@@ -189,7 +189,7 @@ export default function CreateEventPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setView("url-input")} className="w-full">
+              <Button size="action" onClick={() => setView("url-input")} className="w-full">
                 Wybierz
               </Button>
             </CardContent>
@@ -207,6 +207,7 @@ export default function CreateEventPage() {
             </CardHeader>
             <CardContent>
               <Button
+                size="action"
                 onClick={() => {
                   setGeneratedData(null);
                   setView("form");
@@ -240,6 +241,7 @@ export default function CreateEventPage() {
               disabled={isAutofilling}
             />
             <Button
+              size="action"
               onClick={() => handleGenerateFromUrl(url)}
               className="w-full"
               disabled={isAutofilling}
@@ -279,6 +281,7 @@ export default function CreateEventPage() {
               disabled={isAutofilling}
             />
             <Button
+              size="action"
               onClick={() => handleGenerateFromPrompt(prompt)}
               className="w-full"
               disabled={isAutofilling}

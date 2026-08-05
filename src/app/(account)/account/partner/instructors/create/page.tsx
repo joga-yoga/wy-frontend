@@ -474,7 +474,12 @@ function LegacyAddInstructorFlow() {
               </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+            <Button
+              size="action"
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
               {form.formState.isSubmitting ? "Sprawdzam..." : "Dalej →"}
             </Button>
           </form>
@@ -517,6 +522,7 @@ function LegacyAddInstructorFlow() {
               </p>
             ) : (
               <Button
+                size="action"
                 onClick={() =>
                   router.push(`/konto/partner/instruktorzy/${preview.instructor_id}/edit`)
                 }
@@ -525,6 +531,7 @@ function LegacyAddInstructorFlow() {
               </Button>
             )}
             <Button
+              size="action"
               variant="outline"
               onClick={() => {
                 setStep("identify");

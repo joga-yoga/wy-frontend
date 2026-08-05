@@ -9,4 +9,4 @@ export interface BaseEvent {
   is_public: boolean;
 }
 
-export type DashboardItem = BaseEvent & { kind: "retreat" | "workshop" | "class" | "course" };
+export type DashboardItem = BaseEvent & { kind: "retreat" | "workshop" | "course" };

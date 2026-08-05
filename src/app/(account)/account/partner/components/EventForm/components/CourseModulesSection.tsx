@@ -95,6 +95,7 @@ export const CourseModulesSection = ({ control, register, errors }: CourseModule
         ))}
 
         <Button
+          size="action"
           type="button"
           variant="outline"
           onClick={() => append({ title: "", description: null, hours: null, topics: [] })}

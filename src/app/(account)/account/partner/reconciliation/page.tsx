@@ -149,10 +149,10 @@ export default function ReconciliationPage() {
         entry={resolveEntry}
         open={resolveEntry != null}
         onOpenChange={(open) => !open && setResolveEntry(null)}
-        onMarkPaid={() => resolveWith("mark-paid")}
-        onMarkCardOk={() => resolveWith("mark-card-ok")}
-        onMarkAttended={() => resolveWith("mark-attended")}
+        onConfirm={() => resolveWith("confirm")}
         onMarkNoShow={() => resolveWith("mark-no-show")}
+        onCorrectNoShow={() => resolveWith("correct-no-show")}
+        onDeskCancel={() => resolveWith("desk-cancel")}
       />
     </div>
   );
