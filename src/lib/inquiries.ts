@@ -25,5 +25,5 @@ export async function submitInquiry(payload: InquiryPayload) {
 
 /** Login URL that returns the user to where they were once they are signed in. */
 export function loginRedirectHref(returnTo: string) {
-  return `/konto/logowanie?next=${encodeURIComponent(returnTo)}`;
+  return `/account/login?next=${encodeURIComponent(returnTo)}`;
 }

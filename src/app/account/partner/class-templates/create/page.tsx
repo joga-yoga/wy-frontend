@@ -19,7 +19,7 @@ export default function CreateTemplatePage() {
     try {
       await axiosInstance.post("/class-templates", data);
       toast({ description: "Szablon utworzony." });
-      router.push("/konto/partner/szablony-zajec");
+      router.push("/account/partner/class-templates");
     } catch {
       toast({
         description: "Nie udało się utworzyć szablonu.",
@@ -35,7 +35,7 @@ export default function CreateTemplatePage() {
       <TemplateEditor
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
-        onCancel={() => router.push("/konto/partner/szablony-zajec")}
+        onCancel={() => router.push("/account/partner/class-templates")}
         pinFooter
       />
     </div>

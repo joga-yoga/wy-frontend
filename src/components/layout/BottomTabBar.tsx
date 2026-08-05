@@ -17,10 +17,10 @@ import { cn } from "@/lib/utils";
 /** Every path a tab can point to — used by the layout to decide when to reserve
  * space for the fixed bar, independent of which tabs are currently conditional. */
 export const TAB_PATHS = [
-  "/konto/partner/grafik",
-  "/konto/partner/rezerwacje",
-  "/konto/partner/oferta",
-  "/konto/partner/menu",
+  "/account/partner/schedule",
+  "/account/partner/bookings",
+  "/account/partner/offer",
+  "/account/partner/menu",
 ] as const;
 
 type TabPath = (typeof TAB_PATHS)[number];
@@ -28,13 +28,13 @@ type TabPath = (typeof TAB_PATHS)[number];
 type Tab = { path: TabPath; label: string; Icon: React.ElementType };
 
 const REZERWACJE: Tab = {
-  path: "/konto/partner/rezerwacje",
+  path: "/account/partner/bookings",
   label: "Rezerwacje",
   Icon: IoFileTrayOutline,
 };
-const OFERTA: Tab = { path: "/konto/partner/oferta", label: "Oferta", Icon: IoPricetagOutline };
-const MENU: Tab = { path: "/konto/partner/menu", label: "Menu", Icon: IoMenuOutline };
-const GRAFIK: Tab = { path: "/konto/partner/grafik", label: "Grafik", Icon: IoCalendarOutline };
+const OFERTA: Tab = { path: "/account/partner/offer", label: "Oferta", Icon: IoPricetagOutline };
+const MENU: Tab = { path: "/account/partner/menu", label: "Menu", Icon: IoMenuOutline };
+const GRAFIK: Tab = { path: "/account/partner/schedule", label: "Grafik", Icon: IoCalendarOutline };
 
 /**
  * Tabs materialize from what the partner actually has — never a role/entity switcher

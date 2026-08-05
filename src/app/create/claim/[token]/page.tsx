@@ -39,7 +39,7 @@ function ClaimDraftContent() {
     const claimPath = `/create/claim/${params.token}`;
 
     if (!user) {
-      router.replace(`/konto/logowanie?next=${encodeURIComponent(claimPath)}`);
+      router.replace(`/account/login?next=${encodeURIComponent(claimPath)}`);
       return;
     }
 
@@ -55,7 +55,7 @@ function ClaimDraftContent() {
         const code = getErrorCode(error);
 
         if (status === 403 && code === "partner_required") {
-          router.replace(`/konto/partner/zostan-partnerem?next=${encodeURIComponent(claimPath)}`);
+          router.replace(`/account/partner/become-partner?next=${encodeURIComponent(claimPath)}`);
           return;
         }
 

@@ -237,13 +237,13 @@ export default function PartnerProfilePage() {
             description: "Najpierw utwórz profil organizatora.",
             variant: "destructive",
           });
-          router.push("/konto/partner/zostan-partnerem");
+          router.push("/account/partner/become-partner");
         } else {
           toast({
             description: "Nie udało się wczytać profilu organizatora.",
             variant: "destructive",
           });
-          router.push("/konto/partner");
+          router.push("/account/partner");
         }
       })
       .finally(() => setLoading(false));

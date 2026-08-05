@@ -32,7 +32,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/konto/logowanie");
+      router.replace("/account/login");
     }
   }, [user, loading, router]);
 

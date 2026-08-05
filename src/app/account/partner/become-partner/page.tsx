@@ -16,7 +16,7 @@ import { PhoneVerificationForm } from "@/components/partner/PhoneVerificationFor
 export default function BecomePartnerPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/konto/partner";
+  const next = searchParams.get("next") || "/account/partner";
 
   return (
     <div className="mx-auto max-w-xl px-4 py-12 sm:px-6 lg:px-8">

@@ -75,7 +75,7 @@ export default function RosterInstructorDetailPage() {
       })
       .catch(() => {
         toast({ description: "Nie udało się wczytać profilu.", variant: "destructive" });
-        router.push("/konto/partner/instruktorzy");
+        router.push("/account/partner/instructors");
       })
       .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +95,7 @@ export default function RosterInstructorDetailPage() {
             } nadchodzących sesji — zmień prowadzącego w Grafiku.`
           : "Odłączono od studia.",
       });
-      router.push("/konto/partner/instruktorzy");
+      router.push("/account/partner/instructors");
     } catch {
       toast({ description: "Nie udało się odłączyć instruktora.", variant: "destructive" });
     } finally {

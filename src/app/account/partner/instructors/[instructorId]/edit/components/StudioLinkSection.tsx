@@ -445,7 +445,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
               Wróć do profilu instruktora
             </Button>
             <Button type="button" size="sm" asChild>
-              <Link href={`/konto/partner/studio/${createdStudioId}/edit`}>
+              <Link href={`/account/partner/studio/${createdStudioId}/edit`}>
                 Uzupełnij studio teraz
               </Link>
             </Button>

@@ -45,11 +45,11 @@ export function LoginPage() {
   const hasAutoRedirected = useRef(false);
   const hasAutoSubmittedEmail = useRef(false);
   const nextParam = searchParams.get("next");
-  // Renders "/konto/partner" on the server (no localStorage there) and only picks up
+  // Renders "/account/partner" on the server (no localStorage there) and only picks up
   // the remembered mode after mount, to avoid a hydration mismatch — see partnerMode.ts.
-  const [defaultNext, setDefaultNext] = useState("/konto/partner");
+  const [defaultNext, setDefaultNext] = useState("/account/partner");
   useEffect(() => {
-    setDefaultNext(getLastMode() === "b2c" ? "/konto" : "/konto/partner");
+    setDefaultNext(getLastMode() === "b2c" ? "/account" : "/account/partner");
   }, []);
   const next = nextParam || defaultNext;
   const emailParam = searchParams.get("email") || "";
@@ -58,7 +58,7 @@ export function LoginPage() {
   const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login?next=${encodeURIComponent(next)}`;
 
   useEffect(() => {
-    if (next && next !== "/konto/partner") {
+    if (next && next !== "/account/partner") {
       localStorage.setItem("wy_auth_next", next);
     }
   }, [next]);

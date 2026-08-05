@@ -147,10 +147,10 @@ export function EventForm({
   const isOccurrenceBased = isWorkshop;
   const eventBaseApiPath = isWorkshop ? "/workshops" : isCourse ? "/courses" : "/retreats";
   const profileEditPath = isWorkshop
-    ? `/konto/partner/wydarzenia`
+    ? `/account/partner/workshops`
     : isCourse
-      ? `/konto/partner/kursy`
-      : `/konto/partner/wyjazdy`;
+      ? `/account/partner/courses`
+      : `/account/partner/retreats`;
   const publicPath = isWorkshop ? `/wydarzenia` : isCourse ? `/kursy` : `/wyjazdy`;
   const isEditMode = !!eventId;
   const [isLoading, setIsLoading] = useState(isEditMode);

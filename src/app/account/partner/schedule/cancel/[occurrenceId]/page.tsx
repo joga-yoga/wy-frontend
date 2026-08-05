@@ -153,7 +153,7 @@ export default function CancelSessionPage() {
             <Button
               size="action"
               variant="outline"
-              onClick={() => router.push("/konto/partner/grafik")}
+              onClick={() => router.push("/account/partner/schedule")}
             >
               Anuluj
             </Button>

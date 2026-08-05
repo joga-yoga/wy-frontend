@@ -114,7 +114,7 @@ export function HeaderAvatar() {
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    router.push(`/konto/partner/instruktorzy/${instructor.id}/edit`);
+                    router.push(`/account/partner/instructors/${instructor.id}/edit`);
                   }}
                   className="text-sm font-semibold text-b2b-green-strong"
                 >
@@ -204,7 +204,7 @@ export function HeaderAvatar() {
                     udostępniania.
                   </p>
                 </div>
-                <Link href="/konto/partner/instruktorzy/create" onClick={() => setIsOpen(false)}>
+                <Link href="/account/partner/instructors/create" onClick={() => setIsOpen(false)}>
                   <Button variant="green" className="w-full rounded-full">
                     Utwórz profil instruktora
                   </Button>

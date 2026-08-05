@@ -45,7 +45,7 @@ function VerifyEmailContent() {
         const redirectTo =
           next ||
           localStorage.getItem("wy_auth_next") ||
-          (getLastMode() === "b2c" ? "/konto" : "/konto/partner");
+          (getLastMode() === "b2c" ? "/account" : "/account/partner");
         localStorage.removeItem("wy_auth_next");
 
         // Redirect after a short delay
@@ -97,7 +97,7 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-semibold">Błąd weryfikacji</h1>
           <p className="text-gray-500">Link weryfikacyjny jest nieprawidłowy lub wygasł.</p>
           <button
-            onClick={() => router.push("/konto/logowanie")}
+            onClick={() => router.push("/account/login")}
             className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors mt-4"
           >
             Wróć do logowania

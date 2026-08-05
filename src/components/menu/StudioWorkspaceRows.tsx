@@ -55,31 +55,31 @@ export function StudioWorkspaceRows({
         {/* R1 leads this row with the studio's own logo rather than a generic icon —
             it is the only row that is *about* a specific studio. */}
         <MenuRow
-          href={`/konto/partner/studio/${studioId}/edit`}
+          href={`/account/partner/studio/${studioId}/edit`}
           title="Profil studia"
           subtitle="Podstawy, lokalizacja, cennik, zdjęcia"
           leading={<StudioLogoTile name={studioName} imageId={studioImageId} />}
         />
         <MenuRow
-          href={`/konto/partner/instruktorzy?studioId=${studioId}`}
+          href={`/account/partner/instructors?studioId=${studioId}`}
           title="Instruktorzy"
           subtitle={rosterSubtitle(roster)}
           Icon={Users}
         />
         <MenuRow
-          href={`/konto/partner/klienci?studioId=${studioId}`}
+          href={`/account/partner/clients?studioId=${studioId}`}
           title="Klienci"
           subtitle="Karnety i wizyty"
           Icon={Users}
         />
         <MenuRow
-          href="/konto/partner/szablony-zajec"
+          href="/account/partner/class-templates"
           title="Szablony zajęć"
           subtitle="Zarządzaj grafikiem zajęć"
           Icon={Layers}
         />
         <MenuRow
-          href={`/konto/partner/studio/${studioId}/payments`}
+          href={`/account/partner/studio/${studioId}/payments`}
           title="Płatności i odwołania"
           subtitle="Metody płatności, polityka odwołań"
           Icon={CreditCard}

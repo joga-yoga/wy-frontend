@@ -173,7 +173,7 @@ export default function InstructorsRosterPage() {
           return (
             <Link
               key={item.id}
-              href={`/konto/partner/instruktorzy/${item.id}${
+              href={`/account/partner/instructors/${item.id}${
                 studio ? `?studioId=${studio.id}` : ""
               }`}
               className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50"
@@ -184,7 +184,7 @@ export default function InstructorsRosterPage() {
         })}
 
         <Link
-          href={`/konto/partner/instruktorzy/create?studioId=${studio.id}`}
+          href={`/account/partner/instructors/create?studioId=${studio.id}`}
           className="flex items-center justify-center gap-1.5 px-4 py-3.5 text-sm font-semibold text-b2b-green-text transition-colors hover:bg-gray-50"
         >
           <Plus size={16} />

@@ -58,8 +58,8 @@ export default function SchedulePage() {
     if (capabilities.managedStudios.length > 0) return;
     router.replace(
       capabilities.teachingStudios.length > 0
-        ? "/konto/partner/grafik/instructor"
-        : "/konto/partner/rezerwacje",
+        ? "/account/partner/schedule/instructor"
+        : "/account/partner/bookings",
     );
   }, [isLoadingCapabilities, capabilities, router]);
 
@@ -203,7 +203,7 @@ export default function SchedulePage() {
   function goToSession(occ: ScheduleOccurrence) {
     const targetStudioId = occ.studio_id ?? currentStudio?.id ?? studioId;
     if (!targetStudioId) return;
-    router.push(`/konto/partner/studio/${targetStudioId}/front-desk/${occ.id}`);
+    router.push(`/account/partner/studio/${targetStudioId}/front-desk/${occ.id}`);
   }
 
   return (
@@ -283,7 +283,7 @@ export default function SchedulePage() {
             <p className="text-xs text-gray-500">
               Dodaj pierwsze zajęcia, żeby zbudować cotygodniowy grafik.
             </p>
-            <Link href="/konto/partner/grafiki-zajec/create">
+            <Link href="/account/partner/class-schedules/create">
               <Button variant="outline" size="sm">
                 <Plus size={14} className="mr-1" />
                 Dodaj zajęcia
@@ -300,7 +300,7 @@ export default function SchedulePage() {
                 <p className="text-sm text-gray-500">
                   Brak zajęć w {formatDayHeader(selectedDay.date).split(",")[0]}
                 </p>
-                <Link href="/konto/partner/grafiki-zajec/create">
+                <Link href="/account/partner/class-schedules/create">
                   <Button variant="outline" size="sm">
                     <Plus size={14} className="mr-1" />
                     Dodaj zajęcia
@@ -326,7 +326,7 @@ export default function SchedulePage() {
        * on a short day (and collides with the fixed add button) reads as broken, not deprioritized. */}
       {reconciliation.sessionCount > 0 && (
         <Link
-          href="/konto/partner/rozliczenia"
+          href="/account/partner/reconciliation"
           className="fixed inset-x-4 bottom-[calc(var(--bottom-tab-h)+0.5rem)] z-30 mx-auto flex h-14 max-w-lg items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 text-sm font-medium text-b2b-amber-text shadow-md transition-opacity hover:opacity-90 md:bottom-6"
         >
           <span className="flex items-center gap-2">
@@ -346,7 +346,7 @@ export default function SchedulePage() {
        * wins) because at md: the tab bar becomes a sidebar and the offset is unnecessary.
        * Bumped higher still when the reconciliation strip is showing, so the two never cross. */}
       <Link
-        href="/konto/partner/grafiki-zajec/create"
+        href="/account/partner/class-schedules/create"
         aria-label="Dodaj zajęcia"
         className={cn(
           "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",

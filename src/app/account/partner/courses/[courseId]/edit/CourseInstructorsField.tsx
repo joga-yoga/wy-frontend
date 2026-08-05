@@ -99,7 +99,7 @@ export function CourseInstructorsField({ errors, setValue, watch }: CourseInstru
                   asChild
                 >
                   <Link
-                    href={`/konto/partner/instruktorzy/${instructor.id}/edit`}
+                    href={`/account/partner/instructors/${instructor.id}/edit`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

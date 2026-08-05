@@ -317,7 +317,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
       } else {
         response = await axiosInstance.post<StudioApiResponse>("/studios", payload);
         setStudioId(response.data.id);
-        router.replace(`/konto/partner/studio/${response.data.id}/edit`);
+        router.replace(`/account/partner/studio/${response.data.id}/edit`);
       }
       setCurrentIsPublic(response.data.status === "claimed");
       reset(getValues());

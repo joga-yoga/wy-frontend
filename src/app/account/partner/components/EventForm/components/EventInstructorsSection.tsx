@@ -119,7 +119,7 @@ export const EventInstructorsSection = ({
                                   asChild
                                 >
                                   <Link
-                                    href={`/konto/partner/instruktorzy/${instructor.id}/edit`}
+                                    href={`/account/partner/instructors/${instructor.id}/edit`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >

@@ -56,7 +56,7 @@ export default function ClientDetailPage() {
       .then(({ data }) => setClient(data))
       .catch(() => {
         toast({ description: "Nie udało się wczytać klienta.", variant: "destructive" });
-        router.push("/konto/partner/klienci");
+        router.push("/account/partner/clients");
       })
       .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,7 +100,7 @@ export default function ClientDetailPage() {
           // The card is the doorway to the full history (K3) — a client with one visible
           // pass usually has others behind it, and the card is where you look for them.
           <Link
-            href={`/konto/partner/klienci/${client.user_id}/karnety?studioId=${studio.id}`}
+            href={`/account/partner/clients/${client.user_id}/passes?studioId=${studio.id}`}
             className="block transition-opacity hover:opacity-90"
           >
             <PassCard pass={client.wallet} />
@@ -116,7 +116,7 @@ export default function ClientDetailPage() {
           a profile is navigation into a flow, not the flow's own commit. */}
       <Button size="action" variant="outline" className="w-full" asChild>
         <Link
-          href={`/konto/partner/studio/${studio.id}/front-desk/sell-pass?userId=${client.user_id}&email=${encodeURIComponent(client.email)}`}
+          href={`/account/partner/studio/${studio.id}/front-desk/sell-pass?userId=${client.user_id}&email=${encodeURIComponent(client.email)}`}
         >
           Sprzedaj karnet
         </Link>
@@ -136,7 +136,7 @@ export default function ClientDetailPage() {
             {/* K2 puts the count in the link. "Wszystkie wizyty (14)" tells you whether
                 opening it is worth it; "Pełna historia" does not. */}
             <Link
-              href={`/konto/partner/klienci/${client.user_id}/wizyty?studioId=${studio.id}`}
+              href={`/account/partner/clients/${client.user_id}/visits?studioId=${studio.id}`}
               className="flex items-center justify-center gap-1 px-4 py-3 text-sm font-semibold text-b2b-green-text transition-colors hover:bg-gray-50"
             >
               Wszystkie wizyty ({client.visit_count})

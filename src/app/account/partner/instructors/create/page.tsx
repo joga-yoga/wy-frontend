@@ -61,7 +61,7 @@ function StudioRosterAddFlow() {
     setStubEmail(prefillEmail ?? "");
     const params = new URLSearchParams(searchParams.toString());
     params.set("step", "new");
-    router.push(`/konto/partner/instruktorzy/create?${params.toString()}`, { scroll: false });
+    router.push(`/account/partner/instructors/create?${params.toString()}`, { scroll: false });
   };
 
   // Live lookup, debounced — read-only, never sends an invite (instructors-clients §3).
@@ -102,7 +102,7 @@ function StudioRosterAddFlow() {
             ? "Instruktor dodany do studia."
             : "Zaproszenie do studia wysłane.",
       });
-      router.push("/konto/partner/instruktorzy");
+      router.push("/account/partner/instructors");
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({ description: detail || "Nie udało się dodać instruktora.", variant: "destructive" });
@@ -126,7 +126,7 @@ function StudioRosterAddFlow() {
           ? "Instruktor dodany, zaproszenie wysłane."
           : "Instruktor dodany do studia.",
       });
-      router.push("/konto/partner/instruktorzy");
+      router.push("/account/partner/instructors");
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({ description: detail || "Nie udało się dodać instruktora.", variant: "destructive" });
@@ -398,7 +398,7 @@ function LegacyAddInstructorFlow() {
     try {
       const res = await axiosInstance.post<{ id: string }>("/instructors/self", {});
       toast({ description: "Twój profil instruktora gotowy!" });
-      router.push(`/konto/partner/instruktorzy/${res.data.id}/edit`);
+      router.push(`/account/partner/instructors/${res.data.id}/edit`);
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({ description: detail || "Nie udało się utworzyć profilu.", variant: "destructive" });
@@ -417,7 +417,7 @@ function LegacyAddInstructorFlow() {
       }>("/instructors/resolve", { email: data.email });
 
       if (res.data.created) {
-        router.push(`/konto/partner/instruktorzy/${res.data.instructor_id}/edit`);
+        router.push(`/account/partner/instructors/${res.data.instructor_id}/edit`);
       } else {
         setPreview({
           instructor_id: res.data.instructor_id,
@@ -524,7 +524,7 @@ function LegacyAddInstructorFlow() {
               <Button
                 size="action"
                 onClick={() =>
-                  router.push(`/konto/partner/instruktorzy/${preview.instructor_id}/edit`)
+                  router.push(`/account/partner/instructors/${preview.instructor_id}/edit`)
                 }
               >
                 Przejdź do profilu instruktora →

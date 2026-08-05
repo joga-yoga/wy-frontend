@@ -130,7 +130,7 @@ export default function StudioPaymentsPage() {
             : null,
       });
       toast({ description: "Zapisano ustawienia." });
-      router.push("/konto/partner/menu");
+      router.push("/account/partner/menu");
     } catch {
       toast({ description: "Nie udało się zapisać ustawień.", variant: "destructive" });
     } finally {

@@ -11,7 +11,7 @@ import { rememberPublicPath } from "@/lib/publicReturn";
  *
  * Mounted at the root rather than inside `(public)` on purpose: `/book/...` and
  * `/create/...` are public too and live outside that group. `rememberPublicPath` skips
- * anything under `/konto`, so the account app never records itself.
+ * anything under `/account`, so the account app never records itself.
  */
 export function PublicPathRecorder() {
   const pathname = usePathname();

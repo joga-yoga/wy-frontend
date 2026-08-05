@@ -53,7 +53,7 @@ function ResetPasswordForm() {
           description: "Token resetowania hasła jest nieprawidłowy lub wygasł.",
           variant: "destructive",
         });
-        router.push("/konto/logowanie");
+        router.push("/account/login");
       }
     } else {
       toast({
@@ -61,7 +61,7 @@ function ResetPasswordForm() {
         description: "Brak tokena resetowania hasła w adresie URL.",
         variant: "destructive",
       });
-      router.push("/konto/logowanie");
+      router.push("/account/login");
     }
   }, [token, router, toast]);
 
@@ -83,7 +83,7 @@ function ResetPasswordForm() {
         toast({
           description: "Hasło zostało zmienione pomyślnie. Logowanie...",
         });
-        router.push("/konto/partner");
+        router.push("/account/partner");
       }
     } catch (error: any) {
       toast({

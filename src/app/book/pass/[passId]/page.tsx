@@ -154,7 +154,7 @@ function BookPassContent() {
 
   useEffect(() => {
     if (authLoading || user) return;
-    router.replace(`/konto/logowanie?next=${encodeURIComponent(pathname)}`);
+    router.replace(`/account/login?next=${encodeURIComponent(pathname)}`);
   }, [authLoading, user, router, pathname]);
 
   // Next.js's client router cache can keep this page's component instance (and its React

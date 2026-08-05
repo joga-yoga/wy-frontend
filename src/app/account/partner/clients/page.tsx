@@ -131,7 +131,7 @@ export default function ClientsListPage() {
             return (
               <Link
                 key={client.user_id}
-                href={`/konto/partner/klienci/${client.user_id}?studioId=${studio.id}`}
+                href={`/account/partner/clients/${client.user_id}?studioId=${studio.id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
               >
                 <HashedAvatar

@@ -7,7 +7,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { cn } from "@/lib/utils";
 
-const INSTRUCTOR_PATH = "/konto/partner/grafik/instructor";
+const INSTRUCTOR_PATH = "/account/partner/schedule/instructor";
 
 /**
  * Grafik is a single-context workspace (spec-b2b §3) — chips appear only once there
@@ -38,7 +38,7 @@ export function GrafikContextChips() {
         return (
           <Link
             key={studio.id}
-            href={`/konto/partner/grafik?studio_id=${studio.id}`}
+            href={`/account/partner/schedule?studio_id=${studio.id}`}
             className={cn(
               "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
               isActive

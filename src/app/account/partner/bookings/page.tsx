@@ -217,13 +217,13 @@ export default function BookingsPage() {
             </div>
             {filter === "all" && (
               <div className="flex flex-col items-center gap-3 pt-1">
-                <Link href="/konto/partner/oferta" className="w-full">
+                <Link href="/account/partner/offer" className="w-full">
                   <Button size="action" variant="green" className="w-full rounded-full">
                     Dodaj pierwsze wydarzenie
                   </Button>
                 </Link>
                 <Link
-                  href="/konto/partner/instruktorzy/create"
+                  href="/account/partner/instructors/create"
                   className="text-sm font-semibold text-gray-900 hover:underline"
                 >
                   Utwórz profil instruktora
@@ -291,7 +291,7 @@ function InquiryRow({ item, showSourceLabel }: { item: InquiryItem; showSourceLa
   const typeLabel = item.event_type ? EVENT_TYPE_LABELS[item.event_type] : null;
   return (
     <Link
-      href={`/konto/partner/rezerwacje/${item.id}`}
+      href={`/account/partner/bookings/${item.id}`}
       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
     >
       <HashedAvatar seed={item.author?.id ?? item.id} name={displayName} size={40} />

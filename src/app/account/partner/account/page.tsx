@@ -47,7 +47,7 @@ export default function KontoPage() {
         </h2>
         <div className="rounded-b2b border bg-white divide-y overflow-hidden">
           <Link
-            href="/konto/partner/organizacja"
+            href="/account/partner/partner"
             className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors"
           >
             <div>
@@ -71,7 +71,7 @@ export default function KontoPage() {
       {/* Przełącz na profil B2C */}
       <section className="space-y-1.5">
         <Link
-          href="/konto"
+          href="/account"
           className="rounded-b2b border bg-white px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
         >
           <div>

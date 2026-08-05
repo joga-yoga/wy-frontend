@@ -70,7 +70,7 @@ export default function ClassTemplatesPage() {
             Szablon to definicja zajęć (np. &ldquo;Vinyasa Flow&rdquo;, 60 min). Tworzysz go raz,
             potem szybko dodajesz do grafiku.
           </p>
-          <Link href="/konto/partner/szablony-zajec/create">
+          <Link href="/account/partner/class-templates/create">
             <Button variant="outline" size="sm" className="mt-2">
               <Plus size={14} className="mr-1" />
               Utwórz pierwszy szablon
@@ -85,7 +85,7 @@ export default function ClassTemplatesPage() {
           {templates.map((t) => (
             <Link
               key={t.id}
-              href={`/konto/partner/szablony-zajec/${t.id}/edit`}
+              href={`/account/partner/class-templates/${t.id}/edit`}
               className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50"
             >
               <span
@@ -102,7 +102,7 @@ export default function ClassTemplatesPage() {
             </Link>
           ))}
           <Link
-            href="/konto/partner/szablony-zajec/create"
+            href="/account/partner/class-templates/create"
             className="flex items-center justify-center gap-1.5 px-4 py-3.5 text-sm font-semibold text-b2b-green-text transition-colors hover:bg-gray-50"
           >
             <Plus size={16} />

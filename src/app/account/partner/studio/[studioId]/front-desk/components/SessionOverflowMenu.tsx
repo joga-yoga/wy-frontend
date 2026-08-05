@@ -57,10 +57,10 @@ export function SessionOverflowMenu({
           </>
         )}
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/konto/partner/grafik/edit/${occurrenceId}`}>Edytuj sesję</Link>
+          <Link href={`/account/partner/schedule/edit/${occurrenceId}`}>Edytuj sesję</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/konto/partner/grafik/edit/${occurrenceId}?field=instructor`}>
+          <Link href={`/account/partner/schedule/edit/${occurrenceId}?field=instructor`}>
             Zmień prowadzącego
           </Link>
         </DropdownMenuItem>
@@ -68,7 +68,7 @@ export function SessionOverflowMenu({
           asChild
           className="cursor-pointer text-b2b-red-solid focus:bg-b2b-red-bg focus:text-b2b-red-solid"
         >
-          <Link href={`/konto/partner/grafik/cancel/${occurrenceId}`}>Odwołaj sesję</Link>
+          <Link href={`/account/partner/schedule/cancel/${occurrenceId}`}>Odwołaj sesję</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

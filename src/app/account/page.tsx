@@ -43,7 +43,7 @@ export default function AccountHubPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace(`/konto/logowanie?next=${encodeURIComponent("/konto")}`);
+      router.replace(`/account/login?next=${encodeURIComponent("/account")}`);
     }
   }, [loading, user, router]);
 
@@ -80,7 +80,7 @@ export default function AccountHubPage() {
   async function handleBecomePartner() {
     try {
       await axiosInstance.post("/partner/instant");
-      router.push("/konto/partner");
+      router.push("/account/partner");
     } catch {
       toast({ description: "Nie udało się utworzyć konta partnera.", variant: "destructive" });
     }
@@ -133,7 +133,7 @@ export default function AccountHubPage() {
         </div>
 
         <Link
-          href="/konto/rezerwacje"
+          href="/account/bookings"
           className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
         >
           {/* Rounded square, not a circle: F2 reserves circles for people. */}
@@ -223,7 +223,7 @@ export default function AccountHubPage() {
         >
           <div className="mx-auto max-w-md">
             <Button size="action" variant="green" className="w-full gap-2" asChild>
-              <Link href="/konto/partner">
+              <Link href="/account/partner">
                 <ArrowLeftRight size={16} />
                 Przełącz na konto partnera
               </Link>

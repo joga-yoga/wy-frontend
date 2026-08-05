@@ -159,7 +159,7 @@ export function InstructorFullProfileForm({
       })
       .catch(() => {
         toast({ title: "Nie udało się wczytać danych instruktora", variant: "destructive" });
-        router.push("/konto/partner");
+        router.push("/account/partner");
       })
       .finally(() => setIsLoading(false));
   }, [instructorId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -307,7 +307,7 @@ export function InstructorFullProfileForm({
     try {
       await axiosInstance.delete(`/instructors/${instructorId}`);
       toast({ title: "Instruktor usunięty" });
-      router.push("/konto/partner/oferta");
+      router.push("/account/partner/offer");
     } catch {
       toast({ title: "Nie udało się usunąć instruktora", variant: "destructive" });
     }

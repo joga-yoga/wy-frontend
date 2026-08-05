@@ -50,7 +50,7 @@ export default function InstructorSchedulePage() {
   useEffect(() => {
     if (isLoadingCapabilities || !capabilities) return;
     if (capabilities.teachingStudios.length === 0) {
-      router.replace("/konto/partner/grafik");
+      router.replace("/account/partner/schedule");
     }
   }, [isLoadingCapabilities, capabilities, router]);
 
@@ -142,7 +142,7 @@ export default function InstructorSchedulePage() {
   // there is no "current studio" concept to fall back to for a teaching-only partner.
   function goToSession(occ: ScheduleOccurrence) {
     if (!occ.studio_id) return;
-    router.push(`/konto/partner/studio/${occ.studio_id}/front-desk/${occ.id}`);
+    router.push(`/account/partner/studio/${occ.studio_id}/front-desk/${occ.id}`);
   }
 
   return (

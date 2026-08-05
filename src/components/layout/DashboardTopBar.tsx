@@ -15,7 +15,7 @@ import {
   usePageTitleOverride,
 } from "@/context/PageHeaderContext";
 
-const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
+const BECOME_PARTNER_PATH = "/account/partner/become-partner";
 
 /**
  * Screens the prototypes draw as modals (R3, R4, U3): an X rather than a back chevron.
@@ -26,86 +26,87 @@ const BECOME_PARTNER_PATH = "/konto/partner/zostan-partnerem";
  */
 function isModalScreen(pathname: string): boolean {
   return (
-    pathname === "/konto/partner/instruktorzy/create" ||
-    pathname === "/konto/partner/grafiki-zajec/create"
+    pathname === "/account/partner/instructors/create" ||
+    pathname === "/account/partner/class-schedules/create"
   );
 }
 
 const TAB_TITLES: Record<string, string> = {
-  "/konto/partner/grafik": "Grafik",
-  "/konto/partner/rezerwacje": "Rezerwacje",
-  "/konto/partner/oferta": "Oferta",
-  "/konto/partner/menu": "Menu",
-  "/konto/partner/konto": "Konto",
+  "/account/partner/schedule": "Grafik",
+  "/account/partner/bookings": "Rezerwacje",
+  "/account/partner/offer": "Oferta",
+  "/account/partner/menu": "Menu",
+  "/account/partner/account": "Konto",
 };
 
 function getPageTitle(pathname: string, searchParams: URLSearchParams): string | undefined {
   if (TAB_TITLES[pathname]) return TAB_TITLES[pathname];
-  if (/^\/konto\/partner\/rezerwacje\/[^/]+$/.test(pathname)) return "Wiadomość";
-  if (pathname === "/konto/partner/instruktorzy") return "Instruktorzy";
-  if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
+  if (/^\/account\/partner\/bookings\/[^/]+$/.test(pathname)) return "Wiadomość";
+  if (pathname === "/account/partner/instructors") return "Instruktorzy";
+  if (pathname.startsWith("/account/partner/instructors/") && pathname.endsWith("/edit"))
     return "Edytuj instruktora";
-  if (pathname === "/konto/partner/instruktorzy/create")
+  if (pathname === "/account/partner/instructors/create")
     return searchParams.get("step") === "new" ? "Nowy instruktor" : "Dodaj instruktora";
-  if (pathname === "/konto/partner/klienci") return "Klienci";
-  // Ordering trap, same shape that bit the roster/sell-pass pair: the /karnety and
-  // /wizyty leaves both also match the bare `klienci/<id>` pattern below, so they are
+  if (pathname === "/account/partner/clients") return "Klienci";
+  // Ordering trap, same shape that bit the roster/sell-pass pair: the /passes and
+  // /visits leaves both also match the bare `klienci/<id>` pattern below, so they are
   // tested first.
-  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/karnety"))
+  if (pathname.startsWith("/account/partner/clients/") && pathname.endsWith("/passes"))
     return "Karnety klienta";
-  if (pathname === "/konto/partner/rozliczenia") return "Do rozliczenia";
+  if (pathname === "/account/partner/reconciliation") return "Do rozliczenia";
   // sell-pass must be tested before the roster pattern — it also matches `/front-desk/<seg>`.
-  if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/sell-pass$/.test(pathname))
+  if (/^\/account\/partner\/studio\/[^/]+\/front-desk\/sell-pass$/.test(pathname))
     return "Sprzedaj karnet";
   // The session screen (spec §3) titles itself by class name via `useSetPageTitle` once its
   // own data loads — no static fallback here, same pattern as the instructor detail screen.
-  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty"))
+  if (pathname.startsWith("/account/partner/clients/") && pathname.endsWith("/visits"))
     return "Historia wizyt";
-  if (/^\/konto\/partner\/klienci\/[^/]+$/.test(pathname)) return "Klient";
-  if (pathname === "/konto/partner/wyjazdy/create") return "Nowy wyjazd";
-  if (pathname === "/konto/partner/wydarzenia/create") return "Nowe wydarzenie";
-  if (pathname === "/konto/partner/kursy/create") return "Nowy kurs";
-  if (pathname.startsWith("/konto/partner/kursy/") && pathname.endsWith("/edit"))
+  if (/^\/account\/partner\/clients\/[^/]+$/.test(pathname)) return "Klient";
+  if (pathname === "/account/partner/retreats/create") return "Nowy wyjazd";
+  if (pathname === "/account/partner/workshops/create") return "Nowe wydarzenie";
+  if (pathname === "/account/partner/courses/create") return "Nowy kurs";
+  if (pathname.startsWith("/account/partner/courses/") && pathname.endsWith("/edit"))
     return "Edytuj kurs";
-  if (pathname === "/konto/partner/studio/create") return "Nowe studio";
-  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/edit"))
+  if (pathname === "/account/partner/studio/create") return "Nowe studio";
+  if (pathname.startsWith("/account/partner/studio/") && pathname.endsWith("/edit"))
     return "Edytuj studio";
-  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/payments"))
+  if (pathname.startsWith("/account/partner/studio/") && pathname.endsWith("/payments"))
     return "Płatności i odwołania";
-  if (pathname.startsWith("/konto/partner/menu/studio/")) return "Studio";
-  if (pathname === "/konto/partner/szablony-zajec") return "Szablony zajęć";
-  if (pathname === "/konto/partner/szablony-zajec/create") return "Nowy szablon";
-  if (pathname.startsWith("/konto/partner/szablony-zajec/") && pathname.endsWith("/edit"))
+  if (pathname.startsWith("/account/partner/menu/studio/")) return "Studio";
+  if (pathname === "/account/partner/class-templates") return "Szablony zajęć";
+  if (pathname === "/account/partner/class-templates/create") return "Nowy szablon";
+  if (pathname.startsWith("/account/partner/class-templates/") && pathname.endsWith("/edit"))
     return "Edytuj szablon";
-  if (pathname === "/konto/partner/grafiki-zajec/create") return "Dodaj zajęcia";
-  if (pathname === "/konto/partner/grafik/instructor") return "Mój grafik";
-  if (pathname.startsWith("/konto/partner/grafik/edit/")) {
+  if (pathname === "/account/partner/class-schedules/create") return "Dodaj zajęcia";
+  if (pathname === "/account/partner/schedule/instructor") return "Mój grafik";
+  if (pathname.startsWith("/account/partner/schedule/edit/")) {
     // Zastępstwo enters the same edit pipeline through a different door (S8), and its
     // header names that door rather than the pipeline.
     return searchParams.get("field") === "instructor" ? "Zmień prowadzącego" : "Edytuj sesję";
   }
-  if (pathname.startsWith("/konto/partner/grafik/cancel/")) return "Odwołaj sesję";
+  if (pathname.startsWith("/account/partner/schedule/cancel/")) return "Odwołaj sesję";
   return undefined;
 }
 
 function getBackHref(pathname: string, searchParams: URLSearchParams): string | undefined {
-  if (pathname === "/konto/partner/grafik/instructor") return "/konto/partner/grafik";
-  if (pathname.startsWith("/konto/partner/grafik/edit/")) return "/konto/partner/grafik";
-  if (pathname.startsWith("/konto/partner/grafik/cancel/")) return "/konto/partner/grafik";
-  if (pathname === "/konto/partner/grafiki-zajec/create") return "/konto/partner/grafik";
-  if (pathname === "/konto/partner/konto") return "/konto/partner/menu";
-  if (pathname === "/konto/partner/szablony-zajec") return "/konto/partner/oferta";
-  if (pathname === "/konto/partner/szablony-zajec/create") return "/konto/partner/szablony-zajec";
-  if (pathname.startsWith("/konto/partner/szablony-zajec/") && pathname.endsWith("/edit"))
-    return "/konto/partner/szablony-zajec";
-  if (pathname === "/konto/partner/studio/create") return "/konto/partner/menu";
-  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/edit"))
-    return "/konto/partner/menu";
-  if (pathname.startsWith("/konto/partner/studio/") && pathname.endsWith("/payments"))
-    return "/konto/partner/menu";
-  if (pathname.startsWith("/konto/partner/menu/studio/")) return "/konto/partner/menu";
-  if (pathname === "/konto/partner/instruktorzy") return "/konto/partner/menu";
-  if (pathname === "/konto/partner/instruktorzy/create") {
+  if (pathname === "/account/partner/schedule/instructor") return "/account/partner/schedule";
+  if (pathname.startsWith("/account/partner/schedule/edit/")) return "/account/partner/schedule";
+  if (pathname.startsWith("/account/partner/schedule/cancel/")) return "/account/partner/schedule";
+  if (pathname === "/account/partner/class-schedules/create") return "/account/partner/schedule";
+  if (pathname === "/account/partner/account") return "/account/partner/menu";
+  if (pathname === "/account/partner/class-templates") return "/account/partner/offer";
+  if (pathname === "/account/partner/class-templates/create")
+    return "/account/partner/class-templates";
+  if (pathname.startsWith("/account/partner/class-templates/") && pathname.endsWith("/edit"))
+    return "/account/partner/class-templates";
+  if (pathname === "/account/partner/studio/create") return "/account/partner/menu";
+  if (pathname.startsWith("/account/partner/studio/") && pathname.endsWith("/edit"))
+    return "/account/partner/menu";
+  if (pathname.startsWith("/account/partner/studio/") && pathname.endsWith("/payments"))
+    return "/account/partner/menu";
+  if (pathname.startsWith("/account/partner/menu/studio/")) return "/account/partner/menu";
+  if (pathname === "/account/partner/instructors") return "/account/partner/menu";
+  if (pathname === "/account/partner/instructors/create") {
     // Studio-scoped roster screens carry `studioId` through every step — never let a
     // 2+-studio partner's back-navigation silently drop which studio they were in.
     const studioQuery = searchParams.get("studioId")
@@ -113,47 +114,47 @@ function getBackHref(pathname: string, searchParams: URLSearchParams): string | 
       : "";
     // Stub step (R4) backs up into the email step (R3), not all the way out.
     return searchParams.get("step") === "new"
-      ? `/konto/partner/instruktorzy/create${studioQuery}`
-      : `/konto/partner/instruktorzy${studioQuery}`;
+      ? `/account/partner/instructors/create${studioQuery}`
+      : `/account/partner/instructors${studioQuery}`;
   }
-  if (pathname.startsWith("/konto/partner/instruktorzy/") && pathname.endsWith("/edit"))
-    return "/konto/partner/instruktorzy";
-  if (/^\/konto\/partner\/instruktorzy\/[^/]+$/.test(pathname)) {
+  if (pathname.startsWith("/account/partner/instructors/") && pathname.endsWith("/edit"))
+    return "/account/partner/instructors";
+  if (/^\/account\/partner\/instructors\/[^/]+$/.test(pathname)) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`
       : "";
-    return `/konto/partner/instruktorzy${studioQuery}`;
+    return `/account/partner/instructors${studioQuery}`;
   }
-  if (pathname === "/konto/partner/klienci") return "/konto/partner/menu";
-  if (pathname === "/konto/partner/rozliczenia") return "/konto/partner/grafik";
+  if (pathname === "/account/partner/clients") return "/account/partner/menu";
+  if (pathname === "/account/partner/reconciliation") return "/account/partner/schedule";
   // Same ordering trap as the titles: sell-pass matches the roster pattern too, and it is
   // reached *from* a roster, so it must go back there rather than out to Grafik.
-  const sellPass = pathname.match(/^(\/konto\/partner\/studio\/[^/]+\/front-desk)\/sell-pass$/);
+  const sellPass = pathname.match(/^(\/account\/partner\/studio\/[^/]+\/front-desk)\/sell-pass$/);
   if (sellPass) {
     const occurrenceId = searchParams.get("occurrenceId");
-    return occurrenceId ? `${sellPass[1]}/${occurrenceId}` : "/konto/partner/grafik";
+    return occurrenceId ? `${sellPass[1]}/${occurrenceId}` : "/account/partner/schedule";
   }
-  if (/^\/konto\/partner\/studio\/[^/]+\/front-desk\/[^/]+$/.test(pathname))
-    return "/konto/partner/grafik";
-  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/karnety")) {
+  if (/^\/account\/partner\/studio\/[^/]+\/front-desk\/[^/]+$/.test(pathname))
+    return "/account/partner/schedule";
+  if (pathname.startsWith("/account/partner/clients/") && pathname.endsWith("/passes")) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`
       : "";
-    return `${pathname.replace(/\/karnety$/, "")}${studioQuery}`;
+    return `${pathname.replace(/\/passes$/, "")}${studioQuery}`;
   }
-  if (pathname.startsWith("/konto/partner/klienci/") && pathname.endsWith("/wizyty")) {
+  if (pathname.startsWith("/account/partner/clients/") && pathname.endsWith("/visits")) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`
       : "";
-    return `${pathname.replace(/\/wizyty$/, "")}${studioQuery}`;
+    return `${pathname.replace(/\/visits$/, "")}${studioQuery}`;
   }
-  if (/^\/konto\/partner\/klienci\/[^/]+$/.test(pathname)) {
+  if (/^\/account\/partner\/clients\/[^/]+$/.test(pathname)) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`
       : "";
-    return `/konto/partner/klienci${studioQuery}`;
+    return `/account/partner/clients${studioQuery}`;
   }
-  if (/^\/konto\/partner\/rezerwacje\/[^/]+$/.test(pathname)) return "/konto/partner/rezerwacje";
+  if (/^\/account\/partner\/bookings\/[^/]+$/.test(pathname)) return "/account/partner/bookings";
   return undefined;
 }
 

@@ -133,7 +133,7 @@ export default function MenuPage() {
             {managedStudios.map((studio) => (
               <MenuRow
                 key={studio.id}
-                href={`/konto/partner/menu/studio/${studio.id}`}
+                href={`/account/partner/menu/studio/${studio.id}`}
                 title={studio.name}
                 subtitle="Profil, klienci, szablony"
                 leading={<StudioLogoTile name={studio.name} imageId={studio.image_id} />}
@@ -147,7 +147,7 @@ export default function MenuPage() {
         <section className="space-y-2">
           <SectionLabel>Studio</SectionLabel>
           <Link
-            href="/konto/partner/studio/create"
+            href="/account/partner/studio/create"
             className="flex items-center justify-center rounded-b2b border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
           >
             <div>
@@ -162,7 +162,7 @@ export default function MenuPage() {
         <section className="space-y-2">
           <SectionLabel>Studio</SectionLabel>
           <Link
-            href="/konto/partner/studio/create"
+            href="/account/partner/studio/create"
             className="flex items-center justify-center rounded-b2b border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
           >
             <div>
@@ -177,13 +177,13 @@ export default function MenuPage() {
         <SectionLabel>Konto</SectionLabel>
         <div className="rounded-b2b border bg-white overflow-hidden divide-y">
           <MenuRow
-            href="/konto/partner/organizacja"
+            href="/account/partner/partner"
             title="Profil organizatora"
             subtitle="Publiczny profil, jako kogo organizujesz"
             Icon={Store}
           />
           <MenuRow
-            href="/konto/partner/konto"
+            href="/account/partner/account"
             title="Dane konta"
             subtitle="Imię, e-mail, hasło"
             Icon={UserRound}
@@ -198,7 +198,7 @@ export default function MenuPage() {
           Stays a bordered card rather than a solid button: B2B already has a tab bar, so
           the switch is calm here, while B2C (which has none) gets the pinned button. */}
       <Link
-        href="/konto"
+        href="/account"
         className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 hover:bg-gray-50 transition-colors"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-b2b-green-bg text-b2b-green-text">

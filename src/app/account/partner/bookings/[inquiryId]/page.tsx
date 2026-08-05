@@ -49,7 +49,7 @@ export default function InquiryDetailPage() {
       .then(({ data }) => setInquiry(data))
       .catch(() => {
         toast({ description: "Nie udało się wczytać wiadomości.", variant: "destructive" });
-        router.push("/konto/partner/rezerwacje");
+        router.push("/account/partner/bookings");
       })
       .finally(() => setIsLoading(false));
     axiosInstance

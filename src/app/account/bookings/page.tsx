@@ -140,7 +140,7 @@ export default function MyBookingsPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace(`/konto/logowanie?next=${encodeURIComponent("/konto/rezerwacje")}`);
+      router.replace(`/account/login?next=${encodeURIComponent("/account/bookings")}`);
     }
   }, [loading, user, router]);
 

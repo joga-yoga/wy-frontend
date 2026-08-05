@@ -42,7 +42,7 @@ interface ProfileHeaderProps {
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true }) => {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
-  const logoHref = pathname === "/konto/partner" ? "/" : "/konto/partner";
+  const logoHref = pathname === "/account/partner" ? "/" : "/account/partner";
 
   return (
     <header
@@ -58,7 +58,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
 
         <div className="flex items-center gap-4">
           {user && (
-            <LinkWithBlocker href="/konto/partner/organizacja">
+            <LinkWithBlocker href="/account/partner/partner">
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>
@@ -100,10 +100,10 @@ export const PublicHeader = () => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   // Public pages lead into B2C (spec-b2b §2/§7) — the mode is derivable from the
-  // route, and the pinned switch inside /konto is how a partner reaches B2B from
+  // route, and the pinned switch inside /account is how a partner reaches B2B from
   // here, not this icon directly.
   const accountHref =
-    mounted && user ? "/konto" : `/konto/logowanie?next=${encodeURIComponent(pathname)}`;
+    mounted && user ? "/account" : `/account/login?next=${encodeURIComponent(pathname)}`;
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);

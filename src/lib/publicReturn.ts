@@ -1,7 +1,7 @@
 /**
  * The last public page the user was on, so closing the B2C profile puts them back there.
  *
- * The rule (user's words): *"Clicking on 'X' in header on /konto page must ALWAYS return
+ * The rule (user's words): *"Clicking on 'X' in header on /account page must ALWAYS return
  * user to public side of our app. If there is no any persisted state — we must fallback to
  * root page joga.yoga/, if user come to profile from specific public page … we must return
  * user to this page"*.
@@ -19,11 +19,11 @@
 const PUBLIC_RETURN_KEY = "wy_public_return";
 
 /**
- * Everything under `/konto` is the account app — profile, partner panel, auth. Recording
+ * Everything under `/account` is the account app — profile, partner panel, auth. Recording
  * any of it would make the close button a no-op that returns to itself.
  */
 export function isPublicPath(pathname: string): boolean {
-  return !pathname.startsWith("/konto");
+  return !pathname.startsWith("/account");
 }
 
 export function rememberPublicPath(pathname: string, search = ""): void {

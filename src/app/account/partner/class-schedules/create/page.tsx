@@ -522,7 +522,7 @@ export default function CreateScheduleWizard() {
             <Button
               size="action"
               className="w-full"
-              onClick={() => router.push("/konto/partner/grafik")}
+              onClick={() => router.push("/account/partner/schedule")}
             >
               Zobacz grafik
             </Button>

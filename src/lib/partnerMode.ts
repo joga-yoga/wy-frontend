@@ -1,5 +1,5 @@
 /**
- * B2C/B2B mode is always derived from the route (`/konto/partner` prefix = B2B) —
+ * B2C/B2B mode is always derived from the route (`/account/partner` prefix = B2B) —
  * there is no hidden mode state (spec-b2b §2). This is only "last used mode per
  * device" memory for the one place that needs a default with no route context yet:
  * where a freshly-authenticated user with no explicit `next` target lands. Every

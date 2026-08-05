@@ -30,7 +30,7 @@ export default function EditTemplatePage() {
           description: "Nie udało się załadować szablonu.",
           variant: "destructive",
         });
-        router.push("/konto/partner/szablony-zajec");
+        router.push("/account/partner/class-templates");
       })
       .finally(() => setIsLoading(false));
   }, [params.templateId, router, toast]);
@@ -40,7 +40,7 @@ export default function EditTemplatePage() {
     try {
       await axiosInstance.patch(`/class-templates/${params.templateId}`, data);
       toast({ description: "Szablon zaktualizowany." });
-      router.push("/konto/partner/szablony-zajec");
+      router.push("/account/partner/class-templates");
     } catch {
       toast({
         description: "Nie udało się zapisać zmian.",
@@ -56,7 +56,7 @@ export default function EditTemplatePage() {
     try {
       await axiosInstance.delete(`/class-templates/${params.templateId}`);
       toast({ description: "Szablon usunięty." });
-      router.push("/konto/partner/szablony-zajec");
+      router.push("/account/partner/class-templates");
     } catch {
       toast({
         description: "Nie udało się usunąć szablonu.",
@@ -84,7 +84,7 @@ export default function EditTemplatePage() {
         onSubmit={handleSubmit}
         submitLabel="Zapisz zmiany"
         isSubmitting={isSubmitting}
-        onCancel={() => router.push("/konto/partner/szablony-zajec")}
+        onCancel={() => router.push("/account/partner/class-templates")}
         pinFooter
       />
 
@@ -93,7 +93,7 @@ export default function EditTemplatePage() {
           then asked you to pick the template you were already looking at. */}
       <div className="mt-6 border-t pt-4">
         <Button size="action" variant="outline" className="w-full" asChild>
-          <Link href={`/konto/partner/grafiki-zajec/create?templateId=${params.templateId}`}>
+          <Link href={`/account/partner/class-schedules/create?templateId=${params.templateId}`}>
             <CalendarPlus size={15} className="mr-1.5" />
             Dodaj do grafiku
           </Link>

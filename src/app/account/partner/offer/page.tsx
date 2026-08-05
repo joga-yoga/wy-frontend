@@ -78,9 +78,9 @@ const getEventStatus = (event: BaseEvent) => {
 };
 
 function editLink(item: DashboardItem) {
-  if (item.kind === "workshop") return `/konto/partner/wydarzenia/${item.id}/edit`;
-  if (item.kind === "course") return `/konto/partner/kursy/${item.id}/edit`;
-  return `/konto/partner/wyjazdy/${item.id}/edit`;
+  if (item.kind === "workshop") return `/account/partner/workshops/${item.id}/edit`;
+  if (item.kind === "course") return `/account/partner/courses/${item.id}/edit`;
+  return `/account/partner/retreats/${item.id}/edit`;
 }
 
 function publicLink(item: DashboardItem): string | null {
@@ -278,10 +278,10 @@ export default function OfferPage() {
       sessionStorage.setItem("duplicateEventData", JSON.stringify(payload));
       const createPath =
         event.kind === "workshop"
-          ? "/konto/partner/wydarzenia/create?duplicate=true"
+          ? "/account/partner/workshops/create?duplicate=true"
           : event.kind === "course"
-            ? "/konto/partner/kursy/create?duplicate=true"
-            : "/konto/partner/wyjazdy/create?duplicate=true";
+            ? "/account/partner/courses/create?duplicate=true"
+            : "/account/partner/retreats/create?duplicate=true";
       router.push(createPath);
       toast({ description: "Duplikowanie..." });
     } catch (error: any) {
@@ -346,7 +346,7 @@ export default function OfferPage() {
               ))}
             </div>
             <Link
-              href="/konto/partner/instruktorzy/create"
+              href="/account/partner/instructors/create"
               onClick={() => setIsCreateMenuOpen(false)}
               className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
             >
@@ -388,21 +388,21 @@ export default function OfferPage() {
 
 const OFFER_TYPE_ROWS = [
   {
-    href: "/konto/partner/wyjazdy/create",
+    href: "/account/partner/retreats/create",
     title: "Wyjazd",
     description: "Kilkudniowy retreat z zakwaterowaniem",
     Icon: Mountain,
     badgeClassName: "bg-b2b-green-bg text-b2b-green-text",
   },
   {
-    href: "/konto/partner/wydarzenia/create",
+    href: "/account/partner/workshops/create",
     title: "Wydarzenie",
     description: "Spotkanie, jednorazowa praktyka",
     Icon: Sparkles,
     badgeClassName: "bg-b2b-amber-bg text-b2b-amber-text",
   },
   {
-    href: "/konto/partner/kursy/create",
+    href: "/account/partner/courses/create",
     title: "Kurs",
     description: "Cykl spotkań z zapisami na całość",
     Icon: GraduationCap,

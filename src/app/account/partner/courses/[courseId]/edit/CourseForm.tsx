@@ -264,7 +264,7 @@ export function CourseForm({ routeId }: CourseFormProps) {
       } else {
         response = await axiosInstance.post<CourseApiResponse>("/courses", payload);
         setCourseId(response.data.id);
-        router.replace(`/konto/partner/kursy/${response.data.id}/edit`);
+        router.replace(`/account/partner/courses/${response.data.id}/edit`);
       }
       setCurrentIsPublic(Boolean(response.data.is_public));
       reset({ ...getValues(), is_public: isPublic });
