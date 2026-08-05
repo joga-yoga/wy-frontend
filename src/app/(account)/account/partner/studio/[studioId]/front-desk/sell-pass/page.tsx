@@ -152,9 +152,9 @@ export default function SellPassPage() {
             />
           </div>
           {isSearching && <p className="text-xs text-gray-400">Szukam...</p>}
-          {results && (results.studio_clients.length > 0 || results.other_accounts.length > 0) && (
+          {results && results.studio_clients.length > 0 && (
             <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-              {[...results.studio_clients, ...results.other_accounts].map((c) => (
+              {results.studio_clients.map((c) => (
                 <button
                   key={c.user_id}
                   onClick={() => setCandidate(c)}

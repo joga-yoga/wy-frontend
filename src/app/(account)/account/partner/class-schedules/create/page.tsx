@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
 import type { ClassTemplate, ClassTemplateCreate } from "../../class-templates/types";
-import { ScheduleRecurrenceForm } from "../components/ScheduleRecurrenceForm";
+import type { PickableInstructor } from "../../schedule/components/InstructorPicker";
+import { type EndDateMode, ScheduleRecurrenceForm } from "../components/ScheduleRecurrenceForm";
 import type {
   PreviewOccurrence,
   RoomOption,
@@ -21,6 +22,17 @@ import type {
   SchedulePreviewResponse,
   StudioOption,
 } from "../types";
+
+/** "1 Month" as a calendar-month rollover, clamped at month end (e.g. Jan 31 → Feb 28/29)
+ * rather than JS's native date-overflow behavior (which would roll Jan 31 + 1 month into
+ * March). */
+function addCalendarMonthClamped(d: Date): Date {
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const targetMonth = month + 1;
+  const daysInTargetMonth = new Date(year, targetMonth + 1, 0).getDate();
+  return new Date(year, targetMonth, Math.min(d.getDate(), daysInTargetMonth));
+}
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -69,11 +81,12 @@ export default function CreateScheduleWizard() {
   const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
-  const [instructors, setInstructors] = useState<{ id: string; name: string }[]>([]);
+  const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
   const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
   const [selectedDays, setSelectedDays] = useState<string[]>(["MO"]);
-  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [fromDate, setFromDate] = useState<Date | undefined>(() => new Date());
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [endDateMode, setEndDateMode] = useState<EndDateMode>("custom");
   const [startTime, setStartTime] = useState("09:00");
 
   // Step 3
@@ -97,10 +110,6 @@ export default function CreateScheduleWizard() {
         if (r.data?.length === 1) setStudioId(r.data[0].id);
       })
       .catch(() => {});
-    axiosInstance
-      .get<{ id: string; name: string }[]>("/instructors")
-      .then((r) => setInstructors(r.data ?? []))
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -112,6 +121,28 @@ export default function CreateScheduleWizard() {
       .get<RoomOption[]>(`/studios/${studioId}/rooms`)
       .then((r) => setRooms(r.data ?? []))
       .catch(() => setRooms([]));
+  }, [studioId]);
+
+  // Roster (not the flat `/instructors` list) — carries `image_id`/`row_state` for
+  // the avatar picker, and matches the edit flow's Zastępstwo picker data source.
+  useEffect(() => {
+    if (!studioId) {
+      setInstructors([]);
+      return;
+    }
+    axiosInstance
+      .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
+      .then((r) =>
+        setInstructors(
+          r.data.items.map(({ id, name, image_id, row_state }) => ({
+            id,
+            name,
+            image_id,
+            row_state,
+          })),
+        ),
+      )
+      .catch(() => setInstructors([]));
   }, [studioId]);
 
   useEffect(() => {
@@ -173,8 +204,18 @@ export default function CreateScheduleWizard() {
 
   const buildPayload = useCallback((): ScheduleCreatePayload | null => {
     if (!selectedTemplate || !studioId || !fromDate) return null;
-    const effectiveToDate = frequency === "once" ? fromDate : toDate;
-    if (!effectiveToDate) return null;
+
+    let effectiveToDate: Date | undefined;
+    if (frequency === "once") {
+      effectiveToDate = fromDate;
+    } else if (endDateMode === "endless") {
+      effectiveToDate = undefined;
+    } else if (endDateMode === "1month") {
+      effectiveToDate = addCalendarMonthClamped(fromDate);
+    } else {
+      if (!toDate) return null;
+      effectiveToDate = toDate;
+    }
 
     return {
       template_id: selectedTemplate.id,
@@ -185,7 +226,7 @@ export default function CreateScheduleWizard() {
       frequency,
       days: frequency === "weekly" ? selectedDays : undefined,
       from_date: formatDate(fromDate),
-      to_date: formatDate(effectiveToDate),
+      to_date: effectiveToDate ? formatDate(effectiveToDate) : undefined,
       start_time: startTime + ":00",
     };
   }, [
@@ -197,6 +238,7 @@ export default function CreateScheduleWizard() {
     frequency,
     selectedDays,
     fromDate,
+    endDateMode,
     toDate,
     startTime,
   ]);
@@ -238,7 +280,9 @@ export default function CreateScheduleWizard() {
   const stepNumber = step === "select" ? 1 : step === "recurrence" ? 2 : step === "preview" ? 3 : 3;
 
   const canAdvanceStep2 =
-    studioId && fromDate && (frequency === "once" || (toDate && selectedDays.length > 0));
+    studioId &&
+    fromDate &&
+    (frequency === "once" || (selectedDays.length > 0 && (endDateMode !== "custom" || toDate)));
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
@@ -391,6 +435,8 @@ export default function CreateScheduleWizard() {
             onFromDateChange={setFromDate}
             toDate={toDate}
             onToDateChange={setToDate}
+            endDateMode={endDateMode}
+            onEndDateModeChange={setEndDateMode}
             startTime={startTime}
             onStartTimeChange={setStartTime}
           />
@@ -488,8 +534,9 @@ export default function CreateScheduleWizard() {
                 setStep("select");
                 setSelectedTemplate(null);
                 setShowInlineCreate(false);
-                setFromDate(undefined);
+                setFromDate(new Date());
                 setToDate(undefined);
+                setEndDateMode("custom");
                 setPreviewOccs([]);
               }}
             >

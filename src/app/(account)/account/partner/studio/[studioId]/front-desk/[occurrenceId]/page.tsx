@@ -1,7 +1,6 @@
 "use client";
 
-import { ChevronDown, Search, X } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeft, ChevronDown, Search, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -13,7 +12,13 @@ import type {
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import {
   useSetPageHeaderAction,
@@ -33,6 +38,30 @@ import { RosterRow, RosterRowUndoStrip } from "../components/RosterRow";
 import { SessionOverflowMenu } from "../components/SessionOverflowMenu";
 import { isPendingEntry } from "../rosterGrouping";
 import type { FundingType, RosterEntry, WalkInCandidate, WalkInSearchResponse } from "../types";
+
+// Field doubles as a search query up to this point (any text is fine — no validation
+// needed) and only becomes an email the instant "+ Nowy użytkownik" is clicked. A bare
+// `.includes("@")` check let malformed addresses (e.g. "a@b") through to the create
+// call, which crashed the toast on the backend's structured validation-error response
+// (see `createNewUser`'s catch block) instead of showing a helpful message here first.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function isValidEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(value.trim());
+}
+
+/** FastAPI's `detail` is usually a string, but a Pydantic validation failure (422) sends
+ * a *list* of `{loc,msg,type}` objects instead — `toast({ description })` renders that
+ * value directly as a React child, and an array-of-objects there crashes with "Objects
+ * are not valid as a React child". Always resolve to a display string first. */
+function extractErrorMessage(err: unknown, fallback: string): string {
+  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0] as { msg?: unknown };
+    if (typeof first?.msg === "string") return first.msg;
+  }
+  return fallback;
+}
 
 /** "dziś" / "wczoraj" / "12 lipca" — the desk cares which day relative to now. */
 function relativeDay(dateStr: string): string {
@@ -245,8 +274,10 @@ export default function FrontDeskRosterPage() {
     } catch (err: unknown) {
       // No optimistic mutation happened above, so there's nothing to roll back — just surface
       // the error. The desk must never believe money was collected when it wasn't.
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      toast({ description: detail || "Nie udało się potwierdzić.", variant: "destructive" });
+      toast({
+        description: extractErrorMessage(err, "Nie udało się potwierdzić."),
+        variant: "destructive",
+      });
     } finally {
       setBusyBookingId(null);
     }
@@ -291,7 +322,7 @@ export default function FrontDeskRosterPage() {
   }
 
   async function createNewUser() {
-    if (!query.includes("@")) return;
+    if (!isValidEmail(query)) return;
     try {
       const { data } = await axiosInstance.post<{
         user_id: string;
@@ -305,8 +336,10 @@ export default function FrontDeskRosterPage() {
         pass_context: null,
       });
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      toast({ description: detail || "Nie udało się utworzyć konta.", variant: "destructive" });
+      toast({
+        description: extractErrorMessage(err, "Nie udało się utworzyć konta."),
+        variant: "destructive",
+      });
     }
   }
 
@@ -333,8 +366,10 @@ export default function FrontDeskRosterPage() {
       fetchRoster();
       resetAddFlow();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      toast({ description: detail || "Nie udało się dodać uczestnika.", variant: "destructive" });
+      toast({
+        description: extractErrorMessage(err, "Nie udało się dodać uczestnika."),
+        variant: "destructive",
+      });
     } finally {
       setIsSubmittingWalkIn(false);
     }
@@ -645,16 +680,15 @@ export default function FrontDeskRosterPage() {
         </div>
       )}
 
-      {/* Pinned footer (reception-desk §2) — fade gradient, list scrolls under. */}
+      {/* Pinned footer (reception-desk §2) — fade gradient, list scrolls under. Only
+       * "Dodaj uczestnika" — selling a pass without booking anyone into this session is
+       * still reachable from the Klienci screen's "Sprzedaj karnet" entry point, but it's
+       * redundant here: the add-participant flow already offers "Kup karnet i dodaj
+       * rezerwację" as one of its payment choices. */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8">
-        <div className="mx-auto flex max-w-lg gap-2 px-4">
-          <Button size="action" className="flex-1" onClick={() => setIsAddOpen(true)}>
+        <div className="mx-auto max-w-lg px-4">
+          <Button size="action" className="w-full" onClick={() => setIsAddOpen(true)}>
             Dodaj uczestnika
-          </Button>
-          <Button size="action" variant="outline" className="flex-1" asChild>
-            <Link href={`/konto/partner/studio/${studioId}/front-desk/sell-pass`}>
-              Sprzedaj karnet
-            </Link>
           </Button>
         </div>
       </div>
@@ -670,14 +704,17 @@ export default function FrontDeskRosterPage() {
       />
 
       <Drawer open={isAddOpen} onOpenChange={(open) => !open && resetAddFlow()} showSwipeHandle>
-        <DrawerContent className="sm:mx-auto sm:max-w-md">
+        {/* Fixed to the full available height (rather than the default `auto`, which
+         * animated its height on every async result-set change and produced the
+         * grow/scroll-glitch bug) — the results list scrolls inside a stable-size panel. */}
+        <DrawerContent className="sm:mx-auto sm:max-w-md [--drawer-height:calc(100dvh-2rem)]">
           <DrawerHeader className="flex-row items-center justify-between">
             <DrawerTitle>Dodaj uczestnika</DrawerTitle>
             <button onClick={resetAddFlow} aria-label="Zamknij" className="p-1">
               <X size={18} />
             </button>
           </DrawerHeader>
-          <div className="space-y-4 px-4 pb-6">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
             {!selectedCandidate ? (
               <>
                 <div className="relative">
@@ -730,59 +767,27 @@ export default function FrontDeskRosterPage() {
                   </div>
                 )}
 
-                {searchResults && searchResults.other_accounts.length > 0 && (
-                  <div className="space-y-1.5">
-                    <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                      Inne konta joga.yoga
-                    </p>
-                    <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-                      {searchResults.other_accounts.map((c) => (
-                        <button
-                          key={c.user_id}
-                          onClick={() => selectCandidate(c)}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
-                        >
-                          <HashedAvatar
-                            seed={c.user_id}
-                            name={personLabel(c.name, c.email).primary}
-                            initialsOverride={personInitials(c.name, c.email)}
-                            size={36}
-                          />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold text-gray-900">
-                              {personLabel(c.name, c.email).primary}
-                            </span>
-                            {personLabel(c.name, c.email).secondary && (
-                              <span className="block truncate text-xs text-gray-500">
-                                {personLabel(c.name, c.email).secondary}
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      ))}
+                {searchResults && searchResults.studio_clients.length === 0 && !isSearching && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="h-px flex-1 bg-gray-200" />
+                      <span className="text-xs text-gray-400">nie ma na liście</span>
+                      <span className="h-px flex-1 bg-gray-200" />
                     </div>
+                    <button
+                      onClick={createNewUser}
+                      disabled={!isValidEmail(query)}
+                      className="flex w-full items-center gap-2 rounded-b2b border px-4 py-3.5 text-left text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      + Nowy użytkownik — podaj email
+                    </button>
+                    {query.trim().length > 0 && !isValidEmail(query) && (
+                      <p className="px-1 text-xs text-gray-400">
+                        Podaj pełny adres e-mail, np. jan@example.com.
+                      </p>
+                    )}
                   </div>
                 )}
-
-                {searchResults &&
-                  searchResults.studio_clients.length === 0 &&
-                  searchResults.other_accounts.length === 0 &&
-                  !isSearching && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <span className="h-px flex-1 bg-gray-200" />
-                        <span className="text-xs text-gray-400">nie ma na liście</span>
-                        <span className="h-px flex-1 bg-gray-200" />
-                      </div>
-                      <button
-                        onClick={createNewUser}
-                        disabled={!query.includes("@")}
-                        className="flex w-full items-center gap-2 rounded-b2b border px-4 py-3.5 text-left text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
-                      >
-                        + Nowy użytkownik — podaj email
-                      </button>
-                    </div>
-                  )}
               </>
             ) : (
               <>
@@ -856,40 +861,50 @@ export default function FrontDeskRosterPage() {
                           ))}
                         </div>
                       )}
-
-                      <Button
-                        size="action"
-                        className="w-full"
-                        variant="green"
-                        disabled={
-                          !fundingType ||
-                          (fundingType === "buy_and_use" && !selectedPassId) ||
-                          (fundingType === "sport_card" && !selectedSportCardId) ||
-                          isSubmittingWalkIn
-                        }
-                        onClick={handleWalkInSubmit}
-                      >
-                        {isSubmittingWalkIn ? "Dodaję..." : submitLabel}
-                      </Button>
                     </>
                   )
                 )}
-
-                <Button
-                  size="action"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setSelectedCandidate(null);
-                    setOptions(null);
-                    setFundingType(undefined);
-                  }}
-                >
-                  ← Wybierz inną osobę
-                </Button>
               </>
             )}
           </div>
+
+          {/* Pinned so both actions stay reachable while the results/payment-choice list
+           * scrolls above — "Wybierz inną osobę" collapsed to a circular icon button next
+           * to "Dodaj rezerwację" per the reception-desk polish brief. */}
+          {selectedCandidate && (
+            <DrawerFooter className="flex-row items-center gap-2">
+              <Button
+                type="button"
+                size="action"
+                variant="outline"
+                aria-label="Wybierz inną osobę"
+                className="h-12 w-12 shrink-0 rounded-full p-0"
+                onClick={() => {
+                  setSelectedCandidate(null);
+                  setOptions(null);
+                  setFundingType(undefined);
+                }}
+              >
+                <ArrowLeft size={18} />
+              </Button>
+              {options && options.seat_available && paymentChoices.length > 0 && (
+                <Button
+                  size="action"
+                  className="flex-1"
+                  variant="green"
+                  disabled={
+                    !fundingType ||
+                    (fundingType === "buy_and_use" && !selectedPassId) ||
+                    (fundingType === "sport_card" && !selectedSportCardId) ||
+                    isSubmittingWalkIn
+                  }
+                  onClick={handleWalkInSubmit}
+                >
+                  {isSubmittingWalkIn ? "Dodaję..." : submitLabel}
+                </Button>
+              )}
+            </DrawerFooter>
+          )}
         </DrawerContent>
       </Drawer>
     </div>

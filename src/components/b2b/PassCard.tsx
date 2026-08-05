@@ -1,3 +1,5 @@
+import { IoInfinite as InfiniteIcon } from "react-icons/io5";
+
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { plural, wejscGenitive, wejscia } from "@/lib/polishPlural";
 import { cn } from "@/lib/utils";
@@ -81,24 +83,44 @@ export function PassCard({
       )}
     >
       <div className="flex items-start gap-3">
-        {/* Entry count over duration — K3's left tile. It is the number the client
-            actually asks about, so it gets the largest type on the card. */}
+        {/* Entry count over duration — K3's left tile, restyled to echo the public pass
+         * catalog's tile (`LightPassTile`): tighter 6px corners and, for an unlimited
+         * pass, the same solid-fill + infinity-icon treatment (rather than a bare "∞"
+         * glyph) — but only while active. A used/expired/cancelled pass keeps the
+         * existing neutral gray fill regardless of unlimited/numbered, since here the
+         * tile's job is first to say "not usable", which the public catalog's tile
+         * never has to communicate. */}
         <div
           className={cn(
-            "flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg",
-            state === "active" ? "bg-b2b-green-bg" : "bg-gray-100",
+            "flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-md",
+            state === "active"
+              ? unlimited
+                ? "bg-brand-green-700"
+                : "bg-b2b-green-bg"
+              : "bg-gray-100",
           )}
         >
-          <span
-            className={cn(
-              "text-lg font-bold leading-none",
-              state === "active" ? "text-b2b-green-text" : "text-gray-500",
-            )}
-          >
-            {unlimited ? "∞" : total}
-          </span>
+          {unlimited ? (
+            <InfiniteIcon
+              className={cn("size-6", state === "active" ? "text-white" : "text-gray-400")}
+            />
+          ) : (
+            <span
+              className={cn(
+                "text-xl font-bold leading-none",
+                state === "active" ? "text-b2b-green-text" : "text-gray-500",
+              )}
+            >
+              {total}
+            </span>
+          )}
           {pass.duration_days != null && (
-            <span className="mt-0.5 text-[10px] leading-none text-gray-400">
+            <span
+              className={cn(
+                "mt-0.5 text-[10px] leading-none",
+                state === "active" && unlimited ? "text-white/70" : "text-gray-400",
+              )}
+            >
               {pass.duration_days} dni
             </span>
           )}
@@ -108,7 +130,7 @@ export function PassCard({
           <div className="flex items-start gap-2">
             <p
               className={cn(
-                "min-w-0 flex-1 text-sm font-semibold",
+                "min-w-0 flex-1 text-base font-semibold",
                 isExpired ? "text-gray-700" : "text-gray-900",
               )}
             >
@@ -117,7 +139,7 @@ export function PassCard({
             {showState && <PassStateChip state={state} validUntil={valid_until} />}
           </div>
           {(meta ?? defaultMeta) && (
-            <p className="mt-0.5 text-xs text-gray-500">{meta ?? defaultMeta}</p>
+            <p className="mt-0.5 text-sm text-gray-500">{meta ?? defaultMeta}</p>
           )}
         </div>
       </div>

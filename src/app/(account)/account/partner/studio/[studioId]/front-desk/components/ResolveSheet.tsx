@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
+import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { personInitials, personLabel } from "@/lib/personDisplay";
 
@@ -42,14 +43,29 @@ export function ResolveSheet({
 }) {
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  if (!entry) return null;
+  // Both callers derive `open` from `entry != null` and null the entry out the instant
+  // they close the sheet — so `entry` would go null on the very same render as `open`
+  // going false. Unmounting `<Drawer>` on `!entry` (the previous approach) meant it never
+  // had a prior "open" paint to transition *from*, so it just appeared/disappeared
+  // instantly. Keeping the last non-null entry around lets `<Drawer>` stay mounted and
+  // animate its own close, the same way the Front Desk add-user drawer already does.
+  const [lastEntry, setLastEntry] = useState<RosterEntry | null>(entry);
+  useEffect(() => {
+    if (entry) setLastEntry(entry);
+  }, [entry]);
+  const displayEntry = entry ?? lastEntry;
 
-  const isNoShow = entry.status === "no_show";
-  const isPending = isPendingEntry(entry);
-  const amount = entry.amount_owed;
-  const label = personLabel(entry.user_name, entry.user_email);
-  const detail = fundingDetailLine(entry);
-  const owesMoney = (entry.needs_settlement ?? entry.is_overdue) && !entry.needs_card_check;
+  if (!displayEntry) {
+    return <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle />;
+  }
+
+  const isNoShow = displayEntry.status === "no_show";
+  const isPending = isPendingEntry(displayEntry);
+  const amount = displayEntry.amount_owed;
+  const label = personLabel(displayEntry.user_name, displayEntry.user_email);
+  const detail = fundingDetailLine(displayEntry);
+  const owesMoney =
+    (displayEntry.needs_settlement ?? displayEntry.is_overdue) && !displayEntry.needs_card_check;
 
   async function run(key: string, action: () => Promise<void>) {
     setBusyKey(key);
@@ -67,9 +83,9 @@ export function ResolveSheet({
         {/* T5-v2 header: avatar, name, and the state chip on the right. */}
         <div className="flex items-start gap-3 px-4 pt-2 pb-4">
           <HashedAvatar
-            seed={entry.user_id}
+            seed={displayEntry.user_id}
             name={label.primary}
-            initialsOverride={personInitials(entry.user_name, entry.user_email)}
+            initialsOverride={personInitials(displayEntry.user_name, displayEntry.user_email)}
             size={44}
           />
           <div className="min-w-0 flex-1">
@@ -79,11 +95,11 @@ export function ResolveSheet({
               </DrawerTitle>
               {isNoShow ? (
                 <StatusChip tone="gray">Nieobecność</StatusChip>
-              ) : entry.needs_card_check ? (
+              ) : displayEntry.needs_card_check ? (
                 <StatusChip tone="amber">Sprawdź kartę</StatusChip>
               ) : owesMoney ? (
                 <StatusChip tone="amber">Do zapłaty</StatusChip>
-              ) : entry.checked_in_at != null ? (
+              ) : displayEntry.checked_in_at != null ? (
                 <StatusChip tone="green">Obecność ✓</StatusChip>
               ) : (
                 <StatusChip tone="gray">Oczekuje</StatusChip>
@@ -104,41 +120,49 @@ export function ResolveSheet({
 
         <div className="space-y-2 px-4 pb-6">
           {isPending && (
-            <button
+            <Button
+              size="action"
+              variant="green"
+              className="w-full"
               onClick={() => run("confirm", onConfirm)}
               disabled={busyKey !== null}
-              className="w-full rounded-xl bg-b2b-green-text px-4 py-3.5 text-center text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
             >
               {amount != null ? `Potwierdź · ${amount} zł` : "Potwierdź"}
-            </button>
+            </Button>
           )}
 
           {isNoShow ? (
-            <button
+            <Button
+              size="action"
+              variant="green"
+              className="w-full"
               onClick={() => run("correct", onCorrectNoShow)}
               disabled={busyKey !== null}
-              className="w-full rounded-xl bg-b2b-green-text px-4 py-3.5 text-center text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
             >
               Cofnij nieobecność
-            </button>
+            </Button>
           ) : (
             // Outline, not solid: marking someone absent is a normal outcome, not a warning.
-            <button
+            <Button
+              size="action"
+              variant="outline"
+              className="w-full border-b2b-red-border text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid"
               onClick={() => run("no_show", onMarkNoShow)}
               disabled={busyKey !== null}
-              className="w-full rounded-b2b border border-b2b-red-border bg-white px-4 py-3.5 text-center text-sm font-medium text-b2b-red-solid hover:bg-b2b-red-bg disabled:opacity-60"
             >
-              Nieobecność
-            </button>
+              Oznacz nieobecność
+            </Button>
           )}
 
-          <button
+          <Button
+            size="action"
+            variant="outline"
+            className="w-full"
             onClick={() => run("cancel", onDeskCancel)}
             disabled={busyKey !== null}
-            className="w-full rounded-b2b border bg-white px-4 py-3.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
           >
             Usuń rezerwację
-          </button>
+          </Button>
 
           <p className="px-1 pt-1 text-xs text-gray-400">
             {isNoShow

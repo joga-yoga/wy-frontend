@@ -13,7 +13,7 @@ import { isFewForm, plural } from "@/lib/polishPlural";
 
 import { ScheduleRecurrenceForm } from "../../../class-schedules/components/ScheduleRecurrenceForm";
 import type { RoomOption } from "../../../class-schedules/types";
-import { InstructorPicker } from "../../components/InstructorPicker";
+import { InstructorPicker, type PickableInstructor } from "../../components/InstructorPicker";
 import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { PreviewNoteCard, SessionChangesPreview } from "../../components/SessionChangesPreview";
@@ -45,8 +45,6 @@ function shortDate(dateStr: string): string {
   });
 }
 type Step = "scope" | "form" | "preview" | "success";
-
-const WEEKDAY_KEYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
 
 function sesjeAccusative(n: number): string {
   if (n === 1) return "sesję";
@@ -138,7 +136,7 @@ export default function EditSessionPage() {
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
 
-  const [instructors, setInstructors] = useState<{ id: string; name: string }[]>([]);
+  const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
   const [rooms, setRooms] = useState<RoomOption[]>([]);
 
   // Recurrence form state
@@ -169,7 +167,14 @@ export default function EditSessionPage() {
 
         const sessionDate = new Date(sd.calendar_date + "T00:00:00");
         setFromDate(sessionDate);
-        setSelectedDays([WEEKDAY_KEYS[sessionDate.getDay()]]);
+
+        // Pre-fill the real series pattern — not the tapped occurrence's single
+        // day-of-week, which silently collapsed a Mon/Wed/Fri series to whichever day
+        // happened to be tapped on any "this and following"/"whole series" save.
+        // `frequency` local state stays "weekly" (its default): `recurrence_frequency`
+        // can only ever be "WEEKLY" or null for a recurring series today (see
+        // `parse_recurrence`'s docstring — no other FREQ is generated or understood).
+        setSelectedDays(sd.recurrence_days ?? []);
 
         // Pre-fill series end date from UNTIL
         if (sd.series_to_date) {
@@ -196,8 +201,17 @@ export default function EditSessionPage() {
     const studioId = sessionDetail?.studio_id || currentStudio?.id;
     if (!studioId) return;
     axiosInstance
-      .get<{ items: { id: string; name: string }[] }>(`/studios/${studioId}/roster`)
-      .then((r) => setInstructors(r.data.items.map(({ id, name }) => ({ id, name }))))
+      .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
+      .then((r) =>
+        setInstructors(
+          r.data.items.map(({ id, name, image_id, row_state }) => ({
+            id,
+            name,
+            image_id,
+            row_state,
+          })),
+        ),
+      )
       .catch(() => {});
   }, [sessionDetail?.studio_id, currentStudio?.id]);
 
@@ -294,7 +308,13 @@ export default function EditSessionPage() {
         <div className="space-y-4">
           <SessionContextCard
             title={sessionDetail.template_title}
-            subtitle={`${shortDate(sessionDetail.calendar_date)} · ${formatStartTime(sessionDetail.start_time)}${sessionDetail.instructor_name ? ` · ${sessionDetail.instructor_name}` : ""}`}
+            date={shortDate(sessionDetail.calendar_date)}
+            subtitle={formatStartTime(sessionDetail.start_time)}
+            instructor={
+              sessionDetail.instructor_name
+                ? { id: sessionDetail.instructor_id, name: sessionDetail.instructor_name }
+                : null
+            }
           />
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
             {isSubstitution ? "Na ile zajęć?" : "Czego dotyczy zmiana?"}
@@ -329,7 +349,8 @@ export default function EditSessionPage() {
         <div className="space-y-4">
           <SessionContextCard
             title={sessionDetail.template_title}
-            subtitle={`Zakres: ${scopeLabel(scope, isSubstitution)} · ${shortDate(sessionDetail.calendar_date)}`}
+            date={shortDate(sessionDetail.calendar_date)}
+            subtitle={`Zakres: ${scopeLabel(scope, isSubstitution)}`}
           />
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
             Prowadzący
@@ -364,7 +385,13 @@ export default function EditSessionPage() {
         <div className="space-y-4">
           <ScheduleRecurrenceForm
             templateTitle={sessionDetail.template_title}
-            templateSubtitle={`Zakres: ${scopeLabel(scope, isSubstitution)} · ${shortDate(sessionDetail.calendar_date)}`}
+            templateDate={shortDate(sessionDetail.calendar_date)}
+            templateSubtitle={`Zakres: ${scopeLabel(scope, isSubstitution)}`}
+            templateInstructor={
+              sessionDetail.instructor_name
+                ? { id: sessionDetail.instructor_id, name: sessionDetail.instructor_name }
+                : null
+            }
             studios={[]}
             studioId={sessionDetail.studio_id ?? ""}
             onStudioChange={() => {}}

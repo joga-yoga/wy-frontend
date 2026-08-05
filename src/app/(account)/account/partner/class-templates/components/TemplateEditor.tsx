@@ -35,6 +35,14 @@ interface TemplateEditorProps {
   isSubmitting?: boolean;
   /** Omitted where there is nowhere sensible to cancel to (the inline create in U3). */
   onCancel?: () => void;
+  /** Pins Anuluj/Zapisz to the viewport bottom (fade-gradient bar, list/form scrolls
+   * underneath — the same pattern the Front Desk roster page's action bar uses) instead
+   * of rendering them inline at the end of the form. Only meaningful for the standalone
+   * create/edit pages — left off for the wizard-embedded inline create (U3), which isn't
+   * a full-page scroll context and would clash with a viewport-fixed bar. Callers that
+   * pass `true` are responsible for adding matching bottom padding so the fixed bar
+   * doesn't cover the end of the form. */
+  pinFooter?: boolean;
 }
 
 const DURATION_OPTIONS = [
@@ -65,6 +73,7 @@ export function TemplateEditor({
   submitLabel = "Zapisz szablon",
   isSubmitting = false,
   onCancel,
+  pinFooter = false,
 }: TemplateEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -383,29 +392,58 @@ export function TemplateEditor({
       </section>
 
       {/* U2 pairs Anuluj with Zapisz. A lone full-width save gives no way out of a form
-          you opened by mistake except the browser's back. */}
-      <div className="flex gap-3">
-        {onCancel && (
+          you opened by mistake except the browser's back. Pinned variant mirrors the Front
+          Desk roster page's action bar: a full-width fade-gradient outer bar (so the fade
+          reaches both viewport edges) with the buttons constrained/centred inside it. */}
+      {pinFooter ? (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8">
+          <div className="mx-auto flex max-w-lg gap-3 px-4">
+            {onCancel && (
+              <Button
+                size="action"
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onCancel}
+              >
+                Anuluj
+              </Button>
+            )}
+            <Button
+              size="action"
+              variant="green"
+              className="flex-1"
+              onClick={handleSubmit}
+              disabled={!title.trim() || isSubmitting}
+            >
+              {isSubmitting ? "Zapisywanie..." : submitLabel}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          {onCancel && (
+            <Button
+              size="action"
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={onCancel}
+            >
+              Anuluj
+            </Button>
+          )}
           <Button
             size="action"
-            type="button"
-            variant="outline"
+            variant="green"
             className="flex-1"
-            onClick={onCancel}
+            onClick={handleSubmit}
+            disabled={!title.trim() || isSubmitting}
           >
-            Anuluj
+            {isSubmitting ? "Zapisywanie..." : submitLabel}
           </Button>
-        )}
-        <Button
-          size="action"
-          variant="green"
-          className="flex-1"
-          onClick={handleSubmit}
-          disabled={!title.trim() || isSubmitting}
-        >
-          {isSubmitting ? "Zapisywanie..." : submitLabel}
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

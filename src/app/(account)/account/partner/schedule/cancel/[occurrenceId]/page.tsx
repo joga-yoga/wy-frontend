@@ -127,7 +127,8 @@ export default function CancelSessionPage() {
             <SessionContextCard
               tone="danger"
               title={sessionDetail.template_title}
-              subtitle={`${cancelDate(sessionDetail.calendar_date)} · ${cancelTime(sessionDetail.start_time)}`}
+              date={cancelDate(sessionDetail.calendar_date)}
+              subtitle={cancelTime(sessionDetail.start_time)}
             />
           )}
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">

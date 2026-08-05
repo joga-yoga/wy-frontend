@@ -18,7 +18,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import {
+  InstructorPicker,
+  type PickableInstructor,
+} from "../../schedule/components/InstructorPicker";
 import type { RoomOption, StudioOption } from "../types";
+
+export type EndDateMode = "endless" | "1month" | "custom";
 
 const DAYS = [
   { key: "MO", label: "Pn" },
@@ -34,6 +40,10 @@ interface ScheduleRecurrenceFormProps {
   // Template info (pinned card)
   templateTitle: string;
   templateSubtitle: string;
+  /** Shown as the card's date eyebrow line — only the edit flow has a real date to show
+   * here (a session being created has no date until the form below is filled in). */
+  templateDate?: string | null;
+  templateInstructor?: { id?: string | null; name: string; imageId?: string | null } | null;
   onChangeTemplate?: () => void; // if undefined → hide the "Zmień" button
 
   // Studio (shown only when studios.length > 1)
@@ -47,7 +57,7 @@ interface ScheduleRecurrenceFormProps {
   onRoomChange: (id: string) => void;
 
   // Instructors
-  instructors: { id: string; name: string }[];
+  instructors: PickableInstructor[];
   instructorId: string;
   onInstructorChange: (id: string) => void;
   defaultInstructorId?: string | null; // for "· z szablonu" label
@@ -69,6 +79,11 @@ interface ScheduleRecurrenceFormProps {
   disableFromDate?: boolean; // true in edit mode → show greyed-out, non-interactive
   toDate: Date | undefined;
   onToDateChange: (d: Date | undefined) => void;
+  /** Endless / 1 Month / Custom date. When omitted, "Do dnia" falls back to the
+   * original single required-date picker (used by the edit flow, which isn't part
+   * of this polish round). */
+  endDateMode?: EndDateMode;
+  onEndDateModeChange?: (mode: EndDateMode) => void;
 
   // Time
   startTime: string;
@@ -83,6 +98,8 @@ interface ScheduleRecurrenceFormProps {
 export function ScheduleRecurrenceForm({
   templateTitle,
   templateSubtitle,
+  templateDate,
+  templateInstructor,
   onChangeTemplate,
   studios,
   studioId,
@@ -106,6 +123,8 @@ export function ScheduleRecurrenceForm({
   disableFromDate,
   toDate,
   onToDateChange,
+  endDateMode,
+  onEndDateModeChange,
   startTime,
   onStartTimeChange,
   showRecurrence = true,
@@ -115,7 +134,12 @@ export function ScheduleRecurrenceForm({
       {/* Which session/series this form is acting on (S3/S4) */}
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <SessionContextCard title={templateTitle} subtitle={templateSubtitle} />
+          <SessionContextCard
+            title={templateTitle}
+            date={templateDate}
+            subtitle={templateSubtitle}
+            instructor={templateInstructor}
+          />
         </div>
         {onChangeTemplate && (
           <button
@@ -191,7 +215,13 @@ export function ScheduleRecurrenceForm({
       )}
 
       {showRecurrence && (
-        <div className={frequency === "once" ? "" : "grid grid-cols-2 gap-3"}>
+        <div
+          className={
+            frequency === "once" || (frequency === "weekly" && onEndDateModeChange)
+              ? "space-y-3"
+              : "grid grid-cols-2 gap-3"
+          }
+        >
           <div>
             <Label>{frequency === "once" ? "Data" : "Od dnia"}</Label>
             {disableFromDate ? (
@@ -220,7 +250,39 @@ export function ScheduleRecurrenceForm({
               </Popover>
             )}
           </div>
-          {frequency === "weekly" && (
+          {frequency === "weekly" && onEndDateModeChange && (
+            <div>
+              <Label>Do dnia</Label>
+              <SegmentedToggle
+                className="mt-1 mb-0"
+                columns={3}
+                value={endDateMode}
+                onChange={onEndDateModeChange}
+                options={[
+                  { label: "Bezterminowo", value: "endless" },
+                  { label: "1 miesiąc", value: "1month" },
+                  { label: "Wybierz datę", value: "custom" },
+                ]}
+              />
+              {endDateMode === "custom" && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="action"
+                      variant="outline"
+                      className="w-full justify-start font-normal"
+                    >
+                      {toDate ? toDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={toDate} onSelect={onToDateChange} />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+          )}
+          {frequency === "weekly" && !onEndDateModeChange && (
             <div>
               <Label>Do dnia</Label>
               <Popover>
@@ -289,28 +351,15 @@ export function ScheduleRecurrenceForm({
             <span className="ml-1 text-xs text-gray-400">· z szablonu</span>
           )}
         </Label>
-        <div className="flex gap-1.5">
-          <Select value={instructorId || undefined} onValueChange={onInstructorChange}>
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Wybierz prowadzącego" />
-            </SelectTrigger>
-            <SelectContent>
-              {instructors.map((i) => (
-                <SelectItem key={i.id} value={i.id}>
-                  {i.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {instructorId && (
-            <button
-              type="button"
-              onClick={() => onInstructorChange("")}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] border-[1.5px] border-input text-gray-400 hover:text-gray-600"
-            >
-              <X size={16} />
-            </button>
-          )}
+        <div className="mt-1">
+          <InstructorPicker
+            instructors={instructors}
+            selectedId={instructorId}
+            currentId={null}
+            onSelect={onInstructorChange}
+            allowNone
+            otherLabel=""
+          />
         </div>
       </div>
 

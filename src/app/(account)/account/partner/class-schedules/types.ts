@@ -7,7 +7,8 @@ export interface ScheduleCreatePayload {
   frequency: "once" | "weekly";
   days?: string[];
   from_date: string;
-  to_date: string;
+  /** undefined = endless (no UNTIL= in the rrule). */
+  to_date?: string;
   start_time: string;
 }
 

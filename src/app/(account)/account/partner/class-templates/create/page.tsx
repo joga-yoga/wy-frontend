@@ -31,11 +31,12 @@ export default function CreateTemplatePage() {
   };
 
   return (
-    <div className="p-4 mx-auto max-w-lg">
+    <div className="p-4 pb-32 mx-auto max-w-lg">
       <TemplateEditor
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         onCancel={() => router.push("/konto/partner/szablony-zajec")}
+        pinFooter
       />
     </div>
   );

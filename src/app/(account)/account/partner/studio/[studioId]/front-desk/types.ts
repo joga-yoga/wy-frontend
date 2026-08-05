@@ -61,6 +61,7 @@ export interface WalkInCandidate {
 }
 
 export interface WalkInSearchResponse {
+  /** Scoped to this studio's own clients only — the backend never returns other
+   * studios' joga.yoga accounts here (privacy). */
   studio_clients: WalkInCandidate[];
-  other_accounts: WalkInCandidate[];
 }

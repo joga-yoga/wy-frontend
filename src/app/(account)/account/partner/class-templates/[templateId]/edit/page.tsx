@@ -78,13 +78,14 @@ export default function EditTemplatePage() {
   if (!template) return null;
 
   return (
-    <div className="p-4 mx-auto max-w-lg">
+    <div className="p-4 pb-32 mx-auto max-w-lg">
       <TemplateEditor
         initial={template}
         onSubmit={handleSubmit}
         submitLabel="Zapisz zmiany"
         isSubmitting={isSubmitting}
         onCancel={() => router.push("/konto/partner/szablony-zajec")}
+        pinFooter
       />
 
       {/* The user's "add Class to Schedule from Class details". A template exists to be
