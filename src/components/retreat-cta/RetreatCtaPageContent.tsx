@@ -44,12 +44,12 @@ const AUTH_IMPORT_RETREAT_HREF = `/profile/login?next=${encodeURIComponent(CREAT
 
 const processSteps: CtaProcessStep[] = [
   {
-    title: "Najpierw załóż konto",
-    description: "To pomaga nam dbać o jakość ogłoszeń i kontakt z prawdziwymi organizatorami",
+    title: "Stwórz sowje konto",
+    description: "To pomaga dbać o jakość ogłoszeń i kontakt z organizatorami",
     icon: AccountProcessIcon,
   },
   {
-    title: "Tworzenie strony wyjazdu z jogą",
+    title: "Tworzenie strony wyjazdu",
     description: "Generowanie strony na podstawie linku lub wprowadzonych danych",
     icon: SparklesProcessIcon,
   },
@@ -60,7 +60,7 @@ const processSteps: CtaProcessStep[] = [
   },
   {
     title: "Publikacja",
-    description: "Uczestnicy mogą już go zobaczyć i się zapisać",
+    description: "Uczestnicy mogą się zapisać",
     icon: PublishProcessIcon,
   },
 ];
@@ -127,7 +127,7 @@ function ProcessAndImportSection() {
           id="retreat-process-title"
           className="text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:text-[30px]"
         >
-          Co będzie dalej po naciśnięciu:
+          Co będzie dalej
         </h2>
         <ProcessSteps
           steps={processSteps}
@@ -247,17 +247,17 @@ function BenefitsSection() {
           <div className="contents md:flex md:flex-col md:gap-7">
             <BenefitCopy
               title="Oferta gotowa do pokazania"
-              description="Wyjazd wygląda jasno i konkretnie od pierwszego wejścia"
+              description="Wyjazd wygląda jasno i konkretnie od pierwszego spojrzenia lub wejrzenia"
               className="order-1"
             />
             <BenefitCopy
               title="Więcej rezerwacji"
-              description="Jasna oferta i prosty zapis skracają drogę od zainteresowania do miejsca na wyjeździe"
+              description="Jasna oferta i prosty zapis skracają drogę od zainteresowania faktycznej rezerwacji"
               className="order-3"
             />
             <BenefitCopy
-              title="Pewność przed zapisem"
-              description="Uczestnik widzi klimat, program i warunki, zanim podejmie decyzję"
+              title="Pewność i zaufanie"
+              description="Uczestnik widzi klimat, program i warunki"
               className="order-4"
             />
             <BenefitCopy
@@ -340,7 +340,7 @@ function ExamplesSection({ events }: { events: Event[] }) {
 export function RetreatCtaPageContent({ events }: { events: Event[] }) {
   return (
     <main className="bg-white text-[#27272A]">
-      <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-[22px] md:h-[620px] md:rounded-[24px] md:bg-[#F2F2F3] md:px-24 md:py-[72px]">
+      <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-none md:h-[620px] md:rounded-[24px] md:bg-[#F2F2F3] md:px-24 md:py-[72px]">
         <div className="absolute inset-0 md:static md:grid md:h-full md:grid-cols-[520px_1fr] md:items-center md:gap-20">
           <div className="relative z-10 flex h-full flex-col justify-between px-8 py-9 md:items-center md:px-0 md:py-0">
             <JogaYogaLogo variant="on-dark" size="mobile" className="md:hidden" />
@@ -364,7 +364,7 @@ export function RetreatCtaPageContent({ events }: { events: Event[] }) {
             </div>
           </div>
 
-          <div className="absolute inset-0 md:relative md:h-full md:overflow-hidden md:rounded-2xl md:border md:border-white/70 md:shadow-[0_18px_48px_rgba(0,0,0,0.16)]">
+          <div className="absolute inset-0 md:relative md:h-full md:overflow-hidden rounded-b-lg rounded-t-none md:border md:border-white/70 md:shadow-[0_18px_48px_rgba(0,0,0,0.16)] md:rounded-none">
             <Image
               src="/images/cta/retreats/hero.png"
               alt="Praktyka jogi przy basenie o zachodzie słońca"

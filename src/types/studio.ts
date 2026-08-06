@@ -88,3 +88,38 @@ export interface StudioPublic {
   created_at: string;
   updated_at: string;
 }
+
+export interface StudioPublicSearchItem {
+  id: string;
+  name: string;
+  slug?: string | null;
+  image_id?: string | null;
+  address?: string | null;
+  city?: string | null;
+  is_claimed: boolean;
+}
+
+export interface StudioPublicListItem {
+  id: string;
+  name: string;
+  slug: string;
+  image_id?: string | null;
+  image_ids: string[];
+  address?: string | null;
+  city?: string | null;
+  yoga_styles: string[];
+}
+
+export interface GeneratedStudioProfileDraft {
+  draft_id: string;
+  public_token: string;
+  public_url: string;
+  draft_kind: "existing" | "generated";
+  status: string;
+  profile: StudioPublic;
+  sources: Array<Record<string, unknown>>;
+  confidence: Record<string, unknown>;
+  image_provenance: Record<string, unknown>;
+  error_message?: string | null;
+  expires_at: string;
+}

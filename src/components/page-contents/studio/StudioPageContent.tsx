@@ -2,7 +2,7 @@
 
 import { ArrowRight, Calendar, CreditCard, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
@@ -37,6 +37,9 @@ import { formatSneakDayHeader } from "./scheduleSneakUtils";
 interface StudioPageContentProps {
   studio: StudioPublic;
   initialSchedulePreview?: PublicSchedulePreviewResponse | null;
+  previewMode?: boolean;
+  notice?: ReactNode;
+  bottomPrimaryAction?: { label: string; href: string };
 }
 
 function initials(name: string) {
@@ -693,19 +696,35 @@ function AmenitiesSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
-export function StudioPageContent({ studio, initialSchedulePreview }: StudioPageContentProps) {
+export function StudioPageContent({
+  studio,
+  initialSchedulePreview,
+  previewMode = false,
+  notice,
+  bottomPrimaryAction,
+}: StudioPageContentProps) {
   return (
     <main className="min-h-screen bg-white text-gray-950">
       <HeroSection studio={studio} />
-      {studio.slug && (
+      {notice && <div className="mx-auto max-w-5xl px-4 pt-5">{notice}</div>}
+      {!previewMode && studio.slug && (
         <StudioScheduleSneak studioSlug={studio.slug} preview={initialSchedulePreview} />
       )}
-      {studio.slug && <ZajeciaPreviewSection studioSlug={studio.slug} />}
+      {!previewMode && studio.slug && <ZajeciaPreviewSection studioSlug={studio.slug} />}
       <InstructorsSection studio={studio} />
       <PricingSection studio={studio} />
       <SportCardsSection studio={studio} />
       <AmenitiesSection studio={studio} />
       <LocationSection studio={studio} />
+      {bottomPrimaryAction && (
+        <section className="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">
+          <div className="mx-auto max-w-5xl">
+            <Button asChild className="h-12 w-full rounded-full text-base">
+              <Link href={bottomPrimaryAction.href}>{bottomPrimaryAction.label}</Link>
+            </Button>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

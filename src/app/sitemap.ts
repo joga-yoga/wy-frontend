@@ -9,13 +9,19 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
 
-  const staticRoutes = ["/", "/partners", "/contact", "/policy", "/terms", "/instruktor/dodaj"].map(
-    (route) => ({
-      url: `${BASE_URL}${route}`,
-      changeFrequency: "monthly" as const,
-      priority: route === "/" ? 1 : 0.7,
-    }),
-  );
+  const staticRoutes = [
+    "/",
+    "/partners",
+    "/contact",
+    "/policy",
+    "/terms",
+    "/instruktor/dodaj",
+    "/studio/dodaj",
+  ].map((route) => ({
+    url: `${BASE_URL}${route}`,
+    changeFrequency: "monthly" as const,
+    priority: route === "/" ? 1 : 0.7,
+  }));
 
   const staticWorkshopRoutes = [
     "/wydarzenia/dodaj",

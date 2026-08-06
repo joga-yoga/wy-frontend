@@ -36,23 +36,23 @@ const AUTH_IMPORT_WORKSHOP_HREF = `/profile/login?next=${encodeURIComponent(CREA
 
 const processSteps: CtaProcessStep[] = [
   {
-    title: "Konto organizatora",
+    title: "Stwórz sowje konto",
     description: "Profil pozwala zarządzać wydarzeniami, zapisami i danymi kontaktowymi",
     icon: AccountProcessIcon,
   },
   {
-    title: "Uzupełnienie wydarzenia",
-    description: "Opis, termin, miejsce, cena, prowadzący i zdjęcia trafiają do jednej struktury",
+    title: "Tworzenie strony wydarzenia",
+    description: "Generowanie strony na podstawie linku lub wprowadzonych danych",
     icon: SparklesProcessIcon,
   },
   {
     title: "Edycja szczegółów",
-    description: "Organizator aktualizuje opis, terminy, cenę, limit miejsc i sposób zapisów",
+    description: "Zmiana szczegółów informacji, dodawanie zdjęć, sprawdzanie ceny",
     icon: EditProcessIcon,
   },
   {
     title: "Publikacja",
-    description: "Uczestnicy widzą wydarzenie w kalendarzu i mogą przejść do zapisów",
+    description: "Uczestnicy mogą już go zobaczyć i się zapisać",
     icon: PublishProcessIcon,
   },
 ];
@@ -125,7 +125,7 @@ function WorkshopSourceUrlForm({ id }: { id: "mobile" | "desktop" }) {
 function HeroSection() {
   return (
     <>
-      <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-[22px] md:h-[640px] md:rounded-none md:bg-[#F2F2F3] md:px-24 md:py-[72px]">
+      <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-none md:h-[640px] md:rounded-none md:bg-[#F2F2F3] md:px-24 md:py-[72px]">
         <div className="absolute inset-0 md:static md:grid md:h-full md:grid-cols-[576px_1fr] md:items-center md:gap-16">
           <div className="relative z-10 flex h-full flex-col items-start justify-between px-8 py-9 md:h-auto md:items-center md:justify-start md:px-0 md:py-0">
             <JogaYogaLogo variant="on-dark" size="mobile" className="self-center md:hidden" />
@@ -135,7 +135,7 @@ function HeroSection() {
                 Dodaj wydarzenie jogowe
               </h1>
               <p className="mt-3 text-[18px] font-medium leading-[22px] tracking-[-0.36px] text-[#E4E4E7] md:mt-6 md:max-w-[520px] md:text-[18px] md:font-normal md:leading-7 md:tracking-normal md:text-[#71717A]">
-                Publikuj kursy, warsztaty i wydarzenia jogowe w jednym czytelnym miejscu
+                Publikuj kursy, warsztaty i wydarzenia jogowe w jednym miejscu
               </p>
               <div className="mt-6 hidden md:block">
                 <WorkshopSourceUrlForm id="desktop" />

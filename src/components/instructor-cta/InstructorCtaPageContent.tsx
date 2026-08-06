@@ -58,7 +58,7 @@ const processSteps: CtaProcessStep[] = [
     title: "Sprawdzimy publiczne informacje",
     description: (
       <>
-        <span className="md:hidden">Sprawdzamy informacje dostępne w sieci</span>
+        <span className="md:hidden">Szukamy danych udostępnionych w sieci</span>
         <span className="hidden md:inline">Wyszukiwanie informacji w źródłach otwartych</span>
       </>
     ),
@@ -66,7 +66,7 @@ const processSteps: CtaProcessStep[] = [
   },
   {
     title: "Przygotujemy szkic strony",
-    description: "Ułożymy znalezione informacje w prostą stronę, którą możesz poprawić",
+    description: "Układamy znalezione informacje w prostą stronę, którą w każdej chwili możesz edytować",
     icon: DraftProcessIcon,
   },
   {
@@ -137,7 +137,7 @@ export function InstructorCtaPageContent({
         }}
         onSubmit={generateDraft}
       />
-      <SectionDivider className="md:h-[72px] md:px-[10px]" />
+      
       <div className="px-6 py-6 md:hidden">
         <InstructorDraftForm
           id="instructor-query-mobile"
@@ -192,7 +192,7 @@ function HeroSection({
   onSubmit: () => void;
 }) {
   return (
-    <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-[22px] md:h-[720px] md:rounded-none">
+    <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-none md:h-[720px] md:rounded-none">
       <Image
         src="/images/cta/instructors/hero.png"
         alt="Nauczycielka jogi podczas spokojnej praktyki"
@@ -214,8 +214,8 @@ function HeroSection({
             <h1 className="text-[32px] font-semibold leading-[30px] tracking-[-0.64px] md:text-[46px] md:leading-[50px] md:tracking-[-1.38px]">
               Tworzenie strony nauczyciela jogi
             </h1>
-            <p className="mx-auto mt-2 w-[164px] text-[15px] leading-[18px] text-[#F2F2F3] md:mx-0 md:mt-6 md:w-full md:text-[22px] md:font-medium md:leading-[30px] md:tracking-[-0.44px] md:text-white/90">
-              Opowiedz o sobie, pokaż zajęcia i ułatw ludziom zapis
+            <p className="mx-auto mt-2 w-[215px] text-[15px] leading-[18px] text-[#F2F2F3] md:mx-0 md:mt-6 md:w-full md:text-[22px] md:font-medium md:leading-[30px] md:tracking-[-0.44px] md:text-white/90">
+              Opowiedz o swoih zajęciach, zaprezentuj siebie. Daj możliwość zapisania się na praktyę
             </p>
           </div>
 
@@ -442,7 +442,7 @@ function BenefitsSection() {
             />
             <BenefitCopy
               title="Twórz i sprzedawaj swoje wydarzenia"
-              description="Warsztaty, kursy i wyjazdy z łatwą rejestracją"
+              description="Łatwa rejestracja na wszystkie eventy"
             />
             <ScheduleBenefitCard />
             <BenefitCopy
