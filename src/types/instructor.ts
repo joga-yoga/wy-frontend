@@ -80,6 +80,15 @@ export interface InstructorPublic {
   updated_at: string;
 }
 
+export interface InstructorPublicListItem {
+  name: string;
+  slug: string;
+  image_id: string;
+  cities: CityItem[] | null;
+  yoga_styles: InstructorYogaStyle[];
+  published_at: string | null;
+}
+
 export interface InstructorDetails {
   instructor: InstructorPublic;
   upcoming_retreats: import("@/components/page-contents/organizer/types").OrganizerEvent[];

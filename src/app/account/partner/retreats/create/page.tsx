@@ -14,6 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getRandomDefaultImageId } from "@/lib/getRandomDefaultImageId";
+import {
+  clearPendingRetreatImport,
+  isValidRetreatSourceUrl,
+  readPendingRetreatImport,
+} from "@/lib/pendingRetreatImport";
 
 import { EventForm } from "../../components/EventForm";
 import { EventDashboardSidebar } from "../../components/EventForm/components/EventDashboardSidebar";
@@ -23,6 +28,7 @@ type View = "options" | "url-input" | "prompt-input" | "form";
 export default function CreateEventPage() {
   const searchParams = useSearchParams();
   const isDuplicate = searchParams.get("duplicate") === "true";
+  const shouldImportUrl = searchParams.get("source") === "url";
 
   const [view, setView] = useState<View>("options");
   const [isAutofilling, setIsAutofilling] = useState(false);
@@ -49,6 +55,11 @@ export default function CreateEventPage() {
           variant: "destructive",
         });
       }
+    } else if (shouldImportUrl) {
+      setGeneratedData(null);
+      setPrompt("");
+      setUrl(readPendingRetreatImport() ?? "");
+      setView("url-input");
     } else {
       setView("options");
       setGeneratedData(null);
@@ -56,16 +67,6 @@ export default function CreateEventPage() {
       setPrompt("");
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Validate URL format
-  const isValidUrl = (urlString: string): boolean => {
-    try {
-      new URL(urlString);
-      return true;
-    } catch {
-      return false;
-    }
-  };
 
   const handleGenerateFromPrompt = async (promptText: string) => {
     if (!promptText.trim()) {
@@ -111,7 +112,7 @@ export default function CreateEventPage() {
       return;
     }
 
-    if (!isValidUrl(urlString)) {
+    if (!isValidRetreatSourceUrl(urlString)) {
       toast({
         title: "Błąd",
         description: "Wpisz prawidłowy adres URL (np. https://example.com)",
@@ -132,6 +133,7 @@ export default function CreateEventPage() {
           imageId: getRandomDefaultImageId(),
         }));
       }
+      clearPendingRetreatImport();
       setGeneratedData(data);
       setView("form");
     } catch (error) {

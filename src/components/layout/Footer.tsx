@@ -18,8 +18,17 @@ type FooterSectionDef = {
 
 function buildFooterSections(
   prefix: string,
-  project: "retreats" | "workshops",
+  project: "main" | "retreats" | "workshops",
 ): FooterSectionDef[] {
+  if (project === "main") {
+    return [
+      {
+        title: "O nas",
+        links: [{ label: "Kontakt", href: "/contact" }],
+      },
+    ];
+  }
+
   return [
     {
       title: "Pomoc",
@@ -140,16 +149,35 @@ const FooterBottom = ({ onOpenCookieSettings }: { onOpenCookieSettings: () => vo
 export const Footer: React.FC = () => {
   const params = useParams();
   const pathname = usePathname();
-  const isEventPage = !!params.slug;
-  const project: "retreats" | "workshops" = pathname.startsWith("/wyjazdy")
-    ? "retreats"
-    : "workshops";
+  const isInstructorDraftTechnicalPage =
+    pathname.startsWith("/instruktor/dodaj/preview/") ||
+    pathname.startsWith("/instruktor/dodaj/claim/") ||
+    pathname.startsWith("/instructor/dodaj/preview/") ||
+    pathname.startsWith("/instructor/dodaj/claim/");
+  const isCtaPage =
+    pathname === "/wyjazdy/dodaj" ||
+    pathname === "/retreats/dodaj" ||
+    pathname === "/wydarzenia/dodaj" ||
+    pathname === "/workshops/dodaj" ||
+    pathname === "/instruktor/dodaj" ||
+    pathname === "/instructor/dodaj";
+  const isEventPage = !!params.slug && !isCtaPage;
+  const project: "main" | "retreats" | "workshops" =
+    pathname === "/instruktor/dodaj" || pathname === "/instructor/dodaj"
+      ? "main"
+      : pathname.startsWith("/wyjazdy") || pathname.startsWith("/retreats")
+        ? "retreats"
+        : "workshops";
   const sectionPrefix = project === "retreats" ? "/wyjazdy" : "/wydarzenia";
   const FOOTER_SECTIONS = buildFooterSections(sectionPrefix, project);
 
   const handleOpenCookieSettings = () => {
     window.dispatchEvent(new CustomEvent(COOKIE_SETTINGS_OPEN_EVENT));
   };
+
+  if (isInstructorDraftTechnicalPage) {
+    return null;
+  }
 
   return (
     <>

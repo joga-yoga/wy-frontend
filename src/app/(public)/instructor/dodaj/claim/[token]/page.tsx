@@ -36,7 +36,7 @@ function ClaimDraftContent() {
   useEffect(() => {
     if (loading || hasStarted.current) return;
 
-    const claimPath = `/create/claim/${params.token}`;
+    const claimPath = `/instruktor/dodaj/claim/${params.token}`;
 
     if (!user) {
       router.replace(`/account/login?next=${encodeURIComponent(claimPath)}`);
@@ -74,7 +74,7 @@ function ClaimDraftContent() {
         <h1 className="text-2xl font-semibold">Nie udało się przygotować profilu</h1>
         <p className="max-w-md text-sm text-muted-foreground">{errorMessage}</p>
         <Button asChild>
-          <Link href="/create">Wróć do generatora</Link>
+          <Link href="/instruktor/dodaj">Wróć do generatora</Link>
         </Button>
       </main>
     );

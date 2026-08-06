@@ -119,7 +119,7 @@ test.describe("instructor profile hero", () => {
   });
 
   test("labels sample data only on the generated preview", async ({ page }) => {
-    await page.goto("/create/preview/preview-fixture");
+    await page.goto("/instruktor/dodaj/preview/preview-fixture");
 
     await expect(page.getByText("Dane przykładowe").first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Wyjazdy", exact: true })).toBeVisible();

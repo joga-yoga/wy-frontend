@@ -93,6 +93,13 @@ export const PublicHeader = () => {
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const isPartnersPage = pathname === "/partners";
   const isStudioPage = pathname.startsWith("/studio/");
+  const isCtaPage =
+    pathname === "/wyjazdy/dodaj" ||
+    pathname === "/retreats/dodaj" ||
+    pathname === "/wydarzenia/dodaj" ||
+    pathname === "/workshops/dodaj" ||
+    pathname.startsWith("/instruktor/dodaj") ||
+    pathname.startsWith("/instructor/dodaj");
   const isInstructorScheduleOrClassesPage =
     pathname.startsWith("/instruktor/") &&
     (pathname.includes("/grafik") || pathname.includes("/zajecia"));
@@ -119,7 +126,7 @@ export const PublicHeader = () => {
   }, [pathname]);
   const storedOrigin = navigationOrigin?.target === pathname ? navigationOrigin.origin : null;
   const logoHref = isWyjazdy ? "/wyjazdy" : "/";
-  if (isPartnersPage || isStudioPage || isInstructorScheduleOrClassesPage) {
+  if (isPartnersPage || isStudioPage || isCtaPage || isInstructorScheduleOrClassesPage) {
     return null;
   }
 
@@ -222,7 +229,7 @@ export const PublicHeader = () => {
         {/* Right Section: Actions & Profile */}
         <div className="ml-auto flex items-center gap-3 md:gap-3 self-center">
           <Link
-            href="/partners"
+            href={isWyjazdy ? "/wyjazdy/dodaj" : "/wydarzenia/dodaj"}
             passHref
             className={cn(isMainPage ? undefined : "hidden md:inline-block")}
           >
@@ -232,7 +239,11 @@ export const PublicHeader = () => {
               </p>
             </button>
           </Link>
-          <Link href="/partners" passHref className={cn(isMainPage ? "hidden" : "md:hidden")}>
+          <Link
+            href={isWyjazdy ? "/wyjazdy/dodaj" : "/wydarzenia/dodaj"}
+            passHref
+            className={cn(isMainPage ? "hidden" : "md:hidden")}
+          >
             <button
               aria-label="Add Event"
               className="group text-black h-10 w-10 flex items-center justify-center relative"

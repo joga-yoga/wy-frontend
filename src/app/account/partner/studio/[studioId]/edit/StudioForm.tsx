@@ -309,7 +309,9 @@ export function StudioForm({ routeId }: StudioFormProps) {
       return;
     }
 
-    const payload = buildStudioPayload(getValues());
+    const values = getValues();
+    const payload = buildStudioPayload(values);
+    if (intent === "publish") payload.is_listed = true;
     try {
       let response;
       if (studioId) {
@@ -319,8 +321,12 @@ export function StudioForm({ routeId }: StudioFormProps) {
         setStudioId(response.data.id);
         router.replace(`/account/partner/studio/${response.data.id}/edit`);
       }
-      setCurrentIsPublic(response.data.status === "claimed");
-      reset(getValues());
+      setCurrentIsPublic(response.data.is_listed !== false);
+      reset({
+        ...values,
+        is_public: response.data.is_listed !== false,
+        is_listed: response.data.is_listed !== false,
+      });
       toast({
         description: intent === "publish" ? "Studio opublikowane." : "Zmiany zapisane.",
       });
