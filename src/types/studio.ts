@@ -1,3 +1,5 @@
+import type { SocialLinkOut } from "./socialLink";
+
 export interface StudioRoom {
   id: string;
   studio_id: string;
@@ -85,6 +87,7 @@ export interface StudioPublic {
   yoga_styles: StudioYogaStyle[];
   instructors: StudioInstructor[];
   location?: StudioPublicLocation | null;
+  social_links: SocialLinkOut[];
   created_at: string;
   updated_at: string;
 }

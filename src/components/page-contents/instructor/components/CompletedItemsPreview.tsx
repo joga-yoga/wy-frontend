@@ -21,7 +21,7 @@ export function CompletedItemsPreview({ items }: CompletedItemsPreviewProps) {
           Zrealizowano
         </h2>
         <p className="text-[15px] leading-5 text-[#717171]">
-          Krótki podgląd doświadczenia i aktywności nauczyciela.
+          Wydarzenia i wyjazdy, które mam już za sobą.
         </p>
       </div>
 

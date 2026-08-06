@@ -2,19 +2,24 @@ import { IoInfinite as InfiniteIcon } from "react-icons/io5";
 
 import { getCurrencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import type { StudioPass, StudioSportCardAcceptance } from "@/types/studio";
+import type { StudioSportCardAcceptance } from "@/types/studio";
+
+interface PriceableItem {
+  price: number;
+  session_count?: number | null;
+}
 
 export function formatMoney(value: number | null | undefined, currency?: string | null) {
   if (value == null) return "";
   return `${value.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(currency || "PLN")}`;
 }
 
-export function perEntry(pass: StudioPass) {
+export function perEntry(pass: PriceableItem) {
   if (!pass.session_count || pass.session_count <= 0) return null;
   return pass.price / pass.session_count;
 }
 
-export function discountPercent(pass: StudioPass, dropInPrice?: number | null) {
+export function discountPercent(pass: PriceableItem, dropInPrice?: number | null) {
   const entry = perEntry(pass);
   if (!entry || !dropInPrice || dropInPrice <= 0 || entry >= dropInPrice) return null;
   return Math.round((1 - entry / dropInPrice) * 100);
@@ -44,11 +49,14 @@ export function LightPassTile({
 
   return (
     <div
-      className="flex shrink-0 flex-col items-center justify-center rounded-[10px] bg-[#F5F3EE]"
+      className={cn(
+        "flex shrink-0 flex-col items-center justify-center rounded-[6px]",
+        isUnlimitedSessions ? "bg-brand-green-700" : "bg-[#F5F3EE]",
+      )}
       style={{ width: size, height: size }}
     >
       {isUnlimitedSessions ? (
-        <InfiniteIcon className={cn(compact ? "size-5" : "size-7", "text-[#222222]")} />
+        <InfiniteIcon className={cn("text-white", compact ? "size-5" : "size-7")} />
       ) : (
         <span
           className={cn(
@@ -62,7 +70,8 @@ export function LightPassTile({
       {!hideDuration && (
         <span
           className={cn(
-            "mt-0.5 flex items-center font-medium text-[#888888]",
+            "mt-0.5 flex items-center font-medium",
+            isUnlimitedSessions ? "text-gray-200" : "text-[#888888]",
             compact ? "text-[9px]" : "text-[14px]",
           )}
         >

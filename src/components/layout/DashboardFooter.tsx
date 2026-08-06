@@ -78,7 +78,12 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           {/* Use items-center for alignment */}
           {/* Render Create button if handler exists */}
           {onCreate && (
-            <Button variant="default" onClick={onCreate} className="w-full md:w-auto md:flex-none">
+            <Button
+              size="action"
+              variant="default"
+              onClick={onCreate}
+              className="w-full md:w-auto md:flex-none"
+            >
               <span className="inline-flex items-center">
                 {createIcon}
                 <span className="ml-2 hidden md:block">{createLabel}</span>
@@ -88,7 +93,12 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           )}
           {/* Render View Public button if href exists */}
           {isPublished && viewPublicHref && (
-            <Button variant="outline" asChild className="w-full md:w-auto md:flex-none">
+            <Button
+              size="action"
+              variant="outline"
+              asChild
+              className="w-full md:w-auto md:flex-none"
+            >
               <a href={viewPublicHref} target="_blank" rel="noopener noreferrer">
                 <span className="inline-flex items-center">
                   {viewPublicIcon}
@@ -101,10 +111,11 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           {/* Render Publish button only if not published */}
           {showPublishButton && onPublishToggle && !isPublished && (
             <Button
+              size="action"
               variant="outline"
               onClick={onPublishToggle}
               disabled={isPublishing}
-              className="w-full md:w-auto md:flex-none border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+              className="w-full md:w-auto md:flex-none border-b2b-green-border text-b2b-green-text hover:bg-b2b-green-bg hover:text-b2b-green-text"
             >
               <span className="inline-flex items-center">
                 {isPublishing ? publishingIcon : publishIcon}
@@ -119,15 +130,17 @@ export const DashboardFooter: React.FC<DashboardFooterProps> = ({
           )}
           {/* Render Update button if handler exists */}
           {onUpdate && (
+            // Green, not black: V1/V2/V3 and every other prototype footer draw the
+            // primary save action in the brand green. The indigo shadow was left over
+            // from a palette this product does not use.
             <Button
-              variant="default"
+              size="action"
+              variant="green"
               onClick={() => {
                 onUpdate();
               }}
               disabled={isSaveDisabled || isPublishing}
-              className={`w-full md:w-auto md:flex-none transition-all duration-300 ${
-                !isSaveDisabled ? "shadow-lg shadow-indigo-500/20" : ""
-              }`}
+              className="w-full md:w-auto md:flex-none transition-all duration-300"
             >
               <span className="inline-flex items-center">
                 {updateIcon}

@@ -2,6 +2,9 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Viewport } from "next";
+import { Suspense } from "react";
+
+import { PublicPathRecorder } from "@/components/layout/PublicPathRecorder";
 
 import { fonts } from "./fonts";
 import { Providers } from "./providers";
@@ -39,7 +42,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="googlebot" content="all" />
       </head>
       <body suppressHydrationWarning={true}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {/* Records the last public URL so the B2C profile's close button knows where
+              to send the user back to. Root-level because /book and /create are public
+              too and sit outside the (public) group. */}
+          <Suspense fallback={null}>
+            <PublicPathRecorder />
+          </Suspense>
+          {children}
+        </Providers>
       </body>
     </html>
   );

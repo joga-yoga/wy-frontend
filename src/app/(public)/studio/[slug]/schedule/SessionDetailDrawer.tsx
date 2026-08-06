@@ -2,7 +2,6 @@
 
 import {
   BarChart3,
-  Building2,
   Calendar,
   Check,
   Clock,
@@ -15,23 +14,18 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoChevronForward, IoLanguage, IoLanguageOutline } from "react-icons/io5";
 
 import { CancellationChip } from "@/components/booking/CancellationChip";
-import { SportCardLogo } from "@/components/booking/SportCardLogo";
-import { InstructorAvatar } from "@/components/common/InstructorAvatar";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
-import { WyImage } from "@/components/custom/WyImage";
+import { StudioCard } from "@/components/common/StudioCard";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
-import {
-  discountPercent,
-  formatMoney,
-  LightPassTile,
-  perEntry,
-} from "@/components/page-contents/studio/pricingHelpers";
+import { hasPassPricing, PassList } from "@/components/page-contents/studio/PassList";
+import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
+import { SportCardList } from "@/components/page-contents/studio/SportCardList";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -46,12 +40,7 @@ import { cn } from "@/lib/utils";
 
 import { levelLabel } from "../classes/types";
 import { COLOR_BORDER_MAP, DEFAULT_BORDER, NEARLY_FULL_THRESHOLD } from "./components/SessionCard";
-import type {
-  OccurrenceDetail,
-  OccurrenceDetailInstructor,
-  OccurrenceDetailStudioPass,
-  OccurrenceDetailStudioSportCardAcceptance,
-} from "./types";
+import type { OccurrenceDetail, OccurrenceDetailInstructor } from "./types";
 
 const BRAND_GREEN = "#4F8A62";
 
@@ -385,7 +374,12 @@ function InstructorSection({
 
   const row = (
     <div className="flex items-center gap-3">
-      <InstructorAvatar name={instructor.name} imageId={instructor.image_id} size={48} />
+      <HashedAvatar
+        seed={instructor.id}
+        name={instructor.name}
+        imageId={instructor.image_id}
+        size={48}
+      />
       <div className="min-w-0 flex-1">
         {showInstructorChange && detail.previous_instructor_name && (
           <p className="truncate text-sm text-gray-400 line-through">
@@ -498,18 +492,13 @@ function AboutClassSection({ detail }: { detail: OccurrenceDetail }) {
   );
 }
 
-// ── Pricing row + drawer (T07) ─────────────────────────────────
+// ── Pricing row + drawer (T06: shared PassList/SportCardList, see StudioPageContent) ──
 
 function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
-  const [showAllPasses, setShowAllPasses] = useState(false);
   const hasDropIn = studio.drop_in_price != null;
-  const hasPricing = hasDropIn || studio.passes.length > 0;
+  const hasPricing = hasPassPricing(studio.passes, studio.drop_in_price);
   const hasSportCards = studio.accepts_sport_cards != null;
   if (!hasPricing && !hasSportCards) return null;
-
-  const passLimit = hasDropIn ? 2 : 3;
-  const visiblePasses = showAllPasses ? studio.passes : studio.passes.slice(0, passLimit);
-  const hiddenPassCount = studio.passes.length - passLimit;
 
   return (
     <Drawer showSwipeHandle>
@@ -550,105 +539,18 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
         <div className="overflow-y-auto px-4 pb-6">
           <div className="space-y-4">
             {hasPricing && (
-              <div className="divide-y divide-gray-100">
-                {hasDropIn && (
-                  <div className="flex items-center gap-4 py-3">
-                    <LightPassTile sessionCount={1} durationDays={0} />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900">Pojedyncze wejście</h3>
-                      <p className="mt-0.5 text-xs text-gray-500">Bez karnetu i karty sportowej</p>
-                    </div>
-                    <span className="shrink-0 text-base font-semibold text-gray-900">
-                      {formatMoney(studio.drop_in_price, studio.currency)}
-                    </span>
-                  </div>
-                )}
-                {visiblePasses.map((pass: OccurrenceDetailStudioPass) => {
-                  const entry = perEntry(pass);
-                  const discount = discountPercent(pass, studio.drop_in_price);
-                  return (
-                    <div key={pass.id} className="flex items-center gap-4 py-3">
-                      <LightPassTile
-                        sessionCount={pass.session_count}
-                        durationDays={pass.duration_days}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-gray-900">{pass.name}</h3>
-                          {discount != null && (
-                            <span className="text-xs font-semibold text-emerald-600">
-                              −{discount}%
-                            </span>
-                          )}
-                        </div>
-                        {entry != null && (
-                          <p className="mt-0.5 text-xs text-gray-500">
-                            {formatMoney(entry, pass.currency || studio.currency)}/wejście
-                          </p>
-                        )}
-                      </div>
-                      <span className="shrink-0 text-base font-semibold text-gray-900">
-                        {formatMoney(pass.price, pass.currency || studio.currency)}
-                      </span>
-                    </div>
-                  );
-                })}
-                {!showAllPasses && hiddenPassCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllPasses(true)}
-                    className="w-full py-3 text-center text-sm font-medium text-gray-900"
-                  >
-                    Pokaż wszystkie karnety (+{hiddenPassCount})
-                  </button>
-                )}
-              </div>
+              <PassList
+                passes={studio.passes}
+                dropInPrice={studio.drop_in_price}
+                currency={studio.currency}
+              />
             )}
-
             {hasSportCards && (
-              <div>
-                <p className="mb-2 text-xs text-gray-500">
-                  Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za
-                  wejście.
-                </p>
-                {studio.sport_card_acceptances.map(
-                  (item: OccurrenceDetailStudioSportCardAcceptance, i: number) => {
-                    const name = item.sport_card?.name ?? item.name ?? "Karta sportowa";
-                    const photo = item.sport_card?.photo ?? item.photo ?? null;
-                    const hasFee = item.fee != null && item.fee > 0;
-                    return (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          "flex items-center gap-3 py-2.5",
-                          i > 0 && "border-t border-gray-100",
-                        )}
-                      >
-                        <SportCardLogo
-                          photo={photo}
-                          alt={name}
-                          width={44}
-                          height={32}
-                          className="rounded"
-                        />
-                        <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">
-                          {name}
-                        </p>
-                        <span
-                          className={cn(
-                            "shrink-0 text-xs",
-                            hasFee ? "text-gray-500" : "font-medium text-emerald-600",
-                          )}
-                        >
-                          {hasFee
-                            ? `dopłata ${formatMoney(item.fee, studio.currency)}`
-                            : "bez dopłaty"}
-                        </span>
-                      </div>
-                    );
-                  },
-                )}
-              </div>
+              <SportCardList
+                acceptsSportCards={studio.accepts_sport_cards}
+                acceptances={studio.sport_card_acceptances}
+                currency={studio.currency}
+              />
             )}
           </div>
         </div>
@@ -660,33 +562,10 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
 // ── Studio section (T07) ───────────────────────────────────────────────
 
 function StudioSection({ studio }: { studio: OccurrenceDetail["studio"] }) {
-  const href = studio.slug ? `/studio/${studio.slug}` : null;
-
-  const row = (
-    <div className="flex items-center gap-3">
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white">
-        {studio.image_id ? (
-          <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-100">
-            <Building2 className="h-5 w-5 text-gray-400" />
-          </div>
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-[#222222]">{studio.name}</p>
-        {studio.address && (
-          <p className="mt-0.5 truncate text-xs text-[#717171]">{studio.address}</p>
-        )}
-      </div>
-      {href && <IoChevronForward className="h-5 w-5 shrink-0 text-gray-500" />}
-    </div>
-  );
-
   return (
     <section className="space-y-3 px-4 py-4">
       <p className="text-[18px] font-semibold text-[#222222]">Studio</p>
-      {href ? <Link href={href}>{row}</Link> : row}
+      <StudioCard studio={studio} />
     </section>
   );
 }

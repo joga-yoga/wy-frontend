@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, Calendar, CreditCard, MapPin } from "lucide-react";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 
@@ -9,30 +10,27 @@ import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/Class
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
 import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
-import type {
-  PublicOccurrence,
-  PublicSchedulePreviewResponse,
-} from "@/app/(public)/studio/[slug]/schedule/types";
+import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]/schedule/types";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
+import { InstructorList } from "@/components/common/InstructorList";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
+import { SocialLinksRow } from "@/components/common/SocialLinksRow";
 import { PhotoGallery } from "@/components/custom/PhotoGallery";
 import { WyImage } from "@/components/custom/WyImage";
-import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
+import { amenityIcon } from "@/lib/amenityIcons";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
-import type { StudioPass, StudioPublic, StudioSportCardAcceptance } from "@/types/studio";
+import type { StudioPublic } from "@/types/studio";
 
+import { hasPassPricing, PassList } from "./PassList";
 import {
-  discountPercent,
-  formatMoney,
-  LightPassTile,
-  perEntry,
-  sportCardName,
-  sportCardPhoto,
-} from "./pricingHelpers";
-import { formatSneakDayHeader } from "./scheduleSneakUtils";
+  formatSneakDayHeader,
+  formatWarsawDateShort,
+  groupOccurrencesByDay,
+} from "./scheduleSneakUtils";
+import { SportCardList } from "./SportCardList";
 
 interface StudioPageContentProps {
   studio: StudioPublic;
@@ -40,39 +38,6 @@ interface StudioPageContentProps {
   previewMode?: boolean;
   notice?: ReactNode;
   bottomPrimaryAction?: { label: string; href: string };
-}
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-function formatWarsawDateShort(d: Date): string {
-  const parts = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Warsaw",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(d);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
-
-function groupOccurrencesByDay(occurrences: PublicOccurrence[]) {
-  const groups: { date: string; occurrences: PublicOccurrence[] }[] = [];
-  for (const occ of occurrences) {
-    const last = groups[groups.length - 1];
-    if (last?.date === occ.calendar_date) {
-      last.occurrences.push(occ);
-    } else {
-      groups.push({ date: occ.calendar_date, occurrences: [occ] });
-    }
-  }
-  return groups;
 }
 
 function StudioScheduleSneak({
@@ -86,6 +51,19 @@ function StudioScheduleSneak({
   const occurrences = preview?.occurrences ?? [];
   const groups = groupOccurrencesByDay(occurrences);
   const todayStr = formatWarsawDateShort(new Date());
+
+  // Mirrors StudioSchedulePage's pathname-reset effect: Next.js's client router cache can
+  // keep this component instance (and its state) alive across an away-and-back navigation,
+  // so a stale selectedOccurrenceId could reopen the drawer with data from a previous visit.
+  const pathname = usePathname();
+  const isFirstPathnameEffect = useRef(true);
+  useEffect(() => {
+    if (isFirstPathnameEffect.current) {
+      isFirstPathnameEffect.current = false;
+      return;
+    }
+    setSelectedOccurrenceId(null);
+  }, [pathname]);
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
@@ -114,7 +92,10 @@ function StudioScheduleSneak({
 
       <Link
         href={`/studio/${studioSlug}/grafik`}
-        className="mt-3 grid h-12 w-full grid-cols-[16px_1fr_16px] items-center gap-3 rounded-xl bg-gray-950 px-4 text-md font-medium text-white transition-colors hover:bg-gray-800"
+        className={cn(
+          buttonVariants({ variant: "muted" }),
+          "relative mt-3 h-12 w-full rounded-xl grid grid-cols-[16px_1fr_16px] items-center gap-3 px-4!",
+        )}
       >
         <Calendar className="h-4 w-4 shrink-0" />
         <span className="text-center">Zobacz cały grafik</span>
@@ -156,7 +137,7 @@ function ZajeciaPreviewSection({ studioSlug }: { studioSlug: string }) {
             key={item.id}
             studioSlug={studioSlug}
             item={item}
-            variant="compact"
+            // hideDescription
             backTo="studio"
           />
         ))}
@@ -177,7 +158,7 @@ function StudioHeader() {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const accountHref = mounted && user ? "/profile" : "/profile/login";
+  const accountHref = mounted && user ? "/account/partner" : "/account/login";
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20">
@@ -257,14 +238,15 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
       <PhotoGallery images={studio.image_ids} alt={studio.name} />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4">
-        <div className="pointer-events-none relative -mt-[50px] h-[100px] w-[100px] overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
-          {studio.image_id ? (
-            <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xl font-bold text-gray-500">
-              {initials(studio.name)}
-            </div>
-          )}
+        <div className="pointer-events-none -mt-[50px] w-[100px] overflow-hidden rounded-2xl border-2 border-white shadow-sm">
+          <HashedAvatar
+            seed={studio.id}
+            name={studio.name}
+            imageId={studio.image_id}
+            size={100}
+            imageFit="contain"
+            className="rounded-none bg-white"
+          />
         </div>
 
         <h1 className="mt-2.5 text-xl font-bold text-gray-950 md:text-3xl">{studio.name}</h1>
@@ -279,6 +261,7 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
             <span>{studio.address}</span>
           </button>
         )}
+        <SocialLinksRow links={studio.social_links} />
         {studio.description && <DescriptionBlock text={studio.description} />}
       </div>
     </section>
@@ -286,294 +269,31 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
 }
 
 function PricingSection({ studio }: { studio: StudioPublic }) {
-  const currency = studio.currency || "PLN";
-  const hasDropIn = studio.drop_in_price != null;
-  const hasPricing = hasDropIn || studio.passes.length > 0;
-  const [selectedPass, setSelectedPass] = useState<StudioPass | null>(null);
-  const [showDropIn, setShowDropIn] = useState(false);
-  const [showAllPasses, setShowAllPasses] = useState(false);
-  if (!hasPricing) return null;
-
-  const passLimit = hasDropIn ? 2 : 3;
-  const visiblePasses = showAllPasses ? studio.passes : studio.passes.slice(0, passLimit);
-  const hiddenPassCount = studio.passes.length - passLimit;
+  if (!hasPassPricing(studio.passes, studio.drop_in_price)) return null;
 
   return (
     <section id="pricing-section" className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Cennik</h2>
-      <div className="divide-y divide-gray-100">
-        {hasDropIn && (
-          <button
-            type="button"
-            onClick={() => setShowDropIn(true)}
-            className="flex w-full items-center gap-4 py-3 text-left"
-          >
-            <LightPassTile sessionCount={1} durationDays={0} />
-            <div className="min-w-0 flex-1">
-              <h3 className="text-[15px] font-semibold text-[#222222]">Pojedyncze wejście</h3>
-              <p className="mt-0.5 text-sm text-[#717171]">Bez karnetu i karty sportowej</p>
-            </div>
-            <span className="shrink-0 text-lg font-semibold text-[#222222]">
-              {formatMoney(studio.drop_in_price, currency)}
-            </span>
-          </button>
-        )}
-        {visiblePasses.map((pass) => {
-          const entryPrice = perEntry(pass);
-          const discount = discountPercent(pass, studio.drop_in_price);
-          const subtitle = [
-            pass.description,
-            entryPrice != null
-              ? `${formatMoney(entryPrice, pass.currency || currency)}/wejście`
-              : null,
-          ]
-            .filter(Boolean)
-            .join(" · ");
-          return (
-            <button
-              key={pass.id}
-              type="button"
-              onClick={() => setSelectedPass(pass)}
-              className="flex w-full items-center gap-4 py-3 text-left"
-            >
-              <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-[15px] font-semibold text-[#222222]">{pass.name}</h3>
-                  {discount != null && (
-                    <span className="text-sm font-semibold text-emerald-600">−{discount}%</span>
-                  )}
-                </div>
-                {subtitle && (
-                  <p className="mt-0.5 text-sm leading-snug text-[#717171]">{subtitle}</p>
-                )}
-              </div>
-              <span className="shrink-0 text-lg font-semibold text-[#222222]">
-                {formatMoney(pass.price, pass.currency || currency)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {!showAllPasses && hiddenPassCount > 0 && (
-        <Button
-          variant="muted"
-          className="mt-3 h-12 w-full rounded-xl"
-          onClick={() => setShowAllPasses(true)}
-        >
-          Pokaż wszystkie karnety
-        </Button>
-      )}
-
-      <Drawer open={selectedPass != null} onOpenChange={(o) => !o && setSelectedPass(null)}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{selectedPass?.name ?? ""}</DrawerTitle>
-          </DrawerHeader>
-          {selectedPass &&
-            (() => {
-              const passCurrency = selectedPass.currency || currency;
-              const entry = perEntry(selectedPass);
-              const discount = discountPercent(selectedPass, studio.drop_in_price);
-              const isUnlimitedSessions = selectedPass.session_count == null;
-              const isUnlimitedDays = selectedPass.duration_days == null;
-
-              return (
-                <div className="px-4 pb-6">
-                  <div className="mb-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <LightPassTile
-                        sessionCount={selectedPass.session_count}
-                        durationDays={selectedPass.duration_days}
-                      />
-                      <span className="text-2xl font-bold text-[#222222]">
-                        {formatMoney(selectedPass.price, passCurrency)}
-                      </span>
-                    </div>
-                    {discount != null && (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                        −{discount}%
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="divide-y divide-gray-100 rounded-xl bg-[#FAFAFA] px-4">
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-sm text-[#717171]">Wejścia</span>
-                      <span className="text-sm font-medium text-[#222222]">
-                        {isUnlimitedSessions ? "Bez limitu" : selectedPass.session_count}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-sm text-[#717171]">Ważność</span>
-                      <span className="text-sm font-medium text-[#222222]">
-                        {isUnlimitedDays ? "Bezterminowo" : `${selectedPass.duration_days} dni`}
-                      </span>
-                    </div>
-                    {entry != null && (
-                      <div className="flex items-center justify-between py-3">
-                        <span className="text-sm text-[#717171]">Cena za wejście</span>
-                        <span className="text-sm font-medium text-[#222222]">
-                          {formatMoney(entry, passCurrency)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {selectedPass.description && (
-                    <p className="mt-4 text-sm leading-relaxed text-[#717171]">
-                      {selectedPass.description}
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
-        </DrawerContent>
-      </Drawer>
-
-      <Drawer open={showDropIn} onOpenChange={setShowDropIn}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Pojedyncze wejście</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6">
-            <div className="mb-5 flex items-center gap-4">
-              <LightPassTile sessionCount={1} durationDays={0} />
-              <span className="text-2xl font-bold text-[#222222]">
-                {formatMoney(studio.drop_in_price, currency)}
-              </span>
-            </div>
-            <p className="text-[15px] leading-relaxed text-[#222222]">
-              Cena za jedno wejście bez karnetu i bez karty sportowej.
-            </p>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <PassList
+        passes={studio.passes}
+        dropInPrice={studio.drop_in_price}
+        currency={studio.currency}
+      />
     </section>
   );
 }
 
 function SportCardsSection({ studio }: { studio: StudioPublic }) {
-  const [selectedCard, setSelectedCard] = useState<StudioSportCardAcceptance | null>(null);
-  const [showAllCards, setShowAllCards] = useState(false);
-
   if (studio.accepts_sport_cards == null) return null;
-
-  const selectedPhoto = selectedCard ? sportCardPhoto(selectedCard) : null;
-  const selectedDescription =
-    selectedCard?.description || selectedCard?.sport_card?.description || null;
 
   return (
     <section id="sport-cards-section" className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-1 text-[18px] font-semibold text-[#222222]">Karty sportowe</h2>
-      <p className="mb-4 text-sm text-[#717171]">
-        Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za wejście.
-      </p>
-      {studio.accepts_sport_cards === false ? (
-        <p className="text-sm text-[#717171]">Studio nie akceptuje kart sportowych.</p>
-      ) : (
-        <div>
-          {(showAllCards
-            ? studio.sport_card_acceptances
-            : studio.sport_card_acceptances.slice(0, 3)
-          ).map((item, i) => {
-            const photo = sportCardPhoto(item);
-            const hasFee = item.fee != null && item.fee > 0;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setSelectedCard(item)}
-                className={`flex w-full items-center gap-3 py-3 text-left${i > 0 ? " border-t border-gray-100" : ""}`}
-              >
-                <div className="relative flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[4px] bg-[#F5F3EE]">
-                  {photo ? (
-                    <WyImage
-                      src={photo}
-                      alt={sportCardName(item)}
-                      width={56}
-                      height={40}
-                      className="h-10 w-14 object-fill"
-                    />
-                  ) : (
-                    <CreditCard className="h-4 w-4 text-[#AAAAAA]" />
-                  )}
-                </div>
-                <p className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#222222]">
-                  {sportCardName(item)}
-                </p>
-                <span
-                  className={`shrink-0 text-sm ${hasFee ? "text-[#717171]" : "font-medium text-emerald-600"}`}
-                >
-                  {hasFee
-                    ? `dopłata ${formatMoney(item.fee, studio.currency || "PLN")}`
-                    : "bez dopłaty"}
-                </span>
-              </button>
-            );
-          })}
-          {studio.sport_card_acceptances.length === 0 && (
-            <p className="py-3 text-sm text-[#717171]">
-              Lista akceptowanych kart pojawi się po uzupełnieniu profilu.
-            </p>
-          )}
-          {!showAllCards && studio.sport_card_acceptances.length > 3 && (
-            <Button
-              variant="muted"
-              className="mt-3 h-12 w-full rounded-xl"
-              onClick={() => setShowAllCards(true)}
-            >
-              Pokaż wszystkie karty
-            </Button>
-          )}
-        </div>
-      )}
-
-      <Drawer open={selectedCard != null} onOpenChange={(o) => !o && setSelectedCard(null)}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{selectedCard ? sportCardName(selectedCard) : ""}</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6">
-            {selectedPhoto ? (
-              <div className="mb-4 overflow-hidden rounded-xl">
-                <WyImage
-                  src={selectedPhoto}
-                  alt={selectedCard ? sportCardName(selectedCard) : ""}
-                  width={560}
-                  height={320}
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-            ) : (
-              <div className="mb-4 flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-[#F5F3EE]">
-                <CreditCard className="h-8 w-8 text-[#BBBBBB]" />
-              </div>
-            )}
-            <div className="space-y-3">
-              <p className="text-[15px] leading-relaxed text-[#222222]">
-                {selectedCard?.fee != null && selectedCard.fee > 0 ? (
-                  <>
-                    Akceptujemy kartę{" "}
-                    <strong>{selectedCard ? sportCardName(selectedCard) : ""}</strong>. Do każdego
-                    wejścia obowiązuje dopłata{" "}
-                    {formatMoney(selectedCard.fee, studio.currency || "PLN")}.
-                  </>
-                ) : (
-                  <>
-                    Akceptujemy kartę{" "}
-                    <strong>{selectedCard ? sportCardName(selectedCard) : ""}</strong> bez
-                    dodatkowych opłat.
-                  </>
-                )}
-              </p>
-              {selectedDescription && (
-                <p className="text-sm leading-relaxed text-[#717171]">{selectedDescription}</p>
-              )}
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <SportCardList
+        acceptsSportCards={studio.accepts_sport_cards}
+        acceptances={studio.sport_card_acceptances}
+        currency={studio.currency}
+      />
     </section>
   );
 }
@@ -584,46 +304,7 @@ function InstructorsSection({ studio }: { studio: StudioPublic }) {
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Instruktorzy</h2>
-      <div className="space-y-4">
-        {studio.instructors.map((instructor) => {
-          const href = instructor.slug ? `/instruktor/${instructor.slug}` : null;
-          const avatar = instructor.image_id ? (
-            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
-              <WyImage
-                src={instructor.image_id}
-                alt={instructor.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-50 text-base font-semibold text-amber-800">
-              {initials(instructor.name)}
-            </div>
-          );
-
-          const row = (
-            <div className="flex items-center gap-3">
-              {avatar}
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold leading-tight text-[#222222]">{instructor.name}</p>
-                {instructor.short_bio && (
-                  <p className="mt-0.5 text-sm leading-tight text-[#717171]">
-                    {instructor.short_bio}
-                  </p>
-                )}
-              </div>
-              {href && <ArrowRight className="h-5 w-5 shrink-0 text-gray-400" />}
-            </div>
-          );
-
-          return (
-            <div key={instructor.id}>
-              {href ? <DetailPageLink href={href}>{row}</DetailPageLink> : row}
-            </div>
-          );
-        })}
-      </div>
+      <InstructorList instructors={studio.instructors} />
     </section>
   );
 }
@@ -673,15 +354,16 @@ function AmenitiesSection({ studio }: { studio: StudioPublic }) {
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Udogodnienia</h2>
-      <div className="flex flex-wrap gap-2">
-        {visibleAmenities.map((amenity) => (
-          <span
-            key={amenity.id}
-            className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm text-[#444444]"
-          >
-            {amenity.name}
-          </span>
-        ))}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {visibleAmenities.map((amenity) => {
+          const Icon = amenityIcon(amenity.icon_id);
+          return (
+            <div key={amenity.id} className="flex items-center gap-2">
+              <Icon className="h-5 w-5 shrink-0 text-gray-500" />
+              <span className="text-sm text-[#444444]">{amenity.name}</span>
+            </div>
+          );
+        })}
       </div>
       {hasMore && !showAll && (
         <Button

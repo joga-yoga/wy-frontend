@@ -44,3 +44,21 @@ export const COLOR_LABELS: Record<ClassColor, string> = {
   sand: "Piaskowy",
   apricot: "Morelowy",
 };
+
+export const COLOR_FILL_700_MAP: Record<ClassColor, string> = {
+  green: "bg-class-green-700",
+  teal: "bg-class-teal-700",
+  blue: "bg-class-blue-700",
+  lavender: "bg-class-lavender-700",
+  rose: "bg-class-rose-700",
+  sand: "bg-class-sand-700",
+  apricot: "bg-class-apricot-700",
+};
+
+/** Stable hash of an arbitrary seed (id, not name — so the color doesn't change if
+ * something is renamed) to one of the 7 class-color hues, for avatar/logo fallbacks. */
+export function hashSeedToClassColor(seed: string): ClassColor {
+  let sum = 0;
+  for (let i = 0; i < seed.length; i++) sum += seed.charCodeAt(i);
+  return CLASS_COLORS[sum % CLASS_COLORS.length];
+}

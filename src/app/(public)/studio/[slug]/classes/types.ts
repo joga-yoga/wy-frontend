@@ -59,3 +59,19 @@ export function formatClassMetaLine(item: {
     .filter(Boolean)
     .join(" · ");
 }
+
+/** Polish plural rules for "rodzaj" (class type): 1 rodzaj, 2-4 rodzaje (except
+ * 12-14), otherwise rodzajów. Returns the full "{N} rodzaj(e/ów) zajęć" count line. */
+export function classCountLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  let word: string;
+  if (count === 1) {
+    word = "rodzaj";
+  } else if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
+    word = "rodzaje";
+  } else {
+    word = "rodzajów";
+  }
+  return `${count} ${word} zajęć`;
+}

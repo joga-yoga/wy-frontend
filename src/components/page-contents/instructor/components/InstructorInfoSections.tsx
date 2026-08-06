@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  Award,
-  ChevronLeft,
-  ChevronRight,
-  GraduationCap,
-  Home,
-  Languages,
-  MapPin,
-  X,
-} from "lucide-react";
+import { Award, GraduationCap, Languages, MapPin } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { PhotoGallery } from "@/components/custom/PhotoGallery";
 import { WyImage } from "@/components/custom/WyImage";
 import TagYogaLotosIcon from "@/components/icons/tags/TagYogaLotosIcon";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { scrollTo } from "@/lib/scrollTo";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -23,6 +15,13 @@ import type {
   InstructorProfileViewModel,
   InstructorStyleViewModel,
 } from "./viewModel";
+
+/** Section ids that each highlight kind scrolls to when clicked. `location`/`language`
+ * have no corresponding section on the page and stay non-interactive. */
+const HIGHLIGHT_SCROLL_TARGETS: Partial<Record<InstructorHighlightViewModel["kind"], string>> = {
+  certificate: "certificates",
+  experience: "experience",
+};
 
 export function InstructorHighlights({
   highlights,
@@ -38,23 +37,41 @@ export function InstructorHighlights({
       aria-label="Najważniejsze informacje o nauczycielu jogi"
     >
       <div className="space-y-2 md:space-y-4">
-        {highlights.map((item) => (
-          <div
-            key={item.id}
-            data-testid={`instructor-highlight-${item.kind}`}
-            className="flex min-w-0 items-center gap-3 text-[#717171]"
-          >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[#5F5F69] md:h-8 md:w-8">
-              {highlightIcon(item.kind)}
-            </span>
-            <span
-              className="min-w-0 truncate text-[15px] font-medium leading-5 md:text-[28px] md:leading-[34px]"
-              title={item.label}
+        {highlights.map((item) => {
+          const targetId = HIGHLIGHT_SCROLL_TARGETS[item.kind];
+          const isInteractive = Boolean(targetId);
+
+          return (
+            <div
+              key={item.id}
+              data-testid={`instructor-highlight-${item.kind}`}
+              role={isInteractive ? "button" : undefined}
+              tabIndex={isInteractive ? 0 : undefined}
+              onClick={isInteractive ? () => scrollTo(targetId!) : undefined}
+              onKeyDown={
+                isInteractive
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") scrollTo(targetId!);
+                    }
+                  : undefined
+              }
+              className={cn(
+                "flex min-w-0 items-center gap-3 text-[#717171]",
+                isInteractive && "cursor-pointer",
+              )}
             >
-              {item.label}
-            </span>
-          </div>
-        ))}
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[#5F5F69] md:h-8 md:w-8">
+                {highlightIcon(item.kind)}
+              </span>
+              <span
+                className="min-w-0 truncate text-[15px] font-medium leading-5 md:text-[28px] md:leading-[34px]"
+                title={item.label}
+              >
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -66,8 +83,6 @@ function highlightIcon(kind: InstructorHighlightViewModel["kind"]) {
   switch (kind) {
     case "certificate":
       return <Award className={className} aria-hidden="true" />;
-    case "studio":
-      return <Home className={className} aria-hidden="true" />;
     case "location":
       return <MapPin className={className} aria-hidden="true" />;
     case "experience":
@@ -160,12 +175,16 @@ export function InstructorLanguages({
 
 export function InstructorExperience({ items }: { items: InstructorStyleViewModel[] }) {
   return (
-    <section className="px-4 py-7 md:px-8 md:py-10" aria-labelledby="instructor-experience-title">
+    <section
+      id="experience"
+      className="scroll-mt-16 px-4 py-7 md:px-8 md:py-10"
+      aria-labelledby="instructor-experience-title"
+    >
       <SectionHeading
         id="instructor-experience-title"
         icon={<TagYogaLotosIcon className="h-5 w-5" aria-hidden="true" />}
       >
-        Doświadczenie
+        Style, których uczę
       </SectionHeading>
       <div className="mt-4 space-y-3">
         {items.map((item) => (
@@ -190,7 +209,11 @@ export function InstructorCertificates({
   certificates: InstructorCertificateViewModel[];
 }) {
   return (
-    <section className="px-4 py-7 md:px-8 md:py-10" aria-labelledby="instructor-certificates-title">
+    <section
+      id="certificates"
+      className="scroll-mt-16 px-4 py-7 md:px-8 md:py-10"
+      aria-labelledby="instructor-certificates-title"
+    >
       <SectionHeading
         id="instructor-certificates-title"
         icon={<GraduationCap className="h-5 w-5" aria-hidden="true" />}
@@ -218,49 +241,20 @@ export function InstructorCertificates({
 }
 
 export function InstructorGallery({ imageIds }: { imageIds: string[] }) {
-  const visibleImageIds = imageIds.slice(0, 4);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const openPhoto = (index: number) => {
-    setActiveIndex(index);
-    setLightboxOpen(true);
-  };
-
   return (
     <section className="px-4 py-7 md:px-8 md:py-10" aria-labelledby="instructor-gallery-title">
       <SectionHeading id="instructor-gallery-title">Galeria</SectionHeading>
-      <div className="mt-4 grid grid-cols-2 gap-2 md:max-w-[560px] md:gap-3">
-        {visibleImageIds.map((imageId, index) => (
-          <button
-            key={`${imageId}-${index}`}
-            type="button"
-            onClick={() => openPhoto(index)}
-            className="relative aspect-square overflow-hidden rounded-lg bg-[#F7F7F7]"
-            aria-label={`Otwórz zdjęcie ${index + 1}`}
-          >
-            <WyImage
-              src={imageId}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(min-width: 768px) 274px, 50vw"
-            />
-          </button>
-        ))}
-      </div>
-
-      <PhotoLightbox
-        imageIds={visibleImageIds}
-        initialIndex={activeIndex}
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
+      <PhotoGallery
+        images={imageIds}
+        alt="Zdjęcie z galerii nauczyciela"
+        variant="grid"
+        className="mt-4"
       />
     </section>
   );
 }
 
-function SectionHeading({
+export function SectionHeading({
   id,
   icon,
   children,
@@ -280,73 +274,5 @@ function SectionHeading({
         {children}
       </h2>
     </div>
-  );
-}
-
-function PhotoLightbox({
-  imageIds,
-  initialIndex,
-  open,
-  onClose,
-}: {
-  imageIds: string[];
-  initialIndex: number;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [index, setIndex] = useState(initialIndex);
-
-  useEffect(() => {
-    if (open) setIndex(initialIndex);
-  }, [open, initialIndex]);
-
-  if (imageIds.length === 0) return null;
-
-  const prev = () => setIndex((i) => (i - 1 + imageIds.length) % imageIds.length);
-  const next = () => setIndex((i) => (i + 1) % imageIds.length);
-
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="w-full max-w-[390px] border-none bg-black/95 p-0 [&>button]:hidden">
-        <div className="relative flex flex-col items-center">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60"
-            aria-label="Zamknij galerię"
-          >
-            <X className="h-4 w-4 text-white" />
-          </button>
-
-          <div className="relative aspect-square w-full">
-            <WyImage src={imageIds[index]} alt="" fill className="object-contain" sizes="390px" />
-          </div>
-
-          {imageIds.length > 1 && (
-            <div className="flex items-center gap-4 py-4">
-              <button
-                type="button"
-                onClick={prev}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"
-                aria-label="Poprzednie zdjęcie"
-              >
-                <ChevronLeft className="h-4 w-4 text-white" />
-              </button>
-              <span className="text-xs text-white/60">
-                {index + 1} / {imageIds.length}
-              </span>
-              <button
-                type="button"
-                onClick={next}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"
-                aria-label="Następne zdjęcie"
-              >
-                <ChevronRight className="h-4 w-4 text-white" />
-              </button>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

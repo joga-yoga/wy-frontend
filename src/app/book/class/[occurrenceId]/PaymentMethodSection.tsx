@@ -3,10 +3,13 @@
 import { Banknote, CreditCard } from "lucide-react";
 import { useState } from "react";
 
-import type { OccurrenceDetail } from "@/app/(public)/studio/[slug]/schedule/types";
 import { OptionRadio, OptionRow } from "@/components/booking/OptionRow";
 
-export function PaymentMethodSection({ studio }: { studio: OccurrenceDetail["studio"] }) {
+export interface PaymentMethodStudio {
+  accepts_stripe: boolean;
+}
+
+export function PaymentMethodSection({ studio }: { studio: PaymentMethodStudio }) {
   const [method, setMethod] = useState<"cash" | "online">("cash");
   const onlineVisible = studio.accepts_stripe;
 

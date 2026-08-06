@@ -1,11 +1,12 @@
 "use client";
 
-import { Banknote, Check, ShieldAlert, ShoppingBag, Ticket, Wallet } from "lucide-react";
+import { Banknote, Check, ShoppingBag, Ticket, Wallet } from "lucide-react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { IoChevronForward } from "react-icons/io5";
 
 import type { OccurrenceDetail } from "@/app/(public)/studio/[slug]/schedule/types";
+import { BlockedState } from "@/components/booking/BlockedState";
 import { CancellationChip } from "@/components/booking/CancellationChip";
 import { OccurrenceHero } from "@/components/booking/OccurrenceHero";
 import { OptionRadio, OptionRow, OwnTag } from "@/components/booking/OptionRow";
@@ -223,7 +224,11 @@ function FundingScreen({
         color={detail.color}
         instructor={
           detail.instructor
-            ? { name: detail.instructor.name, imageId: detail.instructor.image_id }
+            ? {
+                id: detail.instructor.id,
+                name: detail.instructor.name,
+                imageId: detail.instructor.image_id,
+              }
             : null
         }
       />
@@ -535,33 +540,6 @@ function ConfirmationScreen({
   );
 }
 
-// ── Blocked states (§7.1/§7.2) ──────────────────────────────────────────
-
-function BlockedState({
-  title,
-  body,
-  contactHref,
-}: {
-  title: string;
-  body: string;
-  contactHref?: string | null;
-}) {
-  return (
-    <div className="mx-auto max-w-md px-4 py-14 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-        <ShieldAlert className="h-7 w-7 text-gray-400" />
-      </div>
-      <h1 className="mt-4 text-xl font-extrabold text-gray-900">{title}</h1>
-      <p className="mt-2 text-sm text-gray-500">{body}</p>
-      {contactHref && (
-        <Button asChild variant="outline" className="mt-6">
-          <a href={contactHref}>Skontaktuj się ze studiem</a>
-        </Button>
-      )}
-    </div>
-  );
-}
-
 // ── Root content ─────────────────────────────────────────────────────
 
 function BookClassContent() {
@@ -588,7 +566,7 @@ function BookClassContent() {
 
   useEffect(() => {
     if (authLoading || user) return;
-    router.replace(`/profile/login?next=${encodeURIComponent(pathname)}`);
+    router.replace(`/account/login?next=${encodeURIComponent(pathname)}`);
   }, [authLoading, user, router, pathname]);
 
   useEffect(() => {

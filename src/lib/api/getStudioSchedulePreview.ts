@@ -3,6 +3,7 @@ import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]
 export async function getStudioSchedulePreview(
   studioId: string,
   limit = 3,
+  classTemplateId?: string,
 ): Promise<PublicSchedulePreviewResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
   if (!baseUrl) {
@@ -10,6 +11,9 @@ export async function getStudioSchedulePreview(
   }
 
   const params = new URLSearchParams({ limit: String(limit) });
+  if (classTemplateId) {
+    params.set("class_template_id", classTemplateId);
+  }
   const res = await fetch(`${baseUrl}/public/studios/${studioId}/schedule/preview?${params}`, {
     cache: "no-store",
   });

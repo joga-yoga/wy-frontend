@@ -1,12 +1,23 @@
 "use client";
 
-import { BarChart3, Building2, ChevronLeft, ChevronRight, Clock, Flower2 } from "lucide-react";
+import { BarChart3, Clock, Flower2 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
+import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
+import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
+import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]/schedule/types";
+import { BackButton } from "@/components/common/BackButton";
+import { InstructorList } from "@/components/common/InstructorList";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
+import { StudioCard } from "@/components/common/StudioCard";
 import { WyImage } from "@/components/custom/WyImage";
-import { DetailPageLink } from "@/components/navigation/DetailPageLink";
+import {
+  formatSneakDayHeader,
+  formatWarsawDateShort,
+  groupOccurrencesByDay,
+} from "@/components/page-contents/studio/scheduleSneakUtils";
 import { Button } from "@/components/ui/button";
 import type { StudioPublic } from "@/types/studio";
 
@@ -15,27 +26,7 @@ import { type ClassTemplateDetail, levelLabel } from "../types";
 interface ClassLandingPageProps {
   studio: StudioPublic;
   classTemplate: ClassTemplateDetail;
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-function BackButton({ href }: { href: string }) {
-  return (
-    <Link
-      href={href}
-      className="fixed left-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
-      aria-label="Wróć"
-    >
-      <ChevronLeft className="h-5 w-5" />
-    </Link>
-  );
+  initialUpcomingOccurrences?: PublicSchedulePreviewResponse | null;
 }
 
 function QuickFactsChips({ classTemplate }: { classTemplate: ClassTemplateDetail }) {
@@ -95,11 +86,11 @@ function Header({
             className="object-cover"
             sizes="100vw"
           />
-          <BackButton href={backHref} />
+          <BackButton href={backHref} className="fixed left-4 top-4 z-50" />
         </div>
       ) : (
         <div className="flex items-center justify-center bg-[#f4efe8] px-4 pb-8 pt-14">
-          <BackButton href={backHref} />
+          <BackButton href={backHref} className="fixed left-4 top-4 z-50" />
           <Flower2 className="h-14 w-14 text-[#c9b596]" />
         </div>
       )}
@@ -125,40 +116,63 @@ function InstructorsSection({ classTemplate }: { classTemplate: ClassTemplateDet
     <section className="border-b px-4 py-5">
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-3 text-[18px] font-semibold text-[#222222]">Instruktorzy</h2>
-        <div className="space-y-3">
-          {classTemplate.instructors.map((instructor) => {
-            const row = (
-              <div className="flex items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100">
-                  {instructor.image_id ? (
-                    <WyImage
-                      src={instructor.image_id}
-                      alt={instructor.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs font-bold text-gray-500">
-                      {initials(instructor.name)}
-                    </div>
-                  )}
-                </div>
-                <p className="min-w-0 flex-1 truncate font-semibold text-[#222222]">
-                  {instructor.name}
-                </p>
-                {instructor.slug && <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />}
+        <InstructorList instructors={classTemplate.instructors} />
+      </div>
+    </section>
+  );
+}
+
+function NajblizszeZajeciaSection({ preview }: { preview?: PublicSchedulePreviewResponse | null }) {
+  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
+
+  // Mirrors StudioSchedulePage's/StudioScheduleSneak's pathname-reset effect: Next.js's
+  // client router cache can keep this component instance (and its state) alive across an
+  // away-and-back navigation, so a stale selectedOccurrenceId could reopen the drawer with
+  // data from a previous visit.
+  const pathname = usePathname();
+  const isFirstPathnameEffect = useRef(true);
+  useEffect(() => {
+    if (isFirstPathnameEffect.current) {
+      isFirstPathnameEffect.current = false;
+      return;
+    }
+    setSelectedOccurrenceId(null);
+  }, [pathname]);
+
+  const occurrences = preview?.occurrences ?? [];
+  if (occurrences.length === 0) return null;
+
+  const groups = groupOccurrencesByDay(occurrences);
+  const todayStr = formatWarsawDateShort(new Date());
+
+  return (
+    <section className="border-b px-4 py-5">
+      <div className="mx-auto max-w-5xl">
+        <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Najbliższe zajęcia</h2>
+        <div className="space-y-5">
+          {groups.map((group) => (
+            <div key={group.date}>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {formatSneakDayHeader(group.date, todayStr)}
+              </p>
+              <div className="space-y-2">
+                {group.occurrences.map((occ) => (
+                  <SessionCard
+                    key={occ.id}
+                    occ={occ}
+                    onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                  />
+                ))}
               </div>
-            );
-            return instructor.slug ? (
-              <DetailPageLink key={instructor.id} href={`/instruktor/${instructor.slug}`}>
-                {row}
-              </DetailPageLink>
-            ) : (
-              <div key={instructor.id}>{row}</div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
+
+      <SessionDetailDrawer
+        occurrenceId={selectedOccurrenceId}
+        onClose={() => setSelectedOccurrenceId(null)}
+      />
     </section>
   );
 }
@@ -168,24 +182,7 @@ function StudioCardSection({ studio }: { studio: StudioPublic }) {
     <section className="border-b px-4 py-5">
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-3 text-[18px] font-semibold text-[#222222]">Studio</h2>
-        <Link href={`/studio/${studio.slug}`} className="flex items-center gap-3">
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white">
-            {studio.image_id ? (
-              <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gray-100">
-                <Building2 className="h-5 w-5 text-gray-400" />
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold text-[#222222]">{studio.name}</p>
-            {studio.address && (
-              <p className="mt-0.5 truncate text-xs text-[#717171]">{studio.address}</p>
-            )}
-          </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-        </Link>
+        <StudioCard studio={studio} />
       </div>
     </section>
   );
@@ -215,7 +212,11 @@ function ClassLocationSection({ studio }: { studio: StudioPublic }) {
   );
 }
 
-export function ClassLandingPage({ studio, classTemplate }: ClassLandingPageProps) {
+export function ClassLandingPage({
+  studio,
+  classTemplate,
+  initialUpcomingOccurrences,
+}: ClassLandingPageProps) {
   return (
     <div className="min-h-screen bg-white pb-24">
       <Header studio={studio} classTemplate={classTemplate} />
@@ -231,17 +232,15 @@ export function ClassLandingPage({ studio, classTemplate }: ClassLandingPageProp
         </section>
       )}
 
+      <NajblizszeZajeciaSection preview={initialUpcomingOccurrences} />
+
       <InstructorsSection classTemplate={classTemplate} />
       <StudioCardSection studio={studio} />
       <ClassLocationSection studio={studio} />
 
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-1.5 text-sm font-medium text-[#222222]">
-            <Clock className="h-4 w-4" />
-            {classTemplate.duration_minutes} min
-          </div>
-          <Button asChild variant="cta" size="cta" className="shrink-0">
+        <div className="mx-auto flex max-w-5xl items-center justify-end px-4 py-3">
+          <Button asChild variant="cta" size="cta" className="w-full">
             <Link href={`/studio/${studio.slug}/grafik?class=${classTemplate.slug}`}>
               Zapisz się na zajęcia
             </Link>

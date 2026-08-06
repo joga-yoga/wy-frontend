@@ -39,7 +39,7 @@ function ClaimDraftContent() {
     const claimPath = `/instruktor/dodaj/claim/${params.token}`;
 
     if (!user) {
-      router.replace(`/profile/login?next=${encodeURIComponent(claimPath)}`);
+      router.replace(`/account/login?next=${encodeURIComponent(claimPath)}`);
       return;
     }
 
@@ -55,7 +55,7 @@ function ClaimDraftContent() {
         const code = getErrorCode(error);
 
         if (status === 403 && code === "partner_required") {
-          router.replace(`/profile/become-partner?next=${encodeURIComponent(claimPath)}`);
+          router.replace(`/account/partner/become-partner?next=${encodeURIComponent(claimPath)}`);
           return;
         }
 

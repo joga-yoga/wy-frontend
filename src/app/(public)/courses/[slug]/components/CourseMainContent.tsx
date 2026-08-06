@@ -15,6 +15,7 @@ import {
 import React from "react";
 
 import { formatMultiLineText } from "@/app/(public)/retreats/[slug]/helpers";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { WyImage } from "@/components/custom/WyImage";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
@@ -27,29 +28,6 @@ import { ExpandableDescription } from "./ExpandableDescription";
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 // Use brand colors from globals.css
-const AVATAR_COLORS = [
-  "bg-brand-aqua/20 text-brand-aqua",
-  "bg-brand-blue/20 text-brand-blue",
-  "bg-brand-green/20 text-brand-green",
-  "bg-brand-yellow/20 text-brand-yellow",
-  "bg-brand-pink/20 text-brand-pink",
-  "bg-brand-red/20 text-brand-red",
-];
-
-function getAvatarColor(name: string) {
-  const hash = [...name].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
 function formatProgramDateTitle(start?: string | null, end?: string | null): string {
   if (!start) return "";
   const startDate = parseISO(start);
@@ -165,25 +143,15 @@ export const CourseMainContent: React.FC<CourseMainContentProps> = ({ event }) =
           <h2 className="text-xl font-semibold mb-4">Prowadzący</h2>
           <div className="space-y-5">
             {event.instructors!.map((instructor) => {
-              const initials = getInitials(instructor.name);
-              const avatarColor = getAvatarColor(instructor.name);
               const instructorHref = instructor.slug ? `/instruktor/${instructor.slug}` : null;
 
-              const avatar = instructor.image_id ? (
-                <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0">
-                  <WyImage
-                    src={instructor.image_id}
-                    alt={instructor.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-semibold shrink-0 ${avatarColor}`}
-                >
-                  {initials}
-                </div>
+              const avatar = (
+                <HashedAvatar
+                  seed={instructor.id}
+                  name={instructor.name}
+                  imageId={instructor.image_id}
+                  size={48}
+                />
               );
 
               const row = (

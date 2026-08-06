@@ -1,3 +1,5 @@
+import type { SocialLinkOut } from "./socialLink";
+
 export interface YogaStyle {
   id: string;
   name: string;
@@ -46,11 +48,11 @@ export interface InstructorProfile {
   photo_ids: string[] | null;
   certificates: CertificateItem[] | null;
   yoga_styles: InstructorYogaStyle[];
+  social_links: SocialLinkOut[];
   created_by_partner_id: string | null;
   claimed_at: string | null;
   is_published: boolean;
   published_at: string | null;
-  studio_name?: string | null;
   is_claimed: boolean;
   claim_status: "claimed" | "invited" | "invitable" | "legacy" | null;
   created_at: string;
@@ -64,12 +66,16 @@ export interface InstructorPublic {
   short_bio: string | null;
   slug: string | null;
   image_id: string | null;
-  studio_name?: string | null;
   languages: string[] | null;
   cities: CityItem[] | null;
   photo_ids: string[] | null;
   certificates: CertificateItem[] | null;
   yoga_styles: InstructorYogaStyle[];
+  social_links: SocialLinkOut[];
+  is_published: boolean;
+  // Genuinely self-claimed vs. a placeholder the organizing partner manages but the real
+  // person hasn't claimed yet — used to keep unclaimed profiles out of search indexing.
+  is_claimed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -111,11 +117,11 @@ export interface InstructorUpdatePayload {
   email?: string | null;
   description?: string | null;
   short_bio?: string | null;
-  studio_name?: string | null;
   image_id?: string | null;
   languages?: string[] | null;
   cities?: CityItem[] | null;
   photo_ids?: string[] | null;
   certificates?: CertificateItem[] | null;
   yoga_styles?: InstructorYogaStyleIn[];
+  social_links?: Array<{ url: string; label?: string | null; position: number }>;
 }
