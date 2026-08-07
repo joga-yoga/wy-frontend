@@ -1,11 +1,10 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
-import { Button } from "@/components/ui/button";
+import { DashboardFooter } from "@/components/layout/DashboardFooter";
 import {
   Form,
   FormControl,
@@ -172,13 +171,13 @@ export function ProfileForm() {
           <Input id="profile-email" value={user.email} disabled readOnly />
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || isUploadingImage}>
-          {isSubmitting || isUploadingImage ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "Zapisz"
-          )}
-        </Button>
+        <DashboardFooter
+          title="Profil"
+          onUpdate={handleSubmit(onSubmit)}
+          updateLabel={isSubmitting || isUploadingImage ? "Zapisywanie..." : "Zapisz"}
+          updateLabelShort={isSubmitting || isUploadingImage ? "Zapisywanie..." : "Zapisz"}
+          isSaveDisabled={isSubmitting || isUploadingImage}
+        />
       </form>
     </Form>
   );

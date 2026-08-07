@@ -119,6 +119,7 @@ export default function AccountHubPage() {
           <HashedAvatar
             seed={user?.id ?? identity.primary}
             name={identity.primary}
+            imageId={user?.image_id}
             initialsOverride={personInitials(user?.name, user?.email ?? "")}
             size={56}
           />
