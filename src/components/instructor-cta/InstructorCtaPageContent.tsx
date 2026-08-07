@@ -194,11 +194,10 @@ function HeroSection({
   return (
     <section className="relative h-[430px] overflow-hidden rounded-b-lg rounded-t-none md:h-[720px] md:rounded-none">
       <Image
-        src="/images/cta/instructors/hero.png"
+        src="/images/cta/instructors/hero.webp"
         alt="Nauczycielka jogi podczas spokojnej praktyki"
         fill
         priority
-        unoptimized
         className="object-cover object-center"
         sizes="100vw"
       />
@@ -426,10 +425,9 @@ function BenefitsSection() {
         <div className="grid gap-6 md:grid-cols-[600px_minmax(0,1fr)] md:items-center md:gap-20">
           <div className="relative h-[229px] overflow-hidden rounded-xl md:h-[600px] md:rounded-[32px]">
             <Image
-              src="/images/cta/instructors/benefits.png"
+              src="/images/cta/instructors/benefits.webp"
               alt="Nauczycielka przeglądająca stronę joga.yoga"
               fill
-              unoptimized
               className="object-cover"
               sizes="(min-width: 768px) 600px, 338px"
             />
@@ -543,7 +541,6 @@ function InstructorExampleCard({
             src={localImageSrc}
             alt={name}
             fill
-            unoptimized
             className="object-cover"
             sizes="(min-width: 768px) 326px, 354px"
           />

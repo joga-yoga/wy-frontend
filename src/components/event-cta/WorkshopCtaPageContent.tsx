@@ -145,11 +145,10 @@ function HeroSection() {
 
           <div className="absolute inset-0 md:relative md:h-full md:overflow-hidden md:rounded-[24px]">
             <Image
-              src="/images/cta/workshops/hero.png"
+              src="/images/cta/workshops/hero.webp"
               alt="Kobieta praktykująca jogę w spokojnym wnętrzu"
               fill
               priority
-              unoptimized
               className="object-cover"
               sizes="(min-width: 768px) 608px, 100vw"
             />
@@ -256,10 +255,9 @@ function BenefitsSection() {
           </div>
           <div className="relative h-[229px] overflow-hidden rounded-xl md:h-full md:min-h-[393px]">
             <Image
-              src="/images/cta/workshops/benefits.png"
+              src="/images/cta/workshops/benefits.webp"
               alt="Kobieta podczas spokojnej praktyki oddechowej"
               fill
-              unoptimized
               className="object-cover"
               sizes="(min-width: 768px) 580px, calc(100vw - 64px)"
             />

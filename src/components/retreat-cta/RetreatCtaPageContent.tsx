@@ -229,7 +229,7 @@ function BenefitsSection() {
           <div className="contents md:flex md:flex-col md:gap-14">
             <div className="relative order-2 h-[225px] overflow-hidden rounded-2xl md:order-none md:h-[352px]">
               <Image
-                src="/images/cta/retreats/benefits.png"
+                src="/images/cta/retreats/benefits.webp"
                 alt="Grupa podczas praktyki jogi na tarasie z widokiem na morze"
                 fill
                 className="object-cover"
@@ -366,7 +366,7 @@ export function RetreatCtaPageContent({ events }: { events: Event[] }) {
 
           <div className="absolute inset-0 md:relative md:h-full md:overflow-hidden rounded-b-lg rounded-t-none md:border md:border-white/70 md:shadow-[0_18px_48px_rgba(0,0,0,0.16)] md:rounded-none">
             <Image
-              src="/images/cta/retreats/hero.png"
+              src="/images/cta/retreats/hero.webp"
               alt="Praktyka jogi przy basenie o zachodzie słońca"
               fill
               priority
