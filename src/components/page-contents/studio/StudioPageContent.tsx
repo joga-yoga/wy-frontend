@@ -159,6 +159,10 @@ function StudioHeader() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const accountHref = mounted && user ? "/account/partner" : "/account/login";
+  // Auth state only exists on the client, and this segment hydrates after AuthProvider
+  // has already populated `user` — so the avatar has to wait for `mounted` too, or the
+  // hydration render picks the <img> branch against server HTML that has the fallback.
+  const partnerImageId = mounted ? user?.partner?.image_id : undefined;
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20">
@@ -173,9 +177,9 @@ function StudioHeader() {
           </span>
         </Link>
         <Link href={accountHref} className="flex items-center">
-          {user?.partner?.image_id ? (
+          {partnerImageId ? (
             <WyImage
-              src={user.partner.image_id}
+              src={partnerImageId}
               alt="Avatar"
               className="h-9 w-9 rounded-full object-cover ring-2 ring-white/100"
               width={128}
