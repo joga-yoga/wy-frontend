@@ -14,9 +14,6 @@ import {
 type Partner = {
   id: string;
   user_id: string;
-  name?: string;
-  description?: string;
-  image_id?: string;
   phone_number?: string;
   phone_verified: boolean;
 };
@@ -25,6 +22,7 @@ type User = {
   id: string;
   email: string;
   name?: string;
+  image_id?: string;
   partner?: Partner | null;
 };
 
