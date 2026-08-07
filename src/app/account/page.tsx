@@ -183,7 +183,19 @@ export default function AccountHubPage() {
             {/* Account settings sub-pages are out of this task's committed scope
                 (spec-b2b §7: "detailed B2C design is deferred") — rows are visual
                 only until a later plan builds their destinations. */}
-            <StaticRow title="Dane konta" subtitle="Imię, e-mail, hasło" Icon={UserIcon} />
+            <Link
+              href="/account/profile"
+              className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+                <UserIcon size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-900">Dane konta</p>
+                <p className="text-xs text-gray-500">Imię, e-mail, zdjęcie</p>
+              </div>
+              <ChevronRight size={16} className="shrink-0 text-gray-400" />
+            </Link>
             <StaticRow title="Powiadomienia" subtitle="Przypomnienia o zajęciach" Icon={Bell} />
             <StaticRow title="Pomoc i kontakt" subtitle="Napisz do nas" Icon={HelpCircle} />
           </div>
