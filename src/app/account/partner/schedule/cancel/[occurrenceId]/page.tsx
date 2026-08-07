@@ -67,6 +67,10 @@ function cancelTime(iso: string): string {
   return m ? `${m[1]}:${m[2]}` : iso;
 }
 
+function cancelDurationMinutes(start: string, end: string): number {
+  return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000);
+}
+
 export default function CancelSessionPage() {
   const params = useParams<{ occurrenceId: string }>();
   const router = useRouter();
@@ -128,7 +132,12 @@ export default function CancelSessionPage() {
               tone="danger"
               title={sessionDetail.template_title}
               date={cancelDate(sessionDetail.calendar_date)}
-              subtitle={cancelTime(sessionDetail.start_time)}
+              time={cancelTime(sessionDetail.start_time)}
+              durationMinutes={cancelDurationMinutes(
+                sessionDetail.start_time,
+                sessionDetail.end_time,
+              )}
+              color={sessionDetail.color}
             />
           )}
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">

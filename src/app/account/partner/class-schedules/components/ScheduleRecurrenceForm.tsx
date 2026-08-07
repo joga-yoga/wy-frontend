@@ -44,6 +44,11 @@ interface ScheduleRecurrenceFormProps {
   /** Shown as the card's date eyebrow line — only the edit flow has a real date to show
    * here (a session being created has no date until the form below is filled in). */
   templateDate?: string | null;
+  /** "HH:MM" for the card's time column — like `templateDate`, only the edit flow has a real
+   * session time to show; the create flow doesn't know one until this form is filled in. */
+  templateTime?: string | null;
+  templateDurationMinutes?: number | null;
+  templateColor?: string | null;
   templateInstructor?: { id?: string | null; name: string; imageId?: string | null } | null;
   onChangeTemplate?: () => void; // if undefined → hide the "Zmień" button
 
@@ -95,6 +100,9 @@ export function ScheduleRecurrenceForm({
   templateTitle,
   templateSubtitle,
   templateDate,
+  templateTime,
+  templateDurationMinutes,
+  templateColor,
   templateInstructor,
   onChangeTemplate,
   rooms,
@@ -130,6 +138,9 @@ export function ScheduleRecurrenceForm({
           <SessionContextCard
             title={templateTitle}
             date={templateDate}
+            time={templateTime}
+            durationMinutes={templateDurationMinutes}
+            color={templateColor}
             subtitle={templateSubtitle}
             instructor={templateInstructor}
           />

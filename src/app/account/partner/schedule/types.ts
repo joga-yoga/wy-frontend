@@ -55,6 +55,7 @@ export interface SessionDetailResponse {
   template_id: string;
   template_title: string;
   template_duration_minutes: number;
+  color?: string | null;
   studio_id: string;
   studio_name: string;
   schedule_id: string;

@@ -41,6 +41,10 @@ function formatStartTime(iso: string): string {
   return m ? `${m[1]}:${m[2]}` : iso;
 }
 
+function sessionDurationMinutes(start: string, end: string): number {
+  return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000);
+}
+
 function shortDate(dateStr: string): string {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("pl-PL", {
     weekday: "short",
@@ -343,7 +347,12 @@ export default function EditSessionPage() {
           <SessionContextCard
             title={sessionDetail.template_title}
             date={shortDate(sessionDetail.calendar_date)}
-            subtitle={formatStartTime(sessionDetail.start_time)}
+            time={formatStartTime(sessionDetail.start_time)}
+            durationMinutes={sessionDurationMinutes(
+              sessionDetail.start_time,
+              sessionDetail.end_time,
+            )}
+            color={sessionDetail.color}
             instructor={
               sessionDetail.instructor_name
                 ? { id: sessionDetail.instructor_id, name: sessionDetail.instructor_name }
@@ -384,6 +393,12 @@ export default function EditSessionPage() {
           <SessionContextCard
             title={sessionDetail.template_title}
             date={shortDate(sessionDetail.calendar_date)}
+            time={formatStartTime(sessionDetail.start_time)}
+            durationMinutes={sessionDurationMinutes(
+              sessionDetail.start_time,
+              sessionDetail.end_time,
+            )}
+            color={sessionDetail.color}
             subtitle={`Zakres: ${scopeLabel(scope, isSubstitution)}`}
           />
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
@@ -420,6 +435,12 @@ export default function EditSessionPage() {
           <ScheduleRecurrenceForm
             templateTitle={sessionDetail.template_title}
             templateDate={shortDate(sessionDetail.calendar_date)}
+            templateTime={formatStartTime(sessionDetail.start_time)}
+            templateDurationMinutes={sessionDurationMinutes(
+              sessionDetail.start_time,
+              sessionDetail.end_time,
+            )}
+            templateColor={sessionDetail.color}
             templateSubtitle={`Zakres: ${scopeLabel(scope, isSubstitution)}`}
             templateInstructor={
               sessionDetail.instructor_name
