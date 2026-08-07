@@ -36,7 +36,7 @@ const TAB_TITLES: Record<string, string> = {
   "/account/partner/bookings": "Rezerwacje",
   "/account/partner/offer": "Oferta",
   "/account/partner/menu": "Menu",
-  "/account/partner/account": "Konto",
+  "/account/partner/profile": "Profil",
 };
 
 function getPageTitle(pathname: string, searchParams: URLSearchParams): string | undefined {
@@ -91,7 +91,7 @@ function getBackHref(pathname: string, searchParams: URLSearchParams): string | 
   if (pathname.startsWith("/account/partner/schedule/edit/")) return "/account/partner/schedule";
   if (pathname.startsWith("/account/partner/schedule/cancel/")) return "/account/partner/schedule";
   if (pathname === "/account/partner/class-schedules/create") return "/account/partner/schedule";
-  if (pathname === "/account/partner/account") return "/account/partner/menu";
+  if (pathname === "/account/partner/profile") return "/account/partner/menu";
   if (pathname === "/account/partner/class-templates") return "/account/partner/offer";
   if (pathname === "/account/partner/class-templates/create")
     return "/account/partner/class-templates";

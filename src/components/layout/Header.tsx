@@ -58,7 +58,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
 
         <div className="flex items-center gap-4">
           {user && (
-            <LinkWithBlocker href="/account/partner/partner">
+            <LinkWithBlocker href="/account/partner/profile">
               <span className="text-sm font-medium cursor-pointer hover:underline">
                 {user.email}
               </span>

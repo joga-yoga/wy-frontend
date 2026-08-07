@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, ChevronRight, LogOut, Store, UserRound } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -177,15 +177,9 @@ export default function MenuPage() {
         <SectionLabel>Konto</SectionLabel>
         <div className="rounded-b2b border bg-white overflow-hidden divide-y">
           <MenuRow
-            href="/account/partner/partner"
-            title="Profil organizatora"
-            subtitle="Publiczny profil, jako kogo organizujesz"
-            Icon={Store}
-          />
-          <MenuRow
-            href="/account/partner/account"
-            title="Dane konta"
-            subtitle="Imię, e-mail, hasło"
+            href="/account/partner/profile"
+            title="Profil"
+            subtitle="Imię, e-mail, zdjęcie"
             Icon={UserRound}
           />
         </div>
