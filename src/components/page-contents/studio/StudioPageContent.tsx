@@ -162,7 +162,7 @@ function StudioHeader() {
   // Auth state only exists on the client, and this segment hydrates after AuthProvider
   // has already populated `user` — so the avatar has to wait for `mounted` too, or the
   // hydration render picks the <img> branch against server HTML that has the fallback.
-  const partnerImageId = mounted ? user?.partner?.image_id : undefined;
+  const partnerImageId = mounted ? user?.image_id : undefined;
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20">

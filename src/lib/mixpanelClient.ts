@@ -77,17 +77,16 @@ type MixpanelUserProfile = {
   avatarUrl?: string;
 };
 
-// Partner profile data (name, photo) wins over the bare account name.
 export const buildMixpanelProfile = (user: {
   email?: string;
   name?: string;
-  partner?: { name?: string; image_id?: string } | null;
+  image_id?: string;
 }): MixpanelUserProfile => ({
   email: user.email,
-  name: user.partner?.name ?? user.name,
+  name: user.name,
   // getImageUrl falls back to a stock photo when there is no id, so only
-  // build the avatar URL when the partner actually has an image.
-  avatarUrl: user.partner?.image_id ? getImageUrl(user.partner.image_id) : undefined,
+  // build the avatar URL when the user actually has an image.
+  avatarUrl: user.image_id ? getImageUrl(user.image_id) : undefined,
 });
 
 export const identifyMixpanelUser = (userId: string, profile?: MixpanelUserProfile) => {
