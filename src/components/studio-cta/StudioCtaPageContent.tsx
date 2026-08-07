@@ -214,11 +214,10 @@ function HeroSection({ formProps }: { formProps: FormProps }) {
   return (
     <section className="relative h-[430px] overflow-hidden rounded-b-lg md:h-[620px] md:rounded-none">
       <Image
-        src="/images/cta/studios/hero.png"
+        src="/images/cta/studios/hero.webp"
         alt="Wnętrze studia jogi"
         fill
         priority
-        unoptimized
         className="object-cover object-center"
         sizes="100vw"
       />
@@ -432,10 +431,9 @@ function BenefitsSection() {
       <div className="mt-6 grid gap-7 md:mt-12 md:grid-cols-[minmax(0,600px)_1fr] md:items-center md:gap-20">
         <div className="relative aspect-[4/3] overflow-hidden rounded-2xl md:h-[510px] md:aspect-auto md:rounded-[32px]">
           <Image
-            src="/images/cta/studios/benefits.png"
+            src="/images/cta/studios/benefits.webp"
             alt="Przestrzeń do praktyki jogi"
             fill
-            unoptimized
             className="object-cover"
             sizes="(min-width:768px) 600px, 338px"
           />
