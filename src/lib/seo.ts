@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
-import type { OrganizerInfo } from "@/components/page-contents/organizer/types";
 import type { InstructorPublic } from "@/types/instructor";
 import type { StudioPublic } from "@/types/studio";
 
@@ -127,13 +126,6 @@ export function buildEventJsonLd({
     eventStatus: "https://schema.org/EventScheduled",
     url: absoluteUrl(project, path),
     location,
-    organizer: event.organizer
-      ? compactRecord({
-          "@type": "Organization",
-          name: event.organizer.name,
-          url: absoluteUrl(project, `/partner/${event.organizer.id}`),
-        })
-      : undefined,
     offers:
       event.price !== null
         ? compactRecord({
@@ -144,29 +136,6 @@ export function buildEventJsonLd({
             url: absoluteUrl(project, path),
           })
         : undefined,
-  });
-}
-
-export function buildOrganizerJsonLd({
-  project,
-  path,
-  organizer,
-  imageUrl,
-}: {
-  project: SeoProject;
-  path: string;
-  organizer: OrganizerInfo;
-  imageUrl?: string;
-}) {
-  return compactRecord({
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: organizer.name,
-    description: stripHtml(organizer.description),
-    image: imageUrl,
-    url: absoluteUrl(project, path),
-    email: organizer.email,
-    telephone: organizer.phone_number,
   });
 }
 

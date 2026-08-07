@@ -89,14 +89,61 @@ export interface InstructorPublicListItem {
   published_at: string | null;
 }
 
+export interface InstructorEventLocation {
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  country: string;
+  country_code: string;
+  created_at: string;
+  google_place_id: string;
+  id: string;
+  latitude: number;
+  longitude: number;
+  postal_code: string | null;
+  state_province: string;
+  title: string;
+  updated_at: string;
+}
+
+export interface InstructorEvent {
+  slug: string;
+  accommodation_description: string;
+  cancellation_policy: string;
+  created_at: string;
+  currency: string;
+  description: string;
+  end_date: string;
+  food_description: string;
+  guest_welcome_description: string;
+  id: string;
+  image_ids: string[];
+  important_info: string;
+  instructor_ids: string[];
+  is_public: boolean;
+  language: string;
+  location: InstructorEventLocation;
+  main_attractions: string[];
+  paid_attractions: string[];
+  price: number;
+  price_excludes: string[];
+  price_includes: string[];
+  program: { description: string; imageId?: string | null }[];
+  published_at: string;
+  skill_level: string[];
+  start_date: string;
+  title: string;
+  updated_at: string;
+}
+
 export interface InstructorDetails {
   instructor: InstructorPublic;
-  upcoming_retreats: import("@/components/page-contents/organizer/types").OrganizerEvent[];
-  past_retreats: import("@/components/page-contents/organizer/types").OrganizerEvent[];
-  upcoming_workshops: import("@/components/page-contents/organizer/types").OrganizerEvent[];
-  past_workshops: import("@/components/page-contents/organizer/types").OrganizerEvent[];
-  upcoming_courses: import("@/components/page-contents/organizer/types").OrganizerEvent[];
-  past_courses: import("@/components/page-contents/organizer/types").OrganizerEvent[];
+  upcoming_retreats: InstructorEvent[];
+  past_retreats: InstructorEvent[];
+  upcoming_workshops: InstructorEvent[];
+  past_workshops: InstructorEvent[];
+  upcoming_courses: InstructorEvent[];
+  past_courses: InstructorEvent[];
 }
 
 export interface GeneratedInstructorProfileDraft {

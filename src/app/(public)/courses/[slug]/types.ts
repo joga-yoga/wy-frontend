@@ -2,7 +2,6 @@ import {
   EventDetail,
   InstructorDetail,
   LocationDetail,
-  OrganizerDetail,
 } from "@/app/(public)/retreats/[slug]/types";
 
 export interface CourseModule {
@@ -37,4 +36,4 @@ export interface CourseEventDetail extends EventDetail {
   payment_terms?: string | null;
 }
 
-export type { InstructorDetail, LocationDetail, OrganizerDetail };
+export type { InstructorDetail, LocationDetail };

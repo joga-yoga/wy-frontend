@@ -1,8 +1,12 @@
 import { formatDateRange } from "@/lib/formatDateRange";
-import type { CertificateItem, InstructorDetails, InstructorYogaStyle } from "@/types/instructor";
+import type {
+  CertificateItem,
+  InstructorDetails,
+  InstructorEvent as OrganizerEvent,
+  InstructorYogaStyle,
+} from "@/types/instructor";
 import type { SocialLinkOut } from "@/types/socialLink";
 
-import type { OrganizerEvent } from "../../organizer/types";
 import { formatTime } from "./helpers";
 
 export type InstructorStyleViewModel = {

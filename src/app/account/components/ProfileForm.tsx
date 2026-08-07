@@ -6,7 +6,14 @@ import { useForm } from "react-hook-form";
 
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
@@ -166,7 +173,11 @@ export function ProfileForm() {
         </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting || isUploadingImage}>
-          {isSubmitting || isUploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz"}
+          {isSubmitting || isUploadingImage ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "Zapisz"
+          )}
         </Button>
       </form>
     </Form>

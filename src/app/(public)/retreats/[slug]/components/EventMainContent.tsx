@@ -7,7 +7,6 @@ import { formatMultiLineText } from "../helpers";
 import { EventDetail } from "../types";
 import { CancellationPolicySection } from "./CancellationPolicySection";
 import { InstructorSection } from "./InstructorSection";
-import { OrganizerSection } from "./OrganizerSection";
 
 const getFormattedProgramDateTitle = (dateValue?: string | null) => {
   if (!dateValue) {
@@ -224,18 +223,13 @@ export const EventMainContent: React.FC<EventMainContentProps> = ({
         </div>
       ) : null}
 
-      {/* Organizer and Cancellation Policy (Mobile Only) */}
-      <div className="block lg:hidden space-y-5">
-        {event.cancellation_policy ? (
-          <>
-            <hr />
-            <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
-          </>
-        ) : null}
-
-        <hr />
-        <OrganizerSection event={event} project={project} />
-      </div>
+      {/* Cancellation Policy (Mobile Only) */}
+      {event.cancellation_policy ? (
+        <div className="block lg:hidden space-y-5">
+          <hr />
+          <CancellationPolicySection event={event} id="cancellation-policy-mobile" />
+        </div>
+      ) : null}
     </div>
   );
 };

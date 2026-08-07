@@ -14,7 +14,6 @@ import { CancellationPolicySection } from "./CancellationPolicySection";
 import { EventReservation } from "./EventReservation";
 import { EventSidebarLocation } from "./EventSidebarLocation";
 import { InstructorSection } from "./InstructorSection";
-import { OrganizerSection } from "./OrganizerSection";
 
 interface EventSidebarProps {
   event: EventDetail;
@@ -145,18 +144,14 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
       <div className="hidden lg:block">
         <InstructorSection event={event} />
       </div>
-      <hr className="hidden lg:block" />
       {event.cancellation_policy ? (
         <>
+          <hr className="hidden lg:block" />
           <div className="hidden lg:block">
             <CancellationPolicySection event={event} id="cancellation-policy" />
           </div>
-          <hr className="hidden lg:block" />
         </>
       ) : null}
-      <div className="hidden lg:block">
-        <OrganizerSection event={event} project={project} />
-      </div>
     </div>
   );
 };

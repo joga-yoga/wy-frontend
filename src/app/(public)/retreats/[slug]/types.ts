@@ -1,13 +1,4 @@
 // Define structure for nested objects based on API response
-export interface OrganizerDetail {
-  id: string;
-  name: string;
-  phone_number: string | null;
-  email: string;
-  image_id: string | null;
-  description: string | null;
-}
-
 export interface InstructorDetail {
   id: string;
   name: string;
@@ -50,8 +41,6 @@ export interface EventOccurrence {
 // Define the event structure based on API response (schema.Event)
 export interface EventDetail {
   id: string;
-  organizer: OrganizerDetail | null;
-  partner?: OrganizerDetail | null;
   instructors: InstructorDetail[] | null;
   title: string;
   description: string | null;
