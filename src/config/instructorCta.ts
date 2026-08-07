@@ -3,5 +3,5 @@ export const FEATURED_INSTRUCTOR = {
   name: "Anna Kowalska",
   subtitle: "Hatha Yoga · Warszawa",
   href: "/instruktor/anna-kowalska",
-  imageSrc: "/images/cta/instructors/anna-kowalska.png",
+  imageSrc: "/images/cta/instructors/anna-kowalska.webp",
 } as const;
