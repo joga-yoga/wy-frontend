@@ -16,6 +16,9 @@ export interface PartnerCapabilities {
   managedStudios: CapabilityStudio[];
   teachingStudios: CapabilityStudio[];
   hasEvents: boolean;
+  /** Whether the partner has claimed an Instructor identity of their own — lets screens
+   *  hide "create your instructor profile" CTAs without a second /instructors call. */
+  hasInstructorProfile: boolean;
   landingTab: "grafik" | "rezerwacje";
 }
 
@@ -56,6 +59,7 @@ export function PartnerCapabilitiesProvider({ children }: { children: ReactNode 
           managedStudios: res.data.managed_studios,
           teachingStudios: res.data.teaching_studios,
           hasEvents: res.data.has_events,
+          hasInstructorProfile: res.data.has_instructor_profile,
           landingTab: res.data.landing_tab,
         });
       })

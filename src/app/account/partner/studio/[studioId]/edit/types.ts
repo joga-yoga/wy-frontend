@@ -73,7 +73,6 @@ export interface StudioFormValues {
   amenity_ids: string[];
   instructor_ids: string[];
   instructors: StudioInstructor[];
-  yoga_style_ids: string[];
   drop_in_price: number | string;
   currency: string;
   passes: StudioPass[];
@@ -134,7 +133,6 @@ export interface StudioApiResponse {
     sport_card?: SportCard | null;
   }>;
   amenity_ids: string[];
-  yoga_style_ids: string[];
   instructor_links: Array<{ instructor_id: string; created_at: string }>;
   social_links?: SocialLinkOut[];
   created_at: string;
@@ -177,7 +175,6 @@ export interface StudioPayload {
     fee?: number | null;
   }>;
   amenity_ids?: string[];
-  yoga_style_ids?: string[];
   instructor_ids?: string[];
   social_links?: Array<{ url: string; label?: string | null; position: number }>;
 }

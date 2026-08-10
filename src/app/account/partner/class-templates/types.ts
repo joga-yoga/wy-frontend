@@ -7,6 +7,8 @@ export interface ClassTemplate {
   duration_minutes: number;
   level?: string | null;
   intensity?: number | null;
+  style_id?: string | null;
+  /** Read-only catalog name behind `style_id`, denormalized by the API for list screens. */
   style?: string | null;
   important_info?: string | null;
   color?: ClassColor | null;
@@ -24,7 +26,7 @@ export interface ClassTemplateCreate {
   duration_minutes: number;
   level?: string;
   intensity?: number;
-  style?: string;
+  style_id?: string | null;
   important_info?: string;
   color?: ClassColor | null;
   default_instructor_id?: string;

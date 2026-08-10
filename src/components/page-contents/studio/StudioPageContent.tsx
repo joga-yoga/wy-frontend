@@ -233,9 +233,6 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
     document.getElementById("location-section")?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const styles = studio.yoga_styles ?? [];
-  const [showAllStyles, setShowAllStyles] = useState(false);
-
   return (
     <section className="relative">
       <StudioHeader />

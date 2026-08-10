@@ -111,7 +111,8 @@ export function OfferEventRow({
               kind.tile,
             )}
           >
-            <kind.Icon size={22} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={kind.image} alt="" className="h-8 w-8 object-contain" />
           </span>
         )}
 

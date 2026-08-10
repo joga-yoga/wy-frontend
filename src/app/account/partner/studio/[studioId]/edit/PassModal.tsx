@@ -1,19 +1,18 @@
 "use client";
 
-import { AlertTriangle, Lightbulb, X } from "lucide-react";
+import { AlertTriangle, Lightbulb } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { Button } from "@/components/ui/button";
+import { DrawerFooter } from "@/components/ui/drawer";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+  FormDrawer,
+  FormDrawerBody,
+  FormDrawerContent,
+  FormDrawerHeader,
+} from "@/components/ui/form-drawer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -31,6 +30,22 @@ interface PassModalProps {
   currency: string;
   editPass?: StudioPass | null;
 }
+
+/** Month presets map to fixed day counts — `StudioPass.duration_days` is an int of days
+ *  and expiry flows through `timedelta(days=...)`, so there is no calendar-month arithmetic
+ *  to hook into. `null` is the "Własna" escape hatch, which reveals the raw days input. */
+const DURATION_PRESETS: { label: string; days: number | null }[] = [
+  { label: "1 miesiąc", days: 30 },
+  { label: "2 miesiące", days: 60 },
+  { label: "3 miesiące", days: 90 },
+  { label: "6 miesięcy", days: 180 },
+  { label: "12 miesięcy", days: 365 },
+  { label: "Własna", days: null },
+];
+
+const PRESET_DAY_COUNTS = DURATION_PRESETS.map((preset) => preset.days).filter(
+  (days): days is number => days != null,
+);
 
 function blockInvalidNumberChars(event: KeyboardEvent<HTMLInputElement>) {
   if (["e", "E", "+", "-"].includes(event.key)) {
@@ -57,6 +72,9 @@ export function PassModal({
   const [name, setName] = useState("");
   const [durationUnlimited, setDurationUnlimited] = useState(true);
   const [durationDays, setDurationDays] = useState<string>("");
+  /** True when "Własna" is chosen — either explicitly, or because an existing pass's
+   *  duration_days doesn't match any preset. */
+  const [isCustomDuration, setIsCustomDuration] = useState(false);
   const [sessionUnlimited, setSessionUnlimited] = useState(true);
   const [sessionCount, setSessionCount] = useState<string>("");
   const [price, setPrice] = useState<string>("");
@@ -70,6 +88,11 @@ export function PassModal({
       setName(editPass.name);
       setDurationUnlimited(editPass.duration_days == null || editPass.duration_days === "");
       setDurationDays(editPass.duration_days != null ? String(editPass.duration_days) : "");
+      setIsCustomDuration(
+        editPass.duration_days != null &&
+          editPass.duration_days !== "" &&
+          !PRESET_DAY_COUNTS.includes(Number(editPass.duration_days)),
+      );
       setSessionUnlimited(editPass.session_count == null || editPass.session_count === "");
       setSessionCount(editPass.session_count != null ? String(editPass.session_count) : "");
       setPrice(editPass.price != null ? String(editPass.price) : "");
@@ -78,6 +101,7 @@ export function PassModal({
       setName("");
       setDurationUnlimited(false);
       setDurationDays("");
+      setIsCustomDuration(false);
       setSessionUnlimited(false);
       setSessionCount("");
       setPrice("");
@@ -143,12 +167,10 @@ export function PassModal({
   }
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>{editPass ? "Edytuj karnet" : "Nowy karnet"}</DrawerTitle>
-        </DrawerHeader>
-        <div className="overflow-y-auto px-4 pb-4 space-y-4 max-h-[60vh]">
+    <FormDrawer open={isOpen} onClose={onClose}>
+      <FormDrawerContent>
+        <FormDrawerHeader title={editPass ? "Edytuj karnet" : "Nowy karnet"} />
+        <FormDrawerBody className="space-y-4">
           {/* Nazwa */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Nazwa</label>
@@ -160,39 +182,8 @@ export function PassModal({
             />
           </div>
 
-          {/* Ważność */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Ważność</label>
-            <SegmentedToggle
-              value={durationUnlimited}
-              onChange={(next) => {
-                setDurationUnlimited(next);
-                if (next) setDurationDays("");
-              }}
-              options={[
-                { label: "Liczba dni", value: false },
-                { label: "∞ Bez limitu", value: true },
-              ]}
-            />
-            {durationUnlimited && (
-              <p className="text-sm text-muted-foreground mb-2">
-                ∞ Karnet nie wygasa — ważny do wykorzystania wejść.
-              </p>
-            )}
-            {!durationUnlimited && (
-              <Input
-                type="number"
-                min="1"
-                value={durationDays}
-                onChange={(e) => setDurationDays(e.target.value)}
-                onKeyDown={blockInvalidNumberChars}
-                placeholder="Liczba dni"
-                className={fieldClass()}
-              />
-            )}
-          </div>
-
-          {/* Liczba wejść */}
+          {/* Liczba wejść — before Ważność: a partner decides "how many entries" first,
+              and the duration then qualifies that. */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Liczba wejść</label>
             <SegmentedToggle
@@ -219,7 +210,79 @@ export function PassModal({
             )}
           </div>
 
-          {/* Both unlimited warning */}
+          {/* Ważność */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold">Ważność</label>
+            <SegmentedToggle
+              value={durationUnlimited}
+              onChange={(next) => {
+                setDurationUnlimited(next);
+                if (next) {
+                  setDurationDays("");
+                  setIsCustomDuration(false);
+                }
+              }}
+              options={[
+                { label: "Liczba dni", value: false },
+                { label: "∞ Bez limitu", value: true },
+              ]}
+            />
+            {durationUnlimited && (
+              <p className="text-sm text-muted-foreground mb-2">
+                ∞ Karnet nie wygasa — ważny do wykorzystania wejść.
+              </p>
+            )}
+            {/* An unlimited pass has no duration at all, so the presets live inside the
+                non-unlimited branch rather than alongside the toggle. */}
+            {!durationUnlimited && (
+              <div className="mt-2 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {DURATION_PRESETS.map((preset) => {
+                    const isSelected =
+                      preset.days == null
+                        ? isCustomDuration
+                        : !isCustomDuration && durationDays === String(preset.days);
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          if (preset.days == null) {
+                            setIsCustomDuration(true);
+                            return;
+                          }
+                          setIsCustomDuration(false);
+                          setDurationDays(String(preset.days));
+                        }}
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                          isSelected
+                            ? "border-brand-green-700 bg-brand-green-700 text-white"
+                            : "border-gray-200 text-gray-600 hover:bg-gray-50",
+                        )}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {isCustomDuration && (
+                  <Input
+                    type="number"
+                    min="1"
+                    value={durationDays}
+                    onChange={(e) => setDurationDays(e.target.value)}
+                    onKeyDown={blockInvalidNumberChars}
+                    placeholder="Liczba dni"
+                    className={fieldClass()}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Both unlimited warning — kept directly after the two toggles it is about,
+              which is still where it lands now that Ważność sits second. */}
           {bothUnlimited && (
             <div className="flex items-center gap-2 rounded-md bg-b2b-amber-bg border border-b2b-amber-border px-3 py-2 text-sm text-b2b-amber-text">
               <AlertTriangle className="size-4 shrink-0" />
@@ -285,18 +348,15 @@ export function PassModal({
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
-        <DrawerFooter className="flex-row gap-2">
-          <DrawerClose
-            render={<Button variant="outline" size="action" className="w-12 shrink-0 px-0" />}
-          >
-            <X className="size-5" />
-          </DrawerClose>
-          <Button size="action" onClick={handleSave} disabled={isSaving} className="flex-1">
+        </FormDrawerBody>
+        {/* The footer's own X is gone — the header owns closing now, so the footer is
+            purely the save action. */}
+        <DrawerFooter>
+          <Button size="action" onClick={handleSave} disabled={isSaving} className="w-full">
             {isSaving ? "Zapisuję..." : "Zapisz karnet"}
           </Button>
         </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+      </FormDrawerContent>
+    </FormDrawer>
   );
 }

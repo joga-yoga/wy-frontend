@@ -8,6 +8,7 @@ import { IoChevronForward } from "react-icons/io5";
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -90,7 +91,13 @@ export default function InstructorsRosterPage() {
   }
 
   useEffect(() => {
-    if (!studio) return;
+    // Clearing isLoading here is load-bearing: `useCurrentStudio` legitimately resolves
+    // `null` for a partner with no managed studio, and bailing out without it left the
+    // spinner running forever — which also made the "no studio" branch below unreachable.
+    if (!studio) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     axiosInstance
       .get<StudioRosterResponse>(`/studios/${studio.id}/roster`)
@@ -107,10 +114,20 @@ export default function InstructorsRosterPage() {
     );
   }
 
+  // Reached by a partner who simply has no studio — a normal state, not a lookup failure,
+  // so the copy says what to do rather than reading as an error.
   if (!studio) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-5">
-        <p className="text-sm text-gray-500">Nie znaleziono studia.</p>
+      <div className="max-w-lg mx-auto space-y-3 px-4 py-5 text-center">
+        <p className="text-sm font-semibold text-gray-900">Nie masz jeszcze studia</p>
+        <p className="text-sm text-gray-500">
+          Instruktorzy są przypisani do studia. Utwórz studio w Menu, aby zarządzać zespołem.
+        </p>
+        <Link href="/account/partner/menu" className="inline-block">
+          <Button size="action" variant="green" className="rounded-full">
+            Przejdź do Menu
+          </Button>
+        </Link>
       </div>
     );
   }

@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import {
@@ -75,6 +76,7 @@ type FeedRow =
  */
 export default function BookingsPage() {
   const { toast } = useToast();
+  const { capabilities } = usePartnerCapabilities();
   const [filter, setFilter] = useState<InquiryKind | "all">("all");
   const [items, setItems] = useState<InquiryItem[]>([]);
   const [showSourceLabels, setShowSourceLabels] = useState(false);
@@ -222,12 +224,18 @@ export default function BookingsPage() {
                     Dodaj pierwsze wydarzenie
                   </Button>
                 </Link>
-                <Link
-                  href="/account/partner/instructors/create"
-                  className="text-sm font-semibold text-gray-900 hover:underline"
-                >
-                  Utwórz profil instruktora
-                </Link>
+                {/* Only offered to a partner who hasn't got one. Gated on `=== false`
+                    rather than `!hasInstructorProfile` so the link stays hidden while
+                    capabilities are still loading (`capabilities` is null), instead of
+                    flashing in and disappearing. */}
+                {capabilities?.hasInstructorProfile === false && (
+                  <Link
+                    href="/account/partner/instructors/create"
+                    className="text-sm font-semibold text-gray-900 hover:underline"
+                  >
+                    Utwórz profil instruktora
+                  </Link>
+                )}
               </div>
             )}
           </div>

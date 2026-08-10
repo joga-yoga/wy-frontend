@@ -66,7 +66,8 @@ const processSteps: CtaProcessStep[] = [
   },
   {
     title: "Przygotujemy szkic strony",
-    description: "Układamy znalezione informacje w prostą stronę, którą w każdej chwili możesz edytować",
+    description:
+      "Układamy znalezione informacje w prostą stronę, którą w każdej chwili możesz edytować",
     icon: DraftProcessIcon,
   },
   {
@@ -137,7 +138,7 @@ export function InstructorCtaPageContent({
         }}
         onSubmit={generateDraft}
       />
-      
+
       <div className="px-6 py-6 md:hidden">
         <InstructorDraftForm
           id="instructor-query-mobile"

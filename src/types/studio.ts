@@ -84,6 +84,8 @@ export interface StudioPublic {
   passes: StudioPass[];
   sport_card_acceptances: StudioSportCardAcceptance[];
   amenities: StudioAmenity[];
+  /** Computed server-side from the classes with future sessions scheduled here —
+   *  never stored on the studio, and not settable from the studio form. */
   yoga_styles: StudioYogaStyle[];
   instructors: StudioInstructor[];
   location?: StudioPublicLocation | null;

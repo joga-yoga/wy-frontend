@@ -1,5 +1,3 @@
-import { GraduationCap, Mountain, Sparkles } from "lucide-react";
-
 import type { DashboardItem } from "./offerConfig";
 
 /**
@@ -10,27 +8,31 @@ import type { DashboardItem } from "./offerConfig";
  * once: a coloured tile behind the thumbnail (visible when an event has no photo) and a
  * badge that is always there.
  *
- * Colours are the design HTML's per-type palette (`--c-teal`, `--c-sand`, `--c-lav`,
+ * Badge colours are the design HTML's per-type palette (`--c-teal`, `--c-sand`, `--c-lav`,
  * `--c-green` with their `-t` tints and `-x` texts), which is the same palette the class
- * colours already use.
+ * colours already use. They still carry the type on the *text* badge.
+ *
+ * The tile behind the icon is neutral: `image` is a photographic PNG (the same brand
+ * event-type art the public header uses), which reads badly on a saturated tint. The
+ * colour identity lives on the badge, which is the one that is always visible anyway.
  */
 export const EVENT_KIND = {
   retreat: {
     label: "Wyjazd",
-    Icon: Mountain,
-    tile: "bg-class-teal-500/15 text-class-teal-700",
+    image: "/images/logo/logo-retreats.png",
+    tile: "bg-gray-50",
     badge: "bg-class-teal-500/15 text-class-teal-700",
   },
   workshop: {
     label: "Wydarzenie",
-    Icon: Sparkles,
-    tile: "bg-class-sand-500/25 text-class-sand-700",
+    image: "/images/logo/logo-workshops.png",
+    tile: "bg-gray-50",
     badge: "bg-class-sand-500/25 text-class-sand-700",
   },
   course: {
     label: "Kurs",
-    Icon: GraduationCap,
-    tile: "bg-class-lavender-500/20 text-class-lavender-700",
+    image: "/images/logo/logo-courses.png",
+    tile: "bg-gray-50",
     badge: "bg-class-lavender-500/20 text-class-lavender-700",
   },
 } as const satisfies Record<DashboardItem["kind"], unknown>;

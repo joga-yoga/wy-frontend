@@ -73,7 +73,10 @@ export default function CreateScheduleWizard() {
   const [instructorId, setInstructorId] = useState("");
   const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
   const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
-  const [selectedDays, setSelectedDays] = useState<string[]>(["MO"]);
+  // No weekday preselected: the form should not silently commit the user to Monday.
+  // `canSubmit` already requires >=1 day for a weekly series, so the empty default just
+  // leaves the button disabled until a real choice is made.
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [fromDate, setFromDate] = useState<Date | undefined>(() => new Date());
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [endDateMode, setEndDateMode] = useState<EndDateMode>("endless");
@@ -199,6 +202,21 @@ export default function CreateScheduleWizard() {
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
+  };
+
+  /** JS `getDay()` is Sunday-first (0=Sun); DAY_KEYS is Monday-first, hence the +6 rotation. */
+  const DAY_KEYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const;
+
+  /**
+   * Picking a start date implies a weekday, so adopt it — but only while the user hasn't
+   * expressed a multi-day intent. At 2+ selected days the selection is theirs and a date
+   * change must not overwrite it. Runs from the change handler only, never on mount, so the
+   * initial `fromDate` of today does not pre-select anything.
+   */
+  const handleFromDateChange = (next: Date | undefined) => {
+    setFromDate(next);
+    if (!next) return;
+    setSelectedDays((prev) => (prev.length <= 1 ? [DAY_KEYS[(next.getDay() + 6) % 7]] : prev));
   };
 
   const buildPayload = useCallback((): ScheduleCreatePayload | null => {
@@ -428,7 +446,7 @@ export default function CreateScheduleWizard() {
             selectedDays={selectedDays}
             onToggleDay={toggleDay}
             fromDate={fromDate}
-            onFromDateChange={setFromDate}
+            onFromDateChange={handleFromDateChange}
             toDate={toDate}
             onToDateChange={setToDate}
             endDateMode={endDateMode}
@@ -530,6 +548,7 @@ export default function CreateScheduleWizard() {
                 setStep("select");
                 setSelectedTemplate(null);
                 setShowInlineCreate(false);
+                setSelectedDays([]);
                 setFromDate(new Date());
                 setToDate(undefined);
                 setEndDateMode("endless");

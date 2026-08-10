@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronDown, Search, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Plus, Search } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -12,13 +12,13 @@ import type {
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
+import { DrawerFooter } from "@/components/ui/drawer";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+  FormDrawer,
+  FormDrawerBody,
+  FormDrawerContent,
+  FormDrawerHeader,
+} from "@/components/ui/form-drawer";
 import { Input } from "@/components/ui/input";
 import {
   useSetPageHeaderAction,
@@ -161,6 +161,12 @@ export default function FrontDeskRosterPage() {
   const [searchResults, setSearchResults] = useState<WalkInSearchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<WalkInCandidate | null>(null);
+  // Third state of the add-participant drawer, alongside "search" and "candidate picked":
+  // creating a person who isn't in the system yet. Its own field rather than the search
+  // box, so "look someone up" and "create someone" stay two separate intents.
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [isSubmittingNewUser, setIsSubmittingNewUser] = useState(false);
 
   const [options, setOptions] = useState<BookingOptionsResponse | null>(null);
   const [fundingType, setFundingType] = useState<FundingType | undefined>(undefined);
@@ -321,14 +327,28 @@ export default function FrontDeskRosterPage() {
     }
   }
 
+  /** Enter the create step, carrying over an email the desk has already typed into search. */
+  function openCreateUser() {
+    setNewUserEmail(isValidEmail(query) ? query.trim() : "");
+    setIsCreatingUser(true);
+  }
+
+  function cancelCreateUser() {
+    setIsCreatingUser(false);
+    setNewUserEmail("");
+  }
+
   async function createNewUser() {
-    if (!isValidEmail(query)) return;
+    if (!isValidEmail(newUserEmail) || isSubmittingNewUser) return;
+    setIsSubmittingNewUser(true);
     try {
       const { data } = await axiosInstance.post<{
         user_id: string;
         email: string;
         name: string | null;
-      }>(`/studios/${studioId}/front-desk/new-user`, { email: query.trim() });
+      }>(`/studios/${studioId}/front-desk/new-user`, { email: newUserEmail.trim() });
+      setIsCreatingUser(false);
+      setNewUserEmail("");
       await selectCandidate({
         user_id: data.user_id,
         email: data.email,
@@ -340,6 +360,8 @@ export default function FrontDeskRosterPage() {
         description: extractErrorMessage(err, "Nie udało się utworzyć konta."),
         variant: "destructive",
       });
+    } finally {
+      setIsSubmittingNewUser(false);
     }
   }
 
@@ -348,6 +370,8 @@ export default function FrontDeskRosterPage() {
     setQuery("");
     setSearchResults(null);
     setSelectedCandidate(null);
+    setIsCreatingUser(false);
+    setNewUserEmail("");
     setOptions(null);
     setFundingType(undefined);
   }
@@ -703,19 +727,61 @@ export default function FrontDeskRosterPage() {
         onDeskCancel={() => resolveWith("desk-cancel")}
       />
 
-      <Drawer open={isAddOpen} onOpenChange={(open) => !open && resetAddFlow()} showSwipeHandle>
-        {/* Fixed to the full available height (rather than the default `auto`, which
-         * animated its height on every async result-set change and produced the
-         * grow/scroll-glitch bug) — the results list scrolls inside a stable-size panel. */}
-        <DrawerContent className="sm:mx-auto sm:max-w-md [--drawer-height:calc(100dvh-2rem)]">
-          <DrawerHeader className="flex-row items-center justify-between">
-            <DrawerTitle>Dodaj uczestnika</DrawerTitle>
-            <button onClick={resetAddFlow} aria-label="Zamknij" className="p-1">
-              <X size={18} />
-            </button>
-          </DrawerHeader>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
-            {!selectedCandidate ? (
+      {/* FormDrawer supersedes the bespoke `[--drawer-height:calc(100dvh-2rem)]` that used
+       * to live here, and preserves the property that hack was protecting: the height is
+       * pinned up front (via `snapPoints={[1]}`), so the results list can no longer animate
+       * the sheet's height on every async result-set change — the original grow/scroll-glitch
+       * bug. It additionally stops a body drag from dismissing, which the old version still
+       * allowed over the input and the results. */}
+      <FormDrawer open={isAddOpen} onClose={resetAddFlow}>
+        <FormDrawerContent className="sm:mx-auto sm:max-w-md">
+          <FormDrawerHeader title="Dodaj uczestnika" />
+          <FormDrawerBody className="space-y-4 pb-6">
+            {!selectedCandidate && isCreatingUser ? (
+              /* Create step. A person who isn't in the system yet gets their own field and
+                 their own confirm — reusing the search box for this conflated "find" with
+                 "create" and left the action gated behind typing a valid address into a box
+                 labelled "Imię, nazwisko lub email". */
+              <>
+                <button
+                  type="button"
+                  onClick={cancelCreateUser}
+                  className="-ml-1 flex items-center gap-1 p-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  <ArrowLeft size={16} />
+                  Wróć do wyszukiwania
+                </button>
+
+                <div>
+                  <label htmlFor="new-user-email" className="mb-1 block text-sm font-semibold">
+                    Email
+                  </label>
+                  <Input
+                    id="new-user-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    placeholder="jan@example.com"
+                  />
+                  {newUserEmail.trim().length > 0 && !isValidEmail(newUserEmail) && (
+                    <p className="mt-1 px-1 text-xs text-gray-400">
+                      Podaj pełny adres e-mail, np. jan@example.com.
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  size="action"
+                  className="w-full"
+                  disabled={!isValidEmail(newUserEmail) || isSubmittingNewUser}
+                  onClick={createNewUser}
+                >
+                  {isSubmittingNewUser ? "Tworzę..." : "Utwórz i dodaj"}
+                </Button>
+              </>
+            ) : !selectedCandidate ? (
               <>
                 <div className="relative">
                   <Search
@@ -723,7 +789,6 @@ export default function FrontDeskRosterPage() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                   />
                   <Input
-                    autoFocus
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Imię, nazwisko lub email"
@@ -767,26 +832,25 @@ export default function FrontDeskRosterPage() {
                   </div>
                 )}
 
+                {/* "Not on the list" is only worth saying once a search has actually come
+                    back empty; the CTA below stands on its own before that. */}
                 {searchResults && searchResults.studio_clients.length === 0 && !isSearching && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="h-px flex-1 bg-gray-200" />
-                      <span className="text-xs text-gray-400">nie ma na liście</span>
-                      <span className="h-px flex-1 bg-gray-200" />
-                    </div>
-                    <button
-                      onClick={createNewUser}
-                      disabled={!isValidEmail(query)}
-                      className="flex w-full items-center gap-2 rounded-b2b border px-4 py-3.5 text-left text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      + Nowy użytkownik — podaj email
-                    </button>
-                    {query.trim().length > 0 && !isValidEmail(query) && (
-                      <p className="px-1 text-xs text-gray-400">
-                        Podaj pełny adres e-mail, np. jan@example.com.
-                      </p>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <span className="h-px flex-1 bg-gray-200" />
+                    <span className="text-xs text-gray-400">nie ma na liście</span>
+                    <span className="h-px flex-1 bg-gray-200" />
                   </div>
+                )}
+
+                {/* Shown in exactly two situations: the default state (nothing searched
+                    yet) and a search that came back empty. Once there are matches on
+                    screen the manager is scanning them, and a competing primary action
+                    there is just noise. */}
+                {(searchResults?.studio_clients.length ?? 0) === 0 && (
+                  <Button size="action" className="w-full" onClick={openCreateUser}>
+                    <Plus size={18} className="mr-1.5" />
+                    Utwórz użytkownika
+                  </Button>
                 )}
               </>
             ) : (
@@ -866,7 +930,7 @@ export default function FrontDeskRosterPage() {
                 )}
               </>
             )}
-          </div>
+          </FormDrawerBody>
 
           {/* Pinned so both actions stay reachable while the results/payment-choice list
            * scrolls above — "Wybierz inną osobę" collapsed to a circular icon button next
@@ -905,8 +969,8 @@ export default function FrontDeskRosterPage() {
               )}
             </DrawerFooter>
           )}
-        </DrawerContent>
-      </Drawer>
+        </FormDrawerContent>
+      </FormDrawer>
     </div>
   );
 }

@@ -1,15 +1,14 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { useYogaStyleCatalog, YogaStyleChips } from "@/components/common/YogaStyleChips";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { axiosInstance } from "@/lib/axiosInstance";
-import { cn } from "@/lib/utils";
-import type { InstructorYogaStyleIn, YogaStyle } from "@/types/instructor";
+import type { InstructorYogaStyleIn } from "@/types/instructor";
 
 interface Props {
   value: InstructorYogaStyleIn[];
@@ -17,25 +16,20 @@ interface Props {
 }
 
 export function YogaStyleSelector({ value, onChange }: Props) {
-  const [catalog, setCatalog] = useState<YogaStyle[]>([]);
+  const catalog = useYogaStyleCatalog();
   const [customName, setCustomName] = useState("");
   const [showCustom, setShowCustom] = useState(false);
 
-  useEffect(() => {
-    axiosInstance
-      .get<YogaStyle[]>("/yoga-styles")
-      .then(({ data }) => setCatalog(data))
-      .catch(() => {});
-  }, []);
-
   const selectedIds = value.filter((v) => v.yoga_style_id).map((v) => v.yoga_style_id as string);
 
-  const toggleStyle = (style: YogaStyle) => {
-    if (selectedIds.includes(style.id)) {
-      onChange(value.filter((v) => v.yoga_style_id !== style.id));
-    } else {
-      onChange([...value, { yoga_style_id: style.id, description: "" }]);
-    }
+  /** Reconcile the chip grid's flat id list back onto the richer item list, keeping
+   *  custom-style entries and any descriptions already typed. */
+  const handleSelectionChange = (ids: string[]) => {
+    const kept = value.filter((v) => !v.yoga_style_id || ids.includes(v.yoga_style_id));
+    const added = ids
+      .filter((id) => !value.some((v) => v.yoga_style_id === id))
+      .map((id) => ({ yoga_style_id: id, description: "" }));
+    onChange([...kept, ...added]);
   };
 
   const addCustom = () => {
@@ -51,24 +45,12 @@ export function YogaStyleSelector({ value, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {catalog.map((style) => (
-          <Badge
-            key={style.id}
-            variant={selectedIds.includes(style.id) ? "default" : "outline"}
-            // The outline variant's border is brand green, which on a grid of
-            // *unselected* chips reads as "all selected". R5 draws unselected chips in a
-            // neutral outline and only the chosen ones solid.
-            className={cn(
-              "cursor-pointer",
-              !selectedIds.includes(style.id) && "border-gray-200 text-gray-600 hover:bg-gray-50",
-            )}
-            onClick={() => toggleStyle(style)}
-          >
-            {style.name}
-          </Badge>
-        ))}
-      </div>
+      <YogaStyleChips
+        mode="multi"
+        catalog={catalog}
+        value={selectedIds}
+        onChange={handleSelectionChange}
+      />
 
       {value.map((item, i) => {
         const isCustom = !item.yoga_style_id;

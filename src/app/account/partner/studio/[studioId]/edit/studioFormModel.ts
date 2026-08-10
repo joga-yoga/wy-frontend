@@ -29,7 +29,6 @@ export const studioPublishSchema = yup.object({
     .default([]),
   amenity_ids: yup.array().of(yup.string().required()).default([]),
   instructor_ids: yup.array().of(yup.string().required()).default([]),
-  yoga_style_ids: yup.array().of(yup.string().required()).default([]),
   drop_in_price: nullableNumber.optional(),
   currency: yup.string().trim().optional(),
   accepts_sport_cards: yup.boolean().nullable().optional(),
@@ -109,7 +108,6 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     passes,
     sport_card_acceptances: sportCardAcceptances,
     amenity_ids: values.amenity_ids ?? [],
-    yoga_style_ids: values.yoga_style_ids ?? [],
     instructor_ids: values.instructor_ids ?? [],
     social_links: socialLinks,
   };
@@ -128,7 +126,6 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
     amenity_ids: studio.amenity_ids ?? [],
     instructor_ids: (studio.instructor_links ?? []).map((l) => l.instructor_id),
     instructors: [],
-    yoga_style_ids: studio.yoga_style_ids ?? [],
     drop_in_price: studio.drop_in_price ?? "",
     currency: studio.currency ?? "PLN",
     passes: (studio.passes ?? []).map((p) => ({
@@ -185,7 +182,6 @@ export const emptyStudioFormValues: StudioFormValues = {
   amenity_ids: [],
   instructor_ids: [],
   instructors: [],
-  yoga_style_ids: [],
   drop_in_price: "",
   currency: "PLN",
   passes: [],

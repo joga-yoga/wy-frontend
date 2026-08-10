@@ -4,7 +4,7 @@ import { Ban, Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
-import { Badge } from "@/components/ui/badge";
+import { YogaStyleChips } from "@/components/common/YogaStyleChips";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +79,7 @@ export function TemplateEditor({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
   const [level, setLevel] = useState(initial?.level ?? "");
-  const [style, setStyle] = useState(initial?.style ?? "");
+  const [styleId, setStyleId] = useState<string | null>(initial?.style_id ?? null);
   const [language, setLanguage] = useState(initial?.language ?? "polski");
   const [color, setColor] = useState<ClassColor | null>(initial?.color ?? null);
   const [defaultInstructorId, setDefaultInstructorId] = useState(
@@ -89,7 +89,6 @@ export function TemplateEditor({
     initial?.default_capacity != null ? String(initial.default_capacity) : "",
   );
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
-  const [yogaStyles, setYogaStyles] = useState<{ id: string; name: string }[]>([]);
 
   const [imageId, setImageId] = useState(initial?.image_ids?.[0] ?? "");
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -101,10 +100,6 @@ export function TemplateEditor({
     axiosInstance
       .get<InstructorOption[]>("/instructors")
       .then((r) => setInstructors(r.data ?? []))
-      .catch(() => {});
-    axiosInstance
-      .get<{ id: string; name: string }[]>("/yoga-styles")
-      .then((r) => setYogaStyles(r.data ?? []))
       .catch(() => {});
   }, []);
 
@@ -145,7 +140,7 @@ export function TemplateEditor({
     };
     if (description.trim()) data.description = description.trim();
     if (level) data.level = level;
-    if (style.trim()) data.style = style.trim();
+    data.style_id = styleId;
     if (language) data.language = language;
     data.color = color;
     if (defaultInstructorId) data.default_instructor_id = defaultInstructorId;
@@ -250,39 +245,16 @@ export function TemplateEditor({
             <Label htmlFor="style">
               Styl <span className="text-gray-400">· opcjonalnie</span>
             </Label>
-            {yogaStyles.length > 0 ? (
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {yogaStyles.map((s) => (
-                  <Badge
-                    key={s.id}
-                    variant={style === s.name ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => setStyle(style === s.name ? "" : s.name)}
-                  >
-                    {s.name}
-                  </Badge>
-                ))}
-                {style && !yogaStyles.some((s) => s.name === style) && (
-                  <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm bg-gray-50 text-gray-600">
-                    {style}
-                    <button
-                      type="button"
-                      onClick={() => setStyle("")}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                )}
-              </div>
-            ) : (
-              <Input
-                id="style"
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                placeholder="np. Hatha, Ashtanga"
-              />
-            )}
+            {/* Single-select over the catalog. The old free-text fallback is gone: `style_id`
+                is a FK, so an arbitrary string has nowhere to be stored — YogaStyleChips
+                renders nothing at all when the catalog is empty rather than silently
+                accepting input that could not be saved. */}
+            <YogaStyleChips
+              mode="single"
+              className="mt-1.5"
+              value={styleId}
+              onChange={setStyleId}
+            />
           </div>
           <div>
             <Label htmlFor="language">Język prowadzenia</Label>

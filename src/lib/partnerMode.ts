@@ -15,6 +15,21 @@ export function getLastMode(): AppMode {
   return localStorage.getItem(LAST_MODE_KEY) === "b2c" ? "b2c" : "b2b";
 }
 
+/**
+ * Like `getLastMode`, but distinguishes "never recorded" from "recorded as B2B".
+ *
+ * The difference matters for a device that has *only* ever browsed public pages:
+ * `SetLastMode` runs on `/account`, not on the public routes, so such a visitor has no
+ * entry at all. Collapsing that into "b2b" is what used to send a first-time B2C visitor
+ * arriving from the public header into the partner panel. A partner's device, by
+ * contrast, has "b2b" written explicitly by the partner layout, so their memory survives.
+ */
+export function getRecordedMode(): AppMode | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(LAST_MODE_KEY);
+  return stored === "b2c" || stored === "b2b" ? stored : null;
+}
+
 export function setLastMode(mode: AppMode): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(LAST_MODE_KEY, mode);

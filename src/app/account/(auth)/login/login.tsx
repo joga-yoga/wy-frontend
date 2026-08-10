@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { getLastMode } from "@/lib/partnerMode";
+import { getRecordedMode } from "@/lib/partnerMode";
 
 const emailSchema = z.object({
   email: z.string().email({ message: "Proszę podać poprawny adres email." }),
@@ -49,7 +49,10 @@ export function LoginPage() {
   // the remembered mode after mount, to avoid a hydration mismatch — see partnerMode.ts.
   const [defaultNext, setDefaultNext] = useState("/account/partner");
   useEffect(() => {
-    setDefaultNext(getLastMode() === "b2c" ? "/account" : "/account/partner");
+    // A device with no recorded mode has only ever browsed public pages, so it is a B2C
+    // visitor — most likely one who just tapped the public header's account icon, which
+    // deliberately sends no `next`. Only an explicitly remembered "b2b" keeps the panel.
+    setDefaultNext(getRecordedMode() === "b2b" ? "/account/partner" : "/account");
   }, []);
   const next = nextParam || defaultNext;
   const emailParam = searchParams.get("email") || "";

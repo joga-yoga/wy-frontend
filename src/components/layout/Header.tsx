@@ -7,11 +7,13 @@ import React from "react";
 import { IoChevronBack, IoPersonOutline } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/account/partner/components/EventForm/block-navigation/link";
+import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useEventsFilter } from "@/context/EventsFilterContext";
 import { type NavigationOriginRecord, readNavigationOrigin } from "@/lib/navigation-origin";
+import { personInitials, personLabel } from "@/lib/personDisplay";
 import { cn } from "@/lib/utils";
 
 import CustomPlusIconMobile from "../icons/CustomPlusIconMobile";
@@ -109,8 +111,9 @@ export const PublicHeader = () => {
   // Public pages lead into B2C (spec-b2b §2/§7) — the mode is derivable from the
   // route, and the pinned switch inside /account is how a partner reaches B2B from
   // here, not this icon directly.
-  const accountHref =
-    mounted && user ? "/account" : `/account/login?next=${encodeURIComponent(pathname)}`;
+  // No `?next=`: logging in from the header always lands on /account. Sending the user
+  // back to the public page they clicked from defeats the point of the click.
+  const accountHref = mounted && user ? "/account" : "/account/login";
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);
@@ -262,13 +265,35 @@ export const PublicHeader = () => {
           )}
 
           <Link href={accountHref} passHref className="flex items-center justify-center">
-            {/* Partner is auth/back-office only (spec-b2b §6) — nothing public,
-                including this header, renders from it. A generic account icon
-                stands in until B2C grows its own avatar. */}
+            {/* Partner is auth/back-office only (spec-b2b §6) — nothing public, including
+                this header, renders from it. A signed-in visitor gets their own B2C avatar;
+                anonymous visitors keep the generic icon.
+
+                The `mounted` guard is load-bearing: auth state is client-only, so rendering
+                the avatar during SSR would reintroduce the hydration mismatch this guard
+                exists to prevent. Both branches must agree on the server and first client
+                render, which they do — `mounted` is false for both. */}
             <button aria-label="Account">
-              <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
-                <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
-              </div>
+              {/* `user.email` is typed as required but is genuinely absent in the window
+                  between decoding the JWT and `refreshUser()` landing (and for any token
+                  minted without an email claim). Falling through to the generic icon there
+                  is both correct-looking and keeps a missing field from throwing inside the
+                  layout — this header renders on every public page. */}
+              {mounted && user && (user.name || user.email) ? (
+                <div className="rounded-full transition-opacity duration-200 hover:opacity-80">
+                  <HashedAvatar
+                    seed={user.id}
+                    name={personLabel(user.name, user.email ?? "").primary}
+                    initialsOverride={personInitials(user.name, user.email ?? "")}
+                    imageId={user.image_id}
+                    size={40}
+                  />
+                </div>
+              ) : (
+                <div className="h-10 w-10 md:h-10 md:w-10 bg-gray-100 rounded-full text-black flex items-center justify-center hover:bg-gray-200 duration-200">
+                  <IoPersonOutline className="h-6 w-6 md:h-6 md:w-6" />
+                </div>
+              )}
             </button>
           </Link>
         </div>

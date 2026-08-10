@@ -5,15 +5,11 @@ import {
   Calendar,
   ChevronRight,
   ExternalLink,
-  GraduationCap,
   ImageIcon,
   MoreVertical,
-  Mountain,
   Pencil,
   Plus,
-  Sparkles,
   Tag,
-  Users,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -322,7 +318,7 @@ export default function OfferPage() {
           </div>
           <div className="space-y-3 p-4 pt-2">
             <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-              {OFFER_TYPE_ROWS.map(({ href, title, description, Icon, badgeClassName }) => (
+              {OFFER_TYPE_ROWS.map(({ href, title, description, image, badgeClassName }) => (
                 <Link
                   key={href}
                   href={href}
@@ -335,7 +331,8 @@ export default function OfferPage() {
                       badgeClassName,
                     )}
                   >
-                    <Icon size={18} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={image} alt="" className="h-7 w-7 object-contain" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-gray-900">{title}</p>
@@ -345,20 +342,6 @@ export default function OfferPage() {
                 </Link>
               ))}
             </div>
-            <Link
-              href="/account/partner/instructors/create"
-              onClick={() => setIsCreateMenuOpen(false)}
-              className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-b2b-green-text">
-                <Users size={18} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900">Profil instruktora</p>
-                <p className="text-xs text-gray-500 truncate">Dodaj instruktora do swojego konta</p>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 shrink-0" />
-            </Link>
           </div>
         </DrawerContent>
       </Drawer>
@@ -386,27 +369,31 @@ export default function OfferPage() {
 
 // ─── WelcomeBanner ───────────────────────────────────────────────────────────
 
+/** The three event types, rendered both in the create drawer and in the empty state's
+ *  "Typy wydarzeń" card. Icons are the brand event-type art (the same PNGs the public
+ *  header and `CourseCard` use); the tint behind them is neutral because a photographic
+ *  image does not sit well on a saturated colour square. */
 const OFFER_TYPE_ROWS = [
   {
     href: "/account/partner/retreats/create",
     title: "Wyjazd",
     description: "Kilkudniowy retreat z zakwaterowaniem",
-    Icon: Mountain,
-    badgeClassName: "bg-b2b-green-bg text-b2b-green-text",
+    image: "/images/logo/logo-retreats.png",
+    badgeClassName: "bg-gray-50",
   },
   {
     href: "/account/partner/workshops/create",
     title: "Wydarzenie",
     description: "Spotkanie, jednorazowa praktyka",
-    Icon: Sparkles,
-    badgeClassName: "bg-b2b-amber-bg text-b2b-amber-text",
+    image: "/images/logo/logo-workshops.png",
+    badgeClassName: "bg-gray-50",
   },
   {
     href: "/account/partner/courses/create",
     title: "Kurs",
     description: "Cykl spotkań z zapisami na całość",
-    Icon: GraduationCap,
-    badgeClassName: "bg-violet-100 text-violet-700",
+    image: "/images/logo/logo-courses.png",
+    badgeClassName: "bg-gray-50",
   },
 ] as const;
 
@@ -438,7 +425,7 @@ function OfferEmptyState() {
           Typy wydarzeń
         </h2>
         <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-          {OFFER_TYPE_ROWS.map(({ href, title, description, Icon, badgeClassName }) => (
+          {OFFER_TYPE_ROWS.map(({ href, title, description, image, badgeClassName }) => (
             <Link
               key={href}
               href={href}
@@ -450,7 +437,8 @@ function OfferEmptyState() {
                   badgeClassName,
                 )}
               >
-                <Icon size={18} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image} alt="" className="h-7 w-7 object-contain" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-gray-900">{title}</p>

@@ -173,41 +173,12 @@ export function ScheduleRecurrenceForm({
         </div>
       )}
 
-      {showRecurrence && frequency === "weekly" && (
-        <div>
-          <Label>Dni</Label>
-          {/* Green *fill* here, not just a border — S4 draws it that way, and the circles are
-           * too small for a border alone to register. Grid, not flex, so the row fills the
-           * full width edge-to-edge rather than clumping left with dead space on the right. */}
-          <div className="mt-1 grid grid-cols-7 gap-1.5">
-            {DAYS.map((d) => (
-              <button
-                key={d.key}
-                type="button"
-                onClick={() => onToggleDay(d.key)}
-                aria-pressed={selectedDays.includes(d.key)}
-                className={cn(
-                  "h-10 w-10 rounded-full text-xs font-medium transition-colors mx-auto",
-                  selectedDays.includes(d.key)
-                    ? "bg-b2b-green-text text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
-                )}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
+      {/* Od dnia → Dni → Do dnia. The weekday row sits *between* the two dates because
+       * picking a start date is what suggests the weekday, so the two belong adjacent.
+       * That also rules out the old side-by-side `grid-cols-2` for the date pair — they
+       * are no longer neighbours — so everything below is a single stacked column. */}
       {showRecurrence && (
-        <div
-          className={
-            frequency === "once" || (frequency === "weekly" && onEndDateModeChange)
-              ? "space-y-3"
-              : "grid grid-cols-2 gap-3"
-          }
-        >
+        <div className="space-y-3">
           <div>
             <Label>{frequency === "once" ? "Data" : "Od dnia"}</Label>
             {disableFromDate ? (
@@ -236,6 +207,32 @@ export function ScheduleRecurrenceForm({
               </Popover>
             )}
           </div>
+          {frequency === "weekly" && (
+            <div>
+              <Label>Dni</Label>
+              {/* Green *fill* here, not just a border — S4 draws it that way, and the circles are
+               * too small for a border alone to register. Grid, not flex, so the row fills the
+               * full width edge-to-edge rather than clumping left with dead space on the right. */}
+              <div className="mt-1 grid grid-cols-7 gap-1.5">
+                {DAYS.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => onToggleDay(d.key)}
+                    aria-pressed={selectedDays.includes(d.key)}
+                    className={cn(
+                      "h-10 w-10 rounded-full text-xs font-medium transition-colors mx-auto",
+                      selectedDays.includes(d.key)
+                        ? "bg-b2b-green-text text-white"
+                        : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
+                    )}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {frequency === "weekly" && onEndDateModeChange && (
             <div>
               <Label>Do dnia</Label>

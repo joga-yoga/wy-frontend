@@ -19,11 +19,16 @@ import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
-import { PassTile } from "@/components/common/PassTile";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
 import { DashboardFooter } from "@/components/layout/DashboardFooter";
+import {
+  discountPercent,
+  formatMoney,
+  LightPassTile,
+  perEntry,
+} from "@/components/page-contents/studio/pricingHelpers";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,12 +75,6 @@ interface StudioFormProps {
 }
 
 type SubmitIntent = "draft" | "publish";
-
-interface YogaStyle {
-  id: string;
-  name: string;
-  slug: string;
-}
 
 function Section({
   title,
@@ -152,8 +151,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
   // Amenities catalogue
   const [allAmenities, setAllAmenities] = useState<Amenity[]>([]);
-  // Yoga styles catalogue
-  const [allYogaStyles, setAllYogaStyles] = useState<YogaStyle[]>([]);
   // Room input
   const [roomInput, setRoomInput] = useState("");
   // Pass modal
@@ -212,10 +209,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
     axiosInstance
       .get<Amenity[]>("/amenities")
       .then(({ data }) => setAllAmenities(data))
-      .catch(() => {});
-    axiosInstance
-      .get<YogaStyle[]>("/yoga-styles")
-      .then(({ data }) => setAllYogaStyles(data))
       .catch(() => {});
   }, []);
 
@@ -453,16 +446,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
     setDirtyValue("amenity_ids", next);
   }
 
-  // ── Yoga style toggle ────────────────────────────────────────────────
-
-  function toggleYogaStyle(styleId: string) {
-    const current = values.yoga_style_ids ?? [];
-    const next = current.includes(styleId)
-      ? current.filter((id) => id !== styleId)
-      : [...current, styleId];
-    setDirtyValue("yoga_style_ids", next);
-  }
-
   // ── Pass helpers (list shell for T03 modal) ───────────────────────────
 
   function removePass(index: number) {
@@ -644,28 +627,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       spellCheck={false}
                     />
                     <FieldError message={errors.description?.message} />
-                  </div>
-
-                  {/* Style jogi */}
-                  <div>
-                    <label className="mb-1 block text-base font-semibold">Style jogi</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Widoczne na profilu studia i w filtrach wyszukiwania
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {allYogaStyles.map((style) => (
-                        <Badge
-                          key={style.id}
-                          variant={
-                            (values.yoga_style_ids ?? []).includes(style.id) ? "default" : "outline"
-                          }
-                          className="cursor-pointer"
-                          onClick={() => toggleYogaStyle(style.id)}
-                        >
-                          {style.name}
-                        </Badge>
-                      ))}
-                    </div>
                   </div>
 
                   {/* Widoczność */}
@@ -931,53 +892,87 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       Dodaj dostępne karnety z cenami — uczestnicy zobaczą je na profilu studia
                     </p>
                     <div className="space-y-2">
-                      {(values.passes ?? []).map((pass, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 rounded-lg border bg-white px-3 py-2.5"
-                        >
-                          <button
-                            type="button"
-                            className="shrink-0"
-                            onClick={() => {
-                              setEditingPass(pass);
-                              setIsPassModalOpen(true);
-                            }}
+                      {(values.passes ?? []).map((pass, index) => {
+                        // Same row shape as the public profile's `PassList`, so the
+                        // partner edits what a visitor will actually see: tile → name
+                        // (+ discount) → per-entry subtitle → price. The form adds the
+                        // two affordances the public list has no equivalent for —
+                        // tapping opens the editor, and the trash button removes.
+                        const sessionCount =
+                          pass.session_count != null ? Number(pass.session_count) : null;
+                        const durationDays =
+                          pass.duration_days != null ? Number(pass.duration_days) : null;
+                        const passCurrency = pass.currency || values.currency;
+                        const priceable = {
+                          price: Number(pass.price),
+                          session_count: sessionCount,
+                        };
+                        const entryPrice = perEntry(priceable);
+                        // The form model keeps drop_in_price as a string while it is being typed.
+                        const dropIn =
+                          values.drop_in_price != null && values.drop_in_price !== ""
+                            ? Number(values.drop_in_price)
+                            : null;
+                        const discount = discountPercent(priceable, dropIn);
+                        const subtitle = [
+                          pass.description,
+                          entryPrice != null
+                            ? `${formatMoney(entryPrice, passCurrency)}/wejście`
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ");
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center gap-3 rounded-lg border bg-white px-3 py-2.5"
                           >
-                            <PassTile
-                              sessionCount={
-                                pass.session_count != null ? Number(pass.session_count) : null
-                              }
-                              durationDays={
-                                pass.duration_days != null ? Number(pass.duration_days) : null
-                              }
-                              size="sm"
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            className="text-left flex-1 min-w-0"
-                            onClick={() => {
-                              setEditingPass(pass);
-                              setIsPassModalOpen(true);
-                            }}
-                          >
-                            <p className="text-sm font-semibold">{pass.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {pass.price} {getCurrencySymbol(pass.currency || values.currency)}
-                            </p>
-                          </button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 shrink-0 text-muted-foreground"
-                            onClick={() => removePass(index)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <button
+                              type="button"
+                              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                              onClick={() => {
+                                setEditingPass(pass);
+                                setIsPassModalOpen(true);
+                              }}
+                            >
+                              <LightPassTile
+                                sessionCount={sessionCount}
+                                durationDays={durationDays}
+                                size={48}
+                              />
+                              <span className="min-w-0 flex-1">
+                                <span className="flex items-center gap-2">
+                                  <span className="truncate text-sm font-semibold text-[#222222]">
+                                    {pass.name}
+                                  </span>
+                                  {discount != null && (
+                                    <span className="shrink-0 text-xs font-semibold text-emerald-600">
+                                      −{discount}%
+                                    </span>
+                                  )}
+                                </span>
+                                {subtitle && (
+                                  <span className="mt-0.5 block truncate text-xs text-[#717171]">
+                                    {subtitle}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="shrink-0 text-sm font-semibold text-[#222222]">
+                                {formatMoney(Number(pass.price), passCurrency)}
+                              </span>
+                            </button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 shrink-0 text-muted-foreground"
+                              onClick={() => removePass(index)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
                     </div>
                     <button
                       type="button"

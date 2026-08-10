@@ -14,6 +14,7 @@ import {
   usePageSubtitle,
   usePageTitleOverride,
 } from "@/context/PageHeaderContext";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
 const BECOME_PARTNER_PATH = "/account/partner/become-partner";
 
@@ -87,7 +88,16 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
   return undefined;
 }
 
-function getBackHref(pathname: string, searchParams: URLSearchParams): string | undefined {
+/**
+ * Pure `(pathname, searchParams, hasManagedStudios) -> href`. The capability flag is
+ * passed in rather than read from a hook so this stays testable and side-effect free;
+ * `BackButton` is the client component that supplies it.
+ */
+function getBackHref(
+  pathname: string,
+  searchParams: URLSearchParams,
+  hasManagedStudios: boolean,
+): string | undefined {
   if (pathname.startsWith("/account/partner/schedule/edit/")) return "/account/partner/schedule";
   if (pathname.startsWith("/account/partner/schedule/cancel/")) return "/account/partner/schedule";
   if (pathname === "/account/partner/class-schedules/create") return "/account/partner/schedule";
@@ -115,8 +125,13 @@ function getBackHref(pathname: string, searchParams: URLSearchParams): string | 
       ? `/account/partner/instructors/create${studioQuery}`
       : `/account/partner/instructors${studioQuery}`;
   }
-  if (pathname.startsWith("/account/partner/instructors/") && pathname.endsWith("/edit"))
-    return "/account/partner/instructors";
+  if (pathname.startsWith("/account/partner/instructors/") && pathname.endsWith("/edit")) {
+    // The roster is studio-scoped, so it is only a real destination for a partner who
+    // manages one. A studio-less partner reaches this editor from the header avatar's
+    // "Edytuj" and has no roster to return to — send them to Menu, the established
+    // fallback for the other studio-scoped screens above.
+    return hasManagedStudios ? "/account/partner/instructors" : "/account/partner/menu";
+  }
   if (/^\/account\/partner\/instructors\/[^/]+$/.test(pathname)) {
     const studioQuery = searchParams.get("studioId")
       ? `?studioId=${searchParams.get("studioId")}`
@@ -161,9 +176,11 @@ function BackButton({ variant = "back" }: { variant?: "back" | "close" }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { isBlocked, openModal } = useNavigationBlocker();
+  const { capabilities } = usePartnerCapabilities();
+  const hasManagedStudios = (capabilities?.managedStudios.length ?? 0) > 0;
 
   const handleBack = () => {
-    const href = getBackHref(pathname, searchParams);
+    const href = getBackHref(pathname, searchParams, hasManagedStudios);
     const navigate = href
       ? () => startTransition(() => router.push(href))
       : () => startTransition(() => router.back());
