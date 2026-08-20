@@ -4,12 +4,14 @@ import { ChevronRight, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
+import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { personLabel } from "@/lib/personDisplay";
 
 import { ResolveSheet } from "../studio/[studioId]/front-desk/components/ResolveSheet";
 import { fundingDetailLine } from "../studio/[studioId]/front-desk/fundingDetail";
-import type { RosterEntry } from "../studio/[studioId]/front-desk/types";
+import type { PaymentAttentionResponse, RosterEntry } from "../studio/[studioId]/front-desk/types";
+import { PaymentAttention } from "./PaymentAttention";
 
 interface ReconciliationSession {
   occurrence_id: string;
@@ -49,8 +51,23 @@ export default function ReconciliationPage() {
   const [groups, setGroups] = useState<SessionGroup[] | null>(null);
   const [showStudioLabels, setShowStudioLabels] = useState(false);
   const [resolveEntry, setResolveEntry] = useState<RosterEntry | null>(null);
+  const [attention, setAttention] = useState<PaymentAttentionResponse | null>(null);
+
+  async function loadAttention() {
+    try {
+      const { data } = await axiosInstance.get<PaymentAttentionResponse>(
+        "/partner/payment-attention",
+      );
+      setAttention(data);
+    } catch {
+      // The reconciliation list is the primary content here. A failure to load the payment
+      // piles must not blank the screen a studio uses to settle cash at the desk.
+      setAttention(null);
+    }
+  }
 
   async function load() {
+    void loadAttention();
     const { data } = await axiosInstance.get<{
       sessions: ReconciliationSession[];
       show_studio_labels: boolean;
@@ -93,7 +110,20 @@ export default function ReconciliationPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-5">
-      {groups.length === 0 ? (
+      {/* Above the list, because these are a different kind of problem: the list below is
+       * money the studio is waiting for, which settles itself when someone pays at the desk.
+       * These two are money that already moved and went somewhere wrong. */}
+      {attention && (
+        <PaymentAttention
+          paidWithoutSeat={attention.paid_without_seat}
+          needsReview={attention.needs_review}
+          onChanged={load}
+        />
+      )}
+
+      {groups.length === 0 &&
+      !attention?.paid_without_seat.length &&
+      !attention?.needs_review.length ? (
         <p className="py-10 text-center text-sm text-gray-400">
           Wszystko rozliczone. Świetna robota.
         </p>
@@ -120,7 +150,7 @@ export default function ReconciliationPage() {
                       <StatusChip tone="amber">
                         {entry.funding_type === "sport_card" && entry.needs_card_check
                           ? "Sprawdź kartę"
-                          : `Do zapłaty${entry.amount_owed != null ? ` · ${entry.amount_owed} zł` : ""}`}
+                          : `Do zapłaty${entry.amount_owed != null ? ` · ${formatMoney(entry.amount_owed)}` : ""}`}
                       </StatusChip>
                       {fundingDetailLine(entry) && (
                         <span className="text-xs text-gray-500">{fundingDetailLine(entry)}</span>

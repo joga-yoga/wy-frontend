@@ -15,6 +15,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 
 import type { StudioApiResponse } from "../edit/types";
+import { OnlinePaymentsSection } from "./OnlinePaymentsSection";
 
 /**
  * Płatności i odwołania (spec-b2b §8) — a workspace screen, not part of the public
@@ -162,18 +163,13 @@ export default function StudioPaymentsPage() {
             subtitle="Płatność w studiu przed zajęciami"
             checked={acceptsCash}
           />
-          <PaymentMethodRow
-            title="Online · karta lub BLIK"
-            subtitle="Wkrótce"
-            checked={acceptsStripe}
-          />
-          <PaymentMethodRow
-            title="Przelew bankowy"
-            subtitle="Wkrótce"
-            checked={acceptsBankTransfer}
-          />
         </div>
+        {/* The two "Wkrótce" rows that used to sit here are gone: online payment is no longer
+            a promise, and it is not a switch either. It is a configuration with credentials, a
+            verification result and a connected state, so it gets its own section below. */}
       </section>
+
+      <OnlinePaymentsSection studioId={params.studioId} />
 
       <section className="space-y-4">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">

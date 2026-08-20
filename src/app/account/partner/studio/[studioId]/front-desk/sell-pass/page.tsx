@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { HashedAvatar } from "@/components/common/HashedAvatar";
+import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
@@ -130,7 +131,7 @@ export default function SellPassPage() {
         <div className="space-y-1.5">
           <h2 className="text-xl font-bold text-gray-900">Sprzedano karnet</h2>
           <p className="text-sm text-gray-500">
-            {sold.pass_name} · {sold.price.toLocaleString("pl-PL")} zł · gotówka na miejscu
+            {sold.pass_name} · {formatMoney(sold.price)} · gotówka na miejscu
           </p>
         </div>
       </div>
@@ -258,7 +259,7 @@ export default function SellPassPage() {
             {isSubmitting
               ? "Sprzedaję..."
               : selectedPass
-                ? `Sprzedaj karnet · ${selectedPass.price.toLocaleString("pl-PL")} zł`
+                ? `Sprzedaj karnet · ${formatMoney(selectedPass.price)}`
                 : "Sprzedaj karnet"}
           </Button>
         </>

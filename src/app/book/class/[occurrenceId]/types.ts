@@ -23,6 +23,20 @@ export interface BuyAndUsePassOption {
   duration_days?: number | null;
 }
 
+/**
+ * Online methods, as the customer knows them. Deliberately *methods*, never providers — a
+ * studio switching gateway must produce no visible change here, so the gateway's name never
+ * crosses the wire in the first place.
+ *
+ * These are no longer *choices*. They describe what the studio's one online option covers, so
+ * the screen can say "BLIK, karta, przelew" under it; the payer picks the actual method on
+ * the provider's own page, which asks regardless of what we send.
+ */
+export type OnlinePaymentMethod = "blik" | "card" | "wallet" | "transfer";
+
+/** What the customer picks, and all the API is sent: pay here, or pay at the studio. */
+export type PaymentMethod = "cash" | "online";
+
 export interface BookingOptionsResponse {
   seat_available: boolean;
   drop_in_price?: number | null;
@@ -32,6 +46,9 @@ export interface BookingOptionsResponse {
   sport_card_options: SportCardOption[];
   buy_and_use_options: BuyAndUsePassOption[];
   free_cancellation_deadline?: string | null;
+  /** Empty when the studio has no active provider — cash only, exactly as before. */
+  online_payment_methods: OnlinePaymentMethod[];
+  accepts_cash: boolean;
 }
 
 export type FundingType = "drop_in" | "use_pass" | "sport_card" | "buy_and_use";
@@ -41,6 +58,12 @@ export interface BookingCreateRequest {
   user_pass_id?: string;
   studio_sport_card_id?: string;
   pass_id?: string;
+  payment_method?: PaymentMethod;
+}
+
+/** Step two's response: where to send the payer. No provider identifier, by design. */
+export interface StartPaymentResponse {
+  redirect_url: string;
 }
 
 export interface BookingOut {
@@ -55,6 +78,8 @@ export interface BookingOut {
   free_cancellation_deadline?: string | null;
   funding_type: FundingType | "unknown";
   sport_card_surcharge?: number | null;
+  /** Seat held, money not yet requested — the cue to call POST /bookings/{id}/payment. */
+  payment_required: boolean;
 }
 
 // ── T02: flow state ─────────────────────────────────────────────────
@@ -90,16 +115,26 @@ export type FundingSelection =
       fee: number | null;
     };
 
-export function toBookingCreateRequest(selection: FundingSelection): BookingCreateRequest {
+export function toBookingCreateRequest(
+  selection: FundingSelection,
+  paymentMethod?: PaymentMethod,
+): BookingCreateRequest {
+  // Selections that skip the Method screen (a pass already in the wallet, a sport card with no
+  // surcharge) cost nothing, so sending a method for them would be meaningless.
+  const method = skipsMethodScreen(selection) ? undefined : paymentMethod;
   switch (selection.kind) {
     case "use_pass":
       return { funding_type: "use_pass", user_pass_id: selection.userPassId };
     case "drop_in":
-      return { funding_type: "drop_in" };
+      return { funding_type: "drop_in", payment_method: method };
     case "buy_and_use":
-      return { funding_type: "buy_and_use", pass_id: selection.passId };
+      return { funding_type: "buy_and_use", pass_id: selection.passId, payment_method: method };
     case "sport_card":
-      return { funding_type: "sport_card", studio_sport_card_id: selection.studioSportCardId };
+      return {
+        funding_type: "sport_card",
+        studio_sport_card_id: selection.studioSportCardId,
+        payment_method: method,
+      };
   }
 }
 

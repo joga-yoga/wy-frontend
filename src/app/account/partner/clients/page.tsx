@@ -8,6 +8,7 @@ import { IoChevronForward } from "react-icons/io5";
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
+import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Input } from "@/components/ui/input";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
@@ -20,7 +21,7 @@ import type { ChipState, ClientChipOut, ClientListItem } from "./types";
 function chipLabel(chip: ClientChipOut): { text: string; tone: "amber" | "green" | "gray" } {
   switch (chip.state as ChipState) {
     case "debt":
-      return { text: `Do zapłaty · ${chip.amount_due?.toLocaleString("pl-PL")} zł`, tone: "amber" };
+      return { text: `Do zapłaty · ${formatMoney(chip.amount_due)}`, tone: "amber" };
     case "pass":
       return {
         text:

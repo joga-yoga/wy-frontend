@@ -13,7 +13,13 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-import type { PassDetail, PassPurchaseOut, PassPurchaseScreen } from "./types";
+import type {
+  PassDetail,
+  PassPurchaseOut,
+  PassPurchaseScreen,
+  PaymentMethod,
+  StartPaymentResponse,
+} from "./types";
 
 function extractErrorDetail(err: unknown, fallback: string): string {
   const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -44,13 +50,18 @@ function CheckoutScreen({
   onSubmit,
   isSubmitting,
   submitError,
+  paymentMethod,
+  onPaymentMethodChange,
 }: {
   detail: PassDetail;
   onSubmit: () => void;
   isSubmitting: boolean;
   submitError: string | null;
+  paymentMethod: PaymentMethod;
+  onPaymentMethodChange: (method: PaymentMethod) => void;
 }) {
   const price = formatMoney(detail.price, detail.currency || detail.studio.currency);
+  const payingCash = paymentMethod === "cash";
 
   return (
     <div className="mx-auto max-w-md p-4 pb-8">
@@ -62,14 +73,21 @@ function CheckoutScreen({
         currency={detail.studio.currency}
       />
 
-      <PaymentMethodSection studio={{ accepts_stripe: detail.studio.accepts_stripe }} />
+      <PaymentMethodSection
+        method={paymentMethod}
+        onChange={onPaymentMethodChange}
+        onlineMethods={detail.studio.online_payment_methods ?? []}
+        acceptsCash={detail.studio.accepts_cash}
+      />
 
       {submitError && <p className="mt-4 text-sm text-destructive">{submitError}</p>}
 
       <div className="mt-6">
         <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
           <Banknote className="h-[18px] w-[18px] shrink-0 text-brand-green-700" />
-          <span>{price} · płatność gotówką na miejscu</span>
+          <span>
+            {payingCash ? `${price} · płatność gotówką na miejscu` : `${price} · płatność online`}
+          </span>
         </div>
         <Button
           className="w-full"
@@ -151,6 +169,7 @@ function BookPassContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [purchase, setPurchase] = useState<PassPurchaseOut | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
   useEffect(() => {
     if (authLoading || user) return;
@@ -177,16 +196,32 @@ function BookPassContent() {
       .finally(() => setDetailLoading(false));
   }, [passId]);
 
+  /**
+   * Same two-step shape as the class booking: the purchase is recorded first, then the
+   * payment is opened. `isSubmitting` stays true through the redirect — the page is about to
+   * be replaced, and re-enabling the button would invite a second purchase.
+   */
   async function submitPurchase() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const { data } = await axiosInstance.post<PassPurchaseOut>(`/passes/${passId}/purchase`);
+      const { data } = await axiosInstance.post<PassPurchaseOut>(`/passes/${passId}/purchase`, {
+        payment_method: paymentMethod,
+      });
+
+      if (data.payment_required) {
+        const { data: payment } = await axiosInstance.post<StartPaymentResponse>(
+          `/passes/purchases/${data.id}/payment`,
+        );
+        window.location.href = payment.redirect_url;
+        return;
+      }
+
       setPurchase(data);
       setScreen("confirmation");
+      setIsSubmitting(false);
     } catch (err) {
       setSubmitError(extractErrorDetail(err, "Nie udało się kupić karnetu."));
-    } finally {
       setIsSubmitting(false);
     }
   }
@@ -238,6 +273,8 @@ function BookPassContent() {
       onSubmit={submitPurchase}
       isSubmitting={isSubmitting}
       submitError={submitError}
+      paymentMethod={paymentMethod}
+      onPaymentMethodChange={setPaymentMethod}
     />
   );
 }

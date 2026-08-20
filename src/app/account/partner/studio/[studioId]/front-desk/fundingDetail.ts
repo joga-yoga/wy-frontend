@@ -13,6 +13,13 @@ import type { RosterEntry } from "./types";
  */
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "gotówka",
+  online: "online",
+  // Rows written before 2026-08-18, when the booking screen still asked which online method.
+  // What the customer pressed then, not necessarily what they paid with at the gateway.
+  blik: "BLIK",
+  card: "karta",
+  transfer: "przelew",
+  wallet: "portfel",
 };
 
 function formatEntriesLeft(entry: RosterEntry): string {
