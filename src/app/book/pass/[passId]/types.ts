@@ -1,3 +1,9 @@
+import type {
+  OnlinePaymentMethod,
+  PaymentMethod,
+  StartPaymentResponse,
+} from "@/app/book/class/[occurrenceId]/types";
+
 export interface PassDetailStudio {
   id: string;
   name: string;
@@ -6,6 +12,8 @@ export interface PassDetailStudio {
   accepts_stripe: boolean;
   currency?: string | null;
   drop_in_price?: number | null;
+  /** Online methods, never providers. Empty when the studio has no active gateway. */
+  online_payment_methods?: OnlinePaymentMethod[];
 }
 
 export interface PassDetail {
@@ -31,4 +39,8 @@ export interface PassPurchaseOut {
   valid_until?: string | null;
   amount_owed?: number | null;
   studio_slug?: string | null;
+  /** Purchase recorded, money not yet requested — call POST /passes/purchases/{id}/payment. */
+  payment_required?: boolean;
 }
+
+export type { OnlinePaymentMethod, PaymentMethod, StartPaymentResponse };

@@ -11,7 +11,14 @@ interface PriceableItem {
 
 export function formatMoney(value: number | null | undefined, currency?: string | null) {
   if (value == null) return "";
-  return `${value.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(currency || "PLN")}`;
+  // Two decimals only when there are any. Without `minimumFractionDigits`, 49.90 rendered as
+  // "49,9" — which reads as a typo on a price. Setting it unconditionally would be the other
+  // error, turning every "50 zł" in the pass listings into "50,00 zł".
+  const fractionDigits = Number.isInteger(value) ? 0 : 2;
+  return `${value.toLocaleString("pl-PL", {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: 2,
+  })} ${getCurrencySymbol(currency || "PLN")}`;
 }
 
 export function perEntry(pass: PriceableItem) {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
+import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { personInitials, personLabel } from "@/lib/personDisplay";
@@ -111,7 +112,7 @@ export function ResolveSheet({
               {amount != null && owesMoney && (
                 <>
                   {detail ? " · do zapłaty " : "do zapłaty "}
-                  <span className="font-semibold text-gray-900">{amount} zł</span>
+                  <span className="font-semibold text-gray-900">{formatMoney(amount)}</span>
                 </>
               )}
             </p>
@@ -127,7 +128,7 @@ export function ResolveSheet({
               onClick={() => run("confirm", onConfirm)}
               disabled={busyKey !== null}
             >
-              {amount != null ? `Potwierdź · ${amount} zł` : "Potwierdź"}
+              {amount != null ? `Potwierdź · ${formatMoney(amount)}` : "Potwierdź"}
             </Button>
           )}
 

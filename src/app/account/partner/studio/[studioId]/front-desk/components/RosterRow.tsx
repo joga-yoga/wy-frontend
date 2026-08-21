@@ -3,6 +3,7 @@
 import { IoChevronForward } from "react-icons/io5";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
+import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
 import { personLabel } from "@/lib/personDisplay";
 import { cn } from "@/lib/utils";
@@ -75,7 +76,8 @@ export function RosterRow({
                 <StatusChip tone="amber">Sprawdź kartę</StatusChip>
               ) : (
                 <StatusChip tone="amber">
-                  Do zapłaty{entry.amount_owed != null ? ` · ${entry.amount_owed} zł` : ""}
+                  Do zapłaty
+                  {entry.amount_owed != null ? ` · ${formatMoney(entry.amount_owed)}` : ""}
                 </StatusChip>
               )
             ) : needsCardCheck ? (
@@ -92,7 +94,9 @@ export function RosterRow({
         <div className="flex shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
           {isPending ? (
             <Button size="sm" variant="green" disabled={isBusy} onClick={onConfirm}>
-              {entry.amount_owed != null ? `Potwierdź · ${entry.amount_owed} zł` : "Potwierdź"}
+              {entry.amount_owed != null
+                ? `Potwierdź · ${formatMoney(entry.amount_owed)}`
+                : "Potwierdź"}
             </Button>
           ) : (
             // Resolved and no-show rows alike keep a way back into the sheet — a no-show's
@@ -133,7 +137,7 @@ export function RosterRowUndoStrip({
       <p className="min-w-0 truncate text-sm text-gray-600">
         <span className="font-semibold text-gray-900">{label}</span>
         {" · "}
-        {amount != null ? `zapłacono ${amount} zł` : "obecność"}
+        {amount != null ? `zapłacono ${formatMoney(amount)}` : "obecność"}
       </p>
       <Button size="sm" variant="outline" disabled={isBusy} onClick={onUndo}>
         Cofnij

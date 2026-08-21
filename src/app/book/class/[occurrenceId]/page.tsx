@@ -36,7 +36,9 @@ import {
   type ExistingPassOption,
   type FundingSelection,
   isMethodFundingSelection,
+  type PaymentMethod,
   skipsMethodScreen,
+  type StartPaymentResponse,
   toBookingCreateRequest,
 } from "./types";
 
@@ -169,6 +171,8 @@ function FundingScreen({
   onSubmit,
   isSubmitting,
   submitError,
+  paymentMethod,
+  onPaymentMethodChange,
 }: {
   detail: OccurrenceDetail;
   options: BookingOptionsResponse;
@@ -178,6 +182,8 @@ function FundingScreen({
   onSubmit: (selection: FundingSelection) => void;
   isSubmitting: boolean;
   submitError: string | null;
+  paymentMethod: PaymentMethod;
+  onPaymentMethodChange: (method: PaymentMethod) => void;
 }) {
   const currency = options.currency;
   const [expanded, setExpanded] = useState(() => options.existing_passes.length === 0);
@@ -377,7 +383,12 @@ function FundingScreen({
       </div>
 
       {isMethodFundingSelection(selection) && !skipsMethodScreen(selection) && (
-        <PaymentMethodSection studio={detail.studio} />
+        <PaymentMethodSection
+          method={paymentMethod}
+          onChange={onPaymentMethodChange}
+          onlineMethods={options.online_payment_methods ?? []}
+          acceptsCash={options.accepts_cash ?? true}
+        />
       )}
 
       {submitError && <p className="mt-4 text-sm text-destructive">{submitError}</p>}
@@ -563,6 +574,7 @@ function BookClassContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [booking, setBooking] = useState<BookingOut | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
   useEffect(() => {
     if (authLoading || user) return;
@@ -591,19 +603,36 @@ function BookClassContent() {
       .finally(() => setOptionsLoading(false));
   }, [user, occurrenceId]);
 
+  /**
+   * Two calls for an online booking, one for cash.
+   *
+   * The seat is claimed by the first call and held for 20 minutes; the second opens the
+   * payment and hands back a redirect. `isSubmitting` stays true through the redirect on
+   * purpose — the page is about to be replaced, and re-enabling the button first would invite
+   * a second tap that the seat is already spoken for.
+   */
   async function submitBooking(selection: FundingSelection) {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
       const { data } = await axiosInstance.post<BookingOut>(
         `/occurrences/${occurrenceId}/bookings`,
-        toBookingCreateRequest(selection),
+        toBookingCreateRequest(selection, paymentMethod),
       );
+
+      if (data.payment_required) {
+        const { data: payment } = await axiosInstance.post<StartPaymentResponse>(
+          `/bookings/${data.id}/payment`,
+        );
+        window.location.href = payment.redirect_url;
+        return;
+      }
+
       setBooking(data);
       setScreen("confirmation");
+      setIsSubmitting(false);
     } catch (err) {
       setSubmitError(extractErrorDetail(err, "Nie udało się zarezerwować zajęć."));
-    } finally {
       setIsSubmitting(false);
     }
   }
@@ -703,6 +732,8 @@ function BookClassContent() {
         onSubmit={submitBooking}
         isSubmitting={isSubmitting}
         submitError={submitError}
+        paymentMethod={paymentMethod}
+        onPaymentMethodChange={setPaymentMethod}
       />
       <BuyPassDrawer
         open={drawer === "buy-pass"}
