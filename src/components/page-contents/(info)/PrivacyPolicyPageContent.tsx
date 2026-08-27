@@ -8,7 +8,7 @@ const basePolicyHtml = `
 <ol>
   <li>Niniejsza polityka dotyczy Serwisu www, funkcjonującego pod adresem url: <b>https://joga.yoga/</b></li>
   <li>
-    Operatorem serwisu oraz Administratorem danych osobowych jest: SVYATOSLAV BORYSENKO Liściasta 12, 91-001 Łódź 
+    Operatorem serwisu oraz Administratorem danych osobowych jest joga.yoga
               </li>
 
               <li>Adres kontaktowy poczty elektronicznej operatora: hello@joga.yoga</li>
