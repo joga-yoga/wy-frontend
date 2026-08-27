@@ -154,7 +154,7 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
     accepts_cash: studio.accepts_cash !== false,
     accepts_stripe: studio.accepts_stripe ?? false,
     accepts_bank_transfer: studio.accepts_bank_transfer ?? false,
-    cancellation_policy_mode: studio.cancellation_policy_mode ?? "by_time_of_day",
+    cancellation_policy_mode: studio.cancellation_policy_mode ?? "always_free",
     cancellation_morning_deadline_time: toTimeInputValue(studio.cancellation_morning_deadline_time),
     cancellation_afternoon_hours_before: studio.cancellation_afternoon_hours_before ?? null,
     social_links: (studio.social_links ?? [])
@@ -193,8 +193,12 @@ export const emptyStudioFormValues: StudioFormValues = {
   accepts_cash: true,
   accepts_stripe: false,
   accepts_bank_transfer: false,
-  cancellation_policy_mode: "by_time_of_day",
-  cancellation_morning_deadline_time: "22:00",
+  // Matches the backend column default. `by_time_of_day` requires both deadlines, and those
+  // are only settable on the payments screen — defaulting to it here made every payload from
+  // this form carry an incomplete policy, so creating or publishing a studio failed with
+  // "by_time_of_day cancellation policy requires both ...".
+  cancellation_policy_mode: "always_free",
+  cancellation_morning_deadline_time: null,
   cancellation_afternoon_hours_before: "",
   social_links: [],
 };
