@@ -19,15 +19,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 
+import { CHIP } from "../rosterChips";
 import type { StudioRosterItem } from "../types";
 
 /**
- * The connection card for an instructor who has claimed their own profile (R6).
+ * The read-only card for an instructor this studio cannot edit (R6).
  *
- * A sheet rather than a pushed screen, because there is nothing here to edit — once a
- * profile is claimed, edit rights transfer entirely to the instructor, and this shows
- * three read-only facts plus one destructive action. Pushing a whole screen to say
- * "you can't change this" costs a navigation the information does not earn.
+ * A sheet rather than a pushed screen, because there is nothing here to edit, and pushing
+ * a whole screen to say "you can't change this" costs a navigation the information does
+ * not earn.
+ *
+ * **Two different reasons land here, and they must not be conflated.** Either the
+ * instructor claimed the profile and edit rights transferred to them, or another account
+ * created and still owns the stub. The old copy asserted the first unconditionally, so a
+ * row showing amber "Oczekuje" in the list opened onto a green "Połączono" claiming the
+ * profile was "przejęty" — of somebody who had never accepted anything. `claim_status` is
+ * what actually answers this; `can_edit_profile` only says the door is shut, not why.
  */
 export function InstructorConnectionSheet({
   item,
@@ -45,6 +52,8 @@ export function InstructorConnectionSheet({
   if (!item) return null;
 
   const firstName = item.name.split(" ")[0];
+  const chip = CHIP[item.row_state];
+  const isClaimed = item.claim_status === "claimed";
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
@@ -56,7 +65,7 @@ export function InstructorConnectionSheet({
               <DrawerTitle className="min-w-0 flex-1 truncate text-base font-bold text-gray-900">
                 {item.name}
               </DrawerTitle>
-              <StatusChip tone="green">Połączono</StatusChip>
+              <StatusChip tone={chip.tone}>{chip.label}</StatusChip>
             </div>
             {/* R6 shows styles here. The roster payload carries a bio, not styles, and
                 fetching the public profile to fill one subtitle line would be a request
@@ -73,8 +82,17 @@ export function InstructorConnectionSheet({
               is built from a name plus neutral forms, per the vocabulary rule from
               part 1. Guessing from a first name is how you misgender a real user. */}
           <InfoNote icon={<Lock size={15} />}>
-            Profil {firstName} jest przejęty i zarządzany samodzielnie. Edycja danych leży po
-            stronie instruktora.
+            {isClaimed ? (
+              <>
+                Profil {firstName} jest przejęty i zarządzany samodzielnie. Edycja danych leży po
+                stronie instruktora.
+              </>
+            ) : (
+              <>
+                Profil {firstName} prowadzi inne konto — edycja danych nie jest tu dostępna.
+                Połączenie ze studiem działa normalnie.
+              </>
+            )}
           </InfoNote>
 
           {item.slug && (
