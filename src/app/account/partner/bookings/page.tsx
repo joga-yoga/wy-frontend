@@ -20,14 +20,7 @@ import { Button } from "@/components/ui/button";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import {
-  flattenInbox,
-  InboxResponse,
-  InquiryItem,
-  InquiryKind,
-  OrganizerInviteItem,
-  UserInvitationItem,
-} from "@/lib/inboxTypes";
+import { flattenInbox, InboxResponse, InquiryItem, InquiryKind } from "@/lib/inboxTypes";
 import { cn } from "@/lib/utils";
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -62,17 +55,18 @@ function dayGroupLabel(iso: string): string {
   return d.toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
 }
 
-type FeedRow =
-  | { kind: "inquiry"; createdAt: string; data: InquiryItem }
-  | { kind: "organizer_invite"; createdAt: string; data: OrganizerInviteItem }
-  | { kind: "user_invitation"; createdAt: string; data: UserInvitationItem };
+type FeedRow = { kind: "inquiry"; createdAt: string; data: InquiryItem };
 
 /**
  * Rezerwacje tab (spec-b2b §4 + instructors-clients §4) — aggregated, day-grouped
- * inbox over T05's inquiry entity, plus actionable invite rows merged in client-side
- * (there is no shared table to merge them server-side). This is also the fresh-partner
- * onboarding surface (empty state below); T07 built the frame and the populated list,
- * this task adds filter chips, source labels, handled state, and the invite rows.
+ * inbox over T05's inquiry entity. This is also the fresh-partner onboarding surface
+ * (empty state below).
+ *
+ * **Invitations are no longer merged in here** (WY-65). Co-organizer and claim invites
+ * used to be fetched and rendered by this screen as well as by Menu, each with its own
+ * copy of the accept/decline logic — three renderings of one fact. They now live in the
+ * header notifications bell, which reads the unified inbox. Rezerwacje is about
+ * bookings and questions again.
  */
 export default function BookingsPage() {
   const { toast } = useToast();
@@ -80,10 +74,7 @@ export default function BookingsPage() {
   const [filter, setFilter] = useState<InquiryKind | "all">("all");
   const [items, setItems] = useState<InquiryItem[]>([]);
   const [showSourceLabels, setShowSourceLabels] = useState(false);
-  const [organizerInvites, setOrganizerInvites] = useState<OrganizerInviteItem[]>([]);
-  const [userInvitations, setUserInvitations] = useState<UserInvitationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [respondingId, setRespondingId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -97,21 +88,6 @@ export default function BookingsPage() {
           setShowSourceLabels(r.data.show_source_labels);
         }),
     ];
-    if (filter === "all") {
-      requests.push(
-        axiosInstance
-          .get<OrganizerInviteItem[]>("/partner/organizer-invites")
-          .then((r) => setOrganizerInvites(r.data))
-          .catch(() => setOrganizerInvites([])),
-        axiosInstance
-          .get<UserInvitationItem[]>("/users/me/invitations")
-          .then((r) => setUserInvitations(r.data))
-          .catch(() => setUserInvitations([])),
-      );
-    } else {
-      setOrganizerInvites([]);
-      setUserInvitations([]);
-    }
     Promise.all(requests)
       .catch(() =>
         toast({ description: "Nie udało się załadować rezerwacji.", variant: "destructive" }),
@@ -120,50 +96,10 @@ export default function BookingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  async function respondToUserInvitation(id: string, action: "accept" | "decline") {
-    setRespondingId(id);
-    try {
-      await axiosInstance.post(`/users/me/invitations/${id}/${action}`);
-      setUserInvitations((prev) => prev.filter((i) => i.id !== id));
-      toast({
-        description: action === "accept" ? "Zaproszenie zaakceptowane." : "Zaproszenie odrzucone.",
-      });
-    } catch {
-      toast({ description: "Nie udało się zapisać odpowiedzi.", variant: "destructive" });
-    } finally {
-      setRespondingId(null);
-    }
-  }
-
-  async function respondToOrganizerInvite(
-    invite: OrganizerInviteItem,
-    action: "accept" | "decline",
-  ) {
-    setRespondingId(invite.id);
-    try {
-      await axiosInstance.post(`/events/${invite.event_id}/organizers/${invite.id}/${action}`);
-      setOrganizerInvites((prev) => prev.filter((i) => i.id !== invite.id));
-      toast({
-        description:
-          action === "accept" ? "Zostałeś współorganizatorem." : "Zaproszenie odrzucone.",
-      });
-    } catch {
-      toast({ description: "Nie udało się zapisać odpowiedzi.", variant: "destructive" });
-    } finally {
-      setRespondingId(null);
-    }
-  }
-
   const groups = useMemo(() => {
-    const rows: FeedRow[] = [
-      ...items.map((data): FeedRow => ({ kind: "inquiry", createdAt: data.created_at, data })),
-      ...organizerInvites.map(
-        (data): FeedRow => ({ kind: "organizer_invite", createdAt: data.created_at, data }),
-      ),
-      ...userInvitations.map(
-        (data): FeedRow => ({ kind: "user_invitation", createdAt: data.created_at, data }),
-      ),
-    ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    const rows: FeedRow[] = items
+      .map((data): FeedRow => ({ kind: "inquiry", createdAt: data.created_at, data }))
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     const map = new Map<string, FeedRow[]>();
     for (const row of rows) {
@@ -173,7 +109,7 @@ export default function BookingsPage() {
       else map.set(label, [row]);
     }
     return [...map.entries()];
-  }, [items, organizerInvites, userInvitations]);
+  }, [items]);
 
   const isEmpty = groups.length === 0;
 
@@ -256,35 +192,13 @@ export default function BookingsPage() {
                 {label}
               </h2>
               <div className="divide-y rounded-b2b border bg-white overflow-hidden">
-                {groupRows.map((row) => {
-                  if (row.kind === "inquiry") {
-                    return (
-                      <InquiryRow
-                        key={row.data.id}
-                        item={row.data}
-                        showSourceLabel={showSourceLabels}
-                      />
-                    );
-                  }
-                  if (row.kind === "organizer_invite") {
-                    return (
-                      <OrganizerInviteRow
-                        key={row.data.id}
-                        invite={row.data}
-                        isResponding={respondingId === row.data.id}
-                        onRespond={(action) => respondToOrganizerInvite(row.data, action)}
-                      />
-                    );
-                  }
-                  return (
-                    <UserInvitationRow
-                      key={row.data.id}
-                      invitation={row.data}
-                      isResponding={respondingId === row.data.id}
-                      onRespond={(action) => respondToUserInvitation(row.data.id, action)}
-                    />
-                  );
-                })}
+                {groupRows.map((row) => (
+                  <InquiryRow
+                    key={row.data.id}
+                    item={row.data}
+                    showSourceLabel={showSourceLabels}
+                  />
+                ))}
               </div>
             </section>
           ))}
@@ -354,108 +268,5 @@ function InquiryRow({ item, showSourceLabel }: { item: InquiryItem; showSourceLa
         <ChevronRight size={16} className="text-gray-400" />
       </div>
     </Link>
-  );
-}
-
-function InviteRowShell({
-  title,
-  subtitle,
-  isResponding,
-  onRespond,
-}: {
-  title: string;
-  subtitle: string | null;
-  isResponding: boolean;
-  onRespond: (action: "accept" | "decline") => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-b2b-green-bg text-brand-green-700">
-          <UserPlus size={18} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">{title}</p>
-          {subtitle && <p className="truncate text-xs text-gray-500 mt-0.5">{subtitle}</p>}
-          <span className="mt-1 inline-block rounded-full bg-b2b-amber-bg px-2 py-0.5 text-[10px] font-medium text-b2b-amber-text">
-            Zaproszenie
-          </span>
-        </div>
-        <ChevronRight size={16} className="shrink-0 text-gray-400" />
-      </button>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          {subtitle && <AlertDialogDescription>{subtitle}</AlertDialogDescription>}
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel
-            onClick={() => {
-              setIsOpen(false);
-              onRespond("decline");
-            }}
-            disabled={isResponding}
-          >
-            Odrzuć
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              setIsOpen(false);
-              onRespond("accept");
-            }}
-            disabled={isResponding}
-            className="bg-brand-green-700 hover:bg-brand-green-700/90"
-          >
-            Zaakceptuj
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
-function OrganizerInviteRow({
-  invite,
-  isResponding,
-  onRespond,
-}: {
-  invite: OrganizerInviteItem;
-  isResponding: boolean;
-  onRespond: (action: "accept" | "decline") => void;
-}) {
-  return (
-    <InviteRowShell
-      title={`Współorganizacja: ${invite.event_title ?? "wydarzenie"}`}
-      subtitle={invite.organizer_name ? `jako ${invite.organizer_name}` : null}
-      isResponding={isResponding}
-      onRespond={onRespond}
-    />
-  );
-}
-
-function UserInvitationRow({
-  invitation,
-  isResponding,
-  onRespond,
-}: {
-  invitation: UserInvitationItem;
-  isResponding: boolean;
-  onRespond: (action: "accept" | "decline") => void;
-}) {
-  const title =
-    invitation.kind === "studio_claim"
-      ? `Zaproszenie do profilu studia: ${invitation.studio_name ?? ""}`
-      : `Zaproszenie do profilu instruktora: ${invitation.instructor_name ?? ""}`;
-  return (
-    <InviteRowShell
-      title={title}
-      subtitle={invitation.event_title ? `Wydarzenie: ${invitation.event_title}` : null}
-      isResponding={isResponding}
-      onRespond={onRespond}
-    />
   );
 }

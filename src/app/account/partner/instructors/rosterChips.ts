@@ -13,4 +13,7 @@ export const CHIP: Record<RosterRowState, { label: string; tone: "green" | "ambe
   linked: { label: "Połączono", tone: "green" },
   awaiting: { label: "Oczekuje", tone: "amber" },
   no_account: { label: "Bez konta", tone: "gray" },
+  // A refusal, not a detach — the row stays so the studio can ask again. Gray
+  // rather than red: someone declining is an ordinary outcome, not an error.
+  rejected: { label: "Odrzucono", tone: "gray" },
 };

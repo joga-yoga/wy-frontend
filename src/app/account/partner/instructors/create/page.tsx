@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
+import { Mail, UserRound } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { IoChevronForward } from "react-icons/io5";
 import { z } from "zod";
 
 import { InfoNote } from "@/components/b2b/InfoNote";
@@ -19,7 +20,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-import type { InstructorLookupResponse, InstructorResolveResponse } from "../types";
+import type {
+  InstructorLookupResponse,
+  InstructorResolveResponse,
+  InstructorSearchHit,
+  InstructorSearchResponse,
+} from "../types";
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -46,10 +52,17 @@ function StudioRosterAddFlow() {
   const { studio } = useCurrentStudio();
   const step = searchParams.get("step") === "new" ? "new" : "identify";
 
-  const [email, setEmail] = useState("");
+  // One field for both questions (WY-62). The *shape* of what was typed picks the
+  // strategy: an address is an identifier and resolves to one person, a name is a guess
+  // and resolves to a list somebody has to choose from.
+  const [query, setQuery] = useState("");
   const [lookup, setLookup] = useState<InstructorLookupResponse | null>(null);
+  const [hits, setHits] = useState<InstructorSearchHit[] | null>(null);
+  const [notFoundFor, setNotFoundFor] = useState<string | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // `undefined` until known — the "To ja" option must not flicker in and out.
+  const [hasOwnProfile, setHasOwnProfile] = useState<boolean | undefined>(undefined);
 
   const [stubName, setStubName] = useState("");
   const [stubEmail, setStubEmail] = useState("");
@@ -68,35 +81,123 @@ function StudioRosterAddFlow() {
   };
 
   // Live lookup, debounced — read-only, never sends an invite (instructors-clients §3).
+  //
+  // **This effect must never navigate.** It used to call `goToStubStep(email)` the moment
+  // a lookup came back `found: "none"`, which fired *while the user was still typing*:
+  // on the way to `ala@example.com` you pass through `ala@example.co`, a perfectly valid
+  // address matching nobody, and were thrown onto the new-instructor screen mid-word with
+  // a truncated address prefilled. That is the "autosubmit" in WY-62. Moving on is now
+  // always an explicit button press.
   useEffect(() => {
     if (step !== "identify") return;
-    if (!isValidEmail(email)) {
+    const trimmed = query.trim();
+    const isEmail = isValidEmail(trimmed);
+    if (!isEmail && trimmed.length < 2) {
       setLookup(null);
+      setHits(null);
+      setNotFoundFor(null);
       return;
     }
+
+    // A slow earlier response must not overwrite a newer one — a second, quieter way to
+    // show the wrong person.
+    const controller = new AbortController();
     setIsLookingUp(true);
     const handle = setTimeout(() => {
-      axiosInstance
-        .get<InstructorLookupResponse>("/instructors/lookup", { params: { email } })
-        .then(({ data }) => {
-          setLookup(data);
-          if (data.found === "none") {
-            goToStubStep(email);
-          }
+      const request = isEmail
+        ? axiosInstance
+            .get<InstructorLookupResponse>("/instructors/lookup", {
+              params: { email: trimmed },
+              signal: controller.signal,
+            })
+            .then(({ data }) => {
+              setHits(null);
+              setLookup(data);
+              setNotFoundFor(data.found === "none" ? trimmed : null);
+            })
+        : axiosInstance
+            .get<InstructorSearchResponse>("/instructors/lookup", {
+              params: { q: trimmed },
+              signal: controller.signal,
+            })
+            .then(({ data }) => {
+              setLookup(null);
+              setHits(data.items);
+              setNotFoundFor(data.items.length === 0 ? trimmed : null);
+            });
+
+      request
+        .catch(() => {
+          if (controller.signal.aborted) return;
+          setLookup(null);
+          setHits(null);
         })
-        .catch(() => setLookup(null))
-        .finally(() => setIsLookingUp(false));
+        .finally(() => {
+          if (!controller.signal.aborted) setIsLookingUp(false);
+        });
     }, 400);
-    return () => clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, step]);
+
+    return () => {
+      clearTimeout(handle);
+      controller.abort();
+    };
+  }, [query, step]);
+
+  // Does this account already have an instructor profile of its own? Mirrors the check
+  // the legacy flow makes, so "To ja" appears in exactly the same circumstances.
+  useEffect(() => {
+    axiosInstance
+      .get<Array<{ claimed_at: string | null }>>("/instructors")
+      .then(({ data }) => setHasOwnProfile(data.some((i) => i.claimed_at !== null)))
+      .catch(() => setHasOwnProfile(true)); // Fail closed: better absent than wrongly offered.
+  }, []);
+
+  async function handleAddSelected(hit: InstructorSearchHit) {
+    // The name path adds by id: search results deliberately carry no address, so there is
+    // nothing to resolve by. `/roster/{id}` is the route for "this exact person".
+    if (!studio) return;
+    setIsSubmitting(true);
+    try {
+      await axiosInstance.post(`/studios/${studio.id}/roster/${hit.instructor_id}`, {});
+      toast({
+        description:
+          hit.claim_status === "claimed"
+            ? "Zaproszenie do studia wysłane."
+            : "Instruktor dodany do studia.",
+      });
+      router.push("/account/partner/instructors");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Nie udało się dodać instruktora.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleCreateOwnProfile() {
+    // WY-75. The account owns both sides, so the link lands accepted and nothing is sent —
+    // there is nobody to ask for permission to teach at your own studio.
+    if (!studio) return;
+    setIsSubmitting(true);
+    try {
+      const { data } = await axiosInstance.post<{ id: string }>("/instructors/self", {});
+      await axiosInstance.post(`/studios/${studio.id}/roster/${data.id}`, {});
+      toast({ description: "Twój profil instruktora gotowy." });
+      router.push(`/account/partner/instructors/${data.id}/edit`);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast({ description: detail || "Nie udało się utworzyć profilu.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   async function handleInvite() {
     if (!studio || !lookup) return;
     setIsSubmitting(true);
     try {
       await axiosInstance.post<InstructorResolveResponse>("/instructors/resolve", {
-        email,
+        email: query.trim(),
         studio_id: studio.id,
       });
       toast({
@@ -256,18 +357,103 @@ function StudioRosterAddFlow() {
   return (
     <div className="max-w-md mx-auto px-4 py-5 space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="lookup-email">Email instruktora</Label>
+        <Label htmlFor="lookup-query">Imię i nazwisko lub email</Label>
         <Input
-          id="lookup-email"
-          type="email"
+          id="lookup-query"
+          type="text"
           autoFocus
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="instruktor@example.com"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="np. Marta Wiśniewska lub marta@example.com"
         />
+        <p className="px-1 text-xs text-gray-400">
+          Email znajdzie dokładnie tę osobę. Po nazwisku pokażemy listę do wyboru.
+        </p>
       </div>
 
+      {hasOwnProfile === false && (
+        <button
+          type="button"
+          disabled={isSubmitting}
+          onClick={handleCreateOwnProfile}
+          className="flex w-full items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 text-left transition-colors hover:bg-gray-50 disabled:opacity-50"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600">
+            <UserRound size={18} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-gray-900">
+              To ja — prowadzę zajęcia osobiście
+            </span>
+            <span className="block text-xs text-gray-500">
+              Utworzymy Twój profil i dodamy go do studia
+            </span>
+          </span>
+        </button>
+      )}
+
       {isLookingUp && <p className="px-1 text-xs text-gray-400">Sprawdzam...</p>}
+
+      {/* Name search: candidates to choose from. Never auto-selected, even at one
+          result — one match today is two tomorrow, and picking for the user would then
+          silently pick wrong. */}
+      {hits && hits.length > 0 && (
+        <div className="space-y-2">
+          <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            Znaleziono na joga.yoga
+          </p>
+          <div className="divide-y rounded-b2b border bg-white overflow-hidden">
+            {hits.map((hit) => (
+              <button
+                key={hit.instructor_id}
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleAddSelected(hit)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 disabled:opacity-50"
+              >
+                {hit.image_id ? (
+                  <WyImage
+                    src={hit.image_id}
+                    alt={hit.name}
+                    width={44}
+                    height={44}
+                    className="h-11 w-11 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
+                    {hit.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-900">{hit.name}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {[...hit.styles, hit.short_bio].filter(Boolean).join(" · ") || "Instruktor"}
+                  </p>
+                </div>
+                <IoChevronForward className="h-4 w-4 shrink-0 text-gray-300" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Nothing matched. A result, not a redirect — moving on is the user's choice. */}
+      {notFoundFor && !isLookingUp && (
+        <div className="space-y-3">
+          <InfoNote icon={<Mail size={15} />}>
+            Brak wyników dla <span className="font-semibold">{notFoundFor}</span>. Możesz utworzyć
+            nowy profil{isValidEmail(notFoundFor) ? " i wysłać zaproszenie" : ""}.
+          </InfoNote>
+          <Button
+            size="action"
+            variant="green"
+            className="w-full"
+            onClick={() => goToStubStep(isValidEmail(notFoundFor) ? notFoundFor : null)}
+          >
+            Utwórz nowy profil
+          </Button>
+        </div>
+      )}
 
       {lookup && lookup.found !== "none" && (
         <div className="space-y-3">
@@ -307,7 +493,7 @@ function StudioRosterAddFlow() {
                 </>
               ) : (
                 <>
-                  <p className="truncate text-sm font-semibold text-gray-900">{email}</p>
+                  <p className="truncate text-sm font-semibold text-gray-900">{query.trim()}</p>
                   <p className="truncate text-xs text-gray-500">Bez profilu instruktora</p>
                 </>
               )}

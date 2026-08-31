@@ -4,6 +4,10 @@ import { Building2, Check, Loader2, Plus, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import {
+  AddressAutocompleteField,
+  type AddressValue,
+} from "@/components/common/AddressAutocompleteField";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +48,15 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
 
   // Minimal create fields
   const [createName, setCreateName] = useState("");
-  const [createAddress, setCreateAddress] = useState("");
+  // The address plus what the autocomplete resolved it to (WY-64 case 2). `place_id` and
+  // the coordinates are null whenever the text was typed rather than picked, which is a
+  // perfectly ordinary way to create a studio.
+  const [createAddress, setCreateAddress] = useState<AddressValue>({
+    address: "",
+    place_id: null,
+    latitude: null,
+    longitude: null,
+  });
   const [createEmail, setCreateEmail] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [createdStudioId, setCreatedStudioId] = useState<string | null>(null);
@@ -57,25 +69,41 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
       .finally(() => setIsLoading(false));
   }, [instructorId]);
 
-  async function handleSearch(q: string) {
-    setSearchQuery(q);
+  // Debounced + abortable (WY-62). This used to fire a request on every keystroke from two
+  // characters up, with no debounce and nothing cancelling superseded calls — so a slow
+  // early response could land after a fast later one and show results for a prefix the
+  // user had already typed past.
+  useEffect(() => {
+    const q = searchQuery.trim();
     if (q.length < 2) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
+    const controller = new AbortController();
     setIsSearching(true);
-    try {
-      const { data } = await axiosInstance.get<StudioAutocomplete[]>(
-        `/studios/search?q=${encodeURIComponent(q)}`,
-      );
-      const linkedIds = new Set(linkedStudios.map((s) => s.id));
-      setSearchResults(data.filter((s) => !linkedIds.has(s.id)));
-    } catch {
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }
+    const handle = setTimeout(() => {
+      axiosInstance
+        .get<StudioAutocomplete[]>(`/studios/search?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+        })
+        .then(({ data }) => {
+          const linkedIds = new Set(linkedStudios.map((s) => s.id));
+          setSearchResults(data.filter((s) => !linkedIds.has(s.id)));
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setSearchResults([]);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setIsSearching(false);
+        });
+    }, 400);
+
+    return () => {
+      clearTimeout(handle);
+      controller.abort();
+    };
+  }, [searchQuery, linkedStudios]);
 
   async function linkStudio(studio: StudioAutocomplete) {
     try {
@@ -106,7 +134,10 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
     try {
       const { data } = await axiosInstance.post("/studios/minimal", {
         name: createName.trim(),
-        address: createAddress.trim() || null,
+        address: createAddress.address.trim() || null,
+        place_id: createAddress.place_id,
+        latitude: createAddress.latitude,
+        longitude: createAddress.longitude,
       });
       await axiosInstance.post(`/studios/${data.id}/instructors/${instructorId}`);
       setLinkedStudios((prev) => [
@@ -131,7 +162,10 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
     try {
       const { data } = await axiosInstance.post("/studios/minimal", {
         name: createName.trim(),
-        address: createAddress.trim() || null,
+        address: createAddress.address.trim() || null,
+        place_id: createAddress.place_id,
+        latitude: createAddress.latitude,
+        longitude: createAddress.longitude,
         owner_email: createEmail.trim(),
       });
       await axiosInstance.post(`/studios/${data.id}/instructors/${instructorId}`);
@@ -153,7 +187,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
 
   function resetCreate() {
     setCreateName("");
-    setCreateAddress("");
+    setCreateAddress({ address: "", place_id: null, latitude: null, longitude: null });
     setCreateEmail("");
     setCreatedStudioId(null);
   }
@@ -225,7 +259,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Wyszukaj studio po nazwie..."
               className="h-10 pl-9 text-sm"
               autoFocus
@@ -353,12 +387,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium">Adres (opcjonalnie)</label>
-            <Input
-              value={createAddress}
-              onChange={(e) => setCreateAddress(e.target.value)}
-              placeholder="np. ul. Marszałkowska 1, Warszawa"
-              className="h-10 text-sm"
-            />
+            <AddressAutocompleteField value={createAddress} onChange={setCreateAddress} />
           </div>
           <div className="flex gap-2">
             <Button
@@ -391,12 +420,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium">Adres (opcjonalnie)</label>
-            <Input
-              value={createAddress}
-              onChange={(e) => setCreateAddress(e.target.value)}
-              placeholder="np. ul. Marszałkowska 1, Warszawa"
-              className="h-10 text-sm"
-            />
+            <AddressAutocompleteField value={createAddress} onChange={setCreateAddress} />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium">E-mail właściciela *</label>
