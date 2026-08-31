@@ -15,19 +15,8 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { osobyNom, plural } from "@/lib/polishPlural";
 
 import { InstructorConnectionSheet } from "./components/InstructorConnectionSheet";
-import type {
-  RosterRowState,
-  StudioRosterDetachResponse,
-  StudioRosterItem,
-  StudioRosterResponse,
-} from "./types";
-
-const CHIP: Record<RosterRowState, { label: string; tone: "green" | "amber" | "gray" }> = {
-  self: { label: "To Ty", tone: "gray" },
-  linked: { label: "Połączono", tone: "green" },
-  awaiting: { label: "Oczekuje", tone: "amber" },
-  no_account: { label: "Bez konta", tone: "gray" },
-};
+import { CHIP } from "./rosterChips";
+import type { StudioRosterDetachResponse, StudioRosterItem, StudioRosterResponse } from "./types";
 
 function subtitleFor(item: StudioRosterItem): { text: string; amber: boolean } {
   switch (item.row_state) {
@@ -172,8 +161,10 @@ export default function InstructorsRosterPage() {
             </>
           );
 
-          // A claimed profile is read-only, so it opens the connection sheet (R6) rather
-          // than pushing a screen whose only message is "you cannot edit this".
+          // A profile this studio cannot edit is read-only, so it opens the sheet (R6)
+          // rather than pushing a screen whose only message is "you cannot edit this".
+          // Note this is *not* the same as "claimed": a stub another account created is
+          // equally uneditable here, and the sheet says which of the two it is.
           if (!item.can_edit_profile) {
             return (
               <button

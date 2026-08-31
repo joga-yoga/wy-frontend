@@ -113,11 +113,13 @@ export default function RosterInstructorDetailPage() {
 
   const canDetach = rosterItem.row_state !== "self";
 
-  // Połączono — claimed + accepted: view-only connection card, no edit at all
-  // (instructors-clients §4 — edit rights transfer exclusively to the instructor).
-  // Rendered from the roster item + the instructor's own public page — this studio
-  // does not own the profile, so the owner-gated editor endpoint is never called.
+  // Read-only: this studio cannot edit the profile. Two different reasons reach here —
+  // the instructor claimed it (edit rights transferred to them, instructors-clients §4),
+  // or another account owns the stub. `claim_status` distinguishes them; `can_edit_profile`
+  // only says the door is shut. Rendered from the roster item + the instructor's own
+  // public page, since the owner-gated editor endpoint would refuse this studio.
   if (!rosterItem.can_edit_profile) {
+    const isClaimed = rosterItem.claim_status === "claimed";
     const imageId = publicProfile?.image_id ?? rosterItem.image_id;
     const yogaStyles = publicProfile?.yoga_styles ?? [];
     return (
@@ -151,8 +153,17 @@ export default function RosterInstructorDetailPage() {
         <div className="flex items-start gap-3 rounded-b2b border bg-gray-50 px-4 py-3.5 text-left">
           <Lock size={16} className="mt-0.5 shrink-0 text-gray-400" />
           <p className="text-sm text-gray-600">
-            Profil {rosterItem.name.split(" ")[0]} jest przejęty i zarządzany samodzielnie. Edycja
-            danych leży po tej stronie.
+            {isClaimed ? (
+              <>
+                Profil {rosterItem.name.split(" ")[0]} jest przejęty i zarządzany samodzielnie.
+                Edycja danych leży po stronie instruktora.
+              </>
+            ) : (
+              <>
+                Profil {rosterItem.name.split(" ")[0]} prowadzi inne konto — edycja danych nie jest
+                tu dostępna. Połączenie ze studiem działa normalnie.
+              </>
+            )}
           </p>
         </div>
 
