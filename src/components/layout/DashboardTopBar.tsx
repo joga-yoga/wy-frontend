@@ -6,6 +6,7 @@ import { IoChevronBack, IoClose } from "react-icons/io5";
 
 import { LinkWithBlocker } from "@/app/account/partner/components/EventForm/block-navigation/link";
 import { useNavigationBlocker } from "@/app/account/partner/components/EventForm/block-navigation/navigation-block";
+import { NotificationsBell } from "@/components/inbox/NotificationsBell";
 import { TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { LogoFooter } from "@/components/layout/Footer";
 import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
@@ -240,6 +241,9 @@ export function DashboardTopBar() {
         <>
           {title && <h1 className="truncate text-2xl font-bold text-gray-900">{title}</h1>}
           <div className="ml-auto flex items-center gap-2">
+            {/* WY-65: account-level, so it sits beside the avatar on every main tab
+                rather than inside any one studio's screens. */}
+            <NotificationsBell />
             <HeaderAvatar />
           </div>
         </>

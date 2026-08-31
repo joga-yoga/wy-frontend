@@ -1,7 +1,7 @@
 // Aligned with wy-backend `schemas/instructor.py`: StudioRosterItem / StudioRosterResponse /
 // RosterRowState / InstructorResolveRequest / InstructorResolveResponse.
 
-export type RosterRowState = "self" | "linked" | "awaiting" | "no_account";
+export type RosterRowState = "self" | "linked" | "awaiting" | "no_account" | "rejected";
 
 export interface StudioRosterItem {
   id: string;
@@ -41,6 +41,21 @@ export interface InstructorLookupResponse {
   short_bio: string | null;
   styles: string[];
   claim_status: "claimed" | "invited" | "invitable" | "legacy" | null;
+}
+
+/** One candidate from a name search — aligned with backend `InstructorSearchHit`. */
+export interface InstructorSearchHit {
+  instructor_id: string;
+  name: string;
+  image_id: string | null;
+  slug: string | null;
+  short_bio: string | null;
+  styles: string[];
+  claim_status: "claimed" | "invited" | "invitable" | "legacy" | null;
+}
+
+export interface InstructorSearchResponse {
+  items: InstructorSearchHit[];
 }
 
 export type InstructorResolveType = "existing_instructor" | "existing_user" | "new_instructor";

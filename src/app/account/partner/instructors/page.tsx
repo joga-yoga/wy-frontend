@@ -16,31 +16,8 @@ import { osobyNom, plural } from "@/lib/polishPlural";
 
 import { InstructorConnectionSheet } from "./components/InstructorConnectionSheet";
 import { CHIP } from "./rosterChips";
+import { subtitleFor } from "./rosterSubtitles";
 import type { StudioRosterDetachResponse, StudioRosterItem, StudioRosterResponse } from "./types";
-
-function subtitleFor(item: StudioRosterItem): { text: string; amber: boolean } {
-  switch (item.row_state) {
-    case "self":
-      return { text: "Twój profil instruktora", amber: false };
-    case "linked":
-      return { text: "Zarządza swoim profilem", amber: false };
-    case "awaiting":
-      // R2 puts the invite date here rather than the edit-rights fact — "when did we ask
-      // them?" is the question a pending row actually raises, and the chip already says
-      // the profile is unclaimed.
-      return {
-        text: item.invited_at
-          ? `Zaproszenie wysłane ${new Date(item.invited_at).toLocaleDateString("pl-PL", {
-              day: "numeric",
-              month: "short",
-            })}`
-          : "Profil w Twoim zarządzaniu",
-        amber: false,
-      };
-    case "no_account":
-      return { text: "Zaproszenie niewysłane — dodaj email", amber: true };
-  }
-}
 
 export default function InstructorsRosterPage() {
   const { studio, isLoading: isStudioLoading } = useCurrentStudio();
@@ -127,12 +104,14 @@ export default function InstructorsRosterPage() {
       ? "Brak instruktorów"
       : osobyNom(items.length) +
         (roster && roster.awaiting_count > 0
-          ? ` · ${roster.awaiting_count} ${plural(
+          ? // "oczekuje na zaproszenie" reads as *waiting to be invited*. They have been
+            // invited; what is outstanding is their answer.
+            ` · ${roster.awaiting_count} ${plural(
               roster.awaiting_count,
               "oczekuje",
               "oczekują",
               "oczekuje",
-            )} na zaproszenie`
+            )} na akceptację`
           : "");
 
   return (

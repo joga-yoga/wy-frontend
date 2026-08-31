@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
 import type {
   CertificateItem,
@@ -91,6 +92,7 @@ export function InstructorFullProfileForm({
 }) {
   const router = useRouter();
   const { toast } = useToast();
+  const { studio } = useCurrentStudio();
   const [isLoading, setIsLoading] = useState(true);
   const [slug, setSlug] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(true);
@@ -281,7 +283,12 @@ export function InstructorFullProfileForm({
   const handleReinvite = async () => {
     setIsInviting(true);
     try {
-      await axiosInstance.post(`/instructors/${instructorId}/reinvite`);
+      // Carrying the studio is what makes this "ask again" after a refusal: the backend
+      // reopens that studio's rejected roster row alongside the new email (WY-63 case 4).
+      // Without it the invite goes out while the roster keeps reading "Odrzucono".
+      await axiosInstance.post(
+        `/instructors/${instructorId}/reinvite${studio ? `?studio_id=${studio.id}` : ""}`,
+      );
       setClaimStatus("invited");
       toast({
         title: "Zaproszenie wysłane",

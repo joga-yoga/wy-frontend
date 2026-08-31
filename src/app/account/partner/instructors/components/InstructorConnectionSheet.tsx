@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, UserRound } from "lucide-react";
+import { Clock, Lock, UserRound } from "lucide-react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { InfoNote } from "@/components/b2b/InfoNote";
@@ -54,6 +54,8 @@ export function InstructorConnectionSheet({
   const firstName = item.name.split(" ")[0];
   const chip = CHIP[item.row_state];
   const isClaimed = item.claim_status === "claimed";
+  const isRejected = item.row_state === "rejected";
+  const isAwaiting = item.row_state === "awaiting";
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
@@ -81,19 +83,43 @@ export function InstructorConnectionSheet({
               mockup happens to draw a woman. The roster carries no gender, so the copy
               is built from a name plus neutral forms, per the vocabulary rule from
               part 1. Guessing from a first name is how you misgender a real user. */}
-          <InfoNote icon={<Lock size={15} />}>
-            {isClaimed ? (
-              <>
-                Profil {firstName} jest przejęty i zarządzany samodzielnie. Edycja danych leży po
-                stronie instruktora.
-              </>
-            ) : (
-              <>
-                Profil {firstName} prowadzi inne konto — edycja danych nie jest tu dostępna.
-                Połączenie ze studiem działa normalnie.
-              </>
-            )}
-          </InfoNote>
+          {/* A refusal is its own story and must be told before the edit-rights one:
+              "Połączenie ze studiem działa normalnie" is plainly false once the other
+              side has said no. */}
+          {isRejected ? (
+            <InfoNote icon={<Lock size={15} />}>
+              Zaproszenie do studia zostało odrzucone. Profil pozostaje na liście — możesz wysłać
+              zaproszenie ponownie w każdej chwili.
+            </InfoNote>
+          ) : (
+            <>
+              {/* Two independent facts, and they were being told as one. Who may edit the
+                  profile is the *profile* lifecycle; whether the studio connection is
+                  settled is the *link* lifecycle. The old copy asserted "Połączenie ze
+                  studiem działa normalnie" unconditionally, which is false while the
+                  other side has not answered — the same conflation the roster list made.
+                  See `models/studio_instructor.py`: the two machines must not be merged. */}
+              <InfoNote icon={<Lock size={15} />}>
+                {isClaimed ? (
+                  <>
+                    Profil {firstName} jest przejęty i zarządzany samodzielnie. Edycja danych leży
+                    po stronie instruktora.
+                  </>
+                ) : (
+                  <>Profil {firstName} prowadzi inne konto — edycja danych nie jest tu dostępna.</>
+                )}
+              </InfoNote>
+
+              {isAwaiting && (
+                <InfoNote icon={<Clock size={15} />}>
+                  {/* Adjectives agree with "profil"/"studio", never with the person — the
+                      roster carries no gender and a first name is not one. */}
+                  Zaproszenie do zespołu czeka na akceptację. Profil jest już widoczny w grafiku i
+                  na stronie studia; studio pojawi się na profilu publicznym po akceptacji.
+                </InfoNote>
+              )}
+            </>
+          )}
 
           {item.slug && (
             <a

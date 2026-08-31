@@ -13,15 +13,6 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
-interface InvitationItem {
-  id: string;
-  kind: "instructor_claim" | "studio_claim";
-  instructor_name?: string | null;
-  studio_name?: string | null;
-  event_title: string | null;
-  expires_at: string;
-}
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">{children}</h2>
@@ -37,33 +28,10 @@ export default function MenuPage() {
   const { toast } = useToast();
   const { signOut } = useAuth();
   const { capabilities, isLoading } = usePartnerCapabilities();
-  const [invitations, setInvitations] = useState<InvitationItem[]>([]);
-  const [respondingId, setRespondingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    axiosInstance
-      .get<InvitationItem[]>("/users/me/invitations")
-      .then((r) => setInvitations(r.data))
-      .catch(() => setInvitations([]));
-  }, []);
-
-  async function respond(invitationId: string, action: "accept" | "decline") {
-    setRespondingId(invitationId);
-    try {
-      await axiosInstance.post(`/users/me/invitations/${invitationId}/${action}`);
-      setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
-      toast({
-        description:
-          action === "accept"
-            ? "Profil instruktora połączony z Twoim kontem!"
-            : "Zaproszenie odrzucone.",
-      });
-    } catch {
-      toast({ description: "Nie udało się zapisać odpowiedzi.", variant: "destructive" });
-    } finally {
-      setRespondingId(null);
-    }
-  }
+  // Invitations moved to the header bell (WY-65). They used to be listed here *and* on
+  // Rezerwacje, both reading `/users/me/invitations` through their own copy of the
+  // accept/decline logic — two renderings of one fact, which is how the contradictory
+  // statuses in WY-63 arose. One source now, one renderer.
 
   const managedStudios = capabilities?.managedStudios ?? [];
   const hasTeachingOnly = Boolean(
@@ -72,52 +40,6 @@ export default function MenuPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-6">
-      {invitations.length > 0 && (
-        <section className="space-y-2">
-          <SectionLabel>Zaproszenia</SectionLabel>
-          <div className="divide-y rounded-b2b border bg-white overflow-hidden">
-            {invitations.map((inv) => (
-              <div key={inv.id} className="px-4 py-3 space-y-2">
-                <p className="text-sm font-medium text-gray-900">
-                  {inv.kind === "studio_claim" ? (
-                    <>
-                      Zaproszenie do profilu studia:{" "}
-                      <span className="font-semibold">{inv.studio_name}</span>
-                    </>
-                  ) : (
-                    <>
-                      Zaproszenie do profilu instruktora:{" "}
-                      <span className="font-semibold">{inv.instructor_name}</span>
-                    </>
-                  )}
-                </p>
-                {inv.event_title && (
-                  <p className="text-xs text-gray-500">Wydarzenie: {inv.event_title}</p>
-                )}
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="green"
-                    onClick={() => respond(inv.id, "accept")}
-                    disabled={respondingId === inv.id}
-                  >
-                    Zaakceptuj
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => respond(inv.id, "decline")}
-                    disabled={respondingId === inv.id}
-                  >
-                    Odrzuć
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {!isLoading && managedStudios.length === 1 && (
         <StudioWorkspaceRows
           studioId={managedStudios[0].id}
