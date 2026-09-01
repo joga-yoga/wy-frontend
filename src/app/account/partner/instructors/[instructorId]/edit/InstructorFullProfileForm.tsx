@@ -52,6 +52,25 @@ import { LanguageMultiSelect } from "./components/LanguageMultiSelect";
 import { StudioLinkSection } from "./components/StudioLinkSection";
 import { YogaStyleSelector } from "./components/YogaStyleSelector";
 
+/** Per-kind counts of what still references an instructor, as returned by the 409. */
+type DeleteBlockers = Partial<Record<"events" | "occurrences" | "schedules" | "classes", number>>;
+
+const BLOCKER_LABELS: Record<keyof DeleteBlockers, [string, string, string]> = {
+  events: ["wydarzenie", "wydarzenia", "wydarzeń"],
+  occurrences: ["zajęcia", "zajęcia", "zajęć"],
+  schedules: ["grafik", "grafiki", "grafików"],
+  classes: ["szablon zajęć", "szablony zajęć", "szablonów zajęć"],
+};
+
+/** Polish counts take three forms: 1, 2-4, and 5+ (with the teens always taking the last). */
+function pluralize(count: number, [one, few, many]: [string, string, string]): string {
+  if (count === 1) return `${count} ${one}`;
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `${count} ${few}`;
+  return `${count} ${many}`;
+}
+
 const schema = z.object({
   email: z.union([z.literal(""), z.string().email("Podaj poprawny adres e-mail")]).optional(),
   name: z.string().min(1, "Imię i nazwisko jest wymagane"),
@@ -96,6 +115,7 @@ export function InstructorFullProfileForm({
   const [isLoading, setIsLoading] = useState(true);
   const [slug, setSlug] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(true);
+  const [deleteBlockers, setDeleteBlockers] = useState<DeleteBlockers | null>(null);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [isOwnClaimedInstructor, setIsOwnClaimedInstructor] = useState(false);
@@ -315,8 +335,35 @@ export function InstructorFullProfileForm({
       await axiosInstance.delete(`/instructors/${instructorId}`);
       toast({ title: "Instruktor usunięty" });
       router.push("/account/partner/offer");
-    } catch {
+    } catch (err: unknown) {
+      const response = (err as { response?: { status?: number; data?: { detail?: unknown } } })
+        ?.response;
+      const detail = response?.data?.detail;
+      // 409 means the profile still teaches. Rather than a dead-end toast, say what holds
+      // it and offer the way out the backend intends: hide the profile instead.
+      if (response?.status === 409 && typeof detail === "object" && detail) {
+        setDeleteBlockers(
+          ((detail as { blockers?: DeleteBlockers }).blockers ?? {}) as DeleteBlockers,
+        );
+        return;
+      }
       toast({ title: "Nie udało się usunąć instruktora", variant: "destructive" });
+    }
+  };
+
+  const handleUnpublish = async () => {
+    try {
+      const { data: updated } = await axiosInstance.post<InstructorProfile>(
+        `/instructors/${instructorId}/unpublish`,
+      );
+      setIsPublished(updated.is_published);
+      setDeleteBlockers(null);
+      toast({
+        title: "Profil ukryty",
+        description: "Nie jest już widoczny publicznie. Zajęcia pozostały bez zmian.",
+      });
+    } catch {
+      toast({ title: "Nie udało się ukryć profilu", variant: "destructive" });
     }
   };
 
@@ -656,6 +703,34 @@ export function InstructorFullProfileForm({
                   >
                     Tak, usuń
                   </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+              open={deleteBlockers !== null}
+              onOpenChange={(open) => !open && setDeleteBlockers(null)}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Nie można usunąć instruktora</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Ten profil jest jeszcze przypisany do:{" "}
+                    {Object.entries(deleteBlockers ?? {})
+                      .filter(([, count]) => count > 0)
+                      .map(([kind, count]) =>
+                        pluralize(count, BLOCKER_LABELS[kind as keyof DeleteBlockers]),
+                      )
+                      .join(", ")}
+                    . Odepnij instruktora od tych pozycji albo ukryj profil — zajęcia i zapisy
+                    pozostaną bez zmian.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                  {isPublished && (
+                    <AlertDialogAction onClick={handleUnpublish}>Ukryj profil</AlertDialogAction>
+                  )}
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
