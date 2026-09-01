@@ -157,8 +157,9 @@ export interface StudioPayload {
   cancellation_policy_mode?: string;
   cancellation_morning_deadline_time?: string | null;
   cancellation_afternoon_hours_before?: number | null;
-  rooms?: Array<{ name: string }>;
+  rooms?: Array<{ id?: string | null; name: string }>;
   passes?: Array<{
+    id?: string | null;
     name: string;
     price: number;
     currency?: string | null;
@@ -168,6 +169,7 @@ export interface StudioPayload {
     session_count?: number | null;
   }>;
   sport_card_acceptances?: Array<{
+    id?: string | null;
     sport_card_id?: string | null;
     name?: string | null;
     photo?: string | null;

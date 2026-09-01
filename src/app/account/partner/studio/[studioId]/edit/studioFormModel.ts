@@ -56,13 +56,19 @@ function cleanNumber(value: unknown): number | null {
 }
 
 export function buildStudioPayload(values: StudioFormValues): StudioPayload {
+  // Send the id back for rooms that already exist: the backend reconciles by id, so a
+  // room keeps the identity that its schedules and occurrences reference. Dropping it
+  // here is what made every save delete and recreate the whole list.
   const rooms = (values.rooms ?? [])
     .filter((r) => r.name.trim())
-    .map((r) => ({ name: r.name.trim() }));
+    .map((r) => ({ id: r.id ?? null, name: r.name.trim() }));
 
+  // Same as rooms: `passes.id` is what /public/passes/{id}/detail and /passes/{id}/purchase
+  // resolve by, so it has to survive the round trip or every live purchase link dies.
   const passes = (values.passes ?? [])
     .filter((p) => p.name.trim())
     .map((p) => ({
+      id: p.id ?? null,
       name: p.name.trim(),
       price: Number(p.price) || 0,
       currency: cleanString(p.currency),
@@ -72,7 +78,10 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
       session_count: cleanNumber(p.session_count),
     }));
 
+  // `id` here is the studio's acceptance row, not the global sport card (`sport_card_id`).
+  // The booking route takes it as `studio_sport_card_id`, so it must survive the round trip.
   const sportCardAcceptances = (values.sport_card_acceptances ?? []).map((sc) => ({
+    id: sc.id ?? null,
     sport_card_id: sc.sport_card_id ?? null,
     name: cleanString(sc.name),
     photo: cleanString(sc.photo) ?? null,
