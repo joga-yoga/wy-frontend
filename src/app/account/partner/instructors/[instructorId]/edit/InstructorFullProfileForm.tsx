@@ -158,7 +158,11 @@ export function InstructorFullProfileForm({
           short_bio: data.short_bio ?? "",
           image_id: data.image_id ?? "",
           photo_ids: data.photo_ids ?? [],
-          languages: data.languages ?? [],
+          // ⚠ `??`, never `||` or a `.length` check. `null` means this profile has never
+          // been asked (it predates the backend default, or came from a stub path); `[]`
+          // means the instructor cleared every language. Collapsing the two would re-add
+          // Polski to someone who removed it, on a form they only opened (WY-69).
+          languages: data.languages ?? ["pl"],
           cities: (data.cities ?? []) as CityItem[],
           certificates: (data.certificates ?? []) as CertificateItem[],
           yoga_styles: data.yoga_styles.map((ys) => ({

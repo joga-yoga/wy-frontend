@@ -1,10 +1,9 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import { IoChevronForward } from "react-icons/io5";
 
 import { HashedAvatar } from "@/components/common/HashedAvatar";
-import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
+import { SessionCardBase } from "@/components/common/SessionCardBase";
 import { cn } from "@/lib/utils";
 import {
   isAtOrPastWarsawWallClock,
@@ -103,132 +102,104 @@ export function GrafikSessionCard({
   const isPast = state === "past";
   const isDimmed = isCancelled || isPast;
 
-  const color = occ.color as keyof typeof COLOR_SWATCH_MAP | null | undefined;
-  // A finished or cancelled session keeps its slot but drops its colour, so the card reads as
-  // settled rather than as another live class — same rule the public card applies.
-  const borderClass = !isDimmed && color ? COLOR_BORDER_MAP[color] : DEFAULT_BORDER;
-  const barClass = !isDimmed && color ? COLOR_SWATCH_MAP[color] : DEFAULT_BAR;
-
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <SessionCardBase
+      // The colour is passed through unconditionally; `dimmed` is what suppresses it, and that
+      // rule now lives in one place rather than being re-derived per card.
+      color={occ.color}
+      dimmed={isDimmed}
+      struck={isCancelled}
       onClick={() => onClick(occ)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick(occ);
-      }}
-      className={cn(
-        "flex cursor-pointer items-stretch gap-3 overflow-hidden rounded-xl border-[1.5px] bg-white px-3 py-2.5 transition-colors hover:bg-gray-50",
-        borderClass,
-        isDimmed && "opacity-60",
-      )}
-    >
-      <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-        <span
-          className={cn(
-            "text-xl font-semibold",
-            isDimmed ? "text-gray-400" : "text-gray-900",
-            isCancelled && "line-through",
-          )}
-        >
-          {formatTime(occ.start_time)}
-        </span>
-        <span className="text-sm text-gray-400">
-          {formatDurationMinutes(occ.start_time, occ.end_time)}
-        </span>
-      </div>
-
-      <div className={cn("w-1 shrink-0 self-stretch rounded-full", barClass)} />
-
-      <div className="min-w-0 flex-1 self-center py-0.5">
-        <p
-          className={cn(
-            "truncate text-md font-semibold",
-            isDimmed ? "text-gray-400" : "text-gray-900",
-            isCancelled && "line-through",
-          )}
-        >
-          {occ.template_title}
-        </p>
-
-        {isPast && !isCancelled && <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>}
-
-        {/* Instructor/studio stays visible even while live — it used to be replaced
-         * entirely by the "Trwa" line below, which hid who's teaching or which studio
-         * right when someone glancing at the card most needs that context. */}
-        {!isCancelled && !isPast && context === "owner" && occ.instructor_name && (
-          <div className="mt-1 flex items-center gap-1.5">
-            <HashedAvatar
-              seed={occ.instructor_id ?? occ.instructor_name}
-              name={occ.instructor_name}
-              imageId={occ.instructor_image_id}
-              size={20}
-            />
-            {/* Instructor before room, as drawn ("Oleg · Sala 1"). */}
-            <span className="truncate text-sm text-gray-500">
-              {[occ.instructor_name, occ.room_name].filter(Boolean).join(" · ")}
+      hoverable
+      bodyAlign="center"
+      time={formatTime(occ.start_time)}
+      timeSub={formatDurationMinutes(occ.start_time, occ.end_time)}
+      trailing={
+        occ.capacity ? (
+          <div className="flex shrink-0 items-center">
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-1 text-[13px] font-semibold tabular-nums",
+                fillToneClass(state),
+              )}
+            >
+              {/* Live cards report who has actually shown up, not the booking-fill count —
+               * spec §2.1's "attended-count over capacity". */}
+              {isLive ? occ.attended_count : occ.fill_count}/{occ.capacity}
             </span>
           </div>
+        ) : null
+      }
+      // Unlike the public card, the chevron stays on past and cancelled sessions: in Grafik
+      // they are still openable (attendance list, reconciliation), so hiding it would say
+      // "not tappable" about a row that is.
+      showChevron
+    >
+      <p
+        className={cn(
+          "truncate text-md font-semibold",
+          isDimmed ? "text-gray-400" : "text-gray-900",
+          isCancelled && "line-through",
         )}
+      >
+        {occ.template_title}
+      </p>
 
-        {!isCancelled &&
-          !isPast &&
-          context === "instructor" &&
-          (occ.studio_name || occ.room_name) && (
-            <p className="mt-1 truncate text-sm text-gray-500">
-              {[occ.studio_name, occ.room_name].filter(Boolean).join(" · ")}
-            </p>
-          )}
+      {isPast && !isCancelled && <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>}
 
-        {/* Live state (spec §2.1/§10) — now a second line below the instructor/studio
-         * info, not a replacement for it. */}
-        {isLive && (
-          <p className="mt-1 text-[13px] font-medium text-b2b-green-text">
-            Trwa · do {formatTime(occ.end_time)}
-            {occ.unresolved_count > 0 && (
-              <span className="text-b2b-amber-text"> · {occ.unresolved_count} czeka</span>
-            )}
+      {/* Instructor/studio stays visible even while live — it used to be replaced
+       * entirely by the "Trwa" line below, which hid who's teaching or which studio
+       * right when someone glancing at the card most needs that context. */}
+      {!isCancelled && !isPast && context === "owner" && occ.instructor_name && (
+        <div className="mt-1 flex items-center gap-1.5">
+          <HashedAvatar
+            seed={occ.instructor_id ?? occ.instructor_name}
+            name={occ.instructor_name}
+            imageId={occ.instructor_image_id}
+            size={20}
+          />
+          {/* Instructor before room, as drawn ("Oleg · Sala 1"). */}
+          <span className="truncate text-sm text-gray-500">
+            {[occ.instructor_name, occ.room_name].filter(Boolean).join(" · ")}
+          </span>
+        </div>
+      )}
+
+      {!isCancelled &&
+        !isPast &&
+        context === "instructor" &&
+        (occ.studio_name || occ.room_name) && (
+          <p className="mt-1 truncate text-sm text-gray-500">
+            {[occ.studio_name, occ.room_name].filter(Boolean).join(" · ")}
           </p>
         )}
 
-        {(isCancelled || occ.is_modified) && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {isCancelled && (
-              <span className="rounded-full bg-b2b-red-bg px-2 py-0.5 text-[11px] font-medium text-b2b-red-text">
-                Odwołane
-              </span>
-            )}
-            {occ.is_modified && !isCancelled && (
-              <span className="flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                <Pencil size={10} />
-                Wyjątek
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Live state (spec §2.1/§10) — now a second line below the instructor/studio
+       * info, not a replacement for it. */}
+      {isLive && (
+        <p className="mt-1 text-[13px] font-medium text-b2b-green-text">
+          Trwa · do {formatTime(occ.end_time)}
+          {occ.unresolved_count > 0 && (
+            <span className="text-b2b-amber-text"> · {occ.unresolved_count} czeka</span>
+          )}
+        </p>
+      )}
 
-      {occ.capacity ? (
-        <div className="flex shrink-0 items-center">
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-[13px] font-semibold tabular-nums",
-              fillToneClass(state),
-            )}
-          >
-            {/* Live cards report who has actually shown up, not the booking-fill count —
-             * spec §2.1's "attended-count over capacity". */}
-            {isLive ? occ.attended_count : occ.fill_count}/{occ.capacity}
-          </span>
+      {(isCancelled || occ.is_modified) && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {isCancelled && (
+            <span className="rounded-full bg-b2b-red-bg px-2 py-0.5 text-[11px] font-medium text-b2b-red-text">
+              Odwołane
+            </span>
+          )}
+          {occ.is_modified && !isCancelled && (
+            <span className="flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+              <Pencil size={10} />
+              Wyjątek
+            </span>
+          )}
         </div>
-      ) : null}
-
-      {/* Unlike the public card, the chevron stays on past and cancelled sessions: in Grafik
-       * they are still openable (attendance list, reconciliation), so hiding it would say
-       * "not tappable" about a row that is. */}
-      <div className="flex shrink-0 items-center text-gray-500">
-        <IoChevronForward className="h-5 w-5" />
-      </div>
-    </div>
+      )}
+    </SessionCardBase>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { Ban, Check, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { InstructorPicker } from "@/app/account/partner/schedule/components/InstructorPicker";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { YogaStyleChips } from "@/components/common/YogaStyleChips";
 import { Button } from "@/components/ui/button";
@@ -17,16 +18,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAssignableInstructors, useAssignableStudioId } from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { CLASS_COLORS, type ClassColor, COLOR_LABELS, COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 
 import type { ClassTemplate, ClassTemplateCreate } from "../types";
-
-interface InstructorOption {
-  id: string;
-  name: string;
-}
 
 interface TemplateEditorProps {
   initial?: ClassTemplate | null;
@@ -88,20 +85,17 @@ export function TemplateEditor({
   const [defaultCapacity, setDefaultCapacity] = useState(
     initial?.default_capacity != null ? String(initial.default_capacity) : "",
   );
-  const [instructors, setInstructors] = useState<InstructorOption[]>([]);
+  // A template is partner-scoped, so when no single studio resolves the picker falls back to
+  // every instructor the partner has rather than to none — see the hook for why this differs
+  // from the schedule wizard, which needs a studio before the question means anything.
+  const studioId = useAssignableStudioId();
+  const instructors = useAssignableInstructors(studioId, "partner-list");
 
   const [imageId, setImageId] = useState(initial?.image_ids?.[0] ?? "");
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    axiosInstance
-      .get<InstructorOption[]>("/instructors")
-      .then((r) => setInstructors(r.data ?? []))
-      .catch(() => {});
-  }, []);
 
   const handleImageFileSelect = async (file: File) => {
     setIsUploadingImage(true);
@@ -143,7 +137,14 @@ export function TemplateEditor({
     data.style_id = styleId;
     if (language) data.language = language;
     data.color = color;
-    if (defaultInstructorId) data.default_instructor_id = defaultInstructorId;
+    // ⚠ Sent **always**, `null` when nothing is selected — like `style_id` and `color` above,
+    // and unlike the `if (…)` guards used for fields that cannot meaningfully be cleared.
+    // The backend PATCHes with `exclude_unset=True`, so an omitted key means "leave it alone":
+    // under the old `if (defaultInstructorId)` guard, clearing a template's default instructor
+    // silently did nothing. That was survivable when clearing meant finding a small `X` beside
+    // the dropdown; it is not, now that "Brak prowadzącego" is a row the user deliberately
+    // picks and expects to stick.
+    data.default_instructor_id = defaultInstructorId || null;
     if (defaultCapacity) data.default_capacity = parseInt(defaultCapacity, 10);
     data.image_ids = isImageRemoved ? null : imageId ? [imageId] : undefined;
     await onSubmit(data);
@@ -321,32 +322,28 @@ export function TemplateEditor({
 
         <div className="space-y-3">
           <div>
-            <Label htmlFor="instructor">Domyślny prowadzący</Label>
-            <div className="flex gap-1.5">
-              <Select
-                value={defaultInstructorId || undefined}
-                onValueChange={setDefaultInstructorId}
-              >
-                <SelectTrigger id="instructor" className="flex-1">
-                  <SelectValue placeholder="Wybierz prowadzącego" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {defaultInstructorId && (
-                <button
-                  type="button"
-                  onClick={() => setDefaultInstructorId("")}
-                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                >
-                  <X size={14} />
-                </button>
-              )}
+            <Label>Domyślny prowadzący</Label>
+            {/* The same picker the session-creation flow uses (WY-67). Not a `<Select>`: the
+                choice needs to show who each person is and whether they are connected yet,
+                which a dropdown of bare names cannot — `InstructorPicker`'s own docstring
+                makes the argument, and the two forms asking the same question differently was
+                the complaint.
+
+                `allowNone` supplies the "Brak prowadzącego" row, which replaces the separate
+                `X` clear button — a template's default instructor is optional, and clearing it
+                is a choice in the list rather than a control beside it.
+
+                `currentId={null}` + `otherLabel=""`: a template has no assignment being
+                replaced, so the default "Zastępstwo" subtitle would be nonsense here. */}
+            <div className="mt-1">
+              <InstructorPicker
+                instructors={instructors}
+                selectedId={defaultInstructorId}
+                currentId={null}
+                onSelect={setDefaultInstructorId}
+                allowNone
+                otherLabel=""
+              />
             </div>
           </div>
           <div>

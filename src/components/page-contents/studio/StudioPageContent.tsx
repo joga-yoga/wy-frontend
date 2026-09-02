@@ -14,7 +14,7 @@ import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { InstructorList } from "@/components/common/InstructorList";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
-import { SocialLinksRow } from "@/components/common/SocialLinksRow";
+import { ProfileLinks } from "@/components/common/ProfileLinks";
 import { PhotoGallery } from "@/components/custom/PhotoGallery";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -262,7 +262,6 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
             <span>{studio.address}</span>
           </button>
         )}
-        <SocialLinksRow links={studio.social_links} />
         {studio.description && <DescriptionBlock text={studio.description} />}
       </div>
     </section>
@@ -295,6 +294,20 @@ function SportCardsSection({ studio }: { studio: StudioPublic }) {
         acceptances={studio.sport_card_acceptances}
         currency={studio.currency}
       />
+    </section>
+  );
+}
+
+function LinksSection({ studio }: { studio: StudioPublic }) {
+  // Guarded here as well as inside `ProfileLinks`, because the heading is this page's and the
+  // component cannot suppress it — a "Znajdziesz nas też tutaj" over nothing is worse than no
+  // section at all.
+  if (!studio.social_links || studio.social_links.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-5">
+      <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Znajdziesz nas też tutaj</h2>
+      <ProfileLinks links={studio.social_links} />
     </section>
   );
 }
@@ -398,6 +411,7 @@ export function StudioPageContent({
       <PricingSection studio={studio} />
       <SportCardsSection studio={studio} />
       <AmenitiesSection studio={studio} />
+      <LinksSection studio={studio} />
       <LocationSection studio={studio} />
       {bottomPrimaryAction && (
         <section className="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">

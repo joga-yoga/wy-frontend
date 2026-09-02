@@ -89,9 +89,7 @@ export default async function InstructorClassesPage({ params }: Props) {
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f4efe8]">
               <Sparkles className="h-6 w-6 text-[#b9a488]" />
             </div>
-            <p className="text-sm text-gray-500">
-              Ten nauczyciel nie ma jeszcze zaplanowanych zajęć.
-            </p>
+            <p className="text-sm text-gray-500">Nie mam jeszcze zaplanowanych zajęć.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">

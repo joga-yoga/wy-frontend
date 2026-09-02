@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, ChevronRight, Clock } from "lucide-react";
-import { IoChevronForward } from "react-icons/io5";
+import { Check, Clock } from "lucide-react";
 
 import { HashedAvatar } from "@/components/common/HashedAvatar";
-import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
+import { SessionCardBase } from "@/components/common/SessionCardBase";
+import { COLOR_BORDER_MAP, DEFAULT_BORDER } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
@@ -77,9 +77,10 @@ export function SessionCard({
   const isInteractive = canOpenDetails && Boolean(onClick);
   const showChevron = state === "default" || state === "nearly-full";
 
+  // ⚠ Not the same set as `isDimmed`, and the difference is load-bearing: a **full** session
+  // is dimmed but keeps its colour, while past and cancelled ones lose it. Passed to
+  // `SessionCardBase` as `colored` rather than left to be derived from `dimmed`.
   const showColorBorder = state === "default" || state === "nearly-full" || state === "full";
-  const borderClass = showColorBorder && occ.color ? COLOR_BORDER_MAP[occ.color] : DEFAULT_BORDER;
-  const barClass = showColorBorder && occ.color ? COLOR_SWATCH_MAP[occ.color] : DEFAULT_BAR;
 
   const showBookedFooter = occ.viewer_has_booking && !isCancelled;
   const changeVisible = !isCancelled && !isPast && isChangeAnnotationVisible(occ, now);
@@ -87,139 +88,106 @@ export function SessionCard({
   const showInstructorChange = changeVisible && !!occ.previous_instructor_name;
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border-[1.5px] bg-white transition-colors",
-        borderClass,
-        isDimmed && "opacity-60",
-      )}
+    <SessionCardBase
+      color={occ.color}
+      dimmed={isDimmed}
+      colored={showColorBorder}
+      struck={isCancelled}
+      onClick={isInteractive ? () => onClick?.(occ) : undefined}
+      showChevron={showChevron}
+      timeAbove={
+        showTimeChange ? (
+          <span className="text-xs leading-none text-gray-400 line-through">
+            {formatTime(occ.previous_start_time!)}
+          </span>
+        ) : undefined
+      }
+      time={formatTime(occ.start_time)}
+      timeSub={formatDurationMinutes(occ.start_time, occ.end_time)}
+      footer={
+        showBookedFooter ? (
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white"
+            style={{ backgroundColor: BOOKED_GREEN }}
+          >
+            <Check className="h-3.5 w-3.5" />
+            Masz rezerwację na te zajęcia
+          </div>
+        ) : undefined
+      }
     >
-      <div
-        role={isInteractive ? "button" : undefined}
-        tabIndex={isInteractive ? 0 : undefined}
-        onClick={isInteractive ? () => onClick?.(occ) : undefined}
-        onKeyDown={
-          isInteractive
-            ? (e) => {
-                if (e.key === "Enter" || e.key === " ") onClick?.(occ);
-              }
-            : undefined
-        }
-        className={cn("flex items-stretch gap-3 px-3 py-2.5", isInteractive && "cursor-pointer")}
+      <p
+        className={cn(
+          "truncate text-md font-semibold",
+          isCancelled || isPast ? "text-gray-400" : "text-gray-900",
+          isCancelled && "line-through",
+        )}
       >
-        <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-          {showTimeChange && (
-            <span className="text-xs leading-none text-gray-400 line-through">
-              {formatTime(occ.previous_start_time!)}
+        {occ.template_title}
+      </p>
+
+      {!isCancelled && context === "instructor" && occ.studio_name && (
+        <div className="mt-1 flex items-center gap-1.5">
+          <HashedAvatar
+            seed={occ.studio_id ?? occ.studio_name}
+            name={occ.studio_name}
+            imageId={occ.studio_image_id}
+            size={20}
+            imageFit="contain"
+            className="bg-white"
+          />
+          <span className="truncate text-sm text-gray-500">{occ.studio_name}</span>
+        </div>
+      )}
+
+      {!isCancelled && context === "studio" && occ.instructor_name && (
+        <div className="mt-1 flex items-center gap-1.5">
+          <HashedAvatar
+            seed={occ.instructor_id ?? occ.instructor_name}
+            name={occ.instructor_name}
+            imageId={occ.instructor_image_id}
+            size={20}
+          />
+          <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
+        </div>
+      )}
+
+      {showInstructorChange && (
+        <p className="mt-0.5 truncate text-[11px] text-gray-400">
+          Zastępstwo za <span className="line-through">{occ.previous_instructor_name}</span>
+        </p>
+      )}
+
+      {isCancelled ||
+      isPast ||
+      isFull ||
+      (isNearlyFull && occ.spots_remaining != null) ||
+      showTimeChange ? (
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {isCancelled && (
+            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+              Odwołane
             </span>
           )}
-          <span
-            className={cn(
-              "text-xl font-semibold",
-              isCancelled || isPast ? "text-gray-400" : "text-gray-900",
-              isCancelled && "line-through",
-            )}
-          >
-            {formatTime(occ.start_time)}
-          </span>
-          <span className="text-sm text-gray-400">
-            {formatDurationMinutes(occ.start_time, occ.end_time)}
-          </span>
-        </div>
-
-        <div className={cn("w-1 shrink-0 self-stretch rounded-full", barClass)} />
-
-        <div className="min-w-0 flex-1 py-0.5">
-          <p
-            className={cn(
-              "truncate text-md font-semibold",
-              isCancelled || isPast ? "text-gray-400" : "text-gray-900",
-              isCancelled && "line-through",
-            )}
-          >
-            {occ.template_title}
-          </p>
-
-          {!isCancelled && context === "instructor" && occ.studio_name && (
-            <div className="mt-1 flex items-center gap-1.5">
-              <HashedAvatar
-                seed={occ.studio_id ?? occ.studio_name}
-                name={occ.studio_name}
-                imageId={occ.studio_image_id}
-                size={20}
-                imageFit="contain"
-                className="bg-white"
-              />
-              <span className="truncate text-sm text-gray-500">{occ.studio_name}</span>
-            </div>
+          {isPast && <span className="text-[11px] text-gray-400">Zakończone</span>}
+          {isFull && (
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+              Brak wolnych miejsc
+            </span>
           )}
-
-          {!isCancelled && context === "studio" && occ.instructor_name && (
-            <div className="mt-1 flex items-center gap-1.5">
-              <HashedAvatar
-                seed={occ.instructor_id ?? occ.instructor_name}
-                name={occ.instructor_name}
-                imageId={occ.instructor_image_id}
-                size={20}
-              />
-              <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
-            </div>
+          {isNearlyFull && occ.spots_remaining != null && (
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+              {formatSpotsRemainingLabel(occ.spots_remaining)}
+            </span>
           )}
-
-          {showInstructorChange && (
-            <p className="mt-0.5 truncate text-[11px] text-gray-400">
-              Zastępstwo za <span className="line-through">{occ.previous_instructor_name}</span>
-            </p>
+          {showTimeChange && (
+            <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+              <Clock className="h-3 w-3" />
+              Nowa godzina
+            </span>
           )}
-
-          {isCancelled ||
-          isPast ||
-          isFull ||
-          (isNearlyFull && occ.spots_remaining != null) ||
-          showTimeChange ? (
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {isCancelled && (
-                <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
-                  Odwołane
-                </span>
-              )}
-              {isPast && <span className="text-[11px] text-gray-400">Zakończone</span>}
-              {isFull && (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                  Brak wolnych miejsc
-                </span>
-              )}
-              {isNearlyFull && occ.spots_remaining != null && (
-                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                  {formatSpotsRemainingLabel(occ.spots_remaining)}
-                </span>
-              )}
-              {showTimeChange && (
-                <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                  <Clock className="h-3 w-3" />
-                  Nowa godzina
-                </span>
-              )}
-            </div>
-          ) : null}
         </div>
-
-        {showChevron && (
-          <div className="flex shrink-0 items-center text-gray-500">
-            <IoChevronForward className="h-5 w-5" />
-          </div>
-        )}
-      </div>
-
-      {showBookedFooter && (
-        <div
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white"
-          style={{ backgroundColor: BOOKED_GREEN }}
-        >
-          <Check className="h-3.5 w-3.5" />
-          Masz rezerwację na te zajęcia
-        </div>
-      )}
-    </div>
+      ) : null}
+    </SessionCardBase>
   );
 }

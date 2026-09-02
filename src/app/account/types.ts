@@ -10,6 +10,11 @@ export interface MyBookingItem {
   status: string;
   funding: string | null;
   is_past: boolean;
+  /** Class palette colour, so the reservation card draws the same border and bar the
+   *  partner's Grafik and the public schedule draw for the same session. Null for a
+   *  retreat/workshop/course. */
+  color: string | null;
+  duration_minutes: number | null;
 }
 
 export interface MyInquiryItem {
@@ -30,6 +35,10 @@ export interface MyBookingsResponse {
 }
 
 export interface MyPassWalletOut {
+  /** ⚠ Key lists by this, not by `studio_id`. `GET /users/me/passes` returns **every** pass
+   *  since WY-71, so a customer with two passes at one studio produces two rows with the same
+   *  `studio_id` — which is exactly the case the endpoint change exists to make visible. */
+  id: string;
   state: "active" | "used" | "expired" | "cancelled";
   pass_name: string;
   entries_total: number | null;
@@ -44,4 +53,19 @@ export interface MyPassWalletOut {
   is_paid: boolean;
   studio_id: string;
   studio_name: string;
+}
+
+/** One entry spent from a pass. Cancelled rows are included and marked — a returned entry is
+ *  part of the story of where the pass went, and hiding it makes the remaining count look
+ *  wrong to anyone counting the rows. */
+export interface MyPassUsageEntry {
+  booking_id: string;
+  status: string;
+  session_title: string | null;
+  studio_name: string | null;
+  starts_at: string | null;
+}
+
+export interface MyPassDetailOut extends MyPassWalletOut {
+  usage: MyPassUsageEntry[];
 }

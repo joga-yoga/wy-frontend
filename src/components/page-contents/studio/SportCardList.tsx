@@ -36,13 +36,20 @@ export function SportCardList({
 
   return (
     <div>
-      <p className="mb-2 text-sm text-[#717171]">
-        Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za wejście.
-      </p>
+      {/* ⚠ **Inside the branch, not above it.** This line used to render unconditionally, so a
+          studio that answered "Nie" read "Akceptujemy karty sportowe…" immediately followed by
+          "Nie przyjmujemy kart sportowych…" — the contradiction in WY-68. The `false` state was
+          never missing logic; the affirmative copy was simply on the wrong side of the branch.
+          Both branches speak as the studio ("my"), per the tone-of-voice rule in AGENTS.md. */}
       {acceptsSportCards === false ? (
-        <p className="text-sm text-[#717171]">Studio nie akceptuje kart sportowych.</p>
+        <p className="text-sm text-[#717171]">
+          Nie przyjmujemy kart sportowych — zapraszamy na karnet lub pojedyncze wejście.
+        </p>
       ) : (
         <>
+          <p className="mb-2 text-sm text-[#717171]">
+            Akceptujemy karty sportowe. Przy niektórych kartach może obowiązywać dopłata za wejście.
+          </p>
           {acceptances.map((item, i) => {
             const photo = sportCardPhoto(item);
             const hasFee = item.fee != null && item.fee > 0;
@@ -67,7 +74,7 @@ export function SportCardList({
           })}
           {acceptances.length === 0 && (
             <p className="py-3 text-sm text-[#717171]">
-              Lista akceptowanych kart pojawi się po uzupełnieniu profilu.
+              Wkrótce dodamy listę kart, które przyjmujemy.
             </p>
           )}
         </>

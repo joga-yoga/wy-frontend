@@ -8,13 +8,13 @@ import {
   HelpCircle,
   LogOut,
   User as UserIcon,
+  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { PassCard } from "@/components/b2b/PassCard";
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { SetLastMode } from "@/components/layout/SetLastMode";
@@ -23,8 +23,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { personInitials, personLabel } from "@/lib/personDisplay";
+import { plural } from "@/lib/polishPlural";
 import { publicReturnHref } from "@/lib/publicReturn";
 
+import { PassTicketCard } from "./passes/PassTicketCard";
 import type { MyBookingsResponse, MyPassWalletOut } from "./types";
 
 /**
@@ -40,6 +42,12 @@ export default function AccountHubPage() {
   const [summary, setSummary] = useState<MyBookingsResponse | null>(null);
   const [wallets, setWallets] = useState<MyPassWalletOut[]>([]);
   const isPartner = Boolean(user?.partner);
+
+  // `/users/me/passes` returns newest-purchase-first, so the first usable one is the newest
+  // usable one. A customer whose passes are all spent or expired still gets a card — it is
+  // what explains *why* there is nothing to use, which is the job the four states exist for.
+  const featuredPass = wallets.find((w) => w.state === "active") ?? wallets[0];
+  const activeCount = wallets.filter((w) => w.state === "active").length;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -161,17 +169,33 @@ export default function AccountHubPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {wallets.map((w) => (
-                // F2 puts the studio name *inside* the card where the partner-side card
-                // puts the purchase line, and drops the state chip — on your own wallet,
-                // a card being there already says it is usable.
-                <PassCard
-                  key={w.studio_id}
-                  pass={w}
-                  meta={w.studio_name}
-                  showState={w.state !== "active"}
-                />
-              ))}
+              {/* The newest usable pass only. The hub is a summary; the rest live one tap
+                  away rather than turning this screen into a list of everything.
+                  ⚠ Keyed by `id`, not `studio_id` — since WY-71 the endpoint returns every
+                  pass, so two at one studio produce two rows with the same `studio_id`. */}
+              <PassTicketCard
+                key={featuredPass!.id}
+                pass={featuredPass!}
+                onClick={() => router.push(`/account/passes/${featuredPass!.id}`)}
+              />
+              {wallets.length > 1 && (
+                <Link
+                  href="/account/passes"
+                  className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+                    <Wallet size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900">Zarządzaj karnetami</p>
+                    <p className="text-xs text-gray-500">
+                      {wallets.length} {plural(wallets.length, "karnet", "karnety", "karnetów")}
+                      {activeCount > 0 && `, ${activeCount} aktywne`}
+                    </p>
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-gray-400" />
+                </Link>
+              )}
             </div>
           )}
         </section>

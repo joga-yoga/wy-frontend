@@ -29,7 +29,9 @@ export interface ClassTemplateCreate {
   style_id?: string | null;
   important_info?: string;
   color?: ClassColor | null;
-  default_instructor_id?: string;
+  /** `null` clears it. The backend's PATCH is `exclude_unset`, so an omitted field means
+   *  "leave it alone" — only an explicit `null` can remove a template's default instructor. */
+  default_instructor_id?: string | null;
   default_capacity?: number;
   image_ids?: string[] | null;
   language?: string;
