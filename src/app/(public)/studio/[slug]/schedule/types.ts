@@ -100,6 +100,26 @@ export interface OccurrenceDetailBooking {
   status: string;
   funding_type: "drop_in" | "use_pass" | "sport_card" | "buy_and_use" | "unknown";
   sport_card_surcharge?: number | null;
+
+  // ── money (WY-73) ────────────────────────────────────────────────────────
+  /** A payment **method** — "cash" | "blik" | "card" | "transfer" | "wallet". Never a
+   *  provider: a studio switching gateway must produce no visible change here. */
+  payment_method?: string | null;
+  amount_owed?: number | null;
+  currency?: string | null;
+  /** A pass-funded booking has no order and owes nothing — `true` with no amount. */
+  is_paid?: boolean;
+
+  // ── cancellation (WY-73) ─────────────────────────────────────────────────
+  /** `null` both when the studio cancels freely and when it never configured a deadline —
+   *  the backend deliberately does not distinguish the two. */
+  free_cancellation_deadline?: string | null;
+  /** Whether the booking can be cancelled at all. **Not** "is it free": a late cancellation
+   *  still succeeds, it just costs — see `cancellation_is_free`. */
+  can_cancel?: boolean;
+  cancellation_is_free?: boolean;
+  /** The studio's real rule, in words, resolved server-side. */
+  cancellation_policy_text?: string | null;
 }
 
 export interface OccurrenceDetail {

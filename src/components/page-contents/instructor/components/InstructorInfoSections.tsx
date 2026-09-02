@@ -34,7 +34,7 @@ export function InstructorHighlights({
     <section
       data-testid="instructor-highlights"
       className="px-[18px] py-3 md:px-8 md:py-6"
-      aria-label="Najważniejsze informacje o nauczycielu jogi"
+      aria-label="Najważniejsze informacje o mnie"
     >
       <div className="space-y-2 md:space-y-4">
         {highlights.map((item) => {
@@ -246,7 +246,7 @@ export function InstructorGallery({ imageIds }: { imageIds: string[] }) {
       <SectionHeading id="instructor-gallery-title">Galeria</SectionHeading>
       <PhotoGallery
         images={imageIds}
-        alt="Zdjęcie z galerii nauczyciela"
+        alt="Zdjęcie z mojej galerii"
         variant="grid"
         className="mt-4"
       />

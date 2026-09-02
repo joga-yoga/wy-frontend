@@ -5,97 +5,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoChevronForward } from "react-icons/io5";
 
-import { StatusChip } from "@/components/b2b/StatusChip";
 import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 
 import type { MyBookingItem, MyBookingsResponse, MyInquiryItem } from "../types";
+import { BookingCard } from "./BookingCard";
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
   retreat: "Wyjazd",
   workshop: "Wydarzenie",
   course: "Kurs",
 };
-
-const FUNDING_LABEL: Record<string, string> = {
-  drop_in: "wejście jednorazowe",
-  use_pass: "Karnet · 1 wejście",
-  sport_card: "karta sportowa",
-  buy_and_use: "Karnet · 1 wejście",
-};
-
-/**
- * The server sends `"unknown"` when a booking's funding cannot be resolved. Rendering it
- * raw leaked the English literal "unknown" into a Polish UI — the chip fell through to
- * the value because this map, unlike the B2B one, never had an entry for it. There is no
- * honest label for "we don't know", so the chip is simply omitted.
- */
-function fundingLabel(funding: string | null): string | null {
-  if (!funding || funding === "unknown") return null;
-  return FUNDING_LABEL[funding] ?? null;
-}
-
-/** F4 writes "dziś" / "śr 15 lip" under the time — recency beats a bare date. */
-function relativeDay(date: Date): string {
-  const today = new Date();
-  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const days = Math.round((startOfDay(date) - startOfDay(today)) / 86_400_000);
-  if (days === 0) return "dziś";
-  if (days === 1) return "jutro";
-  if (days === -1) return "wczoraj";
-  return date.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" });
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleDateString("pl-PL", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-/**
- * A class booking (F4) — time-led, with a coloured left bar, exactly like Grafik's session
- * rows. The two lists describe the same events from opposite sides of the counter, so
- * they should read the same way.
- */
-function BookingRow({ booking, dimmed }: { booking: MyBookingItem; dimmed: boolean }) {
-  const isPass = booking.funding === "use_pass" || booking.funding === "buy_and_use";
-  const start = booking.start_time ? new Date(booking.start_time) : null;
-  const label = fundingLabel(booking.funding);
-
-  return (
-    <div className={cn("flex items-stretch gap-3 px-4 py-3", dimmed && "opacity-50")}>
-      <div className="w-14 shrink-0 pt-0.5 text-right">
-        <div className="text-sm font-bold leading-none text-gray-900">
-          {start ? start.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }) : "—"}
-        </div>
-        {start && (
-          <div className="mt-1 text-[11px] leading-none text-gray-400">{relativeDay(start)}</div>
-        )}
-      </div>
-
-      {/* The bar is what makes a row scannable as "a class" at a glance. */}
-      <span className="w-0.5 shrink-0 rounded-full bg-class-green-500" aria-hidden />
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-gray-900">{booking.event_title}</p>
-        {booking.studio_name && (
-          <p className="truncate text-xs text-gray-500">{booking.studio_name}</p>
-        )}
-        {label && (
-          <div className="mt-1">
-            <StatusChip tone={isPass ? "green" : "gray"}>{label}</StatusChip>
-          </div>
-        )}
-      </div>
-
-      <IoChevronForward className="h-4 w-4 shrink-0 self-center text-gray-300" />
-    </div>
-  );
-}
 
 /**
  * A trip or workshop (F4). Deliberately *not* shaped like a class row: these are
@@ -137,6 +58,12 @@ export default function MyBookingsPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [data, setData] = useState<MyBookingsResponse | null>(null);
+
+  // WY-73: the chevron has been drawn on every row since this screen shipped and did nothing.
+  // The detail screen is keyed by booking id, not occurrence id, because a booking is the
+  // thing the customer owns — the same session can be booked, cancelled and booked again.
+  const openBooking = (booking: MyBookingItem) =>
+    router.push(`/account/bookings/${booking.booking_id}`);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -196,9 +123,9 @@ export default function MyBookingsPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Nadchodzące zajęcia
             </h2>
-            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+            <div className="space-y-2">
               {upcomingClasses.map((b) => (
-                <BookingRow key={b.booking_id} booking={b} dimmed={false} />
+                <BookingCard key={b.booking_id} booking={b} onOpen={openBooking} />
               ))}
             </div>
           </section>
@@ -209,13 +136,17 @@ export default function MyBookingsPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Wyjazdy i wydarzenia
             </h2>
-            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+            <div className="space-y-2">
               {upcomingTripEvents.map((b) => (
-                <BookingRow key={b.booking_id} booking={b} dimmed={false} />
+                <BookingCard key={b.booking_id} booking={b} onOpen={openBooking} />
               ))}
-              {openInquiries.map((i) => (
-                <InquiryRow key={i.id} inquiry={i} />
-              ))}
+              {openInquiries.length > 0 && (
+                <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+                  {openInquiries.map((i) => (
+                    <InquiryRow key={i.id} inquiry={i} />
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -225,9 +156,9 @@ export default function MyBookingsPage() {
             <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Minione
             </h2>
-            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+            <div className="space-y-2">
               {past.map((b) => (
-                <BookingRow key={b.booking_id} booking={b} dimmed />
+                <BookingCard key={b.booking_id} booking={b} onOpen={openBooking} />
               ))}
             </div>
           </section>

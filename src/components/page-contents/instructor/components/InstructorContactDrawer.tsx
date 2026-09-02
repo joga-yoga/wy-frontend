@@ -83,13 +83,12 @@ export function InstructorContactDrawer({
 
   const header =
     state === "success"
-      ? { title: "Wiadomość wysłana", subtitle: "Dziękujemy. Nauczyciel otrzyma Twoją wiadomość." }
+      ? { title: "Wiadomość wysłana", subtitle: "Dziękuję! Twoja wiadomość już do mnie trafiła." }
       : state === "error"
         ? { title: "Nie udało się wysłać", subtitle: "Spróbuj ponownie za chwilę." }
         : {
             title: `Napisz do: ${instructorName}`,
-            subtitle:
-              "Wyślij wiadomość, aby dowiedzieć się więcej o współpracy z nauczycielem jogi.",
+            subtitle: "Napisz do mnie, jeśli chcesz porozmawiać o współpracy.",
           };
 
   const footer =

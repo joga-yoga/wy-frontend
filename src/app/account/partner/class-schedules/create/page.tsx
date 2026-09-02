@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAssignableInstructors } from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
@@ -15,7 +16,6 @@ import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
 import type { ClassTemplate, ClassTemplateCreate } from "../../class-templates/types";
-import type { PickableInstructor } from "../../schedule/components/InstructorPicker";
 import { type EndDateMode, ScheduleRecurrenceForm } from "../components/ScheduleRecurrenceForm";
 import type {
   PreviewOccurrence,
@@ -71,7 +71,6 @@ export default function CreateScheduleWizard() {
   const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
-  const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
   const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
   // No weekday preselected: the form should not silently commit the user to Monday.
   // `canSubmit` already requires >=1 day for a weekly series, so the empty default just
@@ -125,27 +124,12 @@ export default function CreateScheduleWizard() {
       .catch(() => setRooms([]));
   }, [studioId]);
 
-  // Roster (not the flat `/instructors` list) — carries `image_id`/`row_state` for
-  // the avatar picker, and matches the edit flow's Zastępstwo picker data source.
-  useEffect(() => {
-    if (!studioId) {
-      setInstructors([]);
-      return;
-    }
-    axiosInstance
-      .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
-      .then((r) =>
-        setInstructors(
-          r.data.items.map(({ id, name, image_id, row_state }) => ({
-            id,
-            name,
-            image_id,
-            row_state,
-          })),
-        ),
-      )
-      .catch(() => setInstructors([]));
-  }, [studioId]);
+  // Roster (not the flat `/instructors` list) — carries `image_id`/`row_state` for the avatar
+  // picker, and matches the edit flow's Zastępstwo picker data source. Shared with the
+  // class-template form (WY-67), which asks the same question and used to answer it with a
+  // plain `<Select>`; "empty" because a session belongs to one studio, so before one is
+  // chosen there is no correct list to show.
+  const instructors = useAssignableInstructors(studioId, "empty");
 
   useEffect(() => {
     if (selectedTemplate) {
