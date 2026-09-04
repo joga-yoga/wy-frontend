@@ -1,0 +1,14 @@
+{
+  "title": "Divergent, unresolved — index state check",
+  "date": "2026-09-04",
+  "note": "Criterion 10: reframe left at explored with no outcome, and with no control variant. Also exercises the meta.json width override (320 instead of 396).",
+  "mode": "reframe",
+  "status": "explored",
+  "variants": [
+    {
+      "file": "a-only.tsx",
+      "label": "Sole variant"
+    }
+  ],
+  "width": 320
+}

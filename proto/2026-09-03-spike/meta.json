@@ -1,0 +1,17 @@
+{
+  "title": "Spike — discovery mechanism",
+  "date": "2026-09-03",
+  "note": "T01 spike. Proved import.meta.glob does NOT exist in Next 16.2.4, which changed the approach from A to B. a-first carries the criterion-3 sentinel class (bg-fuchsia-700) and the criterion-2 marker string — T08 asserts on both. Do not delete.",
+  "mode": "system",
+  "status": "locked",
+  "variants": [
+    {
+      "file": "a-first.tsx",
+      "label": "First"
+    },
+    {
+      "file": "b-second.tsx",
+      "label": "Second"
+    }
+  ]
+}

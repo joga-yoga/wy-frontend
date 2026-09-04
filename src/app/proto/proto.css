@@ -1,0 +1,59 @@
+/* Prototype workbench stylesheet — DEV ONLY.
+ *
+ * A second, independent Tailwind build that generates utilities for the prototype tree.
+ * It is imported by exactly one file, layout.proto.tsx, which is only a route while
+ * `next dev` is running (see pageExtensions in next.config.mjs). Next only runs PostCSS on
+ * CSS reachable from the module graph, so in a production build this file is never even
+ * processed — which is what makes acceptance criterion 3 structural rather than conditional.
+ *
+ * DO NOT import this from anywhere else. A second importer in product code would pull the
+ * whole prototype class surface into the production stylesheet, silently.
+ *
+ *   source(none)  disables Tailwind's automatic scanning, so this build sees only what the
+ *                 @source lines below name — the mirror image of the `@source not` in
+ *                 globals.css, which hides the same directory from the product build.
+ *   tokens.css    the product's real theme, imported not copied. A token change is visible
+ *                 in every system/reframe prototype on next reload, with no sync step.
+ */
+@import "tailwindcss" source(none);
+@import "../../styles/tokens.css";
+
+@source "../../../proto";
+@source ".";
+
+/* ── blank-mode isolation (§4, acceptance criterion 8) ────────────────────────────────────
+ *
+ * A `blank` prototype must render "with the frame only and no product styling leaking in".
+ * Both stylesheets are global to the page — globals.css from the root layout, this file from
+ * the proto layout — so neither can be unloaded for one variant. Two things leak, and both
+ * have to be cut:
+ *
+ *   1. INHERITANCE. <html> carries the Hind Siliguri font class, so everything inherits the
+ *      product's typography and colour. `all: initial` on the content wrapper breaks the chain
+ *      at the frame boundary — `initial` does not inherit, so descendants start from browser
+ *      defaults instead of the product's.
+ *   2. TAILWIND PREFLIGHT. Its `@layer base` rules flatten h1/p/ul margins and sizes app-wide.
+ *      `all: revert` on every descendant drops author-origin declarations back to the UA
+ *      stylesheet, so a blank prototype's <h1> is a browser <h1> again.
+ *
+ * Why UNLAYERED and wrapped in :where() — this combination is load-bearing, not styling taste:
+ *
+ *   - Unlayered author rules outrank every cascade layer regardless of specificity, so these
+ *     two rules beat Tailwind's preflight without needing to out-specify it. (A custom
+ *     `@layer` was tried first; Tailwind strips unknown layer blocks from its output.)
+ *   - `:where()` drives specificity to 0,0,0, so anything the prototype writes for itself —
+ *     an inline style, its own <style> block, a CSS module — wins cleanly.
+ *
+ * The result is the intended semantic: a blank prototype styles itself normally, while any
+ * product class it reaches for is neutralised. The shell cannot forbid those imports — that is
+ * a design-diverge protocol, not something a renderer can police (spec-design-skills.md §5) —
+ * but it can guarantee they do not silently style the result.
+ */
+:where([data-proto-mode="blank"]) :where([data-proto-content]) {
+  all: initial;
+  display: block;
+}
+
+:where([data-proto-mode="blank"]) :where([data-proto-content]) :where(*) {
+  all: revert;
+}
