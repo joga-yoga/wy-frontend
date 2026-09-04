@@ -1,0 +1,20 @@
+{
+  "title": "Klienci — jak recepcja kontaktuje się z dłużnikiem",
+  "date": "2026-09-04",
+  "note": "USTALENIE: telefonu nie da się dziś pokazać. `ClientListItem` (wy-frontend/src/app/account/partner/clients/types.ts) ma tylko email; `User.phone_number` istnieje w bazie (wy-backend/src/app/models/user.py), ale `schemas/clients.py::ClientListItem` go nie zwraca. To zmiana addytywna schematu, nie nowa funkcja — trafia do §0 specyfikacji.\n\nPRZEGLĄD (design-reviewer, 2026-09-04): tej pary NIE należy specyfikować w obecnej postaci. Wariant A podaje się za wiersz produkcyjny, a różni się od niego w dziewięciu punktach (brak HashedAvatar, brak <Link> na całym wierszu, brak chevronu, jeden z pięciu ChipState, '45 zł' zamiast 'Do zapłaty · 45 zł', brak kontenera rounded-b2b, brak wyszukiwarki) — czyli porównanie idzie przeciw atrapie. Wariant B miesza dwie zmiany: restrukturyzację wiersza (trzy poziomy → dwa) i afordancję kontaktu; ta pierwsza jest lepszym pomysłem i powinna być osobnym wariantem. Kotwica mailto nie może stać wewnątrz wiersza, który jest <Link> (zagnieżdżone kotwice), a kontakt mailowy to przypadek resztkowy — częsta ścieżka to pobranie gotówki w ResolveSheet. Oba warianty używają surowych rozmiarów (text-sm/text-xs) zamiast ról typograficznych i omijają formatMoney. Ustalenie o telefonie jest trafne i zostało przeniesione do §0 specyfikacji.",
+  "mode": "system",
+  "status": "explored",
+  "spec": "plan-drafts/spec-klienci-kontakt.md",
+  "variants": [
+    {
+      "file": "a-obecny.tsx",
+      "label": "A — kontrola: wiersz dzisiaj",
+      "note": "bez afordancji kontaktu"
+    },
+    {
+      "file": "b-kontakt.tsx",
+      "label": "B — kontakt tylko przy długu",
+      "note": "mailto na tym, co istnieje"
+    }
+  ]
+}

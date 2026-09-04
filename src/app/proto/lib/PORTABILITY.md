@@ -30,6 +30,22 @@ Known members: `layout/Header`, `layout/DashboardTopBar`, `layout/BottomTabBar`,
 That is the intended workflow: render it, read the inline error, add the provider to the one
 wrapper. Do **not** add a second wrapper or a per-component shim.
 
+## 2b. Interactive components need `"use client"` in the *variant* file
+
+A variant that renders a product component taking event handlers — `GrafikSessionCard`, anything
+built on `SessionCardBase` with an `onClick` — must start with `"use client"`. Without it Next
+throws:
+
+```
+Event handlers cannot be passed to Client Component props
+```
+
+and the variant renders as an error card rather than the screen you were comparing. The frame does
+not add the directive for you, because most variants are static and do not need it.
+
+Found while building a `system`-mode control from the real `GrafikSessionCard`. Cheap to fix, and
+completely opaque if you have not seen it before.
+
 ## 3. Calls the API directly — renders, but sees nothing
 
 Around 17 shared components call `axiosInstance` inside an effect, which no provider can intercept:
