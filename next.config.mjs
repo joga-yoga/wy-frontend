@@ -1,3 +1,5 @@
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
+
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
@@ -334,4 +336,29 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Prototype workbench (`.plans/proto-workbench/`, T01).
+ *
+ * The dev-only prototype shell lives in `src/app/(proto)/` and its route files are named
+ * `page.proto.tsx` / `layout.proto.tsx`. App Router discovery globs `page.{ext}` and
+ * `layout.{ext}` off `pageExtensions`, so those files are routes ONLY while `"proto.tsx"`
+ * is in this list — which is only during `next dev`. In every other phase they are inert
+ * files nothing imports, so `/proto` does not exist in a production build and the variant
+ * modules are never bundled.
+ *
+ * Keyed on `phase` rather than `NODE_ENV`: the phase argument is passed by Next itself
+ * (`normalizeConfig` in `next/dist/server/config-shared.js`) and cannot be out of date or
+ * set by a caller, whereas NODE_ENV depends on when the CLI happens to assign it.
+ *
+ * The four default extensions are written out in full on purpose: supplying `pageExtensions`
+ * REPLACES the default list (`next/dist/server/config-shared.js`) rather than extending it,
+ * so dropping one here would silently unroute part of the product.
+ */
+export default function config(phase) {
+  const isDevServer = phase === PHASE_DEVELOPMENT_SERVER;
+
+  return {
+    ...nextConfig,
+    pageExtensions: ["tsx", "ts", "jsx", "js", ...(isDevServer ? ["proto.tsx"] : [])],
+  };
+}

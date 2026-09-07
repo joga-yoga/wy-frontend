@@ -1,0 +1,19 @@
+{
+  "title": "Panel chrome — context-dependent product components",
+  "date": "2026-09-04",
+  "note": "Criterion 6: DashboardTopBar renders from fixture context with zero network requests. Also the prototype that discovered the fourth required provider.",
+  "mode": "system",
+  "status": "locked",
+  "variants": [
+    {
+      "file": "a-top-bar.tsx",
+      "label": "DashboardTopBar",
+      "note": "usePartnerCapabilities + PageHeader context"
+    },
+    {
+      "file": "b-tab-bar.tsx",
+      "label": "Konteksty",
+      "note": "useAuth + usePartnerCapabilities, injected"
+    }
+  ]
+}

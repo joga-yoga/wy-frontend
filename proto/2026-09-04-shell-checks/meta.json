@@ -1,0 +1,12 @@
+{
+  "title": "Shell checks — error isolation, blank mode, undeclared files",
+  "date": "2026-09-04",
+  "note": "T03 verification fixture. Exercises criterion 13 (inline error) and the undeclared-file warning.",
+  "mode": "system",
+  "status": "explored",
+  "variants": [
+    { "file": "a-healthy.tsx", "label": "Healthy sibling", "note": "must survive its broken neighbour" },
+    { "file": "b-broken.tsx", "label": "Deliberately broken", "note": "throws at runtime, on purpose" },
+    { "file": "c-missing.tsx", "label": "Declared but absent" }
+  ]
+}

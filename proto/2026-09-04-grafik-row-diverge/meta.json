@@ -1,0 +1,12 @@
+{
+  "title": "Grafik — wiersz sesji poza konwencją systemu",
+  "date": "2026-09-04",
+  "note": "Czy wiersz grafiku zyskuje na zerwaniu z kolorowym paskiem po lewej? Tożsamość marki utrzymana, konwencje komponentów wolne.",
+  "mode": "reframe",
+  "status": "rejected",
+  "outcome": "rejected",
+  "variants": [
+    { "file": "a-control.tsx", "label": "Kontrola — idiom systemu", "note": "wiersz z kolorowym paskiem, tryb system" },
+    { "file": "b-card.tsx", "label": "B — karta z blokiem godziny", "note": "odrzucone: patrz nota folderu" }
+  ]
+}

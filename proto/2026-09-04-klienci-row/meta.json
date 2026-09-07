@@ -1,0 +1,12 @@
+{
+  "title": "Klienci — jak pokazać dług na wierszu listy",
+  "date": "2026-09-04",
+  "note": "Czy kwota do zapłaty ma być chipem po prawej (obecny idiom), czy ma dominować wiersz? Pytanie wraca przy każdym ekranie z rozliczeniami.",
+  "mode": "system",
+  "status": "locked",
+  "spec": "plan-drafts/spec-reception-desk.md",
+  "variants": [
+    { "file": "a-chip.tsx", "label": "A — chip po prawej", "note": "obecny idiom listy B2B" },
+    { "file": "b-amount-led.tsx", "label": "B — kwota prowadzi wiersz", "note": "dług jako treść główna" }
+  ]
+}

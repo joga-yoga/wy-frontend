@@ -11,14 +11,14 @@ import {
   resetMixpanelUser,
 } from "@/lib/mixpanelClient";
 
-type Partner = {
+export type Partner = {
   id: string;
   user_id: string;
   phone_number?: string;
   phone_verified: boolean;
 };
 
-type User = {
+export type User = {
   id: string;
   email: string;
   name?: string;
@@ -26,7 +26,7 @@ type User = {
   partner?: Partner | null;
 };
 
-type AuthContextType = {
+export type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
   loading: boolean;
@@ -36,7 +36,16 @@ type AuthContextType = {
   signOut: () => void;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+/**
+ * Exported so a test or dev harness can supply a value directly instead of mounting
+ * `AuthProvider`, which fetches `/me` on mount. Used by the prototype workbench's fixture
+ * wrapper (`src/app/proto/lib/FixtureProviders.tsx`) so a prototype renders auth-dependent
+ * product components from fixture data and makes no network request at all.
+ *
+ * Additive only: `AuthProvider` and `useAuth` are unchanged, and nothing in the product reads
+ * this export. Product code should keep using `useAuth`.
+ */
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function isUnauthorizedError(error: unknown) {
   return error instanceof AxiosError && error.response?.status === 401;

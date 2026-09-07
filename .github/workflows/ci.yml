@@ -1,0 +1,66 @@
+name: CI
+
+# wy-frontend had no CI before .plans/proto-workbench/ T08 (see F9). This workflow therefore
+# covers the product as well as the prototype workbench — the proto checks are not its only
+# reason to exist, and it should not be treated as proto-only tooling.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · lint · build · prototype guarantees
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # yarn 4.9.1, pinned by packageManager in package.json.
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install
+        run: yarn install --immutable
+
+      # Decision D4: proto/ stays inside the type check, which makes the committed prototype
+      # archive a MAINTAINED surface. A product refactor that changes a component's props must
+      # also fix every prototype using it. This gate exists so that surfaces here in seconds
+      # rather than minutes into a deploy build.
+      #
+      # If this fails on a prototype: fix it, or delete the folder and record the decision as
+      # `"status": "rejected"` in its meta.json. Deleting is a legitimate response — the archive
+      # is meant to be honest, not exhaustive.
+      - name: Typecheck (includes the prototype archive — see D4)
+        run: yarn typecheck
+
+      - name: Lint
+        run: yarn lint
+
+      # Criteria 2 and 3 must be verified against a REAL production build, never by reading
+      # config. The build is also the product's own build check.
+      - name: Production build
+        run: yarn build
+
+      - name: Prototype production guarantees (criteria 2 and 3)
+        run: yarn proto:verify
+
+# Deliberately NOT run here: `yarn test:e2e`.
+#
+# 7 of its 27 tests already fail on main, and did so before this workflow existed — verified by
+# stashing all local work and re-running at HEAD, which produced a byte-identical failure list
+# (F13 in .plans/proto-workbench/plan.md). Five are layout assertions in instructor-cta.spec.ts,
+# one in instructor-hero.spec.ts, one in navigation-origin.spec.ts; the mock server does not
+# implement endpoints they depend on.
+#
+# Gating on a suite that is already red teaches everyone to ignore a red build, which would
+# quietly disable the three checks above too. Fix the suite, then add it here.

@@ -12,7 +12,9 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "node tests/e2e/mock-instructor-api.mjs",
+      // Run through tsx: the server now imports the shared TypeScript fixture module
+      // in src/fixtures/, so plain `node` can no longer load it.
+      command: "npx tsx tests/e2e/mock-instructor-api.ts",
       url: "http://127.0.0.1:4010/health",
       reuseExistingServer: !process.env.CI,
       timeout: 15_000,

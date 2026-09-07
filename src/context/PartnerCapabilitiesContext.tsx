@@ -22,15 +22,20 @@ export interface PartnerCapabilities {
   landingTab: "grafik" | "rezerwacje";
 }
 
-interface PartnerCapabilitiesContextValue {
+export interface PartnerCapabilitiesContextValue {
   capabilities: PartnerCapabilities | null;
   isLoading: boolean;
   refetch: () => void;
 }
 
-const PartnerCapabilitiesContext = createContext<PartnerCapabilitiesContextValue | undefined>(
-  undefined,
-);
+/**
+ * Exported for the same reason as `AuthContext`: the provider below fetches
+ * `/partner/capabilities` on mount, so a dev harness needs to supply the value directly rather
+ * than mount it. Additive only — product code should keep using `usePartnerCapabilities`.
+ */
+export const PartnerCapabilitiesContext = createContext<
+  PartnerCapabilitiesContextValue | undefined
+>(undefined);
 
 /**
  * One cached `GET /partner/capabilities` call per shell session (spec-b2b §3): which

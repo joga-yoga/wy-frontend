@@ -1,0 +1,20 @@
+{
+  "title": "Grafik — wiersz sesji jako oś dnia",
+  "date": "2026-09-04",
+  "note": "Czy wiersz sesji zyskuje na porzuceniu geometrii SessionCardBase — wspólna szyna godzin dnia zamiast kolumny godziny powtarzanej w każdym wierszu? WYZWALACZ: powracający spór, w którym treść wygrywa z idiomem — żywa sesja to już czwarty poziom w wierszu, wbrew zasadzie „dwie role typograficzne w wierszu”. ODRZUCONE, bo para pokazała, że rozbieżność przenosi problem, zamiast go usuwać: szyna odzyskuje ok. 60 px szerokości, ale stan „Trwa” nadal potrzebuje własnej, czwartej linii, a zepchnięcie „Zakończone”/„Odwołane” do linii pomocniczej obcina ją („Odwołane · 90 min · Tomasz Sowa · Sala gł…”) — dokładnie tej awarii chip unikał. Po drodze wariant traci chevron (jedyny sygnał, że wiersz jest klikalny — a w Grafiku minione i odwołane sesje są klikalne) oraz ramkę karty, którą layout-idioms.md świadomie przypisuje sesji jako obiektowi, na którym się działa. DO URATOWANIA bez żadnej rozbieżności: jawny znacznik przerwy w dniu („10 godz. przerwy”). To warstwa listy dnia, nie karty, więc mieści się w systemie bez ruszania SessionCardBase. PRZY OKAZJI (dotyczy obu wariantów, więc to znalezisko o produkcie, nie o tej eksploracji): żywa sesja pokazuje 0/16, bo liczy obecnych, gdy zapisanych jest 14 — na kafelku tuż przed zajęciami czyta się to jak błąd. Osobna sprawa do rozstrzygnięcia.",
+  "mode": "reframe",
+  "status": "rejected",
+  "outcome": "rejected",
+  "variants": [
+    {
+      "file": "a-control.tsx",
+      "label": "Kontrola — GrafikSessionCard (idiom systemu)",
+      "note": "prawdziwy komponent produktu, nie imitacja"
+    },
+    {
+      "file": "b-os-dnia.tsx",
+      "label": "B — oś dnia (rozbieżny)",
+      "note": "wspólna szyna godzin, bez ramki i bez chevronu; samodzielny, zero importów komponentów produktu"
+    }
+  ]
+}

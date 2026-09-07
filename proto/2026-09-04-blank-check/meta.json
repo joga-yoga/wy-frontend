@@ -1,0 +1,12 @@
+{
+  "title": "Blank mode — isolation check",
+  "date": "2026-09-04",
+  "note": "Criterion 8: renders with the frame only, with no product typography inherited.",
+  "mode": "blank",
+  "status": "explored",
+  "outcome": "rejected",
+  "variants": [
+    { "file": "a-plain.tsx", "label": "Plain markup, no classes" },
+    { "file": "b-control.tsx", "label": "Control (system idiom, for comparison)" }
+  ]
+}

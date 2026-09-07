@@ -1,0 +1,8 @@
+{
+  "title": "Fixture smoke test — persona data through real components",
+  "date": "2026-09-04",
+  "note": "T04 verification: renders the studio persona through product components, proving the fixtures are coherent and portable.",
+  "mode": "system",
+  "status": "explored",
+  "variants": [{ "file": "a-roster.tsx", "label": "Recepcja — lista obecności" }]
+}
