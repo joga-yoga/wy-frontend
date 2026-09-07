@@ -1,0 +1,25 @@
+{
+  "title": "Instructor index — public /instruktorzy",
+  "date": "2026-09-04",
+  "note": "What should a card look like on a public, city-grouped instructor index, given the only fields available are photo, name, styles, city and bio?\n\nCHOSEN: variant C (rails). A and B are kept as the rejected alternatives.\n\nLOCKED: (1) claimed profiles only, `claimed_at IS NOT NULL`, consistent with sitemap.ts; (2) the card shows BOTH the bio AND styles; (3) city sections instead of filter chips — `yoga_styles` is many-per-person (the fixture has someone with four), so grouping by style would duplicate people, whereas `cities` is singular in practice and every consumer in the codebase reads `cities[0]`; (4) one horizontal rail per city, so N cities cost constant vertical space; (5) alphabetical ordering within a city, `localeCompare(…, 'pl')`, NOT `published_at DESC`.\n\nWHY ALPHABETICAL: newest-first reshuffles the page whenever anyone joins, so the same person moves between visits and established instructors sink as new ones arrive. A directory's core promise is that you can find someone twice. Alphabetical is deterministic, caches cleanly under the existing 300s revalidate, and matches the `order_by(Studio.name)` precedent at `crud/studio.py:944`. Polish collation is required — default collation sorts Ł after Z.\n\nRAIL PADDING — MEASURED, NOT GUESSED: with `snap-mandatory` and `snap-start` children, the browser snaps the first card's edge to the SCROLLPORT start, which silently cancels `px-4`. Measured `scrollLeft` was exactly 16px, leaving cards flush against the frame while section headings sat at 16px. The fix is `scroll-pl-4` / `scroll-pr-4`, which moves the snap position itself. Verified after: firstCardLeft === headerLeft (459) with scrollLeft 0 on all five rails. Any future rail in this product needs the same pairing.\n\nBACKEND FINDINGS (these block the build, not the design):\n• The index endpoint DOES NOT EXIST. `/instructors/public` is capped at `limit: Query(2, ge=1, le=3)` — a \"see also\" widget, with no offset, no total, no search and no claimed filter.\n• `InstructorPublicListItem` lacks `id` and `short_bio`. Both are real columns — an additive projection change, no migration. Without `id` there is no `HashedAvatar` seed, and seeding `slug` instead would give the same person a different fallback colour than on the studio page.\n• `image_id` is typed `str` (non-null) in the schema but is NULLABLE in the database. The schema is honest only thanks to the `image_id IS NOT NULL` filter at `crud/instructor.py:160`. This page has a fallback state, so that filter does not apply here and the type must be widened.\n• Stubs are published immediately (`create_stub_instructor` sets `is_published=True`) and `/instructors/public` does NOT check `claimed_at` — so today's endpoint already surfaces unclaimed profiles, while the sitemap deliberately excludes them.\n• `HashedAvatar` cannot fill a frame: it takes `size: number` and writes inline width/height, so inline style beats any `h-full` class. C draws the fallback locally from the same exported maps. Adding a `fill` mode to `HashedAvatar` is in scope for the build, so that duplication does not ship.\n\nCANNOT BE DRAWN: rating or review count — `models/review.py` is keyed by Google Places `place_id` with no foreign key to an instructor. Nor years of experience, class count, price or \"next class\". The studios someone teaches at DO exist, but that is N+1 plus a consent predicate (`crud/studio.py:919`) — a new batched query.\n\nPREVIEW LIMITATION: the fixture layer holds only two real Cloudinary ids, so 8 of 10 people render as initials. Production is the reverse — read the card WITH a photo as the typical case.\n\nCITY-LESS PROFILES: kept, in a final section labelled \"Pozostałe profile\" (\"Pozostali\" would be masculine-personal). Excluding them would silently delete a real person from the only directory the product has, as a penalty for leaving one optional field blank. The section must not be labelled \"online\" — nothing in the data records that; the only evidence is prose inside one bio.\n\nLANGUAGE: code, comments and this note are English; only strings that actually render are Polish.",
+  "mode": "system",
+  "status": "locked",
+  "spec": "plan-drafts/spec-instruktorzy-index.md",
+  "variants": [
+    {
+      "file": "c-alejki.tsx",
+      "label": "C — Rails (one horizontal strip per city) · CHOSEN",
+      "note": "constant height regardless of city count; needs scroll-padding and a `fill` mode on HashedAvatar"
+    },
+    {
+      "file": "a-portret.tsx",
+      "label": "A — Portrait (2-column grid)",
+      "note": "rejected: closest to existing public lists, but grows linearly with city count"
+    },
+    {
+      "file": "b-pozioma.tsx",
+      "label": "B — Horizontal card (single column)",
+      "note": "rejected: needed no component change, but the face gets only 72px on a page about finding a person"
+    }
+  ]
+}

@@ -16,12 +16,29 @@ type FooterSectionDef = {
   links: { label: string; href: string; isExternal?: boolean }[];
 };
 
+/** The instructor directory, in every footer variant.
+ *
+ * `/instruktorzy` is indexable and in the sitemap, but nothing inside the product linked to
+ * it — a directory a crawler can find and a person cannot is not a directory. It goes in
+ * every branch rather than only `main` because `project` is derived from the pathname, and
+ * everything that is not a retreat or the two `dodaj` pages resolves to `workshops` —
+ * including `/instruktorzy` itself, which would otherwise be the one page missing the link
+ * to it.
+ *
+ * The heading is a bare neutral label, and the link under it names the destination — the
+ * same shape as "O nas" → "Kontakt" above it. */
+const INSTRUCTORS_SECTION: FooterSectionDef = {
+  title: "Instruktorzy",
+  links: [{ label: "Wszystkie profile", href: "/instruktorzy" }],
+};
+
 function buildFooterSections(
   prefix: string,
   project: "main" | "retreats" | "workshops",
 ): FooterSectionDef[] {
   if (project === "main") {
     return [
+      INSTRUCTORS_SECTION,
       {
         title: "O nas",
         links: [{ label: "Kontakt", href: "/contact" }],
@@ -40,6 +57,7 @@ function buildFooterSections(
         },
       ],
     },
+    INSTRUCTORS_SECTION,
     {
       title: "O nas",
       links: [{ label: "Kontakt", href: "/contact" }],
