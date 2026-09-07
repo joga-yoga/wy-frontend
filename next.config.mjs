@@ -35,6 +35,9 @@ const nextConfig = {
       { source: "/zajecia/:path*", destination: "/classes/:path*" },
       { source: "/kursy/:path*", destination: "/courses/:path*" },
       // Polish instructor URL → internal English route folder
+      // `/instruktorzy` (the directory) is a separate first segment from `/instruktor`,
+      // so it cannot be caught by the `/instruktor/:slug` rule below and needs its own.
+      { source: "/instruktorzy", destination: "/instructors" },
       { source: "/instruktor/dodaj", destination: "/instructor/dodaj" },
       { source: "/instruktor/dodaj/:path*", destination: "/instructor/dodaj/:path*" },
       { source: "/instruktor/:slug", destination: "/instructor/:slug" },

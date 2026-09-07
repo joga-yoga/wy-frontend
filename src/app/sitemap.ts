@@ -15,6 +15,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
     "/policy",
     "/terms",
+    // The instructor directory. Every card on it links to a claimed profile, and
+    // `/instructors/slugs` below lists exactly the same set — both go through
+    // `publicly_listable` on the backend — so no entry here points at a noindex page.
+    "/instruktorzy",
     "/instruktor/dodaj",
     "/studio/dodaj",
   ].map((route) => ({

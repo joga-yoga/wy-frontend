@@ -89,6 +89,24 @@ export interface InstructorPublicListItem {
   published_at: string | null;
 }
 
+/** One row of the `/instruktorzy` directory — mirrors the backend's `InstructorIndexItem`.
+ *
+ * Deliberately separate from `InstructorPublicListItem` above, whose `image_id: string` is
+ * still true: that one backs the three-row "see also" widget, whose query excludes
+ * photoless instructors. The directory lists them, so `image_id` is nullable here and the
+ * card falls back to initials. Merging the two would force a null branch into a page that
+ * can never hit it, and quietly weaken the widget's guarantee.
+ */
+export interface InstructorIndexItem {
+  id: string;
+  name: string;
+  slug: string;
+  image_id: string | null;
+  short_bio: string | null;
+  cities: CityItem[] | null;
+  yoga_styles: InstructorYogaStyle[];
+}
+
 export interface InstructorEventLocation {
   address_line1: string;
   address_line2: string | null;
