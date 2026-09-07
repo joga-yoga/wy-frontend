@@ -52,6 +52,11 @@ export interface InstructorProfile {
   created_by_partner_id: string | null;
   claimed_at: string | null;
   is_published: boolean;
+  /** The owner's "keep me out of search" switch. Distinct from `is_published`: an unlisted
+   * profile still renders its page in full, it is just absent from the instructor directory
+   * and the sitemap, and the page marks itself `robots: noindex`. Unpublishing withdraws
+   * the content itself. */
+  is_listed: boolean;
   published_at: string | null;
   is_claimed: boolean;
   claim_status: "claimed" | "invited" | "invitable" | "legacy" | null;
@@ -76,6 +81,9 @@ export interface InstructorPublic {
   // Genuinely self-claimed vs. a placeholder the organizing partner manages but the real
   // person hasn't claimed yet — used to keep unclaimed profiles out of search indexing.
   is_claimed: boolean;
+  // The owner asked to stay out of search. The page still renders normally; only the
+  // robots directive and the directory/sitemap membership change.
+  is_listed: boolean;
   created_at: string;
   updated_at: string;
 }

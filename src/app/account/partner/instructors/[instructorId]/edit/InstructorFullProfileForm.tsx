@@ -83,6 +83,7 @@ const schema = z.object({
   certificates: z.array(z.any()).optional(),
   yoga_styles: z.array(z.any()).optional(),
   social_links: z.array(z.any()).optional(),
+  is_listed: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -138,6 +139,10 @@ export function InstructorFullProfileForm({
       certificates: [],
       yoga_styles: [],
       social_links: [],
+      // Listed until the loaded profile says otherwise. A default of `false` would show
+      // every profile as hidden for the moment before the GET resolves, which reads as
+      // "you are invisible" on a page that has not finished loading.
+      is_listed: true,
     },
   });
 
@@ -157,6 +162,7 @@ export function InstructorFullProfileForm({
           description: data.description ?? "",
           short_bio: data.short_bio ?? "",
           image_id: data.image_id ?? "",
+          is_listed: data.is_listed !== false,
           photo_ids: data.photo_ids ?? [],
           // ⚠ `??`, never `||` or a `.length` check. `null` means this profile has never
           // been asked (it predates the backend default, or came from a stub path); `[]`
@@ -238,6 +244,7 @@ export function InstructorFullProfileForm({
         description: values.description || null,
         short_bio: values.short_bio || null,
         image_id: isProfileImageRemoved ? null : values.image_id || null,
+        is_listed: values.is_listed !== false,
         photo_ids: (values.photo_ids ?? []).length ? values.photo_ids : null,
         languages: (values.languages ?? []).length ? values.languages : null,
         cities: (values.cities ?? []).length ? values.cities : null,
@@ -676,6 +683,57 @@ export function InstructorFullProfileForm({
           <StudioLinkSection instructorId={instructorId} />
 
           {extraActions}
+
+          {/* Widoczność w wyszukiwarkach.
+
+              Distinct from publish/unpublish below and above: unpublishing withdraws the
+              page's content (it is how an unreviewed AI-generated draft stays private),
+              while this leaves the profile rendering in full and only takes it out of
+              search results and the instructor directory. A link the owner shares still
+              works — that is the difference, and it is why the copy talks about being
+              *found* rather than about being visible.
+
+              Mirrors the identical control on the studio form. */}
+          <Separator />
+          <FormField
+            control={form.control}
+            name="is_listed"
+            render={({ field }) => {
+              const listed = field.value !== false;
+              return (
+                <FormItem className="flex items-center justify-between rounded-lg border px-4 py-3 space-y-0">
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {listed ? "Profil publiczny" : "Profil ukryty"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {listed
+                        ? "Profil jest widoczny w katalogu instruktorów i w wynikach wyszukiwania Google"
+                        : "Profil nie pojawia się w katalogu ani w wyszukiwarkach — link, który wyślesz, nadal działa"}
+                    </p>
+                  </div>
+                  <FormControl>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={listed}
+                      aria-label="Widoczność profilu w wyszukiwarkach"
+                      onClick={() => field.onChange(!listed)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                        listed ? "bg-b2b-green-text" : "bg-gray-200"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                          listed ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </FormControl>
+                </FormItem>
+              );
+            }}
+          />
 
           {/* Strefa niebezpieczna */}
           <Separator />

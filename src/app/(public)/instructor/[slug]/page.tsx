@@ -37,10 +37,18 @@ export async function generateMetadata(
       description,
       path: `/instruktor/${slug}`,
       image: imageUrl || undefined,
-      // Unclaimed placeholder profiles stay fully visible on the site (studio/event/
-      // session pages, and this page itself) but are kept out of search indexing until
-      // the real person claims them — see .plans/instructor-profile-permissions/.
-      noIndex: !instructor.is_published || !instructor.is_claimed,
+      // Three separate reasons a profile is not indexed, and they are not interchangeable:
+      //
+      //   !is_published  nobody has approved this text yet — the payload itself is stripped
+      //                  to name/photo/slug, so there is barely a page to index.
+      //   !is_claimed    a placeholder a studio made for someone who has never used the
+      //                  product. Stays fully visible on the site (studio, event and
+      //                  session pages, and here) but out of search until they claim it —
+      //                  see .plans/instructor-profile-permissions/.
+      //   !is_listed     the owner asked not to be found. The page renders in full and a
+      //                  link they share still works; it is only search and the
+      //                  /instruktorzy directory that lose it.
+      noIndex: !instructor.is_published || !instructor.is_claimed || !instructor.is_listed,
     }),
   };
 }
