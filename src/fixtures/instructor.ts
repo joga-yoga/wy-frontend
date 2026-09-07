@@ -66,6 +66,7 @@ export const instructorFixture: InstructorDetails = {
     social_links: [],
     is_published: true,
     is_claimed: true,
+    is_listed: true,
     created_at: "2026-06-15T00:00:00.000Z",
     updated_at: "2026-06-15T00:00:00.000Z",
   },
