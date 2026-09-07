@@ -37,18 +37,24 @@ export async function generateMetadata(
       description,
       path: `/instruktor/${slug}`,
       image: imageUrl || undefined,
-      // Three separate reasons a profile is not indexed, and they are not interchangeable:
+      // Two reasons a profile is not indexed, and they are not interchangeable:
       //
       //   !is_published  nobody has approved this text yet — the payload itself is stripped
       //                  to name/photo/slug, so there is barely a page to index.
-      //   !is_claimed    a placeholder a studio made for someone who has never used the
-      //                  product. Stays fully visible on the site (studio, event and
-      //                  session pages, and here) but out of search until they claim it —
-      //                  see .plans/instructor-profile-permissions/.
-      //   !is_listed     the owner asked not to be found. The page renders in full and a
-      //                  link they share still works; it is only search and the
-      //                  /instruktorzy directory that lose it.
-      noIndex: !instructor.is_published || !instructor.is_claimed || !instructor.is_listed,
+      //   !is_listed     somebody asked for this profile not to be found. The page renders
+      //                  in full and a shared link still works; only search and the
+      //                  /instruktorzy directory lose it.
+      //
+      // `is_claimed` is deliberately absent. It used to noindex every profile a studio had
+      // typed in for a person who never signed up (.plans/instructor-profile-permissions),
+      // which also kept them out of the sitemap and the directory. Claim status now answers
+      // only "who may edit this"; whether a profile is findable is `is_listed`, which a
+      // studio can turn off for any profile it manages if the person asks.
+      //
+      // This condition must stay identical to `crud.instructor.publicly_listable` and to
+      // the JSON-LD gate below — a sitemap that advertises a page the page itself tells
+      // crawlers to skip is the failure mode all three are kept in step to avoid.
+      noIndex: !instructor.is_published || !instructor.is_listed,
     }),
   };
 }
@@ -74,7 +80,8 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
 
   return (
     <>
-      {data.instructor.is_published && data.instructor.is_claimed && (
+      {/* Same predicate as `noIndex` above and `publicly_listable` on the backend. */}
+      {data.instructor.is_published && data.instructor.is_listed && (
         <JsonLd
           data={buildInstructorJsonLd({
             path: `/instruktor/${slug}`,
