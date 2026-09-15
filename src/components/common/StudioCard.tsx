@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
+import { cn } from "@/lib/utils";
 
 export interface StudioCardData {
   id: string;
@@ -26,7 +27,12 @@ export function StudioCard({ studio }: { studio: StudioCardData }) {
           imageId={studio.image_id}
           size={48}
           imageFit="contain"
-          className="rounded-none bg-white"
+          // ⚠ `bg-white` only when there is a logo to letterbox. It exists so a
+          // `contain`-fitted logo sits on white — but `cn` is tailwind-merge, so passing it
+          // unconditionally beat `HashedAvatar`'s own `bg-class-{hue}-700` fallback and
+          // rendered **white initials on white**. Every imageless studio, on every surface
+          // this card appears on, showed an empty 48px square.
+          className={cn("rounded-none", studio.image_id && "bg-white")}
         />
       </div>
       <div className="min-w-0 flex-1">

@@ -3,13 +3,18 @@ import { COLOR_FILL_700_MAP, hashSeedToClassColor } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 
 function initials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  return (
+    name
+      .split(/\s+/)
+      // Skip tokens that start with punctuation. Real studio names are full of them —
+      // "Hartownia - studio zdrowego ruchu" rendered as "H-", because the second token is a
+      // lone hyphen and its first character is the hyphen.
+      .filter((part) => /^[\p{L}\p{N}]/u.test(part))
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase()
+  );
 }
 
 interface HashedAvatarBaseProps {

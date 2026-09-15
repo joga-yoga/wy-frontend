@@ -38,6 +38,12 @@ const nextConfig = {
       // `/instruktorzy` (the directory) is a separate first segment from `/instruktor`,
       // so it cannot be caught by the `/instruktor/:slug` rule below and needs its own.
       { source: "/instruktorzy", destination: "/instructors" },
+      // The studio directory index. `/studia` is a separate first segment from `/studio`,
+      // so it cannot be caught by the `/studio/...` rules below and needs its own entry.
+      { source: "/studia", destination: "/studios" },
+      // Claim and removal hang off the directory index, not off an individual studio,
+      // because they must work for a listing that has no page and therefore no slug.
+      { source: "/studia/:path*", destination: "/studios/:path*" },
       { source: "/instruktor/dodaj", destination: "/instructor/dodaj" },
       { source: "/instruktor/dodaj/:path*", destination: "/instructor/dodaj/:path*" },
       { source: "/instruktor/:slug", destination: "/instructor/:slug" },
@@ -46,7 +52,10 @@ const nextConfig = {
       // Public studio schedule route rename (grafik → schedule)
       { source: "/studio/:slug/grafik", destination: "/studio/:slug/schedule" },
       { source: "/studio/:slug/zajecia", destination: "/studio/:slug/classes" },
-      { source: "/studio/:slug/zajecia/:classSlug", destination: "/studio/:slug/classes/:classSlug" },
+      {
+        source: "/studio/:slug/zajecia/:classSlug",
+        destination: "/studio/:slug/classes/:classSlug",
+      },
 
       // // ── Account area: Polish-facing URLs → internal English route folders ──
       // // Only the first segment under /konto/partner is localised; deeper segments
@@ -63,7 +72,6 @@ const nextConfig = {
       // { source: "/konto/reset-hasla", destination: "/account/reset-password" },
       // { source: "/konto/reset-hasla/:path*", destination: "/account/reset-password/:path*" },
       // { source: "/konto/auth/:path*", destination: "/account/auth/:path*" },
-
 
       // // Partner panel
       // { source: "/konto/partner", destination: "/account/partner" },
@@ -154,7 +162,11 @@ const nextConfig = {
       // { source: "/profile/:path*", destination: "/konto/partner/:path*", permanent: false },
 
       { source: "/instructor/dodaj", destination: "/instruktor/dodaj", permanent: true },
-      { source: "/instructor/dodaj/:path*", destination: "/instruktor/dodaj/:path*", permanent: true },
+      {
+        source: "/instructor/dodaj/:path*",
+        destination: "/instruktor/dodaj/:path*",
+        permanent: true,
+      },
 
       // ── Old domain → joga.yoga redirects (host-conditional, processed first) ──
 
@@ -270,7 +282,12 @@ const nextConfig = {
       // app.joga.yoga (old profile subdomain).
       // Deliberately still points at /profile/:path*: that lands on joga.yoga as a
       // fresh request and is picked up by the /profile
-      { source: "/:path*", has: [appJoga], destination: "https://joga.yoga/profile/:path*", permanent: true },
+      {
+        source: "/:path*",
+        has: [appJoga],
+        destination: "https://joga.yoga/profile/:path*",
+        permanent: true,
+      },
 
       // ── joga.yoga internal redirects ──
 

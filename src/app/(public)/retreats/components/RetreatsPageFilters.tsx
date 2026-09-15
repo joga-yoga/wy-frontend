@@ -75,7 +75,7 @@ export const RetreatsPageFilters = () => {
   const { data: filterInitialData, loading: filterDataLoading } = useFilterInitialData(true);
 
   // Initialize search from URL on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setSearchTerm(searchParams.get("search") || "");
   }, []);

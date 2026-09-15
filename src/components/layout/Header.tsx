@@ -81,7 +81,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isSticky = true })
   );
 };
 
-export const PublicHeader = () => {
+/**
+ * @param force  Render even on a route that normally suppresses the site header.
+ *
+ * The suppression list below is pathname-based, which cannot tell a **managed** studio's page
+ * (own hero, own overlay header) from an **unclaimed directory** listing's page (no hero, and
+ * so no header at all until this existed). That distinction is resolved on the server, so the
+ * page that knows passes `force` rather than the header guessing.
+ */
+export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
   const { user } = useAuth();
   const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
@@ -94,6 +102,13 @@ export const PublicHeader = () => {
     pathname.startsWith("/kursy/");
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const isPartnersPage = pathname === "/partners";
+  // A studio page draws its own overlay header on its hero image, so the site header would
+  // be a second one. True of a **managed** studio's page and its schedule and class leaves;
+  // not true of the directory pages, which have no hero (the source carries no images) and
+  // were rendering with no header at all.
+  //
+  // The claimed-vs-directory distinction is resolved on the server, so it cannot be made
+  // from the pathname here. Those pages pass `force` instead.
   const isStudioPage = pathname.startsWith("/studio/");
   const isCtaPage =
     pathname === "/wyjazdy/dodaj" ||
@@ -129,7 +144,10 @@ export const PublicHeader = () => {
   }, [pathname]);
   const storedOrigin = navigationOrigin?.target === pathname ? navigationOrigin.origin : null;
   const logoHref = isWyjazdy ? "/wyjazdy" : "/";
-  if (isPartnersPage || isStudioPage || isCtaPage || isInstructorScheduleOrClassesPage) {
+  if (
+    !force &&
+    (isPartnersPage || isStudioPage || isCtaPage || isInstructorScheduleOrClassesPage)
+  ) {
     return null;
   }
 

@@ -58,6 +58,11 @@ export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDeta
   const discount = discountPercent(pass, dropInPrice);
   const isUnlimitedSessions = pass.session_count == null;
   const isUnlimitedDays = pass.duration_days == null;
+  // ⚠ `0` is "we do not know", not "valid for zero days" — a pass with no validity period
+  // cannot exist, so the number is always a gap in the data rather than a fact. `LightPassTile`
+  // already treats it that way (`hideDuration`); this row did not, and rendered **"Ważność —
+  // 0 dni"**. The row is dropped instead: silence is accurate, a zero is not.
+  const hideDuration = pass.duration_days === 0;
 
   return (
     <div>
@@ -81,12 +86,14 @@ export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDeta
             {isUnlimitedSessions ? "Bez limitu" : pass.session_count}
           </span>
         </div>
-        <div className="flex items-center justify-between py-3">
-          <span className="text-base text-[#717171]">Ważność</span>
-          <span className="text-base font-medium text-[#222222]">
-            {isUnlimitedDays ? "Bezterminowo" : `${pass.duration_days} dni`}
-          </span>
-        </div>
+        {!hideDuration && (
+          <div className="flex items-center justify-between py-3">
+            <span className="text-base text-[#717171]">Ważność</span>
+            <span className="text-base font-medium text-[#222222]">
+              {isUnlimitedDays ? "Bezterminowo" : `${pass.duration_days} dni`}
+            </span>
+          </div>
+        )}
         {entry != null && (
           <div className="flex items-center justify-between py-3">
             <span className="text-base text-[#717171]">Cena za wejście</span>
