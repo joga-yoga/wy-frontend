@@ -94,7 +94,7 @@ function useBlockedNetwork() {
   useEffect(() => {
     const id = axiosInstance.interceptors.request.use((config) => {
       const url = `${config.method?.toUpperCase() ?? "GET"} ${config.url ?? "?"}`;
-      // eslint-disable-next-line no-console
+
       console.warn(
         `[proto] blocked ${url} — prototypes render fixture data only. If this screen needs ` +
           `that data, add it to src/fixtures/ rather than letting the prototype hit the API.`,

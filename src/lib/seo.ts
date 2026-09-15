@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
 import type { InstructorPublic } from "@/types/instructor";
-import type { StudioPublic } from "@/types/studio";
+import type { StudioDirectoryItem, StudioPublic } from "@/types/studio";
 
 export type SeoProject = "retreats" | "workshops";
 
@@ -179,6 +179,51 @@ export function buildStudioJsonLd({
     url: absoluteUrl("workshops", path),
     address: studio.address,
   });
+}
+
+/**
+ * Structured data for an **unclaimed** directory studio.
+ *
+ * Deliberately narrower than `buildStudioJsonLd`: no image. The directory's source carries
+ * none — `image_references` is an empty table — and nothing scraped about a third party
+ * should become this platform's own structured data. `telephone` and `url` are facts the
+ * business publishes itself.
+ */
+export function buildDirectoryStudioJsonLd({
+  path,
+  listing,
+}: {
+  path: string;
+  listing: StudioDirectoryItem;
+}) {
+  return compactRecord({
+    "@context": "https://schema.org",
+    "@type": "HealthAndBeautyBusiness",
+    name: listing.name,
+    description: stripHtml(listing.description ?? undefined),
+    url: absoluteUrl("workshops", path),
+    address: listing.address ?? undefined,
+    telephone: listing.phone ?? undefined,
+  });
+}
+
+/** A city hub — `/[miasto]`. */
+export function buildCityDirectoryJsonLd({
+  path,
+  name,
+  description,
+}: {
+  path: string;
+  name: string;
+  description: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url: absoluteUrl("workshops", path),
+  };
 }
 
 export function buildBreadcrumbJsonLd(

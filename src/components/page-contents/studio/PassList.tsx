@@ -15,13 +15,29 @@ interface PassListProps {
   passes: StudioPass[];
   dropInPrice?: number | null;
   currency?: string | null;
+  /**
+   * Whether these passes can actually be bought here. Defaults to true, so every existing
+   * call site is unchanged.
+   *
+   * ⚠ **The public directory passes `false`, and it is not cosmetic.** A directory studio is
+   * *unclaimed*: the pass was read off someone else's page, there is no such row in our
+   * database, and the studio has no account here. Leaving the checkout button would give a
+   * dead `/book/pass/{id}` link at best, and at worst offer to sell a pass on behalf of a
+   * business that never agreed to sell one.
+   */
+  purchasable?: boolean;
 }
 
 /** Shared pass-card list + tappable detail drawer, used by both the studio page's
  * `Cennik` section and the session drawer's pricing row (T06). Canonical copy/limits
  * are the studio page's pre-existing ones: `hasDropIn ? 2 : 3` visible passes, "Pokaż
  * wszystkie karnety" show-more button with no count suffix. */
-export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProps) {
+export function PassList({
+  passes,
+  dropInPrice,
+  currency = "PLN",
+  purchasable = true,
+}: PassListProps) {
   const router = useRouter();
   const hasDropIn = dropInPrice != null;
   const [selectedPass, setSelectedPass] = useState<StudioPass | null>(null);
@@ -118,14 +134,16 @@ export function PassList({ passes, dropInPrice, currency = "PLN" }: PassListProp
           {selectedPass && (
             <div className="px-4 pb-6">
               <PassDetailBody pass={selectedPass} dropInPrice={dropInPrice} currency={currency} />
-              <Button
-                variant="green"
-                size="cta"
-                className="mt-5 w-full"
-                onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
-              >
-                Kup karnet · {formatMoney(selectedPass.price, selectedPass.currency || currency)}
-              </Button>
+              {purchasable && (
+                <Button
+                  variant="green"
+                  size="cta"
+                  className="mt-5 w-full"
+                  onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
+                >
+                  Kup karnet · {formatMoney(selectedPass.price, selectedPass.currency || currency)}
+                </Button>
+              )}
             </div>
           )}
         </DrawerContent>

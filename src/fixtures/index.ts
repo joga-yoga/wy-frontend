@@ -14,4 +14,5 @@ export * from "./ids";
 export * from "./instructor";
 export * from "./roster";
 export * from "./schedule";
+export * from "./studiaDirectory";
 export * from "./studio";
