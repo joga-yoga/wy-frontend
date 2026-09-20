@@ -102,6 +102,7 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
     pathname.startsWith("/kursy/");
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
   const isPartnersPage = pathname === "/partners";
+  const isStudioMarketingPage = pathname === "/system-dla-studiow-jogi";
   // A studio page draws its own overlay header on its hero image, so the site header would
   // be a second one. True of a **managed** studio's page and its schedule and class leaves;
   // not true of the directory pages, which have no hero (the source carries no images) and
@@ -129,6 +130,11 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
   // No `?next=`: logging in from the header always lands on /account. Sending the user
   // back to the public page they clicked from defeats the point of the click.
   const accountHref = mounted && user ? "/account" : "/account/login";
+  const createHref = isStudioMarketingPage
+    ? "/studio/dodaj"
+    : isWyjazdy
+      ? "/wyjazdy/dodaj"
+      : "/wydarzenia/dodaj";
   const { scrollY } = useScroll();
   const compactProgress = useTransform(scrollY, [0, TAB_COMPACT_SCROLL_DISTANCE], [0, 1]);
   const tabIconOpacity = useTransform(compactProgress, [0, 0.5], [1, 0]);
@@ -250,9 +256,11 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
         {/* Right Section: Actions & Profile */}
         <div className="ml-auto flex items-center gap-3 md:gap-3 self-center">
           <Link
-            href={isWyjazdy ? "/wyjazdy/dodaj" : "/wydarzenia/dodaj"}
+            href={createHref}
             passHref
-            className={cn(isMainPage ? undefined : "hidden md:inline-block")}
+            className={cn(
+              isStudioMarketingPage ? "hidden" : isMainPage ? undefined : "hidden md:inline-block",
+            )}
           >
             <button className="text-md py-2.5 hover:underline">
               <p className="text-black font-medium">
@@ -261,16 +269,21 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
             </button>
           </Link>
           <Link
-            href={isWyjazdy ? "/wyjazdy/dodaj" : "/wydarzenia/dodaj"}
+            href={createHref}
             passHref
-            className={cn(isMainPage ? "hidden" : "md:hidden")}
+            aria-label={
+              isStudioMarketingPage
+                ? "Dodaj lub potwierdź studio"
+                : isWyjazdy
+                  ? "Dodaj wyjazd"
+                  : "Dodaj wydarzenie"
+            }
+            className={cn(
+              "group relative h-10 w-10 items-center justify-center text-black",
+              isStudioMarketingPage ? "inline-flex" : isMainPage ? "hidden" : "md:hidden",
+            )}
           >
-            <button
-              aria-label="Add Event"
-              className="group text-black h-10 w-10 flex items-center justify-center relative"
-            >
-              <CustomPlusIconMobile className="h-10 w-10" />
-            </button>
+            <CustomPlusIconMobile className="h-10 w-10" />
           </Link>
 
           {isMainPage && (

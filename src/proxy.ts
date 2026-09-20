@@ -36,6 +36,8 @@ const KNOWN_ROOT_SEGMENTS = new Set([
   "wyjazdy",
   "zajecia",
   "kursy",
+  "system-dla-studiow-jogi",
+  "cennik",
   "konto",
   "platnosc",
   // public, English folders and legacy paths still redirecting
