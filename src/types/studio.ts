@@ -170,9 +170,10 @@ export interface StudioDirectoryItem {
   /** Contact phone, present on roughly 92% of imported rows. */
   phone: string | null;
   website: string | null;
-  /** Yoga-style names from the source's own resolved taxonomy — already canonical, already
-   *  Polish, no mapping table involved. Only `yoga_style` categories appear here: a studio
-   *  can qualify for a page on pilates or meditation alone and legitimately show no chips. */
+  /** Canonical yoga-style names (backend `services/yoga_style_canon.py`): duplicates merged,
+   *  junk dropped, and **empty for an over-tagged listing** (more than five styles). Only
+   *  yoga styles appear here: a studio can qualify for a page on pilates or meditation alone
+   *  and legitimately show no chips. */
   styles: string[];
   latitude: number | null;
   longitude: number | null;
@@ -255,9 +256,63 @@ export interface DirectoryOffer {
   currency: string | null;
 }
 
-export interface DirectoryStyleFacet {
+/** One card in a studio page's "nearby" block — `GET /directory/studios/{slug}/similar`. */
+export interface SimilarStudio extends StudioDirectoryItem {
+  /** Kilometres from the studio whose page this is; `null` when either has no coordinates. */
+  distance_km: number | null;
+}
+
+/** A city that has a page — enough to link to it and name it in a sentence. `locative` is
+ *  the whole phrase ("w Krakowie"), stored, never generated; `null` when nobody supplied one. */
+export interface DirectoryCityRef {
+  slug: string;
+  name: string;
+  locative: string | null;
+}
+
+export interface SimilarStudiosPayload {
+  /** The city the block is drawn from, for the link under it — `null` when it has no page. */
+  city: DirectoryCityRef | null;
+  studios: SimilarStudio[];
+}
+
+/** A style with a national hub — `/studia/{slug}`. */
+export interface StyleHubItem {
+  slug: string;
   name: string;
   count: number;
+}
+
+export interface StyleHubCity extends DirectoryCityRef {
+  count: number;
+  /** `/{city}/{style}` exists; otherwise the hub links the city page. */
+  has_page: boolean;
+}
+
+/** `/studia/{style}` — backend `services/style_pages.hub_payload`. */
+export interface StyleHubPayload {
+  style: { slug: string; name: string };
+  count: number;
+  cities: StyleHubCity[];
+}
+
+/** `/{city}/{style}` — backend `services/style_pages.city_style_payload`. */
+export interface CityStylePayload {
+  city: DirectoryCityRef;
+  style: { slug: string; name: string };
+  has_hub: boolean;
+  studios: StudioDirectoryItem[];
+  other_styles: StyleHubItem[];
+}
+
+export interface DirectoryStyleFacet {
+  name: string;
+  /** The canonical style slug — the style page's URL segment. */
+  slug: string;
+  count: number;
+  /** `/{city}/{slug}` exists — the one gate on the backend (`services/style_pages`) says so.
+   *  Only these get a link; every other facet is a filter and nothing more. */
+  has_page: boolean;
 }
 
 export interface CityDirectoryPayload {

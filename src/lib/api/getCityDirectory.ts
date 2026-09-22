@@ -3,9 +3,13 @@ import { cacheLife, cacheTag } from "next/cache";
 import type {
   CityDirectoryPayload,
   CityIndexItem,
+  CityStylePayload,
   DirectoryStudioDetail,
+  SimilarStudiosPayload,
   StudioDirectoryItem,
   StudiosIndexPayload,
+  StyleHubItem,
+  StyleHubPayload,
 } from "@/types/studio";
 
 /** Server-side `fetch`, not `axiosInstance` — the latter reads a bearer token from
@@ -113,3 +117,83 @@ export async function getDirectoryListing(
   }
   return response.json();
 }
+
+const EMPTY_SIMILAR: SimilarStudiosPayload = { city: null, studios: [] };
+
+/** The "nearby" block at the foot of a studio page — either kind of studio slug.
+ *
+ * ⚠ **Never throws.** The block is an extra: an API hiccup must cost the page its block, not
+ * the page itself. Any failure, and a 404, is an empty block, which renders nothing.
+ *
+ * Same lifetime as the city page it is drawn from, so a studio that leaves the city page
+ * leaves every block within the same five minutes.
+ */
+export async function getSimilarStudios(slug: string): Promise<SimilarStudiosPayload> {
+  "use cache";
+
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag("directory", `directory:similar:${slug}`);
+
+  try {
+    const response = await fetch(
+      `${baseUrl()}/directory/studios/${encodeURIComponent(slug)}/similar`,
+    );
+    if (!response.ok) return EMPTY_SIMILAR;
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch similar studios", error);
+    return EMPTY_SIMILAR;
+  }
+}
+
+/** The styles with a national hub — for the "Style jogi" section on `/studia` and the hubs'
+ *  sibling links. Never throws: the section is an extra on those pages. */
+export async function getStyleHubs(): Promise<StyleHubItem[]> {
+  "use cache";
+
+  cacheLife({ stale: 600, revalidate: 600, expire: 3600 });
+  cacheTag("directory", "directory:styles");
+
+  try {
+    const response = await fetch(`${baseUrl()}/directory/styles`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch style hubs", error);
+    return [];
+  }
+}
+
+/** `/studia/{style}`. `null` below the gate, which the route turns into a real 404. */
+export async function getStyleHub(style: string): Promise<StyleHubPayload | null> {
+  "use cache";
+
+  cacheLife({ stale: 600, revalidate: 600, expire: 3600 });
+  cacheTag("directory", `directory:style:${style}`);
+
+  const response = await fetch(`${baseUrl()}/directory/styles/${encodeURIComponent(style)}`);
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch style hub: ${response.status}`);
+  }
+  return response.json();
+}
+
+/** `/{city}/{style}`. `null` below the gate, which the route turns into a real 404. Same
+ *  lifetime as the city page it is cut from. */
+export async function getCityStyle(city: string, style: string): Promise<CityStylePayload | null> {
+  "use cache";
+
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  cacheTag("directory", `directory:city:${city}`, `directory:style:${style}`);
+
+  const response = await fetch(
+    `${baseUrl()}/directory/cities/${encodeURIComponent(city)}/styles/${encodeURIComponent(style)}`,
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch city style page: ${response.status}`);
+  }
+  return response.json();
+}
+
