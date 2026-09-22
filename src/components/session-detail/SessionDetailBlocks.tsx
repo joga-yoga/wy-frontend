@@ -10,6 +10,7 @@ import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { StudioCard } from "@/components/common/StudioCard";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
+import { joinPolish } from "@/lib/joinPolish";
 
 /**
  * The instructor / studio / location blocks of a session, shared by the public session drawer
@@ -51,11 +52,6 @@ export function languageName(language: string): string {
 function instrumental(language: string): string {
   const name = languageName(language);
   return LANGUAGE_INSTRUMENTAL[name.toLowerCase()] ?? name;
-}
-
-function joinPolish(items: string[]): string {
-  if (items.length <= 1) return items[0] ?? "";
-  return `${items.slice(0, -1).join(", ")} i ${items[items.length - 1]}`;
 }
 
 export function buildLanguageLines(

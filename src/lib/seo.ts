@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
+import { joinPolish } from "@/lib/joinPolish";
 import type { InstructorPublic } from "@/types/instructor";
 import type { StudioDirectoryItem, StudioPublic } from "@/types/studio";
 
@@ -161,6 +162,96 @@ export function buildInstructorJsonLd({
   });
 }
 
+/** Roughly what Google shows of a meta description before it cuts it off itself. */
+export const META_DESCRIPTION_LIMIT = 155;
+
+/**
+ * A description that fits in a search result.
+ *
+ * Prefers ending on a full sentence when one ends past the halfway mark — a snippet that stops
+ * on a full stop reads as written, one that stops mid-word reads as truncated. Otherwise cuts on
+ * the last word boundary and marks the cut with `…`.
+ */
+export function truncateDescription(text: string, limit = META_DESCRIPTION_LIMIT): string {
+  const clean = stripHtml(text) ?? "";
+  if (clean.length <= limit) return clean;
+
+  const head = clean.slice(0, limit);
+  const sentenceEnd = Math.max(
+    head.lastIndexOf(". "),
+    head.lastIndexOf("! "),
+    head.lastIndexOf("? "),
+  );
+  if (sentenceEnd >= limit / 2) return head.slice(0, sentenceEnd + 1);
+
+  const wordEnd = clean.slice(0, limit - 1).lastIndexOf(" ");
+  const cut = wordEnd > 0 ? clean.slice(0, wordEnd) : clean.slice(0, limit - 1);
+  return `${cut.replace(/[\s,;:–-]+$/, "")}…`;
+}
+
+/**
+ * A studio page's `<title>` — `{name} – studio jogi, {city} | joga.yoga`.
+ *
+ * Shaped like the query that should find it: somebody searches "joga" or "studio jogi" and a
+ * place far more often than a studio's name alone. Platform voice even on a managed studio's
+ * page — metadata is not the owner speaking. The name leads, so if Google truncates, it
+ * truncates the part the reader needs least.
+ *
+ * Whatever the name already says is not said again: "Lido Movement Studio - Yoga, Pilates
+ * Łódź" needs neither "studio jogi" nor "Łódź" after it.
+ */
+export function studioPageTitle(name: string, city: string | null | undefined): string {
+  const lower = name.toLocaleLowerCase("pl");
+  const qualifiers = [
+    /jog|yog/.test(lower) ? null : "studio jogi",
+    city && !lower.includes(city.toLocaleLowerCase("pl")) ? city : null,
+  ].filter(Boolean);
+  const head = qualifiers.length > 0 ? `${name} – ${qualifiers.join(", ")}` : name;
+  return `${head} | ${PROJECT_SEO.siteName}`;
+}
+
+/**
+ * A studio page's meta description.
+ *
+ * The studio's own description when it has one, fitted to a search snippet. Without one, a line
+ * built from facts rather than a generic sentence — "Hatha, Yin i Vinyasa · Kraków, ul. …" is
+ * something a reader can act on, "Profil studia jogi" is not.
+ */
+export function studioMetaDescription({
+  description,
+  styles,
+  city,
+  address,
+}: {
+  description: string | null | undefined;
+  styles: string[];
+  city: string | null | undefined;
+  address: string | null | undefined;
+}): string {
+  const own = stripHtml(description);
+  if (own) return truncateDescription(own);
+
+  const what = styles.length > 0 ? joinPolish(styles.slice(0, 4)) : "Studio jogi";
+  const alreadyNamesCity = Boolean(city && address?.includes(city));
+  const where = [alreadyNamesCity ? null : city, address].filter(Boolean).join(", ");
+  return truncateDescription(where ? `${what} · ${where}` : what);
+}
+
+function postalAddress(street: string | null | undefined, city: string | null | undefined) {
+  if (!street && !city) return undefined;
+  return compactRecord({
+    "@type": "PostalAddress",
+    streetAddress: street ?? undefined,
+    addressLocality: city ?? undefined,
+    addressCountry: "PL",
+  });
+}
+
+function geoCoordinates(latitude: number | null | undefined, longitude: number | null | undefined) {
+  if (latitude == null || longitude == null) return undefined;
+  return { "@type": "GeoCoordinates", latitude, longitude };
+}
+
 export function buildStudioJsonLd({
   path,
   studio,
@@ -170,6 +261,7 @@ export function buildStudioJsonLd({
   studio: StudioPublic;
   imageUrl?: string;
 }) {
+  const sameAs = studio.social_links.map((link) => link.url).filter(Boolean);
   return compactRecord({
     "@context": "https://schema.org",
     "@type": "HealthAndBeautyBusiness",
@@ -177,7 +269,9 @@ export function buildStudioJsonLd({
     description: stripHtml(studio.description),
     image: imageUrl,
     url: absoluteUrl("workshops", path),
-    address: studio.address,
+    address: postalAddress(studio.address ?? studio.location?.address_line1, studio.location?.city),
+    geo: geoCoordinates(studio.location?.latitude, studio.location?.longitude),
+    sameAs: sameAs.length > 0 ? sameAs : undefined,
   });
 }
 
@@ -202,8 +296,10 @@ export function buildDirectoryStudioJsonLd({
     name: listing.name,
     description: stripHtml(listing.description ?? undefined),
     url: absoluteUrl("workshops", path),
-    address: listing.address ?? undefined,
+    address: postalAddress(listing.address, listing.city),
+    geo: geoCoordinates(listing.latitude, listing.longitude),
     telephone: listing.phone ?? undefined,
+    sameAs: listing.website ? [listing.website] : undefined,
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { PublicLocation } from "@/components/common/location/PublicLocation";
 import { ProfileLinks } from "@/components/common/ProfileLinks";
@@ -10,6 +10,7 @@ import { PublicHeader } from "@/components/layout/Header";
 import { PassList } from "@/components/page-contents/studio/PassList";
 import { Button } from "@/components/ui/button";
 import { getCurrencySymbol } from "@/lib/currency";
+import { cityStudiosPath } from "@/lib/directoryPaths";
 import type { DirectoryStudioDetail } from "@/types/studio";
 
 /**
@@ -32,7 +33,15 @@ import type { DirectoryStudioDetail } from "@/types/studio";
  * host the images point at. They never reach this component, because they never reach the
  * projection that feeds it.
  */
-export function DirectoryStudioPage({ listing }: { listing: DirectoryStudioDetail }) {
+export function DirectoryStudioPage({
+  listing,
+  nearby,
+}: {
+  listing: DirectoryStudioDetail;
+  /** The server-rendered "Studia jogi w pobliżu" block — a slot, because this component is a
+   *  client component and the block's links must be in the server HTML. */
+  nearby?: ReactNode;
+}) {
   const [managing, setManaging] = useState<DirectoryStudioDetail | null>(null);
 
   const hasLocation = Boolean(listing.address || (listing.latitude && listing.longitude));
@@ -76,7 +85,7 @@ export function DirectoryStudioPage({ listing }: { listing: DirectoryStudioDetai
                 ? [
                     {
                       label: listing.city,
-                      href: listing.city_slug ? `/${listing.city_slug}` : null,
+                      href: listing.city_slug ? cityStudiosPath(listing.city_slug) : null,
                     },
                   ]
                 : []),
@@ -133,6 +142,8 @@ export function DirectoryStudioPage({ listing }: { listing: DirectoryStudioDetai
             <ProfileLinks links={links} />
           </section>
         )}
+
+        {nearby}
 
         {/* The claim entry for a studio that *has* a page lives here rather than on the city
             row, where the card is itself a link and has no room for it.

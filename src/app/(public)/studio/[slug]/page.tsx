@@ -1,13 +1,23 @@
 import { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 
+import { SimilarStudios } from "@/components/directory/SimilarStudios";
 import { StudioPageContent } from "@/components/page-contents/studio/StudioPageContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getDirectoryStudio } from "@/lib/api/getCityDirectory";
 import { getStudio } from "@/lib/api/getStudio";
 import { getStudioSchedulePreview } from "@/lib/api/getStudioSchedulePreview";
+import { cityStudiosPath } from "@/lib/directoryPaths";
 import { getOgImageUrl } from "@/lib/imageHelpers";
-import { buildDirectoryStudioJsonLd, buildPageMetadata, buildStudioJsonLd } from "@/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildDirectoryStudioJsonLd,
+  buildPageMetadata,
+  buildStudioJsonLd,
+  studioMetaDescription,
+  studioPageTitle,
+} from "@/lib/seo";
+import type { DirectoryStudioDetail, StudioPublic } from "@/types/studio";
 
 import { DirectoryStudioPage } from "./DirectoryStudioPage";
 
@@ -37,6 +47,47 @@ async function resolve(slug: string) {
   return null;
 }
 
+/** The breadcrumb as structured data — the same trail `DirectoryBreadcrumb` renders on an
+ *  unclaimed listing. The city is a step only when it has a page; a studio in a town below
+ *  the threshold has a city name and nowhere to link it. A managed studio's payload does not
+ *  know its city page, so its trail is the directory and the studio. */
+function studioBreadcrumb(
+  slug: string,
+  name: string,
+  city?: { name: string | null; slug: string | null },
+) {
+  return buildBreadcrumbJsonLd([
+    { name: "Studia jogi", path: "/studia" },
+    ...(city?.name && city.slug ? [{ name: city.name, path: cityStudiosPath(city.slug) }] : []),
+    { name, path: `/studio/${slug}` },
+  ]);
+}
+
+function directoryMeta(listing: DirectoryStudioDetail) {
+  return {
+    title: studioPageTitle(listing.name, listing.city),
+    description: studioMetaDescription({
+      description: listing.description,
+      styles: listing.styles,
+      city: listing.city,
+      address: listing.address,
+    }),
+  };
+}
+
+function managedMeta(studio: StudioPublic) {
+  const city = studio.location?.city;
+  return {
+    title: studioPageTitle(studio.name, city),
+    description: studioMetaDescription({
+      description: studio.description,
+      styles: studio.yoga_styles.map((style) => style.name),
+      city,
+      address: studio.address ?? studio.location?.address_line1,
+    }),
+  };
+}
+
 /** The frontend reading of `crud.studio_directory.publicly_listable_studio`. */
 function isIndexable(studio: { is_listed?: boolean; is_published?: boolean }): boolean {
   return studio.is_listed !== false && studio.is_published !== false;
@@ -59,11 +110,7 @@ export async function generateMetadata(
     // it is the same one the sitemap reads.
     return buildPageMetadata({
       project: "workshops",
-      title: `${resolved.listing.name} | joga.yoga`,
-      description:
-        resolved.listing.description ??
-        resolved.listing.address ??
-        "Profil studia jogi na joga.yoga",
+      ...directoryMeta(resolved.listing),
       path: `/studio/${slug}`,
     });
   }
@@ -73,8 +120,7 @@ export async function generateMetadata(
 
   const metadata = buildPageMetadata({
     project: "workshops",
-    title: `${studio.name} | joga.yoga`,
-    description: studio.description ?? studio.address ?? "Profil studia jogi na joga.yoga",
+    ...managedMeta(studio),
     path: `/studio/${slug}`,
     image: imageUrl || undefined,
   });
@@ -114,7 +160,16 @@ export default async function StudioPage({ params }: StudioPageProps) {
             listing: resolved.listing,
           })}
         />
-        <DirectoryStudioPage listing={resolved.listing} />
+        <JsonLd
+          data={studioBreadcrumb(slug, resolved.listing.name, {
+            name: resolved.listing.city,
+            slug: resolved.listing.city_slug,
+          })}
+        />
+        <DirectoryStudioPage
+          listing={resolved.listing}
+          nearby={<SimilarStudios slug={slug} className="px-4 py-5" />}
+        />
       </>
     );
   }
@@ -131,14 +186,19 @@ export default async function StudioPage({ params }: StudioPageProps) {
       {/* Same predicate as `generateMetadata`'s noIndex above and `publicly_listable_studio`
           on the backend. A noindexed page must not advertise itself in structured data. */}
       {isIndexable(studio) && (
-        <JsonLd
-          data={buildStudioJsonLd({
-            path: `/studio/${slug}`,
-            studio,
-            imageUrl: imageUrl || undefined,
-          })}
-        />
+        <>
+          <JsonLd
+            data={buildStudioJsonLd({
+              path: `/studio/${slug}`,
+              studio,
+              imageUrl: imageUrl || undefined,
+            })}
+          />
+          <JsonLd data={studioBreadcrumb(slug, studio.name)} />
+        </>
       )}
+      {/* No "Studia jogi w pobliżu" here: a claimed studio's page is its owner's own page, and
+          it does not list nearby alternatives. Unclaimed listings carry the block. */}
       <StudioPageContent studio={studio} initialSchedulePreview={schedulePreview} />
     </>
   );
