@@ -22,7 +22,7 @@
  */
 
 /** Every first URL segment the site answers on other than a city. A new top-level route must be
- *  added here, or it 404s in production while working in local development.
+ *  added here, or the proxy treats it as a city and can return 404.
  *  `wy-backend/tests/test_directory_city_slugs.py` guards the other direction. */
 export const KNOWN_ROOT_SEGMENTS = new Set([
   // public, Polish
@@ -51,6 +51,8 @@ export const KNOWN_ROOT_SEGMENTS = new Set([
   "book",
   "account",
   // info
+  "cennik",
+  "/system-dla-studiow-jogi",
   "contact",
   "policy",
   "terms",
