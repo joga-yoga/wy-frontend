@@ -16,20 +16,22 @@ type FooterSectionDef = {
   links: { label: string; href: string; isExternal?: boolean }[];
 };
 
-/** The instructor directory, in every footer variant.
+/** The two directories — studios and instructors — in every footer variant.
  *
- * `/instruktorzy` is indexable and in the sitemap, but nothing inside the product linked to
- * it — a directory a crawler can find and a person cannot is not a directory. It goes in
- * every branch rather than only `main` because `project` is derived from the pathname, and
- * everything that is not a retreat or the two `dodaj` pages resolves to `workshops` —
- * including `/instruktorzy` itself, which would otherwise be the one page missing the link
- * to it.
+ * Both are indexable and in the sitemap, and the footer is the one place every page links
+ * from, so it is what keeps them from being crawler-only. The section goes in every branch
+ * rather than only `main` because `project` is derived from the pathname, and everything that
+ * is not a retreat or the two `dodaj` pages resolves to `workshops` — including `/studia` and
+ * `/instruktorzy` themselves, which would otherwise be the pages missing the link to each other.
  *
- * The heading is a bare neutral label, and the link under it names the destination — the
- * same shape as "O nas" → "Kontakt" above it. */
-const INSTRUCTORS_SECTION: FooterSectionDef = {
-  title: "Instruktorzy",
-  links: [{ label: "Wszystkie profile", href: "/instruktorzy" }],
+ * The heading is a bare neutral label; the links name the destination with the phrase people
+ * search for ("studia jogi"), which is also the anchor text Google reads. */
+const DIRECTORY_SECTION: FooterSectionDef = {
+  title: "Katalog",
+  links: [
+    { label: "Studia jogi", href: "/studia" },
+    { label: "Instruktorzy jogi", href: "/instruktorzy" },
+  ],
 };
 
 function buildFooterSections(
@@ -38,7 +40,7 @@ function buildFooterSections(
 ): FooterSectionDef[] {
   if (project === "main") {
     return [
-      INSTRUCTORS_SECTION,
+      DIRECTORY_SECTION,
       {
         title: "O nas",
         links: [{ label: "Kontakt", href: "/contact" }],
@@ -57,7 +59,7 @@ function buildFooterSections(
         },
       ],
     },
-    INSTRUCTORS_SECTION,
+    DIRECTORY_SECTION,
     {
       title: "O nas",
       links: [{ label: "Kontakt", href: "/contact" }],

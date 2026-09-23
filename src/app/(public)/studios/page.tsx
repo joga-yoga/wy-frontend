@@ -5,7 +5,7 @@ import { StudioCard } from "@/components/common/StudioCard";
 import { DetailPageLink } from "@/components/navigation/DetailPageLink";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
-import { getStudiosIndex } from "@/lib/api/getCityDirectory";
+import { getStudiosIndex, getStyleHubs } from "@/lib/api/getCityDirectory";
 import {
   miasta,
   miastaLocative,
@@ -13,7 +13,9 @@ import {
   miejscowosciLocative,
   studios,
 } from "@/lib/directoryCopy";
+import { cityStudiosPath, styleHubPath } from "@/lib/directoryPaths";
 import { buildCollectionJsonLd, buildPageMetadata } from "@/lib/seo";
+import { getStyleCopy } from "@/lib/yogaStyleCopy";
 
 // The folder is English and the public URL is Polish — `/studia` reaches this page through a
 // rewrite in `next.config.mjs`, exactly as `/instruktorzy` reaches `instructors`.
@@ -74,7 +76,11 @@ function studiosWithPages(
  * inline here is what keeps them internally linked.
  */
 export default async function StudiosIndexPage() {
-  const { cities, towns } = await getStudiosIndex();
+  const [{ cities, towns }, hubs] = await Promise.all([getStudiosIndex(), getStyleHubs()]);
+  const styleLinks = hubs.flatMap((hub) => {
+    const copy = getStyleCopy(hub.slug);
+    return copy ? [{ ...hub, heading: copy.heading }] : [];
+  });
   const studioCount = totalStudios(cities, towns);
   const pagedCount = studiosWithPages(cities, towns);
 
@@ -104,7 +110,7 @@ export default async function StudiosIndexPage() {
           {cities.map((city) => (
             <li key={city.slug}>
               <DetailPageLink
-                href={`/${city.slug}`}
+                href={cityStudiosPath(city.slug)}
                 className="flex flex-col rounded-xl border-[1.5px] border-gray-200 bg-white px-3 py-2.5 hover:bg-gray-50"
               >
                 <span className="text-m-header text-gray-900">{city.name}</span>
@@ -116,6 +122,29 @@ export default async function StudiosIndexPage() {
           ))}
         </ul>
       </section>
+
+      {/* The national style hubs — `/studia/hatha`. The one place in the directory that links
+          down to every hub, which is what keeps them from being reachable only by sitemap. */}
+      {styleLinks.length > 0 && (
+        <section>
+          <h2 className="text-filter-subtitle mb-3 uppercase tracking-wide text-gray-500">
+            Style jogi
+          </h2>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {styleLinks.map((hub) => (
+              <li key={hub.slug}>
+                <DetailPageLink
+                  href={styleHubPath(hub.slug)}
+                  className="flex h-full flex-col rounded-xl border-[1.5px] border-gray-200 bg-white px-3 py-2.5 hover:bg-gray-50"
+                >
+                  <span className="text-m-header text-gray-900">{hub.heading}</span>
+                  <span className="text-m-sunscript-font text-gray-500">{studios(hub.count)}</span>
+                </DetailPageLink>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {towns.length > 0 && (
         <section>

@@ -52,3 +52,16 @@ export function miastaLocative(n: number): string {
 export function miejscowosciLocative(n: number): string {
   return `${n} ${n === 1 ? "miejscowości" : "miejscowościach"}`;
 }
+
+/** "Hatha joga w Krakowie" — a style heading placed in a city.
+ *
+ * The locative is stored, never derived (see `cityOpeningSentence`); a city without one is
+ * named plainly after a dash rather than with a guessed case, the same fallback the city page's
+ * own heading uses.
+ */
+export function styleInCity(
+  heading: string,
+  city: { name: string; locative: string | null | undefined },
+): string {
+  return city.locative ? `${heading} ${city.locative}` : `${heading} – ${city.name}`;
+}

@@ -1,120 +1,84 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { decideRoute } from "@/lib/directoryRouting";
+import { getStyleCopy } from "@/lib/yogaStyleCopy";
+
 /**
- * A genuine 404 for a root segment that is not a city.
+ * The directory's routing: real 404s, the `/krakow` → `/krakow/studia` redirect, and the Polish
+ * `studia` segment mapped onto the English `[miasto]/studios` folders. The decisions — and why
+ * they live here rather than in the pages — are in `lib/directoryRouting.ts`, tested in
+ * `lib/directoryRouting.test.ts`. This file only fetches the lists and turns a decision into a
+ * response.
  *
- * Named `proxy` in `src/proxy.ts`: Next 16 renamed the `middleware` convention, and the
- * old name builds with a deprecation warning rather than an error, so it is easy to miss.
- *
- * ⚠ **Why this exists rather than `notFound()` in the page.** `/[miasto]` is a dynamic
- * segment at the root of the domain, so it matches *every* unknown single-segment URL —
- * `/jakis-losowy-segment` included. Before it existed those were unmatched routes and the
- * router 404'd them; now they reach a page, and a page cannot reliably answer with a 404
- * status here: under `cacheComponents` the response goes out before `notFound()` is
- * reached, so the body says 404 and the status says 200. Measured on a production build,
- * not assumed.
- *
- * A soft 404 at the root is precisely what a domain recovering from consolidation cannot
- * afford — it is how an unbounded namespace of empty pages gets indexed. Middleware runs
- * before the router, so it can answer with a real status.
- *
- * ⚠ **Standing cost.** Every new top-level route has to be added to `KNOWN_ROOT_SEGMENTS`
- * below, or it will 404 in production while working perfectly in local development. `wy-backend/tests/test_directory_city_slugs.py` guards the
- * other direction — a city slug that collides with a real route.
+ * Named `proxy` in `src/proxy.ts`: Next 16 renamed the `middleware` convention, and the old
+ * name builds with a deprecation warning rather than an error, so it is easy to miss.
  *
  * Note this does **not** fix the app-wide soft-404 on `/studio/{slug}`, `/instruktor/{slug}`
- * and the other detail routes, which return 200 for a missing resource and did so before
- * this feature. That is a real problem and a separate one.
+ * and the other detail routes, which return 200 for a missing resource and did so before the
+ * directory existed. That is a real problem and a separate one.
  */
-const KNOWN_ROOT_SEGMENTS = new Set([
-  // public, Polish
-  "studia",
-  "studio",
-  "instruktor",
-  "instruktorzy",
-  "wydarzenia",
-  "wyjazdy",
-  "zajecia",
-  "kursy",
-  "system-dla-studiow-jogi",
-  "cennik",
-  "konto",
-  "platnosc",
-  // public, English folders and legacy paths still redirecting
-  "studios",
-  "instructor",
-  "instructors",
-  "workshops",
-  "retreats",
-  "classes",
-  "courses",
-  "partner",
-  "partners",
-  "organizer",
-  "profile",
-  "book",
-  "account",
-  // info
-  "contact",
-  "policy",
-  "terms",
-  "delete-account",
-  // infrastructure
-  "api",
-  "proto",
-]);
 
-/** The city list, refreshed lazily. A stale list can only cause a 404 for a city that has
- *  just joined, which resolves itself within the TTL — the opposite mistake, serving an
- *  empty page for a city that does not qualify, is the one worth avoiding. */
-let cachedCities: { slugs: Set<string>; fetchedAt: number } | null = null;
-const CITY_CACHE_MS = 5 * 60 * 1000;
+/** A list from the directory API, refreshed lazily. A stale list can only cause a 404 for a
+ *  page that has just appeared, which resolves itself within the TTL — the opposite mistake,
+ *  serving an empty page that does not qualify, is the one worth avoiding. */
+const LIST_CACHE_MS = 5 * 60 * 1000;
 
-async function citySlugs(): Promise<Set<string> | null> {
-  if (cachedCities && Date.now() - cachedCities.fetchedAt < CITY_CACHE_MS) {
-    return cachedCities.slugs;
-  }
+function cachedList(path: string, toKeys: (body: unknown) => string[]) {
+  let cached: { keys: Set<string>; fetchedAt: number } | null = null;
 
-  const apiUrl = process.env.API_ENDPOINT ?? process.env.NEXT_PUBLIC_API_ENDPOINT;
-  if (!apiUrl) return null;
+  return async function keys(): Promise<Set<string> | null> {
+    if (cached && Date.now() - cached.fetchedAt < LIST_CACHE_MS) return cached.keys;
 
-  try {
-    const response = await fetch(`${apiUrl}/directory/cities`);
-    if (!response.ok) return cachedCities?.slugs ?? null;
-    const cities: { slug: string }[] = await response.json();
-    cachedCities = { slugs: new Set(cities.map((c) => c.slug)), fetchedAt: Date.now() };
-    return cachedCities.slugs;
-  } catch {
-    // A directory outage must not start 404ing city pages that exist. Fall through to the
-    // last known list, or to letting the request pass.
-    return cachedCities?.slugs ?? null;
-  }
+    const apiUrl = process.env.API_ENDPOINT ?? process.env.NEXT_PUBLIC_API_ENDPOINT;
+    if (!apiUrl) return null;
+
+    try {
+      const response = await fetch(`${apiUrl}${path}`);
+      if (!response.ok) return cached?.keys ?? null;
+      cached = { keys: new Set(toKeys(await response.json())), fetchedAt: Date.now() };
+      return cached.keys;
+    } catch {
+      // A directory outage must not start 404ing pages that exist. Fall through to the last
+      // known list, or to letting the request pass.
+      return cached?.keys ?? null;
+    }
+  };
 }
 
+const lists = {
+  cities: cachedList("/directory/cities", (body) =>
+    (body as { slug: string }[]).map((city) => city.slug),
+  ),
+  // A gated style with no text in `yogaStyleCopy.ts` is left out: its page refuses to render.
+  stylePages: cachedList("/directory/style-pages", (body) =>
+    (body as { city_slug: string | null; style_slug: string }[])
+      .filter((page) => getStyleCopy(page.style_slug))
+      .map((page) => `${page.city_slug ?? ""}/${page.style_slug}`),
+  ),
+};
+
 export async function proxy(request: NextRequest) {
-  const segment = request.nextUrl.pathname.slice(1);
+  const decision = await decideRoute(request.nextUrl.pathname, lists);
 
-  // Only single-segment root paths reach the city route. Anything with a slash or a dot is
-  // another route or a file.
-  if (!segment || segment.includes("/") || segment.includes(".")) {
-    return NextResponse.next();
+  switch (decision.kind) {
+    case "notFound":
+      return new NextResponse(null, { status: 404 });
+    case "redirect": {
+      const url = request.nextUrl.clone();
+      url.pathname = decision.to;
+      return NextResponse.redirect(url, 302);
+    }
+    case "rewrite": {
+      const url = request.nextUrl.clone();
+      url.pathname = decision.to;
+      return NextResponse.rewrite(url);
+    }
+    default:
+      return NextResponse.next();
   }
-  if (KNOWN_ROOT_SEGMENTS.has(segment)) {
-    return NextResponse.next();
-  }
-
-  const slugs = await citySlugs();
-  // If the list is unavailable, let the request through: a soft 404 is bad, but 404ing
-  // every city page because the API blinked is worse.
-  if (slugs === null || slugs.has(segment)) {
-    return NextResponse.next();
-  }
-
-  return new NextResponse(null, { status: 404 });
 }
 
 export const config = {
-  // Root single-segment paths only. Everything nested, and every static asset, is skipped
-  // before the function runs rather than inside it.
+  // Everything except Next internals, API routes and files.
   matcher: ["/((?!_next|api|.*\\.).*)"],
 };

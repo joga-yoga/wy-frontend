@@ -104,9 +104,11 @@ export function CityStudioList({ payload }: { payload: CityDirectoryPayload }) {
 /**
  * Styles lead the page and are the filter.
  *
- * They are **not links**. Roughly 600 style-by-city pages built on a field with uneven
- * per-city coverage is the thin-page risk in its purest form, on a domain that cannot
- * currently afford any of it.
+ * They are **not links**, and stay a filter. The styles that do have a page of their own —
+ * `/{miasto}/{styl}`, opened only above the backend gate in `services/style_pages.py` (2026-09:
+ * ten studios, 36 pages, where the original spec had ruled out all ~600) — are linked from a
+ * separate row the server page renders (`StylePageLinks` in `page.tsx`). A chip that filters
+ * here and a chip that leaves the page must never look the same.
  *
  * Names render exactly as the catalog stores them — never translated, never re-cased —
  * matching the instructor directory.

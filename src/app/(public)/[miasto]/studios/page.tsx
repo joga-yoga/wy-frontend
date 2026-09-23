@@ -1,26 +1,31 @@
 import { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { DirectoryBreadcrumb } from "@/components/directory/DirectoryBreadcrumb";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCityDirectory, getDirectoryCities } from "@/lib/api/getCityDirectory";
-import { cityOpeningSentence, studios } from "@/lib/directoryCopy";
+import { cityOpeningSentence, studios, styleInCity } from "@/lib/directoryCopy";
+import { cityStudiosPath, cityStylePath } from "@/lib/directoryPaths";
 import { buildBreadcrumbJsonLd, buildCityDirectoryJsonLd, buildPageMetadata } from "@/lib/seo";
+import { getStyleCopy } from "@/lib/yogaStyleCopy";
 
 import { CityStudioList } from "./CityStudioList";
 
 /**
- * A city hub at the root of the domain — `/krakow`, `/wroclaw`, `/bielsko-biala`.
+ * A city's studio directory — `/krakow/studia`, `/wroclaw/studia`.
  *
- * **The folder is `[miasto]` rather than an English name behind a rewrite**, which breaks
- * the convention every other public route here follows (`/instruktorzy → /instructors`,
- * `/zajecia → /classes`). The convention exists so folder names stay language-neutral for
- * future i18n — but the segment *is* the city, and a Polish city name has no English
- * equivalent to rewrite from. There is nothing to translate, so there is nothing to keep
- * neutral.
+ * **The city leads the URL** so that `/krakow` can later become a city hub over studios,
+ * instructors and events; until it does, `src/proxy.ts` answers `/krakow` with a 302 here. URL
+ * shapes live in `lib/directoryPaths.ts`.
  *
- * ⚠ **This route occupies the root namespace.** An unknown segment must be a hard 404, not
+ * **Folders:** `[miasto]` is a city name, which has no English form to rewrite from, so it stays
+ * as it is; `studios` is English per the i18n convention, and the proxy maps the public `studia`
+ * segment onto it (a `next.config` rewrite on `/:city/studia` would also catch
+ * `/wydarzenia/studia` — a workshop slugged "studia").
+ *
+ * ⚠ **The city segment occupies the root namespace.** An unknown segment must be a hard 404, not
  * an empty city page: soft-404 sprawl at the root is precisely what this domain, recovering
  * from consolidation, cannot afford. The list it resolves against is the city table, and
  * `wy-backend/tests/test_directory_city_slugs.py` fails the build if a city slug ever
@@ -63,7 +68,7 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
     project: "workshops",
     title: titleFor(summary.name),
     description: descriptionFor(summary.name, summary.city_locative, summary.active_count),
-    path: `/${miasto}`,
+    path: cityStudiosPath(miasto),
   });
 }
 
@@ -107,12 +112,12 @@ export default async function CityPage({ params }: CityPageProps) {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Studia jogi", path: "/studia" },
-          { name: summary.name, path: `/${miasto}` },
+          { name: summary.name, path: cityStudiosPath(miasto) },
         ])}
       />
       <JsonLd
         data={buildCityDirectoryJsonLd({
-          path: `/${miasto}`,
+          path: cityStudiosPath(miasto),
           name: titleFor(summary.name),
           description: descriptionFor(summary.name, summary.city_locative, summary.active_count),
         })}
@@ -144,7 +149,59 @@ export default async function CityPage({ params }: CityPageProps) {
       </header>
 
       <CityStudioList payload={payload} />
+
+      <StylePageLinks citySlug={miasto} payload={payload} />
     </div>
+  );
+}
+
+/**
+ * Links to this city's style pages — `/krakow/studia/hatha` — at the foot of the page.
+ *
+ * **At the bottom, deliberately.** These are here mainly for crawlers and for internal linking;
+ * a reader looking for a class uses the style filter at the top, which stays the page's main
+ * control. Above the list they competed with it.
+ *
+ * **A separate row, not the filter chips.** The chips filter this list in place; a chip that
+ * sometimes filters and sometimes leaves the page would make every chip a guess. So the chips
+ * stay a filter, and the styles that have a page of their own (the backend gate, `has_page`)
+ * are named here as plain links — which is also what a crawler needs to find them.
+ *
+ * Rendered by the server page rather than inside `CityStudioList`, so the links are in the
+ * server HTML and the style copy stays out of the client bundle.
+ */
+function StylePageLinks({
+  citySlug,
+  payload,
+}: {
+  citySlug: string;
+  payload: NonNullable<Awaited<ReturnType<typeof getCityDirectory>>>;
+}) {
+  const city = { name: payload.summary.name, locative: payload.summary.city_locative };
+  const links = payload.styles.flatMap((facet) => {
+    const copy = facet.has_page ? getStyleCopy(facet.slug) : null;
+    return copy ? [{ slug: facet.slug, label: styleInCity(copy.heading, city) }] : [];
+  });
+  if (links.length === 0) return null;
+
+  return (
+    <nav
+      aria-label="Style jogi"
+      className="text-m-sunscript-font border-t border-gray-100 pt-5 text-gray-500"
+    >
+      Zobacz też:{" "}
+      {links.map((link, index) => (
+        <span key={link.slug}>
+          <Link
+            href={cityStylePath(citySlug, link.slug)}
+            className="text-gray-900 underline underline-offset-4 hover:text-gray-600"
+          >
+            {link.label}
+          </Link>
+          {index < links.length - 2 ? ", " : index === links.length - 2 ? " i " : ""}
+        </span>
+      ))}
+    </nav>
   );
 }
 
