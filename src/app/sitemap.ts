@@ -24,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/instruktorzy",
     "/instruktor/dodaj",
     "/studio/dodaj",
+    "/system-dla-studiow-jogi",
+    "/cennik",
     // The studio directory index. Every city it links to is in `cityRoutes` below and every
     // studio it links to is in `studioRoutes`, so nothing here reaches an unlisted page.
     "/studia",

@@ -179,6 +179,11 @@ const server = createServer((req, res) => {
     return;
   }
 
+  if (url.pathname === "/instructors/index") {
+    json(res, 200, []);
+    return;
+  }
+
   if (url.pathname === "/public/studios") {
     json(res, 200, studioExamples);
     return;
@@ -189,6 +194,36 @@ const server = createServer((req, res) => {
       { ...studioExamples[0], is_claimed: false },
       { ...studioExamples[2], is_claimed: true },
     ]);
+    return;
+  }
+
+  if (url.pathname === "/directory/cities") {
+    json(res, 200, [
+      { slug: "warszawa", name: "Warszawa", active_count: 0, published_count: 0 },
+    ]);
+    return;
+  }
+
+  if (url.pathname === "/directory/cities/warszawa") {
+    json(res, 200, {
+      summary: {
+        slug: "warszawa",
+        name: "Warszawa",
+        city_locative: "w Warszawie",
+        active_count: 0,
+        published_count: 0,
+        styles_known_count: 0,
+        pilates_count: 0,
+        meditation_count: 0,
+      },
+      studios: [],
+      styles: [],
+    });
+    return;
+  }
+
+  if (url.pathname === "/directory/studios") {
+    json(res, 200, { cities: [], towns: [] });
     return;
   }
 
