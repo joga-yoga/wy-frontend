@@ -641,6 +641,10 @@ function CtaZone({
     );
   }
 
+  if (detail.is_bookable === false) {
+    return <Button disabled className="w-full" size="cta">Rezerwacje wyłączone</Button>;
+  }
+
   if (isFull) {
     return (
       <div className="space-y-1">

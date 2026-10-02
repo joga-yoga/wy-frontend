@@ -91,6 +91,7 @@ export interface StudioFormValues {
 }
 
 export interface StudioApiResponse {
+  migration_pending?: boolean;
   id: string;
   name: string;
   slug?: string | null;

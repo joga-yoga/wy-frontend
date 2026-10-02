@@ -14,6 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -147,6 +148,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
   const [isPhoneVerificationOpen, setIsPhoneVerificationOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ id: string; file: File }[]>([]);
   const resolverSchemaRef = useRef(studioDraftSchema);
+  const [migrationPending, setMigrationPending] = useState(false);
   const submitIntentRef = useRef<SubmitIntent>("draft");
 
   // Amenities catalogue
@@ -237,6 +239,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
     axiosInstance
       .get<StudioApiResponse>(`/studios/${studioId}`)
       .then(async (response) => {
+        setMigrationPending(response.data.migration_pending === true);
         const formValues = formValuesFromStudio(response.data);
         setCurrentIsPublic(formValues.is_public);
         if (formValues.location_id) {
@@ -524,6 +527,15 @@ export function StudioForm({ routeId }: StudioFormProps) {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <form className="min-h-screen bg-background" onSubmit={(e) => e.preventDefault()}>
+        {migrationPending && (
+          <div className="mx-auto max-w-5xl rounded-lg border bg-amber-50 p-4 text-sm">
+            To prywatny szkic z importu. Zapisz zmiany, a następnie wróć do{" "}
+            <Link className="underline font-medium" href="/account/partner/studio/import/fitssey">
+              podsumowania importu
+            </Link>
+            , aby sprawdzić i opublikować studio.
+          </div>
+        )}
         <div className="flex flex-col md:flex-row">
           <StudioDashboardSidebar isLoading={isLoading} />
 
@@ -643,6 +655,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     </div>
                     <button
                       type="button"
+                      disabled={migrationPending}
                       onClick={() => setDirtyValue("is_listed", !values.is_listed)}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
                         values.is_listed ? "bg-b2b-green-text" : "bg-gray-200"
@@ -1152,11 +1165,11 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
         <DashboardFooter
           title={studioId ? "Edytuj studio" : "Nowe studio"}
-          viewPublicHref={values.slug ? `/studio/${values.slug}` : undefined}
+          viewPublicHref={!migrationPending && values.slug ? `/studio/${values.slug}` : undefined}
           viewPublicLabel="Zobacz stronę publiczną"
           viewPublicLabelShort="Zobacz"
           viewPublicIcon={<ExternalLink className="size-4" />}
-          showPublishButton
+          showPublishButton={!migrationPending}
           isPublished={currentIsPublic}
           isPublishing={isSubmitting}
           onPublishToggle={() => persist("publish")}
