@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, ChevronRight, LogOut, UserRound } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, LogOut, Plus, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -12,6 +12,8 @@ import { useAuth } from "@/context/AuthContext";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+
+import { SavedImports } from "../studio/import/fitssey/SavedImports";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -65,6 +67,17 @@ export default function MenuPage() {
         </section>
       )}
 
+      {!isLoading && managedStudios.length > 0 && (
+        <div className="rounded-b2b border bg-white overflow-hidden">
+          <MenuRow
+            href="/account/partner/studio/create"
+            title="Dodaj kolejne studio"
+            subtitle="Utwórz nowy profil studia"
+            Icon={Plus}
+          />
+        </div>
+      )}
+
       {!isLoading && hasTeachingOnly && (
         <section className="space-y-2">
           <SectionLabel>Studio</SectionLabel>
@@ -95,6 +108,7 @@ export default function MenuPage() {
         </section>
       )}
 
+      <SavedImports />
       <section className="space-y-2">
         <SectionLabel>Konto</SectionLabel>
         <div className="rounded-b2b border bg-white overflow-hidden divide-y">

@@ -123,6 +123,7 @@ export interface OccurrenceDetailBooking {
 }
 
 export interface OccurrenceDetail {
+  is_bookable?: boolean;
   id: string;
   start_time: string;
   end_time: string;
