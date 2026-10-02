@@ -54,6 +54,7 @@ export const KNOWN_ROOT_SEGMENTS = new Set([
   "cennik",
   "system-dla-studiow-jogi",
   "contact",
+  "blog",
   "policy",
   "terms",
   "delete-account",

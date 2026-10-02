@@ -42,6 +42,8 @@ async function run() {
 
   // Real routes are never touched — including a workshop that happens to be slugged "studia".
   await expect("/", next);
+  await expect("/blog", next);
+  await expect("/blog/joga-dla-poczatkujacych", next);
   await expect("/wydarzenia/studia", next);
   await expect("/studio/soulsync", next);
   await expect("/instruktor/dodaj", next);

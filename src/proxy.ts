@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { blogRouteStatus } from "@/app/(public)/blog/routing";
 import { decideRoute } from "@/lib/directoryRouting";
 import { getStyleCopy } from "@/lib/yogaStyleCopy";
 
@@ -58,6 +59,20 @@ const lists = {
 };
 
 export async function proxy(request: NextRequest) {
+  const blogStatus = await blogRouteStatus(request.nextUrl.pathname);
+  if (blogStatus) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/blog/problem/${blogStatus === 404 ? "missing" : "unavailable"}`;
+    url.search = "";
+    return NextResponse.rewrite(url, {
+      status: blogStatus,
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex",
+        ...(blogStatus === 503 ? { "Retry-After": "60" } : {}),
+      },
+    });
+  }
   const decision = await decideRoute(request.nextUrl.pathname, lists);
 
   switch (decision.kind) {
@@ -79,6 +94,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except Next internals, API routes and files.
-  matcher: ["/((?!_next|api|.*\\.).*)"],
+  // Also check dotted article slugs so unknown blog URLs receive real 404s.
+  matcher: ["/blog/:path*", "/((?!_next|api|.*\\.).*)"],
 };

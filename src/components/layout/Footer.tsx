@@ -43,7 +43,10 @@ function buildFooterSections(
       DIRECTORY_SECTION,
       {
         title: "O nas",
-        links: [{ label: "Kontakt", href: "/contact" }],
+        links: [
+          { label: "Blog", href: "/blog" },
+          { label: "Kontakt", href: "/contact" },
+        ],
       },
     ];
   }
@@ -62,7 +65,10 @@ function buildFooterSections(
     DIRECTORY_SECTION,
     {
       title: "O nas",
-      links: [{ label: "Kontakt", href: "/contact" }],
+      links: [
+        { label: "Blog", href: "/blog" },
+        { label: "Kontakt", href: "/contact" },
+      ],
     },
   ];
 }

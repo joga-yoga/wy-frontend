@@ -14,3 +14,8 @@ yarn dev
 
 4. Done, visit:
 [http://localhost:3000/](http://localhost:3000/)
+
+## Public blog
+
+The public article routes, backend API contract, local fixture setting and pre-release
+verification checklist are documented in [docs/public-blog.md](docs/public-blog.md).
