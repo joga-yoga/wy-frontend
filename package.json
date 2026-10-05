@@ -11,6 +11,7 @@
     "test:e2e": "yarn build && playwright test",
     "proto:shot": "tsx scripts/proto-shot.ts",
     "typecheck": "tsc --noEmit",
+    "test:blog": "node --import tsx tests/blog/article.test.tsx && node --import tsx src/lib/seo.test.ts && node --import tsx src/lib/directoryRouting.test.ts",
     "proto:verify": "tsx scripts/proto-verify.ts"
   },
   "dependencies": {

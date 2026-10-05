@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
 import { connection } from "next/server";
 
+import { getPublishedArticles } from "@/app/(public)/blog/api";
+import { articleSitemapEntries } from "@/app/(public)/blog/seo";
 import { cityStudiosPath, cityStylePath, styleHubPath } from "@/lib/directoryPaths";
 import { getStyleCopy } from "@/lib/yogaStyleCopy";
 
@@ -16,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/",
     "/partners",
     "/contact",
+    "/blog",
     "/policy",
     "/terms",
     // The instructor directory. Every card on it links to a claimed profile, and
@@ -180,6 +183,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to fetch style pages for sitemap", error);
   }
 
+  // Fail the sitemap request on a blog outage rather than silently deleting published
+  // URLs from a successful sitemap. Fixtures never participate, even during next dev.
+  const articleRoutes = articleSitemapEntries(await getPublishedArticles({ allowFixtures: false }));
+
   return [
     ...staticRoutes,
     ...staticWorkshopRoutes,
@@ -191,5 +198,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...cityRoutes,
     ...styleRoutes,
     ...studioRoutes,
+    ...articleRoutes,
   ];
 }
