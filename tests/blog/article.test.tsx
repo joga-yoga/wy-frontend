@@ -152,10 +152,9 @@ async function main() {
   assert.equal(await blogRouteStatus("/blog/unpublished"), 404);
   const missingResponse = await proxy(new NextRequest("http://localhost/blog/unpublished"));
   assert.equal(missingResponse.status, 404);
-  assert.match(
-    missingResponse.headers.get("x-middleware-rewrite") ?? "",
-    /\/blog\/problem\/missing$/,
-  );
+  assert.equal(missingResponse.headers.get("x-middleware-rewrite"), null);
+  assert.match(missingResponse.headers.get("content-type") ?? "", /text\/html/);
+  assert.match(await missingResponse.text(), /Nie znaleziono artykułu/);
   assert.equal(missingResponse.headers.get("cache-control"), "no-store");
   assert.equal(missingResponse.headers.get("x-robots-tag"), "noindex");
   assert.equal(await blogRouteStatus("/blog"), 503);

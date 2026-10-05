@@ -81,9 +81,11 @@ metadata and content within the render. No persistent article cache or global re
 setting is introduced, so edits are visible on the next server request.
 
 The public layout has a streaming Suspense boundary. `src/proxy.ts` therefore checks blog
-availability before streaming and rewrites errors to an internal public-layout error view
-with HTTP 404 or 503, no-store, and noindex. Service errors additionally carry Retry-After.
-Error targets are not linked or included in the sitemap. The blog root is reserved in
+availability before streaming and returns a complete HTML error document directly
+with HTTP 404 or 503, no-store, and noindex. Rewriting to a streamed page can lose the status,
+so error responses bypass App Router rendering. Client navigation falls back to a document
+request and shows the same error page with a link back to the blog. Service errors additionally
+carry Retry-After. Internal error targets have been removed. The blog root is reserved in
 directory routing; dots in unknown article slugs also pass through the blog status guard.
 The status guard and render perform separate fresh API reads. An outage between those reads
 is handled by the blog error boundary; production HTTP verification must include this

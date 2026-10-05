@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { blogProblemResponse } from "@/app/(public)/blog/problem-response";
 import { blogRouteStatus } from "@/app/(public)/blog/routing";
 import { decideRoute } from "@/lib/directoryRouting";
 import { getStyleCopy } from "@/lib/yogaStyleCopy";
@@ -60,19 +61,7 @@ const lists = {
 
 export async function proxy(request: NextRequest) {
   const blogStatus = await blogRouteStatus(request.nextUrl.pathname);
-  if (blogStatus) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/blog/problem/${blogStatus === 404 ? "missing" : "unavailable"}`;
-    url.search = "";
-    return NextResponse.rewrite(url, {
-      status: blogStatus,
-      headers: {
-        "Cache-Control": "no-store",
-        "X-Robots-Tag": "noindex",
-        ...(blogStatus === 503 ? { "Retry-After": "60" } : {}),
-      },
-    });
-  }
+  if (blogStatus) return blogProblemResponse(blogStatus);
   const decision = await decideRoute(request.nextUrl.pathname, lists);
 
   switch (decision.kind) {

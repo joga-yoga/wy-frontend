@@ -3,12 +3,17 @@ import { createServer } from "node:http";
 import { articleFixtureList, articleFixtures } from "../../src/app/(public)/blog/fixtures";
 
 let failList = false;
+let missingArticle = false;
 createServer((request, response) => {
   const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
   response.setHeader("Content-Type", "application/json");
   if (pathname === "/health") return response.end("{}");
   if (pathname === "/test-control/list-failure") {
     failList = request.method === "POST";
+    return response.end("{}");
+  }
+  if (pathname === "/test-control/article-missing") {
+    missingArticle = request.method === "POST";
     return response.end("{}");
   }
   if (pathname === "/public/articles") {
@@ -24,7 +29,9 @@ createServer((request, response) => {
   if (pathname === "/public/articles/malformed") return response.end("{}");
   if (pathname.startsWith("/public/articles/")) {
     const article = articleFixtures.find(
-      (item) => item.slug === decodeURIComponent(pathname.slice(17)),
+      (item) =>
+        item.slug === decodeURIComponent(pathname.slice(17)) &&
+        !(missingArticle && item.slug === "lokalna-praktyka"),
     );
     response.statusCode = article ? 200 : 404;
     return response.end(JSON.stringify(article ?? { detail: "Article not found" }));

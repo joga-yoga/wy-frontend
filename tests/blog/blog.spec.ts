@@ -1,5 +1,14 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "wy.cookie_consent.v1",
+      JSON.stringify({ necessary: true, analytics: false, marketing: false, decided: true }),
+    );
+  });
+});
+
 test("published list and article HTML, metadata and optional content", async ({
   page,
   request,
@@ -64,11 +73,19 @@ test("production HTTP distinguishes missing, malformed and failed upstream respo
   request,
 }) => {
   for (const userAgent of ["Mozilla/5.0", "Googlebot"]) {
-    const missing = await request.get("/blog/unknown-or-unpublished", {
-      headers: { "User-Agent": userAgent },
-    });
-    expect(missing.status()).toBe(404);
-    expect(await missing.text()).toContain("Nie znaleziono artykułu");
+    for (const path of [
+      "/blog/unknown-or-unpublished",
+      "/blog/unknown.with-dot",
+      "/blog/unknown/nested",
+      "/blog/problem/missing",
+    ]) {
+      const missing = await request.get(path, { headers: { "User-Agent": userAgent } });
+      expect(missing.status()).toBe(404);
+      expect(await missing.text()).toContain("Nie znaleziono artykułu");
+      expect(missing.headers()["content-type"]).toContain("text/html");
+      expect(missing.headers()["cache-control"]).toBe("no-store");
+      expect(missing.headers()["x-robots-tag"]).toBe("noindex");
+    }
     for (const slug of ["upstream-failure", "malformed"]) {
       const failure = await request.get(`/blog/${slug}`, { headers: { "User-Agent": userAgent } });
       expect(failure.status()).toBe(503);
@@ -82,6 +99,32 @@ test("production HTTP distinguishes missing, malformed and failed upstream respo
     expect((await request.get("/sitemap.xml")).status()).toBe(500);
   } finally {
     await request.delete("http://127.0.0.1:4020/test-control/list-failure");
+  }
+});
+
+test("client navigation to an unpublished article shows a real 404 document", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/blog");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Blog");
+  await request.post("http://127.0.0.1:4020/test-control/article-missing");
+  try {
+    const documentResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/blog/lokalna-praktyka") &&
+        response.request().isNavigationRequest(),
+    );
+    await page
+      .getByRole("link", { name: "Czytaj artykuł: Spokojna praktyka — przykład lokalny" })
+      .click();
+    expect((await documentResponse).status()).toBe(404);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nie znaleziono artykułu");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
+    await page.getByRole("link", { name: "Wróć do bloga", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Blog");
+  } finally {
+    await request.delete("http://127.0.0.1:4020/test-control/article-missing");
   }
 });
 
