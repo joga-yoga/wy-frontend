@@ -128,6 +128,37 @@ test("client navigation to an unpublished article shows a real 404 document", as
   }
 });
 
+test("blog mirror serves artykuly paths with main-domain canonicals", async ({ request }) => {
+  const headers = { host: "wiedza.joga.yoga" };
+  for (const [path, canonical] of [
+    ["/", "https://joga.yoga/blog"],
+    ["/artykuly/lokalna-praktyka", "https://joga.yoga/blog/lokalna-praktyka"],
+  ]) {
+    const response = await request.get(path, { headers });
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html.match(/<link rel="canonical"[^>]*>/g)).toEqual([
+      `<link rel="canonical" href="${canonical}"/>`,
+    ]);
+    expect(html).toContain(
+      path === "/" ? 'href="/artykuly/lokalna-praktyka"' : "Spokojna praktyka",
+    );
+  }
+  for (const path of [
+    "/artykuly/unknown",
+    "/artykuly/unknown.with-dot",
+    "/artykuly/unknown/nested",
+    "/lokalna-praktyka",
+    "/blog/lokalna-praktyka",
+  ]) {
+    const response = await request.get(path, { headers });
+    expect(response.status()).toBe(404);
+    expect(await response.text()).toContain('href="/">Wróć do bloga');
+  }
+  expect((await request.get("/artykuly/upstream-failure", { headers })).status()).toBe(503);
+  expect((await request.get("/images/logo/logo-workshops.png", { headers })).status()).toBe(200);
+});
+
 test("sitemap uses the HTTP collection and stable backend modification dates", async ({
   request,
 }) => {

@@ -4,6 +4,14 @@ Routes: `/blog` and `/blog/{slug}`, inside the existing public layout. The foote
 the blog in each public variant. Every published item has native HTML links from the list;
 there is no search, CMS or editorial interface.
 
+The production mirror at `wiedza.joga.yoga` serves the blog index at `/` and articles at
+`/artykuly/{slug}` through host-specific rewrites in `src/proxy.ts`. Blog navigation uses those
+paths on the mirror. Other page paths, including the former `/{slug}`, return HTTP 404.
+Canonical metadata, Open Graph URLs, structured data and sitemap URLs
+continue to point to `https://joga.yoga/blog` and `https://joga.yoga/blog/{slug}`.
+The same availability guard preserves HTTP 404/503 responses on both domains; framework
+endpoints, public assets, robots and the sitemap remain available without blog rewrites.
+
 ## Backend contract
 
 Implemented against the actual sibling backend code inspected on 2026-10-02:
