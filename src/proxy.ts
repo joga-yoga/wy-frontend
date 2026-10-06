@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { BLOG_MIRROR_HEADER, isBlogMirrorHost, mirrorBlogRoute } from "@/app/(public)/blog/mirror";
 import { blogProblemResponse } from "@/app/(public)/blog/problem-response";
 import { blogRouteStatus } from "@/app/(public)/blog/routing";
 import { decideRoute } from "@/lib/directoryRouting";
@@ -60,6 +61,21 @@ const lists = {
 };
 
 export async function proxy(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  // Derive this only from the incoming host; never trust a client-supplied flag.
+  requestHeaders.delete(BLOG_MIRROR_HEADER);
+  if (isBlogMirrorHost(request.headers.get("host"))) {
+    const pathname = mirrorBlogRoute(request.nextUrl.pathname);
+    if (pathname === 404) return blogProblemResponse(404, "/");
+    if (!pathname) return NextResponse.next();
+    const status = await blogRouteStatus(pathname);
+    if (status) return blogProblemResponse(status, "/");
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    // Next can replace Host with the rewrite target's host while routing locally.
+    requestHeaders.set(BLOG_MIRROR_HEADER, "1");
+    return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+  }
   const blogStatus = await blogRouteStatus(request.nextUrl.pathname);
   if (blogStatus) return blogProblemResponse(blogStatus);
   const decision = await decideRoute(request.nextUrl.pathname, lists);
@@ -75,14 +91,18 @@ export async function proxy(request: NextRequest) {
     case "rewrite": {
       const url = request.nextUrl.clone();
       url.pathname = decision.to;
-      return NextResponse.rewrite(url);
+      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
     }
     default:
-      return NextResponse.next();
+      return NextResponse.next({ request: { headers: requestHeaders } });
   }
 }
 
 export const config = {
   // Also check dotted article slugs so unknown blog URLs receive real 404s.
-  matcher: ["/blog/:path*", "/((?!_next|api|.*\\.).*)"],
+  matcher: [
+    "/blog/:path*",
+    "/((?!_next|api|.*\\.).*)",
+    { source: "/:path*", has: [{ type: "host", value: "wiedza.joga.yoga" }] },
+  ],
 };

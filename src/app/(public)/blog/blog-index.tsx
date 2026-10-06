@@ -1,10 +1,16 @@
 import Link from "next/link";
 
 import { ArticleText } from "./article-text";
-import { blogPath } from "./seo";
+import { blogNavigationPath } from "./mirror";
 import type { ArticleSummary } from "./types";
 
-export function BlogIndex({ items }: { items: ArticleSummary[] }) {
+export function BlogIndex({
+  items,
+  mirror = false,
+}: {
+  items: ArticleSummary[];
+  mirror?: boolean;
+}) {
   return (
     <main className="container-wy mx-auto px-5 md:px-8 py-10 md:py-16">
       <header className="mb-10 max-w-2xl">
@@ -22,7 +28,7 @@ export function BlogIndex({ items }: { items: ArticleSummary[] }) {
             >
               <h2 className="text-xl font-semibold leading-snug text-gray-900">
                 <Link
-                  href={blogPath(article.slug)}
+                  href={blogNavigationPath(article.slug, mirror)}
                   prefetch={false}
                   className="hover:underline underline-offset-4"
                 >
@@ -33,7 +39,7 @@ export function BlogIndex({ items }: { items: ArticleSummary[] }) {
                 <ArticleText text={article.lead || article.description} />
               </div>
               <Link
-                href={blogPath(article.slug)}
+                href={blogNavigationPath(article.slug, mirror)}
                 prefetch={false}
                 className="mt-auto text-sm font-semibold underline underline-offset-4"
                 aria-label={`Czytaj artykuł: ${article.title}`}
