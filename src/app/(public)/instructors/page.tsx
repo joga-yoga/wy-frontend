@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { connection } from "next/server";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getInstructorIndex } from "@/lib/api/getInstructorIndex";
@@ -28,6 +29,8 @@ export const metadata: Metadata = {
 };
 
 export default async function InstructorsIndexPage() {
+  // Keep the cached directory fetch at request time so an API outage cannot fail a build.
+  await connection();
   const groups = groupByCity(await getInstructorIndex());
 
   return (
