@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import { AxiosError } from "axios";
+import type { NextFetchEvent } from "next/server";
 import { NextRequest } from "next/server";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -22,7 +23,19 @@ import {
 } from "../../src/app/(public)/blog/seo";
 import { articleDetailSchema, articleListSchema } from "../../src/app/(public)/blog/types";
 import { axiosInstance } from "../../src/lib/axiosInstance";
-import { proxy } from "../../src/proxy";
+import { proxy as requestProxy } from "../../src/proxy";
+
+async function proxy(request: NextRequest) {
+  const background: Promise<unknown>[] = [];
+  const event = {
+    waitUntil: (task: Promise<unknown>) => {
+      background.push(task);
+    },
+  } as NextFetchEvent;
+  const response = await requestProxy(request, event);
+  await Promise.all(background);
+  return response;
+}
 
 async function main() {
   const html = renderToStaticMarkup(

@@ -1,8 +1,10 @@
+import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
 import { BLOG_MIRROR_HEADER, isBlogMirrorHost, mirrorBlogRoute } from "@/app/(public)/blog/mirror";
 import { blogProblemResponse } from "@/app/(public)/blog/problem-response";
 import { blogRouteStatus } from "@/app/(public)/blog/routing";
+import { cachedDirectoryList } from "@/lib/directoryListCache";
 import { decideRoute } from "@/lib/directoryRouting";
 import { getStyleCopy } from "@/lib/yogaStyleCopy";
 
@@ -21,31 +23,15 @@ import { getStyleCopy } from "@/lib/yogaStyleCopy";
  * directory existed. That is a real problem and a separate one.
  */
 
-/** A list from the directory API, refreshed lazily. A stale list can only cause a 404 for a
- *  page that has just appeared, which resolves itself within the TTL — the opposite mistake,
- *  serving an empty page that does not qualify, is the one worth avoiding. */
-const LIST_CACHE_MS = 5 * 60 * 1000;
-
 function cachedList(path: string, toKeys: (body: unknown) => string[]) {
-  let cached: { keys: Set<string>; fetchedAt: number } | null = null;
-
-  return async function keys(): Promise<Set<string> | null> {
-    if (cached && Date.now() - cached.fetchedAt < LIST_CACHE_MS) return cached.keys;
-
+  return cachedDirectoryList(async () => {
     const apiUrl = process.env.API_ENDPOINT ?? process.env.NEXT_PUBLIC_API_ENDPOINT;
     if (!apiUrl) return null;
 
-    try {
-      const response = await fetch(`${apiUrl}${path}`);
-      if (!response.ok) return cached?.keys ?? null;
-      cached = { keys: new Set(toKeys(await response.json())), fetchedAt: Date.now() };
-      return cached.keys;
-    } catch {
-      // A directory outage must not start 404ing pages that exist. Fall through to the last
-      // known list, or to letting the request pass.
-      return cached?.keys ?? null;
-    }
-  };
+    const response = await fetch(`${apiUrl}${path}`, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) return null;
+    return toKeys(await response.json());
+  });
 }
 
 const lists = {
@@ -60,7 +46,7 @@ const lists = {
   ),
 };
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const requestHeaders = new Headers(request.headers);
   // Derive this only from the incoming host; never trust a client-supplied flag.
   requestHeaders.delete(BLOG_MIRROR_HEADER);
@@ -78,7 +64,11 @@ export async function proxy(request: NextRequest) {
   }
   const blogStatus = await blogRouteStatus(request.nextUrl.pathname);
   if (blogStatus) return blogProblemResponse(blogStatus);
-  const decision = await decideRoute(request.nextUrl.pathname, lists);
+  const waitUntil = (task: Promise<unknown>) => event.waitUntil(task);
+  const decision = await decideRoute(request.nextUrl.pathname, {
+    cities: () => lists.cities(waitUntil),
+    stylePages: () => lists.stylePages(waitUntil),
+  });
 
   switch (decision.kind) {
     case "notFound":
