@@ -56,6 +56,8 @@ function descriptionFor(name: string, locative: string | null | undefined, activ
 }
 
 export async function generateMetadata({ params }: CityPageProps): Promise<Metadata> {
+  // Metadata must wait for a request too; the page's connection() does not defer it.
+  await connection();
   const { miasto } = await params;
   const payload = await getCityDirectory(miasto);
 

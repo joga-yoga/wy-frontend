@@ -5,7 +5,10 @@ import { blogProblemCopy } from "./problem-copy";
 // A rewrite into an App Router page can start streaming under HTTP 200. Return
 // the complete document here so the status is final before any body is sent.
 // HTML also makes the client router fall back to a normal document navigation.
-export function blogProblemResponse(status: 404 | 503): NextResponse {
+export function blogProblemResponse(
+  status: 404 | 503,
+  blogHome: "/" | "/blog" = "/blog",
+): NextResponse {
   const { title, description } = blogProblemCopy[status === 404 ? "missing" : "unavailable"];
   return new NextResponse(
     `<!DOCTYPE html>
@@ -26,7 +29,7 @@ export function blogProblemResponse(status: 404 | 503): NextResponse {
     a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
   </style>
 </head>
-<body><main><h1>${title}</h1><p>${description}</p><a href="/blog">Wróć do bloga</a></main></body>
+<body><main><h1>${title}</h1><p>${description}</p><a href="${blogHome}">Wróć do bloga</a></main></body>
 </html>`,
     {
       status,

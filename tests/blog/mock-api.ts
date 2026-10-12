@@ -37,6 +37,18 @@ createServer((request, response) => {
     return response.end(JSON.stringify(article ?? { detail: "Article not found" }));
   }
   // Unrelated sitemap groups can legitimately be empty in this isolated test backend.
+  if (pathname === "/instructors/index") return response.end("[]");
+  // Cache Components requires one parameter for build-time city route validation.
+  if (pathname === "/directory/cities") {
+    return response.end('[{"slug":"test-city","name":"Test city","studio_count":0}]');
+  }
+  if (pathname === "/directory/cities/test-city") {
+    response.statusCode = 404;
+    return response.end('{"detail":"Not found"}');
+  }
+  if (pathname === "/directory/studios") {
+    return response.end('{"cities":[],"towns":[]}');
+  }
   if (pathname.endsWith("/slugs") || pathname.startsWith("/directory/")) return response.end("[]");
   response.statusCode = 404;
   response.end('{"detail":"Not found"}');
