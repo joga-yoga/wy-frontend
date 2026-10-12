@@ -18,7 +18,7 @@ export const initMixpanel = () => {
   mixpanel.init(MIXPANEL_TOKEN, {
     autocapture: true,
     ignore_dnt: true,
-    api_host: "https://mix.gorbatiuk.com",
+    api_host: "https://mix.joga.yoga",
     debug: MIXPANEL_MODE === "production" ? false : true,
     // No cookies/localStorage until the user grants analytics consent;
     // Mixpanel keeps an in-memory $device_id per page load instead.
