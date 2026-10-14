@@ -184,17 +184,22 @@ async function main() {
     (await proxy(mirrorRequest("/_next/static/file.js"))).headers.get("x-middleware-rewrite"),
     null,
   );
-  axiosInstance.defaults.adapter = async (config) => ({
-    data: config.url?.endsWith("/public/articles") ? articleFixtureList() : articleFixtures[0],
-    status: 200,
-    statusText: "OK",
-    headers: {},
-    config,
-  });
+  const indexProxyRequests: string[] = [];
+  axiosInstance.defaults.adapter = async (config) => {
+    indexProxyRequests.push(config.method ?? "unknown");
+    return {
+      data: config.url?.endsWith("/public/articles") ? articleFixtureList() : articleFixtures[0],
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config,
+    };
+  };
   assert.equal(
     (await proxy(mirrorRequest("/"))).headers.get("x-middleware-rewrite"),
     "http://localhost/blog",
   );
+  assert.deepEqual(indexProxyRequests, []);
   assert.equal(
     (await proxy(new NextRequest("http://localhost/blog/lokalna-praktyka"))).status,
     200,
@@ -230,12 +235,12 @@ async function main() {
   assert.match(await missingResponse.text(), /Nie znaleziono artykułu/);
   assert.equal(missingResponse.headers.get("cache-control"), "no-store");
   assert.equal(missingResponse.headers.get("x-robots-tag"), "noindex");
-  assert.equal(await blogRouteStatus("/blog"), 503);
+  assert.equal(await blogRouteStatus("/blog"), null);
   axiosInstance.defaults.adapter = async () => {
     throw new AxiosError("offline", "ECONNREFUSED");
   };
   assert.equal(await blogRouteStatus("/blog/lokalna-praktyka"), 503);
-  assert.equal((await proxy(mirrorRequest("/"))).status, 503);
+  assert.equal((await proxy(mirrorRequest("/"))).status, 200);
   const failedResponse = await proxy(new NextRequest("http://localhost/blog/lokalna-praktyka"));
   assert.equal(failedResponse.status, 503);
   assert.equal(failedResponse.headers.get("retry-after"), "60");

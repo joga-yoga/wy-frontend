@@ -9,8 +9,10 @@ The production mirror at `wiedza.joga.yoga` serves the blog index at `/` and art
 paths on the mirror. Other page paths, including the former `/{slug}`, return HTTP 404.
 Canonical metadata, Open Graph URLs, structured data and sitemap URLs
 continue to point to `https://joga.yoga/blog` and `https://joga.yoga/blog/{slug}`.
-The same availability guard preserves HTTP 404/503 responses on both domains; framework
+The detail-route guard preserves HTTP 404/503 responses on both domains; framework
 endpoints, public assets, robots and the sitemap remain available without blog rewrites.
+Links into the blog disable automatic prefetch so unrelated pages do not trigger article
+requests in the background.
 
 ## Backend contract
 
@@ -88,17 +90,14 @@ read fresh public data after `connection()`; React `cache` deduplicates article 
 metadata and content within the render. No persistent article cache or global revalidation
 setting is introduced, so edits are visible on the next server request.
 
-The public layout has a streaming Suspense boundary. `src/proxy.ts` therefore checks blog
-availability before streaming and returns a complete HTML error document directly
-with HTTP 404 or 503, no-store, and noindex. Rewriting to a streamed page can lose the status,
-so error responses bypass App Router rendering. Client navigation falls back to a document
-request and shows the same error page with a link back to the blog. Service errors additionally
-carry Retry-After. Internal error targets have been removed. The blog root is reserved in
-directory routing; dots in unknown article slugs also pass through the blog status guard.
-The status guard and render perform separate fresh API reads. An outage between those reads
-is handled by the blog error boundary; production HTTP verification must include this
-streaming behavior. Diagnostic logs contain status/code/validation paths, not article bodies,
-credentials or axios request configuration.
+The public layout has a streaming Suspense boundary. `src/proxy.ts` checks article detail
+routes before streaming and returns complete HTML 404/503 responses, with no-store and
+noindex. Client navigation falls back to a document request with the same status. The blog
+index makes no API request in the proxy; its page loads the list once. If that read fails,
+the blog error boundary shows an error, but the streamed response may already have HTTP 200.
+The blog root is reserved in directory routing; dots in unknown article slugs also pass
+through the detail status guard. Diagnostic logs contain status/code/validation paths, not
+article bodies, credentials or axios request configuration.
 
 ## Verification commands
 
@@ -113,7 +112,7 @@ yarn playwright test --config playwright.blog.config.ts
 The Playwright suite starts an isolated HTTP contract stub and **the production frontend**
 on ports 4020/3220. It checks native server HTML, all article links, one H1, formatting,
 optional details/disclaimers, metadata/canonicals, 404 versus 503 (browser and crawler user
-agents), malformed responses, sitemap dates and production fixture isolation. Desktop and
+agents) for detail routes, malformed responses, sitemap dates and production fixture isolation. Desktop and
 mobile projects capture listing, long-article and FAQ screenshots. It must not be pointed
 at production or share a backend with other development tasks.
 
@@ -153,10 +152,10 @@ for inspecting component layout; they do not verify the shared layout or HTTP be
    articles from the consolidated collection on desktop and mobile. Confirm no text editing
    occurred in the renderer and all published articles have crawlable links.
 4. Check actual production-build HTTP responses with curl: existing detail/list 200, unknown
-   and unpublished 404, service outage 503. Verify source HTML contains the main article text,
+   and unpublished detail 404, detail service outage 503. Verify source HTML contains the main article text,
    exactly one self-canonical, truthful metadata, sitemap URLs and backend modification dates.
-   Check article updates on a subsequent request. Exercise a failure between the proxy check
-   and render as well as a sustained outage.
+   Check article updates on a subsequent request. Exercise a failure between the detail proxy
+   check and render, plus a sustained index outage.
 5. Confirm the root sitemap reads only real HTTP data with fixtures enabled and disabled.
    Restore any local outage simulation after checks.
 

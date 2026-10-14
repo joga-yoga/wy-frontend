@@ -39,7 +39,11 @@ export function ArticleView({
           </li>
           <li aria-hidden="true">/</li>
           <li>
-            <Link href={blogNavigationPath(undefined, mirror)} className="hover:underline">
+            <Link
+              href={blogNavigationPath(undefined, mirror)}
+              prefetch={false}
+              className="hover:underline"
+            >
               Blog
             </Link>
           </li>
@@ -133,6 +137,7 @@ export function ArticleView({
       <div className="mt-12 border-t pt-6">
         <Link
           href={blogNavigationPath(undefined, mirror)}
+          prefetch={false}
           className="font-semibold underline underline-offset-4"
         >
           ← Wróć do bloga

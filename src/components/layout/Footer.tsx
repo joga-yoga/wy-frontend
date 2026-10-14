@@ -90,6 +90,7 @@ const FooterSection = ({
           <li className="text-footer-links text-gray-600 hover:underline" key={link.label}>
             <Link
               href={link.href}
+              prefetch={link.href === "/blog" ? false : undefined}
               target={link.isExternal ? "_blank" : undefined}
               rel={link.isExternal ? "noopener noreferrer" : undefined}
             >
