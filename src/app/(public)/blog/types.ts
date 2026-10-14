@@ -17,14 +17,16 @@ export const articleListSchema = z
     total: z.number().int().nonnegative(),
     items: z.array(summarySchema),
   })
+  .refine((list) => list.total >= list.items.length, "Article count exceeds collection total")
   .refine(
-    (list) => list.total === list.items.length,
-    "Expected the complete unpaginated collection",
-  )
-  .refine(
-    (list) => new Set(list.items.map((item) => item.slug)).size === list.total,
+    (list) => new Set(list.items.map((item) => item.slug)).size === list.items.length,
     "Duplicate article slugs",
   );
+
+export const articleCollectionSchema = articleListSchema.refine(
+  (list) => list.total === list.items.length,
+  "Expected the complete unpaginated collection",
+);
 
 export const articleDetailSchema = summarySchema.extend({
   content: z.object({

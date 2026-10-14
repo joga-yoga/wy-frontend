@@ -1,20 +1,28 @@
 import Link from "next/link";
 
 import { ArticleText } from "./article-text";
+import { BlogPagination } from "./blog-pagination";
 import { blogNavigationPath } from "./mirror";
+import { BLOG_PAGE_SIZE } from "./pagination";
 import type { ArticleSummary } from "./types";
 
 export function BlogIndex({
   items,
   mirror = false,
+  page = 1,
+  total = items.length,
 }: {
   items: ArticleSummary[];
   mirror?: boolean;
+  page?: number;
+  total?: number;
 }) {
   return (
     <main className="container-wy mx-auto px-5 md:px-8 py-10 md:py-16">
       <header className="mb-10 max-w-2xl">
-        <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Blog</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">
+          {page === 1 ? "Blog" : `Blog – strona ${page}`}
+        </h1>
         <p className="mt-4 text-lg text-gray-600">
           Artykuły o jodze, codziennej praktyce i odpoczynku.
         </p>
@@ -52,6 +60,7 @@ export function BlogIndex({
       ) : (
         <p className="text-gray-600">Nie ma jeszcze opublikowanych artykułów.</p>
       )}
+      <BlogPagination page={page} totalPages={Math.ceil(total / BLOG_PAGE_SIZE)} mirror={mirror} />
     </main>
   );
 }

@@ -168,7 +168,78 @@ test("sitemap uses the HTTP collection and stable backend modification dates", a
   const xml = await response.text();
   expect(xml).toContain("<loc>https://joga.yoga/blog</loc>");
   expect(xml).toContain("<loc>https://joga.yoga/blog/lokalna-praktyka</loc>");
+  expect(xml).toContain("<loc>https://joga.yoga/blog/pagination-22</loc>");
   expect(xml).toContain("<lastmod>2026-09-01T12:00:00Z</lastmod>");
   expect(xml).not.toContain("upstream-failure");
   expect(xml).not.toContain("/blog/problem/");
+});
+
+test("paginated HTML stays crawlable, canonical and bounded on both domains", async ({
+  page,
+  request,
+}, testInfo) => {
+  await request.post("http://127.0.0.1:4020/test-control/list-reads");
+  const second = await request.get("/blog?page=2");
+  expect(second.status()).toBe(200);
+  const html = await second.text();
+  expect(html.match(/<article\b/g)).toHaveLength(12);
+  expect(html).not.toContain('href="/blog/lokalna-praktyka"');
+  expect(html.match(/<link rel="canonical"[^>]*>/g)).toEqual([
+    '<link rel="canonical" href="https://joga.yoga/blog?page=2"/>',
+  ]);
+  expect(html).toContain("strona 2 | joga.yoga</title>");
+  expect(html).toMatch(/<a\b(?=[^>]*href="\/blog")(?=[^>]*rel="prev")/);
+  expect(html).toMatch(/<a\b(?=[^>]*href="\/blog\?page=3")(?=[^>]*rel="next")/);
+  expect(html).not.toMatch(/<meta name="robots" content="noindex/);
+  expect(
+    (await (await request.get("http://127.0.0.1:4020/test-control/list-reads")).json()).listReads,
+  ).toBe(1);
+
+  const mirror = await request.get("/?page=2", { headers: { host: "wiedza.joga.yoga" } });
+  const mirrorHtml = await mirror.text();
+  expect(mirrorHtml).toContain('<link rel="canonical" href="https://joga.yoga/blog?page=2"/>');
+  expect(mirrorHtml).toMatch(/<a\b(?=[^>]*href="\/\?page=3")(?=[^>]*rel="next")/);
+  expect(mirrorHtml).toContain('href="/artykuly/pagination-10"');
+
+  await page.goto("/blog");
+  await expect(page.locator("main article")).toHaveCount(12);
+  await page
+    .getByRole("navigation", { name: "Paginacja bloga" })
+    .getByRole("link", { name: "Następna", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/blog\?page=2$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Blog – strona 2");
+  await expect(page.locator('nav[aria-label="Paginacja bloga"] [aria-current="page"]')).toHaveCount(1);
+  await expect(page.locator('nav[aria-label="Paginacja bloga"] [aria-current="page"]')).toHaveText("2");
+  await page.getByRole("link", { name: "Strona 3", exact: true }).click();
+  await expect(page.locator("main article")).toHaveCount(1);
+  await expect(page.locator('nav[aria-label="Paginacja bloga"] [aria-current="page"]')).toHaveCount(1);
+  await expect(page.locator('nav[aria-label="Paginacja bloga"] [aria-current="page"]')).toHaveText("3");
+  await expect(page.getByRole("link", { name: "Następna", exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.screenshot({ path: testInfo.outputPath("blog-last-page.png"), fullPage: true });
+});
+
+test("pagination normalizes duplicate first-page URLs and excludes invalid pages", async ({
+  request,
+}) => {
+  for (const [path, host] of [
+    ["/blog", "joga.yoga"],
+    ["/", "wiedza.joga.yoga"],
+  ]) {
+    const headers = { host };
+    const first = await request.get(`${path}?page=1`, { headers, maxRedirects: 0 });
+    expect(first.status()).toBe(308);
+    const destination = new URL(first.headers().location, first.url());
+    expect(destination.pathname).toBe(path);
+    expect(destination.search).toBe("");
+    for (const query of ["page=0", "page=-1", "page=1.5", "page=nope", "page=1&page=2"]) {
+      expect((await request.get(`${path}?${query}`, { headers })).status()).toBe(404);
+    }
+    const beyondEnd = await request.get(`${path}?page=99`, { headers });
+    // The shared layout can start streaming before notFound(); Next adds noindex.
+    expect(await beyondEnd.text()).toMatch(/<meta name="robots" content="noindex/);
+  }
 });
