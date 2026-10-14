@@ -23,7 +23,11 @@ still described persistence without HTTP routes at the time of inspection; the r
 routes and public response schemas are the contract used here. No provisional endpoint paths.
 
 - `GET /public/articles`: `{ total: number, items: PublicArticleSummary[] }`. Returns **all**
-  published articles ordered by title, then slug. No pagination parameters, cursors or limits.
+  published articles ordered by title, then slug when called without pagination parameters.
+  The blog requests `?limit=12&offset=0`, `?limit=12&offset=12`, etc. `limit` accepts 1–100;
+  `offset` accepts 0–2147483647. `total` always counts the whole published collection.
+  PostgreSQL selects only summary fields, extracting the lead and description from JSONB;
+  full article bodies, media and source payloads are not loaded for the listing.
 - `GET /public/articles/{slug}`: published-only detail. Unknown, draft and archived articles
   return HTTP 404 with `{ detail: "Article not found" }`. Other HTTP failures, network errors,
   timeouts, mismatched slugs and malformed payloads are service failures, not missing content.
@@ -46,6 +50,28 @@ routes and public response schemas are the contract used here. No provisional en
 `types.ts` validates both real responses and local fixtures with the same Zod schemas.
 All article HTTP calls use `src/lib/axiosInstance.ts`; no database connection or backend
 publication dataset import is used by the frontend.
+
+## Pagination and SEO
+
+The index renders 12 articles per page on the server. `/blog` is the first page; later pages
+use `/blog?page=2`, etc. Each valid page is indexable and has its own canonical, Open Graph URL
+and page-number title. Tracking parameters are omitted from canonicals. `?page=1` and leading
+zeroes permanently redirect to the normalized URL. On the mirror, navigation stays at
+`/?page=2`, with a canonical of `https://joga.yoga/blog?page=2`.
+
+Previous, next and numbered controls are HTML links with prefetch disabled. The first page
+is linked throughout the sequence. The complete unpaginated summary request is reserved for
+the sitemap so every published article URL and its modification date remain discoverable.
+These choices follow [Google's pagination guidance](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading).
+
+Malformed or repeated page numbers return 404 in the proxy without an API call. Pages past
+the end call `notFound()` after the single paginated fetch; Next adds `noindex`. Under the
+existing shared streaming layout their HTTP status may already be 200. No availability or
+count probe is added to the proxy. React `cache` shares the result between metadata and page
+rendering, so the listing performs one backend request.
+
+Release the backend pagination support before the frontend. The backend keeps the previous
+unpaginated contract for existing clients, and no database migration is required.
 
 The current content contains plain text and Markdown. The focused server renderer supports
 paragraphs, unordered/ordered/nested lists, emphasis, inline code, fenced code, quotations,
@@ -120,7 +146,18 @@ at production or share a backend with other development tasks.
 `/tmp/joga-blog-preview/` with the real Tailwind stylesheet and a system font. These files are
 for inspecting component layout; they do not verify the shared layout or HTTP behavior.
 
-## Recorded verification in this environment
+## Pagination verification (2026-10-14)
+
+- Passed: 18 backend article API tests against PostgreSQL, including page boundaries,
+  stable ordering, request bounds and summary-only query results.
+- Passed: frontend blog/SEO/routing regression scripts and lint; production webpack build,
+  including its TypeScript check, against the isolated API stub.
+- Passed: all 14 production Playwright cases on desktop and mobile, including rendered
+  pagination links, canonicals, redirects, out-of-range noindex, complete sitemap coverage,
+  one API request shared by metadata/rendering and navigation to the partial last page.
+- Reviewed the mobile last-page screenshot. No production deployment was performed.
+
+## Original blog verification (historical)
 
 - Passed: focused blog regression script, static server-rendered article/list HTML, existing
   SEO and directory-routing regression scripts, lint of touched code, scoped TypeScript check

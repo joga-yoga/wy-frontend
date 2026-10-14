@@ -15,13 +15,22 @@ import { ArticleView } from "../../src/app/(public)/blog/article-view";
 import { BlogIndex } from "../../src/app/(public)/blog/blog-index";
 import { articleFixtureList, articleFixtures } from "../../src/app/(public)/blog/fixtures";
 import { isBlogMirrorHost, mirrorBlogRoute } from "../../src/app/(public)/blog/mirror";
+import {
+  BLOG_PAGE_SIZE,
+  blogIndexPath,
+  parseBlogPage,
+} from "../../src/app/(public)/blog/pagination";
 import { blogRouteStatus } from "../../src/app/(public)/blog/routing";
 import {
   articleJsonLd,
   articleSitemapEntries,
   blogMetadata,
 } from "../../src/app/(public)/blog/seo";
-import { articleDetailSchema, articleListSchema } from "../../src/app/(public)/blog/types";
+import {
+  articleCollectionSchema,
+  articleDetailSchema,
+  articleListSchema,
+} from "../../src/app/(public)/blog/types";
 import { axiosInstance } from "../../src/lib/axiosInstance";
 import { proxy as requestProxy } from "../../src/proxy";
 
@@ -67,7 +76,30 @@ async function main() {
   for (const article of list.items) assert.ok(listingHtml.includes(`href="/blog/${article.slug}"`));
   assert.equal(listingHtml.match(/<h1\b/g)?.length, 1);
   assert.match(renderToStaticMarkup(<BlogIndex items={[]} />), /Nie ma jeszcze opublikowanych/);
-  assert.throws(() => articleListSchema.parse({ total: 5, items: [] }));
+  assert.throws(() => articleCollectionSchema.parse({ total: 5, items: [] }));
+  assert.equal(articleListSchema.parse({ total: 5, items: [] }).total, 5);
+  assert.throws(() => articleListSchema.parse({ total: 0, items: list.items }));
+  assert.throws(() => articleListSchema.parse({ total: 3, items: [list.items[0], list.items[0]] }));
+  assert.equal(parseBlogPage(undefined), 1);
+  assert.equal(parseBlogPage("02"), 2);
+  for (const invalid of [
+    "",
+    "0",
+    "-1",
+    "1.5",
+    "2junk",
+    "1e2",
+    "99999999999999999999",
+    ["1", "2"],
+  ]) {
+    assert.equal(parseBlogPage(invalid), null);
+  }
+  assert.equal(blogIndexPath(1), "/blog");
+  assert.equal(blogIndexPath(2, true), "/?page=2");
+  const pagedHtml = renderToStaticMarkup(<BlogIndex items={list.items} page={2} total={25} />);
+  assert.match(pagedHtml, /<a\b(?=[^>]*href="\/blog")(?=[^>]*rel="prev")/);
+  assert.match(pagedHtml, /<a\b(?=[^>]*href="\/blog\?page=3")(?=[^>]*rel="next")/);
+  assert.match(pagedHtml, /aria-current="page"/);
   assert.throws(() => articleDetailSchema.parse({}));
   for (const fixture of articleFixtures) {
     const article = articleDetailSchema.parse(fixture);
@@ -80,6 +112,11 @@ async function main() {
   assert.equal(articleJsonLd(articleFixtures[0]).author, undefined);
   assert.equal(articleSitemapEntries(list)[0].lastModified, "2026-09-01T12:00:00Z");
   assert.equal(blogMetadata().alternates?.canonical, "https://joga.yoga/blog");
+  const pageMetadata = blogMetadata(undefined, 2);
+  assert.equal(pageMetadata.alternates?.canonical, "https://joga.yoga/blog?page=2");
+  assert.equal(pageMetadata.openGraph?.url, "https://joga.yoga/blog?page=2");
+  assert.match(String(pageMetadata.title), /strona 2/);
+  assert.deepEqual(pageMetadata.robots, { index: true, follow: true });
 
   assert.equal(isBlogMirrorHost("wiedza.joga.yoga:3220"), true);
   assert.equal(isBlogMirrorHost("joga.yoga"), false);
@@ -146,6 +183,14 @@ async function main() {
     config,
   });
   assert.equal((await getPublishedArticles()).total, 3);
+  let paginationParams: unknown;
+  axiosInstance.defaults.adapter = async (config) => {
+    paginationParams = config.params;
+    return { data: { total: 3, items: [] }, status: 200, statusText: "OK", headers: {}, config };
+  };
+  assert.deepEqual(await getPublishedArticles({ page: 2 }), { total: 3, items: [] });
+  assert.deepEqual(paginationParams, { limit: BLOG_PAGE_SIZE, offset: BLOG_PAGE_SIZE });
+  await assert.rejects(getPublishedArticles(), /unavailable/);
   axiosInstance.defaults.adapter = async (config) => ({
     data: {},
     status: 200,
@@ -199,6 +244,17 @@ async function main() {
     (await proxy(mirrorRequest("/"))).headers.get("x-middleware-rewrite"),
     "http://localhost/blog",
   );
+  assert.deepEqual(indexProxyRequests, []);
+  assert.equal((await proxy(new NextRequest("http://localhost/blog?page=2"))).status, 200);
+  for (const query of ["page=0", "page=nope", "page=1&page=2", "page="]) {
+    assert.equal((await proxy(new NextRequest(`http://localhost/blog?${query}`))).status, 404);
+  }
+  const normalized = await proxy(new NextRequest("http://localhost/blog?page=1&utm_source=test"));
+  assert.equal(normalized.status, 308);
+  assert.equal(normalized.headers.get("location"), "http://localhost/blog?utm_source=test");
+  const normalizedMirror = await proxy(mirrorRequest("/?page=02"));
+  assert.equal(normalizedMirror.status, 308);
+  assert.equal(normalizedMirror.headers.get("location"), "http://localhost/?page=2");
   assert.deepEqual(indexProxyRequests, []);
   assert.equal(
     (await proxy(new NextRequest("http://localhost/blog/lokalna-praktyka"))).status,

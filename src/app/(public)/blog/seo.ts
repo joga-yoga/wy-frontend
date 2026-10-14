@@ -2,15 +2,18 @@ import type { Metadata, MetadataRoute } from "next";
 
 import { buildPageMetadata, PROJECT_SEO } from "@/lib/seo";
 
+import { blogIndexPath } from "./pagination";
 import type { ArticleDetail, ArticleList } from "./types";
 
 export const blogPath = (slug?: string) => (slug ? `/blog/${encodeURIComponent(slug)}` : "/blog");
 export const blogUrl = (slug?: string) => `${PROJECT_SEO.baseUrl}${blogPath(slug)}`;
 
-export function blogMetadata(article?: ArticleDetail): Metadata {
+export function blogMetadata(article?: ArticleDetail, page = 1): Metadata {
   const title = article
     ? `${article.seo_metadata.title || article.title} | joga.yoga`
-    : "Blog o jodze i praktyce | joga.yoga";
+    : page === 1
+      ? "Blog o jodze i praktyce | joga.yoga"
+      : `Blog o jodze i praktyce – strona ${page} | joga.yoga`;
   const description =
     article?.seo_metadata.description ||
     article?.description ||
@@ -20,7 +23,7 @@ export function blogMetadata(article?: ArticleDetail): Metadata {
     project: "workshops",
     title,
     description,
-    path: blogPath(article?.slug),
+    path: article ? blogPath(article.slug) : blogIndexPath(page),
     noIndex: robots.includes("noindex") || robots.includes("none"),
   });
   return {

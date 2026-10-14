@@ -1,11 +1,13 @@
 import { createServer } from "node:http";
 
-import { articleFixtureList, articleFixtures } from "../../src/app/(public)/blog/fixtures";
+import { paginationArticles } from "./pagination-fixtures";
 
 let failList = false;
 let missingArticle = false;
+let listReads = 0;
 createServer((request, response) => {
-  const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+  const url = new URL(request.url ?? "/", "http://localhost");
+  const { pathname } = url;
   response.setHeader("Content-Type", "application/json");
   if (pathname === "/health") return response.end("{}");
   if (pathname === "/test-control/list-failure") {
@@ -16,10 +18,28 @@ createServer((request, response) => {
     missingArticle = request.method === "POST";
     return response.end("{}");
   }
+  if (pathname === "/test-control/list-reads") {
+    if (request.method === "POST") listReads = 0;
+    return response.end(JSON.stringify({ listReads }));
+  }
   if (pathname === "/public/articles") {
+    listReads++;
     response.statusCode = failList ? 503 : 200;
+    const offset = Number(url.searchParams.get("offset") ?? 0);
+    const limit = Number(url.searchParams.get("limit") ?? paginationArticles.length);
+    const items = paginationArticles.slice(offset, offset + limit).map((article) => ({
+      slug: article.slug,
+      title: article.title,
+      description: article.description,
+      lead: article.lead,
+      canonical_url: article.canonical_url,
+      updated_at: article.updated_at,
+      published_at: article.published_at,
+    }));
     return response.end(
-      JSON.stringify(failList ? { detail: "Synthetic outage" } : articleFixtureList()),
+      JSON.stringify(
+        failList ? { detail: "Synthetic outage" } : { total: paginationArticles.length, items },
+      ),
     );
   }
   if (pathname === "/public/articles/upstream-failure") {
@@ -28,7 +48,7 @@ createServer((request, response) => {
   }
   if (pathname === "/public/articles/malformed") return response.end("{}");
   if (pathname.startsWith("/public/articles/")) {
-    const article = articleFixtures.find(
+    const article = paginationArticles.find(
       (item) =>
         item.slug === decodeURIComponent(pathname.slice(17)) &&
         !(missingArticle && item.slug === "lokalna-praktyka"),
