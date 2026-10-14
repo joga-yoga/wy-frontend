@@ -13,7 +13,9 @@ export default function BlogError({ reset }: { reset: () => void }) {
       <div className="mt-6 flex flex-wrap gap-3">
         <Button onClick={reset}>Spróbuj ponownie</Button>
         <Button asChild variant="outline">
-          <Link href="/blog">Wróć do bloga</Link>
+          <Link href="/blog" prefetch={false}>
+            Wróć do bloga
+          </Link>
         </Button>
       </div>
     </main>

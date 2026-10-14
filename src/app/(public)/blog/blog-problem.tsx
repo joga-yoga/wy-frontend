@@ -11,7 +11,9 @@ export function BlogProblem({ missing = false }: { missing?: boolean }) {
       <h1 className="text-3xl font-semibold">{title}</h1>
       <p className="mt-4 text-lg text-gray-600">{description}</p>
       <Button asChild variant="outline" className="mt-6">
-        <Link href="/blog">Wróć do bloga</Link>
+        <Link href="/blog" prefetch={false}>
+          Wróć do bloga
+        </Link>
       </Button>
     </main>
   );
