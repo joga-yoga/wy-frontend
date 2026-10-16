@@ -41,6 +41,7 @@ export interface PaymentMethodSectionProps {
   onChange: (method: PaymentMethod) => void;
   onlineMethods: OnlinePaymentMethod[];
   acceptsCash: boolean;
+  solo?: boolean;
 }
 
 export function PaymentMethodSection({
@@ -48,6 +49,7 @@ export function PaymentMethodSection({
   onChange,
   onlineMethods,
   acceptsCash,
+  solo = false,
 }: PaymentMethodSectionProps) {
   // Cash and online are independent, not alternatives — a studio may offer both, and turning
   // one on must not turn the other off.
@@ -61,8 +63,10 @@ export function PaymentMethodSection({
         {acceptsCash && (
           <OptionRow
             icon={<Banknote className="h-5 w-5 text-gray-700" />}
-            title="Gotówką na miejscu"
-            subtitle="Zapłać w studiu przed zajęciami"
+            title={solo ? "Płatność na miejscu" : "Gotówką na miejscu"}
+            subtitle={
+              solo ? "Do zapłaty na miejscu przed zajęciami" : "Zapłać w studiu przed zajęciami"
+            }
             right={<OptionRadio selected={method === "cash"} />}
             selected={method === "cash"}
             onClick={() => onChange("cash")}

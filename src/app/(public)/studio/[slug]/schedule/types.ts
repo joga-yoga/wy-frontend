@@ -3,6 +3,11 @@ import type { ClassColor } from "@/lib/classColors";
 export type { ClassColor };
 
 export interface PublicOccurrence {
+  organizer_kind?: "studio" | "solo";
+  address?: string | null;
+  venue_name?: string | null;
+  price?: number | null;
+  currency?: string | null;
   id: string;
   start_time: string;
   end_time: string;
@@ -78,6 +83,7 @@ export interface OccurrenceDetailStudioLocation {
 }
 
 export interface OccurrenceDetailStudio {
+  organizer_kind?: "studio" | "solo";
   id: string;
   name: string;
   slug?: string | null;

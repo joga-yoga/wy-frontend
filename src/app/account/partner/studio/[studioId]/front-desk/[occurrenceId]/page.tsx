@@ -197,6 +197,7 @@ export default function FrontDeskRosterPage() {
   useSetPageHeaderAction(
     session && session.role === "owner" && session.status !== "cancelled" ? (
       <SessionOverflowMenu
+        solo={session.organizer_kind === "solo"}
         occurrenceId={occurrenceId}
         recurrenceFrequency={session.recurrence_frequency}
         recurrenceDays={session.recurrence_days}
@@ -440,7 +441,7 @@ export default function FrontDeskRosterPage() {
         key: "drop_in",
         fundingType: "drop_in",
         label: `Pojedyncze wejście · ${options.drop_in_price.toLocaleString("pl-PL")} ${sym}`,
-        detail: "Gotówka na miejscu",
+        detail: session?.organizer_kind === "solo" ? "Płatność na miejscu" : "Gotówka na miejscu",
       });
     }
     // A studio can offer a dozen passes. T4-v2 collapses them behind one "Kup karnet" row

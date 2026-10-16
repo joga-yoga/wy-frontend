@@ -23,6 +23,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
 import { importError, importsApi } from "./api";
 import { ImportProgress } from "./ImportProgress";
@@ -32,6 +33,7 @@ import { issueLabels, kinds, type ReviewIssue } from "./types";
 import { useImportJob } from "./useImportJob";
 
 export function ImportWorkspace({ id }: { id: string }) {
+  const { capabilities } = usePartnerCapabilities();
   const { job, setJob, error: loadError, refresh } = useImportJob(id);
   const [phone, setPhone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -219,9 +221,15 @@ export function ImportWorkspace({ id }: { id: string }) {
       <Dialog open={confirm} onOpenChange={setConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Przenieść wybrane dane?</DialogTitle>
+            <DialogTitle>
+              {capabilities?.businessMode == null
+                ? "Zarządzanie studiem"
+                : "Przenieść wybrane dane?"}
+            </DialogTitle>
             <DialogDescription>
-              Powstaną prywatne studia. Możesz edytować je przed publikacją.
+              {capabilities?.businessMode == null
+                ? "Wybierasz zarządzanie studiem. Po zapisaniu to konto pozostanie w tym trybie. Aby prowadzić również własny grafik jako samodzielny instruktor, załóż osobne konto z innym adresem e-mail."
+                : "Powstaną prywatne studia. Możesz edytować je przed publikacją."}
             </DialogDescription>
           </DialogHeader>
           <p>
@@ -241,7 +249,11 @@ export function ImportWorkspace({ id }: { id: string }) {
               Wróć do wyboru
             </Button>
             <Button variant="green" disabled={!ack || busy} onClick={start}>
-              {busy ? "Uruchamianie…" : "Rozpocznij import"}
+              {busy
+                ? "Uruchamianie…"
+                : capabilities?.businessMode == null
+                  ? "Potwierdź i importuj"
+                  : "Rozpocznij import"}
             </Button>
           </DialogFooter>
         </DialogContent>

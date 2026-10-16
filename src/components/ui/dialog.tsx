@@ -35,7 +35,12 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
   );
 }
 
-function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
+function DialogContent({
+  className,
+  children,
+  closeLabel = "Close",
+  ...props
+}: DialogPrimitive.Popup.Props & { closeLabel?: string }) {
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -50,7 +55,7 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.
         {children}
         <DialogPrimitive.Close className="bg-secondary text-secondary-foreground hover:bg-secondary/80 absolute top-2 right-2 rounded-full p-2 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-open:bg-accent data-open:text-muted-foreground">
           <XIcon className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{closeLabel}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Popup>
     </DialogPortal>

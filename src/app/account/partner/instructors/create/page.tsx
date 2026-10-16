@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -569,6 +570,9 @@ type EmailForm = z.infer<typeof emailSchema>;
 
 function LegacyAddInstructorFlow() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnToSolo = searchParams.get("returnTo") === "solo";
+  const { refetch: refetchCapabilities } = usePartnerCapabilities();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -596,17 +600,8 @@ function LegacyAddInstructorFlow() {
 
   useEffect(() => {
     axiosInstance
-      .get<Array<{ is_claimed: boolean; email: string | null }>>("/instructors")
-      .then(({ data }) => {
-        const claimed =
-          user != null &&
-          data.some(
-            (i) =>
-              i.is_claimed === true ||
-              (i.email && i.email.toLowerCase() === user.email.toLowerCase()),
-          );
-        setAlreadyClaimed(claimed);
-      })
+      .get<{ has_instructor_profile: boolean }>("/partner/capabilities")
+      .then(({ data }) => setAlreadyClaimed(data.has_instructor_profile))
       .catch(() => {
         // silently ignore — just show "It's me" by default
       });
@@ -616,8 +611,13 @@ function LegacyAddInstructorFlow() {
     setIsItsMe(true);
     try {
       const res = await axiosInstance.post<{ id: string }>("/instructors/self", {});
+      refetchCapabilities();
       toast({ description: "Twój profil instruktora gotowy!" });
-      router.push(`/account/partner/instructors/${res.data.id}/edit`);
+      router.push(
+        returnToSolo
+          ? "/account/partner/solo-booking"
+          : `/account/partner/instructors/${res.data.id}/edit`,
+      );
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({ description: detail || "Nie udało się utworzyć profilu.", variant: "destructive" });

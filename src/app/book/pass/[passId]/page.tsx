@@ -74,6 +74,7 @@ function CheckoutScreen({
       />
 
       <PaymentMethodSection
+        solo={detail.studio.organizer_kind === "solo"}
         method={paymentMethod}
         onChange={onPaymentMethodChange}
         onlineMethods={detail.studio.online_payment_methods ?? []}
@@ -86,7 +87,9 @@ function CheckoutScreen({
         <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
           <Banknote className="h-[18px] w-[18px] shrink-0 text-brand-green-700" />
           <span>
-            {payingCash ? `${price} · płatność gotówką na miejscu` : `${price} · płatność online`}
+            {payingCash
+              ? `${price} · ${detail.studio.organizer_kind === "solo" ? "płatność na miejscu" : "płatność gotówką na miejscu"}`
+              : `${price} · płatność online`}
           </span>
         </div>
         <Button
@@ -107,6 +110,7 @@ function CheckoutScreen({
 
 function ConfirmationScreen({ purchase }: { purchase: PassPurchaseOut }) {
   const router = useRouter();
+  const isSolo = purchase.organizer_kind === "solo";
 
   return (
     <div className="mx-auto max-w-md px-4 py-8 text-center">
@@ -114,7 +118,9 @@ function ConfirmationScreen({ purchase }: { purchase: PassPurchaseOut }) {
         <Check className="h-7 w-7 text-brand-green-700" />
       </div>
       <h1 className="mt-4 text-2xl font-extrabold text-gray-900">Karnet kupiony!</h1>
-      <p className="mt-1.5 text-sm text-gray-500">Karnet czeka na Ciebie w studiu.</p>
+      <p className="mt-1.5 text-sm text-gray-500">
+        {isSolo ? "Karnet jest gotowy do wykorzystania." : "Karnet czeka na Ciebie w studiu."}
+      </p>
 
       <div className="mt-6 divide-y divide-gray-100 text-left">
         <DetailRow label="Karnet" value={purchase.pass_name} />
@@ -133,8 +139,8 @@ function ConfirmationScreen({ purchase }: { purchase: PassPurchaseOut }) {
       </div>
 
       <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-left text-sm text-gray-600">
-        Zapłać {formatMoney(purchase.amount_owed, purchase.currency)} gotówką w recepcji przed
-        pierwszym wejściem.
+        Zapłać {formatMoney(purchase.amount_owed, purchase.currency)}{" "}
+        {isSolo ? "na miejscu" : "gotówką w recepcji"} przed pierwszym wejściem.
       </div>
 
       <div className="mt-6">
@@ -143,10 +149,16 @@ function ConfirmationScreen({ purchase }: { purchase: PassPurchaseOut }) {
           style={{ background: "#1a1a1a" }}
           size="cta"
           onClick={() =>
-            router.push(purchase.studio_slug ? `/studio/${purchase.studio_slug}/schedule` : "/")
+            router.push(
+              isSolo && purchase.instructor_slug
+                ? `/instruktor/${purchase.instructor_slug}/grafik`
+                : purchase.studio_slug
+                  ? `/studio/${purchase.studio_slug}/schedule`
+                  : "/",
+            )
           }
         >
-          Wróć do grafiku studia
+          {isSolo ? "Wróć do grafiku" : "Wróć do grafiku studia"}
         </Button>
       </div>
     </div>

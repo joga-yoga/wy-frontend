@@ -99,6 +99,11 @@ export default async function InstructorClassesPage({ params }: Props) {
                 <ClassCard
                   key={item.id}
                   studioSlug={primaryStudio?.slug ?? ""}
+                  href={
+                    !primaryStudio?.slug
+                      ? `/instruktor/${instructor.slug}/grafik?class=${item.slug}`
+                      : undefined
+                  }
                   item={item}
                   studioName={primaryStudio?.name}
                 />

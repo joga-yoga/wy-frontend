@@ -378,7 +378,7 @@ function AboutClassSection({ detail }: { detail: OccurrenceDetail }) {
 function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
   const hasDropIn = studio.drop_in_price != null;
   const hasPricing = hasPassPricing(studio.passes, studio.drop_in_price);
-  const hasSportCards = studio.accepts_sport_cards != null;
+  const hasSportCards = studio.organizer_kind !== "solo" && studio.accepts_sport_cards != null;
   if (!hasPricing && !hasSportCards) return null;
 
   return (
@@ -642,7 +642,11 @@ function CtaZone({
   }
 
   if (detail.is_bookable === false) {
-    return <Button disabled className="w-full" size="cta">Rezerwacje wyłączone</Button>;
+    return (
+      <Button disabled className="w-full" size="cta">
+        Rezerwacje wyłączone
+      </Button>
+    );
   }
 
   if (isFull) {

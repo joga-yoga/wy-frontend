@@ -59,7 +59,13 @@ import type {
 
 type View = "loading" | "empty" | "configured" | "adding" | "form";
 
-export function OnlinePaymentsSection({ studioId }: { studioId: string }) {
+export function OnlinePaymentsSection({
+  studioId,
+  solo = false,
+}: {
+  studioId: string;
+  solo?: boolean;
+}) {
   const [config, setConfig] = useState<StudioPaymentConfig | null>(null);
   const [view, setView] = useState<View>("loading");
   const [selected, setSelected] = useState<ProviderManifest | null>(null);
@@ -218,7 +224,9 @@ export function OnlinePaymentsSection({ studioId }: { studioId: string }) {
             pobiera żadnej prowizji.
           </p>
           <p className="text-[13px] leading-snug text-gray-500">
-            Płatność gotówką działa niezależnie — włączenie płatności online niczego w niej nie
+            {solo
+              ? "Płatność na miejscu działa niezależnie — włączenie płatności online niczego w niej nie"
+              : "Płatność gotówką działa niezależnie — włączenie płatności online niczego w niej nie"}
             zmienia.
           </p>
           <Button variant="green" className="w-full" onClick={() => setView("adding")}>
@@ -241,7 +249,9 @@ export function OnlinePaymentsSection({ studioId }: { studioId: string }) {
                 <p className="text-xs text-gray-500">
                   {isOnline
                     ? `Przez ${config.current?.display_name}`
-                    : "Wyłączone — klientki i klienci zapłacą tylko gotówką"}
+                    : solo
+                      ? "Wyłączone — płatność na miejscu"
+                      : "Wyłączone — klientki i klienci zapłacą tylko gotówką"}
                 </p>
               </div>
               <Switch
@@ -401,7 +411,9 @@ export function OnlinePaymentsSection({ studioId }: { studioId: string }) {
           </div>
 
           <p className="px-1 text-xs leading-snug text-gray-500">
-            Płatność gotówką działa niezależnie i pozostaje włączona. Dane wyłączonych operatorów
+            {solo
+              ? "Płatność na miejscu działa niezależnie i pozostaje włączona. Dane wyłączonych operatorów"
+              : "Płatność gotówką działa niezależnie i pozostaje włączona. Dane wyłączonych operatorów"}
             zachowujemy — powrót do nich nie wymaga wpisywania ich ponownie.
           </p>
         </div>

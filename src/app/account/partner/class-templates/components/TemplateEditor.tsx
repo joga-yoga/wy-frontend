@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAssignableInstructors, useAssignableStudioId } from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -24,6 +25,7 @@ import { CLASS_COLORS, type ClassColor, COLOR_LABELS, COLOR_SWATCH_MAP } from "@
 import { cn } from "@/lib/utils";
 
 import type { ClassTemplate, ClassTemplateCreate } from "../types";
+import { type SoloVenue, SoloVenueInput } from "./SoloVenueInput";
 
 interface TemplateEditorProps {
   initial?: ClassTemplate | null;
@@ -72,6 +74,16 @@ export function TemplateEditor({
   onCancel,
   pinFooter = false,
 }: TemplateEditorProps) {
+  const { capabilities } = usePartnerCapabilities();
+  const isSolo = Boolean(capabilities?.soloStudioId);
+  const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : "");
+  const [currency, setCurrency] = useState(initial?.currency ?? "PLN");
+  const [venue, setVenue] = useState<SoloVenue>({
+    location: initial?.location ?? {},
+    studioId: initial?.venue_source_studio_id ?? null,
+    directoryId: initial?.venue_source_directory_id ?? null,
+    showName: initial?.show_venue_name ?? false,
+  });
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
@@ -144,7 +156,30 @@ export function TemplateEditor({
     // silently did nothing. That was survivable when clearing meant finding a small `X` beside
     // the dropdown; it is not, now that "Brak prowadzącego" is a row the user deliberately
     // picks and expects to stick.
-    data.default_instructor_id = defaultInstructorId || null;
+    data.default_instructor_id = isSolo
+      ? capabilities?.selfInstructorId
+      : defaultInstructorId || null;
+    if (isSolo) {
+      if (!initial?.terms_locked) {
+        if (
+          price === "" ||
+          !Number.isFinite(Number(price)) ||
+          !venue.location.address_line1?.trim()
+        ) {
+          toast({
+            description: "Podaj cenę jednego wejścia i fizyczny adres zajęć.",
+            variant: "destructive",
+          });
+          return;
+        }
+        data.price = Number(price);
+        data.currency = currency;
+        data.location = venue.location;
+        data.venue_source_studio_id = venue.studioId;
+        data.venue_source_directory_id = venue.directoryId;
+      }
+      data.show_venue_name = venue.showName;
+    }
     if (defaultCapacity) data.default_capacity = parseInt(defaultCapacity, 10);
     data.image_ids = isImageRemoved ? null : imageId ? [imageId] : undefined;
     await onSubmit(data);
@@ -310,6 +345,42 @@ export function TemplateEditor({
         </div>
       </section>
 
+      {isSolo && (
+        <section className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="solo-price">Cena jednego wejścia</Label>
+              <Input
+                id="solo-price"
+                type="number"
+                step="0.01"
+                value={price}
+                onChange={(event) => setPrice(event.target.value)}
+                disabled={initial?.terms_locked}
+              />
+            </div>
+            <div>
+              <Label htmlFor="solo-currency">Waluta</Label>
+              <Select value={currency} onValueChange={setCurrency} disabled={initial?.terms_locked}>
+                <SelectTrigger id="solo-currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PLN">zł</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <SoloVenueInput value={venue} onChange={setVenue} locked={initial?.terms_locked} />
+          {initial?.terms_locked && (
+            <p className="text-sm text-muted-foreground">
+              Dla innej ceny lub miejsca utwórz nowy szablon i grafik.
+            </p>
+          )}
+        </section>
+      )}
+
       <section className="space-y-4">
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -321,9 +392,10 @@ export function TemplateEditor({
         </div>
 
         <div className="space-y-3">
-          <div>
-            <Label>Domyślny prowadzący</Label>
-            {/* The same picker the session-creation flow uses (WY-67). Not a `<Select>`: the
+          {!isSolo && (
+            <div>
+              <Label>Domyślny prowadzący</Label>
+              {/* The same picker the session-creation flow uses (WY-67). Not a `<Select>`: the
                 choice needs to show who each person is and whether they are connected yet,
                 which a dropdown of bare names cannot — `InstructorPicker`'s own docstring
                 makes the argument, and the two forms asking the same question differently was
@@ -335,17 +407,18 @@ export function TemplateEditor({
 
                 `currentId={null}` + `otherLabel=""`: a template has no assignment being
                 replaced, so the default "Zastępstwo" subtitle would be nonsense here. */}
-            <div className="mt-1">
-              <InstructorPicker
-                instructors={instructors}
-                selectedId={defaultInstructorId}
-                currentId={null}
-                onSelect={setDefaultInstructorId}
-                allowNone
-                otherLabel=""
-              />
+              <div className="mt-1">
+                <InstructorPicker
+                  instructors={instructors}
+                  selectedId={defaultInstructorId}
+                  currentId={null}
+                  onSelect={setDefaultInstructorId}
+                  allowNone
+                  otherLabel=""
+                />
+              </div>
             </div>
-          </div>
+          )}
           <div>
             <Label htmlFor="capacity">Domyślny limit</Label>
             <Input

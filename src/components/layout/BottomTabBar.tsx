@@ -53,7 +53,9 @@ export function BottomTabBar() {
 
   const hasGrafik = Boolean(
     capabilities &&
-      (capabilities.managedStudios.length > 0 || capabilities.teachingStudios.length > 0),
+      (capabilities.managedStudios.length > 0 ||
+        capabilities.teachingStudios.length > 0 ||
+        capabilities.soloStudioId),
   );
 
   // Amber dot on the Grafik icon whenever reconciliation has anything pending —

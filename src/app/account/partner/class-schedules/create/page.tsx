@@ -104,6 +104,10 @@ export default function CreateScheduleWizard() {
   // studio via `?studio_id=`; fall back to the partner's one managed studio otherwise.
   useEffect(() => {
     if (!capabilities) return;
+    if (capabilities.soloStudioId) {
+      setStudioId(capabilities.soloStudioId);
+      return;
+    }
     const requested = searchParams.get("studio_id");
     const match = requested && capabilities.managedStudios.find((s) => s.id === requested);
     if (match) {
@@ -223,7 +227,11 @@ export default function CreateScheduleWizard() {
       studio_id: studioId,
       room_id: roomId || undefined,
       capacity: capacity ? parseInt(capacity, 10) : undefined,
-      instructor_ids: instructorId ? [instructorId] : undefined,
+      instructor_ids: capabilities?.soloStudioId
+        ? undefined
+        : instructorId
+          ? [instructorId]
+          : undefined,
       frequency,
       days: frequency === "weekly" ? selectedDays : undefined,
       from_date: formatDate(fromDate),
@@ -232,6 +240,7 @@ export default function CreateScheduleWizard() {
     };
   }, [
     selectedTemplate,
+    capabilities?.soloStudioId,
     studioId,
     roomId,
     capacity,
@@ -410,6 +419,7 @@ export default function CreateScheduleWizard() {
       {step === "recurrence" && selectedTemplate && (
         <div className="space-y-5">
           <ScheduleRecurrenceForm
+            solo={Boolean(capabilities?.soloStudioId)}
             templateTitle={selectedTemplate.title}
             templateSubtitle={`${selectedTemplate.duration_minutes} min${
               selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""

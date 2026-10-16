@@ -9,6 +9,7 @@ import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
@@ -33,6 +34,8 @@ interface PassOption {
  * buy-and-use booking is priced — no reception-specific payment logic.
  */
 export default function SellPassPage() {
+  const { capabilities } = usePartnerCapabilities();
+  const isSolo = Boolean(capabilities?.soloStudioId);
   const { studioId } = useParams<{ studioId: string }>();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -131,7 +134,8 @@ export default function SellPassPage() {
         <div className="space-y-1.5">
           <h2 className="text-xl font-bold text-gray-900">Sprzedano karnet</h2>
           <p className="text-sm text-gray-500">
-            {sold.pass_name} · {formatMoney(sold.price)} · gotówka na miejscu
+            {sold.pass_name} · {formatMoney(sold.price)} ·{" "}
+            {isSolo ? "płatność na miejscu" : "gotówka na miejscu"}
           </p>
         </div>
       </div>
@@ -239,7 +243,7 @@ export default function SellPassPage() {
             <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-4 py-3">
               <CreditCard size={15} className="mt-0.5 shrink-0 text-gray-400" />
               <p className="text-[13px] leading-snug text-gray-600">
-                Gotówka na miejscu ·{" "}
+                {isSolo ? "Płatność na miejscu" : "Gotówka na miejscu"} ·{" "}
                 <span className="font-semibold text-gray-900">
                   {selectedPass.price.toLocaleString("pl-PL")}{" "}
                   {getCurrencySymbol(selectedPass.currency || "PLN")}

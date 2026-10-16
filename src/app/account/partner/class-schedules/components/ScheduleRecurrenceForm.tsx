@@ -38,6 +38,7 @@ const DAYS = [
 ] as const;
 
 interface ScheduleRecurrenceFormProps {
+  solo?: boolean;
   // Template info (pinned card)
   templateTitle: string;
   templateSubtitle: string;
@@ -97,6 +98,7 @@ interface ScheduleRecurrenceFormProps {
 }
 
 export function ScheduleRecurrenceForm({
+  solo = false,
   templateTitle,
   templateSubtitle,
   templateDate,
@@ -332,24 +334,26 @@ export function ScheduleRecurrenceForm({
         )}
       </div>
 
-      <div>
-        <Label>
-          Prowadzący
-          {defaultInstructorId && instructorId === defaultInstructorId && (
-            <span className="ml-1 text-xs text-gray-400">· z szablonu</span>
-          )}
-        </Label>
-        <div className="mt-1">
-          <InstructorPicker
-            instructors={instructors}
-            selectedId={instructorId}
-            currentId={null}
-            onSelect={onInstructorChange}
-            allowNone
-            otherLabel=""
-          />
+      {!solo && (
+        <div>
+          <Label>
+            Prowadzący
+            {defaultInstructorId && instructorId === defaultInstructorId && (
+              <span className="ml-1 text-xs text-gray-400">· z szablonu</span>
+            )}
+          </Label>
+          <div className="mt-1">
+            <InstructorPicker
+              instructors={instructors}
+              selectedId={instructorId}
+              currentId={null}
+              onSelect={onInstructorChange}
+              allowNone
+              otherLabel=""
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <Label>

@@ -62,7 +62,7 @@ function formatLastVisit(iso: string | null): string | null {
 }
 
 export default function ClientsListPage() {
-  const { studio, isLoading: isStudioLoading } = useCurrentStudio();
+  const { studio, isLoading: isStudioLoading, isSolo } = useCurrentStudio();
   const [search, setSearch] = useState("");
   const [clients, setClients] = useState<ClientListItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,7 +119,7 @@ export default function ClientsListPage() {
 
       {!isLoading && clients && clients.length === 0 && (
         <p className="px-1 py-8 text-center text-sm text-gray-400">
-          {search ? "Brak wyników." : "Brak klientów studia."}
+          {search ? "Brak wyników." : isSolo ? "Brak klientów." : "Brak klientów studia."}
         </p>
       )}
 

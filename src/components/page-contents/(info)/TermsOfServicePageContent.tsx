@@ -16,6 +16,10 @@ export const TermsOfServicePageContent = () => {
               1.1. Niniejszy regulamin (&quot;Regulamin&quot;) określa zasady korzystania z serwisu
               internetowego <strong>joga.yoga</strong> (&quot;Serwis&quot;).
             </p>
+            <p>
+              Jedno konto służy do zarządzania studiem albo własnymi zajęciami. Aby korzystać z obu
+              form, użyj oddzielnych kont z różnymi adresami e-mail.
+            </p>
             <p className="mb-4">
               1.2. Operatorem Serwisu jest [dane podmiotu zostaną uzupełnione po rejestracji firmy].
             </p>

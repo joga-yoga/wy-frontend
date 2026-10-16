@@ -49,7 +49,9 @@ export function fundingDetailLine(entry: RosterEntry): string | null {
     }
     case "drop_in": {
       const method = entry.payment_method
-        ? (PAYMENT_METHOD_LABELS[entry.payment_method] ?? entry.payment_method)
+        ? entry.payment_method === "cash" && entry.organizer_kind === "solo"
+          ? "płatność na miejscu"
+          : (PAYMENT_METHOD_LABELS[entry.payment_method] ?? entry.payment_method)
         : null;
       return method ? `${method} · drop-in` : "drop-in";
     }

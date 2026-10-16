@@ -179,7 +179,8 @@ export default function BookingsPage() {
             <div className="flex items-start gap-2 rounded-xl bg-gray-50 px-4 py-3">
               <CalendarPlus size={16} className="mt-0.5 shrink-0 text-gray-400" />
               <p className="text-xs text-gray-500">
-                Prowadzisz studio lub zajęcia? Utwórz studio w Menu — wtedy pojawi się tab Grafik.
+                Prowadzisz studio lub własne zajęcia? Wybierz sposób zarządzania w Menu, aby
+                otworzyć Grafik.
               </p>
             </div>
           )}

@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 import type { DirectoryStudioDetail } from "@/types/studio";
 
@@ -19,15 +21,27 @@ import type { DirectoryStudioDetail } from "@/types/studio";
  */
 export function ClaimStudioForm({ listing }: { listing: DirectoryStudioDetail }) {
   const router = useRouter();
+  const { user } = useAuth();
+  const { confirmMode, dialog } = useBusinessModeConfirmation();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const claimPath = `/studia/przejmij/${listing.external_id}`;
 
   async function claim() {
+    if (pending) return;
+    if (!user) {
+      router.push(`/account/login?next=${encodeURIComponent(claimPath)}`);
+      return;
+    }
+    if (!user.partner) {
+      router.push(`/account/partner/become-partner?next=${encodeURIComponent(claimPath)}`);
+      return;
+    }
     setPending(true);
     setError(null);
     try {
+      if (!(await confirmMode("studio", "Potwierdź i przejmij"))) return;
       const { data } = await axiosInstance.post(`/directory/listings/${listing.external_id}/claim`);
       router.push(data.edit_url);
     } catch (caught) {
@@ -62,6 +76,7 @@ export function ClaimStudioForm({ listing }: { listing: DirectoryStudioDetail })
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5 p-4 pb-10">
+      {dialog}
       <header className="flex flex-col gap-2">
         <h1 className="text-h-middle text-gray-900">Przejmij profil studia</h1>
         <p className="text-m-descript text-gray-700">{listing.name}</p>
