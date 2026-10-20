@@ -106,7 +106,12 @@ function Chevron() {
   return <IoChevronForward className="h-5 w-5 text-gray-400" />;
 }
 
-function checkoutCtaCopy(selection: FundingSelection | null, currency?: string | null) {
+function checkoutCtaCopy(
+  selection: FundingSelection | null,
+  currency?: string | null,
+  solo = false,
+) {
+  const venuePayment = solo ? "płatność na miejscu" : "płatność gotówką na miejscu";
   if (!selection) {
     return {
       label: "Wybierz sposób płatności",
@@ -128,7 +133,7 @@ function checkoutCtaCopy(selection: FundingSelection | null, currency?: string |
       const amount = formatMoney(selection.price, currency);
       return {
         label: `Zarezerwuj · ${amount}`,
-        receipt: `${amount} · płatność gotówką na miejscu`,
+        receipt: `${amount} · ${venuePayment}`,
         disabled: false,
         icon: "cash" as const,
       };
@@ -137,7 +142,7 @@ function checkoutCtaCopy(selection: FundingSelection | null, currency?: string |
       const amount = formatMoney(selection.price, selection.currency);
       return {
         label: "Kup karnet i zarezerwuj",
-        receipt: `${amount} za karnet · płatność gotówką na miejscu`,
+        receipt: `${amount} za karnet · ${venuePayment}`,
         disabled: false,
         icon: "wallet" as const,
       };
@@ -153,7 +158,7 @@ function checkoutCtaCopy(selection: FundingSelection | null, currency?: string |
       }
       return {
         label: "Zarezerwuj",
-        receipt: `dopłata ${formatMoney(selection.fee, currency)} · płatność gotówką na miejscu`,
+        receipt: `dopłata ${formatMoney(selection.fee, currency)} · ${venuePayment}`,
         disabled: false,
         icon: "cash" as const,
       };
@@ -204,7 +209,7 @@ function FundingScreen({
         ) ?? null)
       : null;
   const showFullFundingList = expanded || options.existing_passes.length === 0;
-  const ctaCopy = checkoutCtaCopy(selection, currency);
+  const ctaCopy = checkoutCtaCopy(selection, currency, detail.studio.organizer_kind === "solo");
 
   useEffect(() => {
     if (selection || options.existing_passes.length === 0) return;
@@ -384,6 +389,7 @@ function FundingScreen({
 
       {isMethodFundingSelection(selection) && !skipsMethodScreen(selection) && (
         <PaymentMethodSection
+          solo={detail.studio.organizer_kind === "solo"}
           method={paymentMethod}
           onChange={onPaymentMethodChange}
           onlineMethods={options.online_payment_methods ?? []}
@@ -452,10 +458,13 @@ function ConfirmationScreen({
   currency?: string | null;
 }) {
   const router = useRouter();
+  const isSolo = detail.studio.organizer_kind === "solo";
   const owesCash = !!booking.amount_owed && booking.amount_owed > 0;
 
   const subtitle = owesCash
-    ? "Twoje miejsce jest zaklepane. Zapłać w studiu przed zajęciami."
+    ? isSolo
+      ? "Twoje miejsce jest zaklepane. Zapłać na miejscu przed zajęciami."
+      : "Twoje miejsce jest zaklepane. Zapłać w studiu przed zajęciami."
     : "Twoje miejsce jest zaklepane. Do zobaczenia na macie.";
 
   // Row labels/branching use BookingOut (the real response) as source of truth; item *names*
@@ -475,14 +484,14 @@ function ConfirmationScreen({
     // drop_in / buy_and_use — amount_owed already carries the full amount for buy_and_use.
     return {
       label: "Do zapłaty na miejscu",
-      value: `${formatMoney(booking.amount_owed, currency)} · gotówką`,
+      value: `${formatMoney(booking.amount_owed, currency)} · ${isSolo ? "na miejscu" : "gotówką"}`,
     };
   })();
 
   const deadline = booking.free_cancellation_deadline;
 
   const payNote = owesCash
-    ? `Zapłać ${formatMoney(booking.amount_owed, currency)} gotówką w recepcji przed zajęciami. Miejsce trzymamy dla Ciebie.`
+    ? `Zapłać ${formatMoney(booking.amount_owed, currency)} ${isSolo ? "na miejscu" : "gotówką w recepcji"} przed zajęciami. Miejsce trzymamy dla Ciebie.`
     : selection?.kind === "use_pass"
       ? selection.entriesRemaining == null
         ? "Wykorzystano 1 wejście z karnetu. Karnet bez limitu wejść."
@@ -495,7 +504,10 @@ function ConfirmationScreen({
       title: detail.template_title,
       startTime: detail.start_time,
       endTime: detail.end_time,
-      location: detail.studio.name,
+      location:
+        detail.studio.organizer_kind === "solo"
+          ? (detail.studio.address ?? "")
+          : detail.studio.name,
     });
   }
 
@@ -699,13 +711,23 @@ function BookClassContent() {
     options.buy_and_use_options.length === 0 &&
     !(options.accepts_sport_cards && options.sport_card_options.length > 0);
 
-  const contactHref = detail.studio.slug ? `/studio/${detail.studio.slug}` : null;
+  const isSolo = detail.studio.organizer_kind === "solo";
+  const contactHref =
+    isSolo && detail.instructor?.slug
+      ? `/instruktor/${detail.instructor.slug}`
+      : detail.studio.slug
+        ? `/studio/${detail.studio.slug}`
+        : null;
 
   if (noPaymentMethods) {
     return (
       <BlockedState
         title="Rezerwacja online niedostępna"
-        body="To studio nie udostępniło jeszcze płatności online. Zarezerwuj miejsce bezpośrednio w studiu."
+        body={
+          isSolo
+            ? "Płatności online nie są jeszcze dostępne. Zarezerwuj miejsce bezpośrednio u organizatora."
+            : "To studio nie udostępniło jeszcze płatności online. Zarezerwuj miejsce bezpośrednio w studiu."
+        }
         contactHref={contactHref}
       />
     );
@@ -715,7 +737,11 @@ function BookClassContent() {
     return (
       <BlockedState
         title="Rezerwacja niedostępna"
-        body="To studio nie udostępniło jeszcze żadnej metody płatności dla tych zajęć. Zarezerwuj miejsce bezpośrednio w studiu."
+        body={
+          isSolo
+            ? "Nie ma jeszcze dostępnej metody płatności dla tych zajęć. Zarezerwuj miejsce bezpośrednio u organizatora."
+            : "To studio nie udostępniło jeszcze żadnej metody płatności dla tych zajęć. Zarezerwuj miejsce bezpośrednio w studiu."
+        }
         contactHref={contactHref}
       />
     );

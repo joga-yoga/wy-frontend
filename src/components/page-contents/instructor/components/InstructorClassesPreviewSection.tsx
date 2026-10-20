@@ -43,6 +43,11 @@ export function InstructorClassesPreviewSection({ instructorSlug }: { instructor
               <ClassCard
                 key={item.id}
                 studioSlug={primaryStudio?.slug ?? ""}
+                href={
+                  !primaryStudio?.slug
+                    ? `/instruktor/${instructorSlug}/grafik?class=${item.slug}`
+                    : undefined
+                }
                 item={item}
                 studioName={primaryStudio?.name}
               />

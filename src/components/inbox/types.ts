@@ -10,6 +10,7 @@ export type InboxKind =
 export type InboxState = "pending" | "accepted" | "rejected" | "expired" | "info";
 
 export interface InboxItem {
+  commits_business_mode?: boolean;
   kind: InboxKind;
   id: string;
   title: string | null;

@@ -1,6 +1,31 @@
+export interface ClassLocation {
+  title?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state_province?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  country_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  google_place_id?: string | null;
+}
+
+export interface SoloTemplateTerms {
+  price?: number | null;
+  currency?: string | null;
+  location_id?: string | null;
+  location?: ClassLocation | null;
+  venue_source_studio_id?: string | null;
+  venue_source_directory_id?: string | null;
+  show_venue_name?: boolean;
+  terms_locked?: boolean;
+}
+
 import type { ClassColor } from "@/lib/classColors";
 
-export interface ClassTemplate {
+export interface ClassTemplate extends SoloTemplateTerms {
   id: string;
   title: string;
   description?: string | null;
@@ -20,7 +45,7 @@ export interface ClassTemplate {
   updated_at: string;
 }
 
-export interface ClassTemplateCreate {
+export interface ClassTemplateCreate extends SoloTemplateTerms {
   title: string;
   description?: string;
   duration_minutes: number;

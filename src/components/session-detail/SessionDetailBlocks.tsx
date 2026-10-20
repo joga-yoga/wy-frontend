@@ -136,6 +136,13 @@ export function InstructorSection({
 }
 
 export function StudioSection({ studio }: { studio: OccurrenceDetail["studio"] }) {
+  if (studio.organizer_kind === "solo")
+    return (
+      <section className="space-y-3 px-4 py-4">
+        <p className="text-[18px] font-semibold text-[#222222]">Organizator</p>
+        <p>{studio.name} · Własne zajęcia</p>
+      </section>
+    );
   return (
     <section className="space-y-3 px-4 py-4">
       <p className="text-[18px] font-semibold text-[#222222]">Studio</p>
@@ -151,7 +158,7 @@ export function LocationSection({ detail }: { detail: OccurrenceDetail }) {
   if (!studio.address && !location?.address_line1 && !hasLatLng) return null;
 
   const publicLocation = {
-    title: location?.title ?? studio.name,
+    title: studio.organizer_kind === "solo" ? location?.title : (location?.title ?? studio.name),
     address: studio.address,
     address_line1: location?.address_line1,
     city: location?.city,
@@ -161,7 +168,12 @@ export function LocationSection({ detail }: { detail: OccurrenceDetail }) {
 
   return (
     <section className="border-t border-gray-100 px-4 pt-4 pb-8">
-      <PublicLocation location={publicLocation} title={studio.name} />
+      <PublicLocation
+        location={publicLocation}
+        title={
+          studio.organizer_kind === "solo" ? (location?.title ?? "Miejsce zajęć") : studio.name
+        }
+      />
     </section>
   );
 }

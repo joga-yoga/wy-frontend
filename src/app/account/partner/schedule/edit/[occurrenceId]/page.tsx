@@ -131,12 +131,12 @@ export default function EditSessionPage() {
   const { toast } = useToast();
   const { studio: currentStudio } = useCurrentStudio();
 
-  const isSubstitution = searchParams.get("field") === "instructor";
-
   const [step, setStep] = useState<Step>("scope");
   const [scope, setScope] = useState<Scope>("single");
 
   const [sessionDetail, setSessionDetail] = useState<SessionDetailResponse | null>(null);
+  const isSolo = sessionDetail?.organizer_kind === "solo";
+  const isSubstitution = searchParams.get("field") === "instructor" && !isSolo;
   const [isLoadingDetail, setIsLoadingDetail] = useState(true);
 
   const [startTime, setStartTime] = useState("");
@@ -228,7 +228,7 @@ export default function EditSessionPage() {
   // to the studio context the edit screen was reached from.
   useEffect(() => {
     const studioId = sessionDetail?.studio_id || currentStudio?.id;
-    if (!studioId) return;
+    if (!studioId || sessionDetail?.organizer_kind === "solo") return;
     axiosInstance
       .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
       .then((r) =>
@@ -265,7 +265,7 @@ export default function EditSessionPage() {
       // Always send field values; null = explicitly clear
       room_id: roomId || null,
       capacity: capacity ? parseInt(capacity, 10) : null,
-      instructor_id: instructorId || null,
+      ...(isSolo ? {} : { instructor_id: instructorId || null }),
     };
 
     // Time: only send if user set it
@@ -433,6 +433,7 @@ export default function EditSessionPage() {
       {step === "form" && sessionDetail && !isSubstitution && (
         <div className="space-y-4">
           <ScheduleRecurrenceForm
+            solo={isSolo}
             templateTitle={sessionDetail.template_title}
             templateDate={shortDate(sessionDetail.calendar_date)}
             templateTime={formatStartTime(sessionDetail.start_time)}

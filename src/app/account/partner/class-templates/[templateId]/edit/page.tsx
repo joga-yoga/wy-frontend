@@ -3,9 +3,10 @@
 import { CalendarPlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -20,6 +21,9 @@ export default function EditTemplatePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const deleteTitleId = useId();
+  const deletingRef = useRef(false);
 
   useEffect(() => {
     axiosInstance
@@ -52,9 +56,12 @@ export default function EditTemplatePage() {
   };
 
   const handleDelete = async () => {
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/class-templates/${params.templateId}`);
+      setDeleteConfirmationOpen(false);
       toast({ description: "Szablon usunięty." });
       router.push("/account/partner/class-templates");
     } catch {
@@ -63,6 +70,7 @@ export default function EditTemplatePage() {
         variant: "destructive",
       });
     } finally {
+      deletingRef.current = false;
       setIsDeleting(false);
     }
   };
@@ -101,15 +109,44 @@ export default function EditTemplatePage() {
       </div>
 
       <div className="mt-3">
-        <Button
-          variant="ghost"
-          className="w-full text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid"
-          onClick={handleDelete}
-          disabled={isDeleting}
-        >
-          <Trash2 size={14} className="mr-1" />
-          {isDeleting ? "Usuwanie..." : "Usuń szablon"}
-        </Button>
+        <Popover open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid"
+              disabled={isDeleting}
+            >
+              <Trash2 size={14} className="mr-1" />
+              {isDeleting ? "Usuwanie..." : "Usuń szablon"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="top" className="w-64 space-y-3" aria-labelledby={deleteTitleId}>
+            <p id={deleteTitleId} className="text-sm font-semibold">
+              Usunąć szablon?
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                disabled={isDeleting}
+                onClick={() => setDeleteConfirmationOpen(false)}
+              >
+                Anuluj
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="h-11"
+                disabled={isDeleting}
+                onClick={handleDelete}
+              >
+                {isDeleting ? "Usuwanie..." : "Tak, usuń"}
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

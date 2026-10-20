@@ -56,7 +56,8 @@ export default function SchedulePage() {
   // the partner's own sessions) — was two separate routes/page components until this
   // was consolidated so the Grafik switcher never needs to leave the page.
   const studioParam = searchParams.get("studio_id") ?? "";
-  const isInstructorView = studioParam === INSTRUCTOR_VIEW_PARAM;
+  const isInstructorView =
+    Boolean(capabilities?.soloStudioId) || studioParam === INSTRUCTOR_VIEW_PARAM;
 
   // Route to wherever the partner actually has something to see: no managed studio at all
   // sends them to "Mój grafik" (if they teach anywhere) or Rezerwacje (if not); asking for
@@ -64,7 +65,7 @@ export default function SchedulePage() {
   useEffect(() => {
     if (isLoadingCapabilities || !capabilities) return;
     if (isInstructorView) {
-      if (capabilities.teachingStudios.length === 0) {
+      if (capabilities.teachingStudios.length === 0 && !capabilities.soloStudioId) {
         router.replace("/account/partner/schedule");
       }
       return;
@@ -178,16 +179,29 @@ export default function SchedulePage() {
     return dates;
   }, [weekStart]);
 
+  const originFilter = searchParams.get("origin") ?? "all";
+  const visibleOccurrences = useMemo(
+    () =>
+      occurrences.filter(
+        (occ) =>
+          !capabilities?.soloStudioId ||
+          originFilter === "all" ||
+          (originFilter === "own"
+            ? occ.studio_id === capabilities.soloStudioId
+            : occ.studio_id === originFilter),
+      ),
+    [occurrences, originFilter, capabilities?.soloStudioId],
+  );
   const sessionCounts = useMemo(() => {
     const counts = Array(7).fill(0);
-    for (const occ of occurrences) {
+    for (const occ of visibleOccurrences) {
       const idx = weekDates.indexOf(occ.calendar_date);
       if (idx >= 0) counts[idx]++;
     }
     return counts;
-  }, [occurrences, weekDates]);
+  }, [visibleOccurrences, weekDates]);
 
-  const hasAnySessions = occurrences.length > 0;
+  const hasAnySessions = visibleOccurrences.length > 0;
 
   // Derived from the strip's own state rather than from fetched data, so the header title
   // stays correct (and stable) while a week is still loading or came back empty.
@@ -196,8 +210,8 @@ export default function SchedulePage() {
     [weekDates, selectedDayIndex, weekStart],
   );
   const dayOccurrences = useMemo(
-    () => occurrences.filter((o) => o.calendar_date === selectedDate),
-    [occurrences, selectedDate],
+    () => visibleOccurrences.filter((o) => o.calendar_date === selectedDate),
+    [visibleOccurrences, selectedDate],
   );
 
   const dayStripRef = useRef<DayStripHandle>(null);
@@ -338,7 +352,9 @@ export default function SchedulePage() {
             <p className="text-xs text-gray-500">
               Dodaj pierwsze zajęcia, żeby zbudować cotygodniowy grafik.
             </p>
-            <Link href={`/account/partner/class-schedules/create?studio_id=${studioId}`}>
+            <Link
+              href={`/account/partner/class-schedules/create?studio_id=${capabilities?.soloStudioId ?? studioId}`}
+            >
               <Button variant="outline" size="sm">
                 <Plus size={14} className="mr-1" />
                 Dodaj zajęcia
@@ -361,7 +377,9 @@ export default function SchedulePage() {
                   <p className="text-sm text-gray-500">
                     Brak zajęć w {formatDayHeader(selectedDate).split(",")[0]}
                   </p>
-                  <Link href={`/account/partner/class-schedules/create?studio_id=${studioId}`}>
+                  <Link
+                    href={`/account/partner/class-schedules/create?studio_id=${capabilities?.soloStudioId ?? studioId}`}
+                  >
                     <Button variant="outline" size="sm">
                       <Plus size={14} className="mr-1" />
                       Dodaj zajęcia
@@ -380,7 +398,11 @@ export default function SchedulePage() {
                 key={occ.id}
                 occ={occ}
                 onClick={goToSession}
-                context={isInstructorView ? "instructor" : "owner"}
+                context={
+                  isInstructorView && occ.studio_id !== capabilities?.soloStudioId
+                    ? "instructor"
+                    : "owner"
+                }
                 now={now}
               />
             ))}
@@ -393,7 +415,7 @@ export default function SchedulePage() {
        * task for top-of-screen position, but a strip that only happens to land near the bottom
        * on a short day (and collides with the fixed add button) reads as broken, not deprioritized.
        * Owner view only — instructor view is read-only, no reconciliation action to take here. */}
-      {!isInstructorView && reconciliation.sessionCount > 0 && (
+      {(!isInstructorView || capabilities?.soloStudioId) && reconciliation.sessionCount > 0 && (
         <Link
           href="/account/partner/reconciliation"
           className="fixed inset-x-4 bottom-[calc(var(--bottom-tab-h)+0.5rem)] z-30 mx-auto flex h-14 max-w-lg items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 text-sm font-medium text-b2b-amber-text shadow-md transition-opacity hover:opacity-90 md:bottom-6"
@@ -415,9 +437,9 @@ export default function SchedulePage() {
        * wins) because at md: the tab bar becomes a sidebar and the offset is unnecessary.
        * Bumped higher still when the reconciliation strip is showing, so the two never cross.
        * Owner view only — instructor view is read-only, there is nothing to add from here. */}
-      {!isInstructorView && (
+      {(!isInstructorView || capabilities?.soloStudioId) && (
         <Link
-          href={`/account/partner/class-schedules/create?studio_id=${studioId}`}
+          href={`/account/partner/class-schedules/create?studio_id=${capabilities?.soloStudioId ?? studioId}`}
           aria-label="Dodaj zajęcia"
           className={cn(
             "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",

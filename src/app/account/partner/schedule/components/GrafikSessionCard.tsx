@@ -145,6 +145,14 @@ export function GrafikSessionCard({
         {occ.template_title}
       </p>
 
+      {occ.organizer_kind === "solo" && (
+        <p className="mt-1 text-xs font-medium text-b2b-green-text">Własne zajęcia</p>
+      )}
+      {occ.address && (
+        <p className="mt-1 text-sm text-gray-500">
+          {[occ.venue_name, occ.address].filter(Boolean).join(" · ")}
+        </p>
+      )}
       {isPast && !isCancelled && <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>}
 
       {/* Instructor/studio stays visible even while live — it used to be replaced

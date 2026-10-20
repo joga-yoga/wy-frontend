@@ -14,7 +14,9 @@ export function PhoneVerificationDialog({
   open,
   onOpenChange,
   onVerified,
+  description = "Zanim utworzysz studio, potwierdź numer telefonu kodem SMS.",
 }: {
+  description?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onVerified: () => void;
@@ -24,9 +26,7 @@ export function PhoneVerificationDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Zweryfikuj numer telefonu</DialogTitle>
-          <DialogDescription>
-            Zanim utworzysz studio, potwierdź numer telefonu kodem SMS.
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <PhoneVerificationForm
           onVerified={() => {

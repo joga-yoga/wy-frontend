@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
@@ -14,9 +15,15 @@ export function useCurrentStudio() {
   const searchParams = useSearchParams();
   const { capabilities, isLoading } = usePartnerCapabilities();
   const requestedId = searchParams.get("studioId");
-  const managedStudios = capabilities?.managedStudios ?? [];
+  const managedStudios = useMemo(
+    () =>
+      capabilities?.soloStudioId
+        ? [{ id: capabilities.soloStudioId, name: "Własne zajęcia", image_id: null }]
+        : (capabilities?.managedStudios ?? []),
+    [capabilities?.soloStudioId, capabilities?.managedStudios],
+  );
   const studio =
     (requestedId && managedStudios.find((s) => s.id === requestedId)) || managedStudios[0] || null;
 
-  return { studio, isLoading, managedStudios };
+  return { studio, isLoading, managedStudios, isSolo: Boolean(capabilities?.soloStudioId) };
 }

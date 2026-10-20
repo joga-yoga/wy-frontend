@@ -126,32 +126,45 @@ export function SessionCard({
         {occ.template_title}
       </p>
 
-      {!isCancelled && context === "instructor" && occ.studio_name && (
-        <div className="mt-1 flex items-center gap-1.5">
-          <HashedAvatar
-            seed={occ.studio_id ?? occ.studio_name}
-            name={occ.studio_name}
-            imageId={occ.studio_image_id}
-            size={20}
-            imageFit="contain"
-            className="bg-white"
-          />
-          <span className="truncate text-sm text-gray-500">{occ.studio_name}</span>
-        </div>
-      )}
+      {!isCancelled &&
+        context === "instructor" &&
+        occ.organizer_kind !== "solo" &&
+        occ.studio_name && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <HashedAvatar
+              seed={occ.studio_id ?? occ.studio_name}
+              name={occ.studio_name}
+              imageId={occ.studio_image_id}
+              size={20}
+              imageFit="contain"
+              className="bg-white"
+            />
+            <span className="truncate text-sm text-gray-500">{occ.studio_name}</span>
+          </div>
+        )}
 
-      {!isCancelled && context === "studio" && occ.instructor_name && (
-        <div className="mt-1 flex items-center gap-1.5">
-          <HashedAvatar
-            seed={occ.instructor_id ?? occ.instructor_name}
-            name={occ.instructor_name}
-            imageId={occ.instructor_image_id}
-            size={20}
-          />
-          <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
-        </div>
-      )}
+      {!isCancelled &&
+        (context === "studio" || occ.organizer_kind === "solo") &&
+        occ.instructor_name && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <HashedAvatar
+              seed={occ.instructor_id ?? occ.instructor_name}
+              name={occ.instructor_name}
+              imageId={occ.instructor_image_id}
+              size={20}
+            />
+            <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
+          </div>
+        )}
 
+      {occ.organizer_kind === "solo" && (
+        <p className="mt-1 text-xs font-medium text-brand-green-700">Własne zajęcia</p>
+      )}
+      {occ.address && (
+        <p className="mt-1 text-sm text-gray-500">
+          {[occ.venue_name, occ.address].filter(Boolean).join(" · ")}
+        </p>
+      )}
       {showInstructorChange && (
         <p className="mt-0.5 truncate text-[11px] text-gray-400">
           Zastępstwo za <span className="line-through">{occ.previous_instructor_name}</span>

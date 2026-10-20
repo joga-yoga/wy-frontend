@@ -24,6 +24,33 @@ export function GrafikContextChips() {
 
   if (!capabilities) return null;
 
+  if (capabilities.soloStudioId) {
+    const active = searchParams.get("origin") ?? "all";
+    const filters = [
+      { id: "all", name: "Wszystkie" },
+      { id: "own", name: "Własne zajęcia" },
+      ...capabilities.teachingStudios,
+    ];
+    return (
+      <div className="-mx-4 mb-2 flex gap-2 overflow-x-auto px-4 pb-1">
+        {filters.map((item) => (
+          <Link
+            key={item.id}
+            href={`/account/partner/schedule?studio_id=${INSTRUCTOR_VIEW_PARAM}&origin=${item.id}`}
+            className={cn(
+              "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium",
+              active === item.id
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-200 bg-white text-gray-600",
+            )}
+          >
+            {item.name}
+          </Link>
+        ))}
+      </div>
+    );
+  }
+
   const hasTeaching = capabilities.teachingStudios.length > 0;
   const sourceCount = capabilities.managedStudios.length + (hasTeaching ? 1 : 0);
   if (sourceCount < 2) return null;

@@ -13,6 +13,9 @@ export interface CapabilityStudio {
 }
 
 export interface PartnerCapabilities {
+  businessMode?: "studio" | "solo" | null;
+  soloStudioId?: string | null;
+  selfInstructorId?: string | null;
   managedStudios: CapabilityStudio[];
   teachingStudios: CapabilityStudio[];
   hasEvents: boolean;
@@ -61,6 +64,9 @@ export function PartnerCapabilitiesProvider({ children }: { children: ReactNode 
       .get("/partner/capabilities")
       .then((res) => {
         setCapabilities({
+          businessMode: res.data.business_mode,
+          soloStudioId: res.data.solo_studio_id,
+          selfInstructorId: res.data.self_instructor_id,
           managedStudios: res.data.managed_studios,
           teachingStudios: res.data.teaching_studios,
           hasEvents: res.data.has_events,

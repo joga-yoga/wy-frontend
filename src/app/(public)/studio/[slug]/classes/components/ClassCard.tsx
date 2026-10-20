@@ -8,6 +8,7 @@ import { type ClassTemplateSummary, formatClassMetaLine } from "../types";
 
 interface ClassCardProps {
   studioSlug: string;
+  href?: string;
   item: ClassTemplateSummary;
   className?: string;
   /** Where the class detail page's back button should return to. Defaults to the classes list. */
@@ -22,6 +23,7 @@ interface ClassCardProps {
 
 export function ClassCard({
   studioSlug,
+  href,
   item,
   className,
   backTo,
@@ -33,7 +35,7 @@ export function ClassCard({
 
   return (
     <Link
-      href={`/studio/${studioSlug}/zajecia/${item.slug}${backTo ? `?back=${backTo}` : ""}`}
+      href={href ?? `/studio/${studioSlug}/zajecia/${item.slug}${backTo ? `?back=${backTo}` : ""}`}
       className={cn("flex items-start gap-3 py-3 text-left", className)}
     >
       <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-lg">

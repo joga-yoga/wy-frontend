@@ -25,10 +25,12 @@ import { recurrenceLabel } from "../../../../schedule/recurrenceLabel";
  * per-session URL exists yet.
  */
 export function SessionOverflowMenu({
+  solo = false,
   occurrenceId,
   recurrenceFrequency,
   recurrenceDays,
 }: {
+  solo?: boolean;
   occurrenceId: string;
   recurrenceFrequency: string | null | undefined;
   recurrenceDays: string[] | undefined;
@@ -59,11 +61,13 @@ export function SessionOverflowMenu({
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href={`/account/partner/schedule/edit/${occurrenceId}`}>Edytuj sesję</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/account/partner/schedule/edit/${occurrenceId}?field=instructor`}>
-            Zmień prowadzącego
-          </Link>
-        </DropdownMenuItem>
+        {!solo && (
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href={`/account/partner/schedule/edit/${occurrenceId}?field=instructor`}>
+              Zmień prowadzącego
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           asChild
           className="cursor-pointer text-b2b-red-solid focus:bg-b2b-red-bg focus:text-b2b-red-solid"

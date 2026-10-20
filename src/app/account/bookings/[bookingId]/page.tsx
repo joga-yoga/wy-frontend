@@ -284,7 +284,11 @@ function ReservationDetailContent() {
                   <Fact
                     label="Płatność"
                     value={
-                      money.method ? (PAYMENT_METHOD_LABEL[money.method] ?? money.method) : null
+                      money.method
+                        ? money.method === "cash" && detail.studio.organizer_kind === "solo"
+                          ? "Płatność na miejscu"
+                          : (PAYMENT_METHOD_LABEL[money.method] ?? money.method)
+                        : null
                     }
                   />
                   <Fact

@@ -1,4 +1,7 @@
 export interface ScheduleOccurrence {
+  organizer_kind?: "studio" | "solo";
+  address?: string | null;
+  venue_name?: string | null;
   id: string;
   start_time: string;
   end_time: string;
@@ -41,6 +44,8 @@ export interface ScheduleWeekResponse {
 }
 
 export interface SessionDetailResponse {
+  organizer_kind?: "studio" | "solo";
+  address?: string | null;
   id: string;
   calendar_date: string;
   start_time: string;

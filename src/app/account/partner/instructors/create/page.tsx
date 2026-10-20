@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { IoChevronForward } from "react-icons/io5";
 import { z } from "zod";
 
+import { InstructorFullProfileForm } from "@/app/account/partner/instructors/[instructorId]/edit/InstructorFullProfileForm";
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -35,7 +37,9 @@ export default function AddInstructorPage() {
   const searchParams = useSearchParams();
   const studioId = searchParams.get("studioId");
 
-  // Two entry points share this route:
+  if (!studioId && searchParams.get("returnTo") === "solo") return <SoloOwnProfileFlow />;
+
+  // The shared studio/general entry points retain their existing flows:
   // - Menu → {Studio} → Instruktorzy → "Dodaj instruktora" carries `studioId` and gets
   //   the email-first, live-lookup roster flow below (instructors-clients §3).
   // - Every other "Dodaj instruktora" surface predates T10 (event/course forms via
@@ -43,6 +47,43 @@ export default function AddInstructorPage() {
   //   Oferta's instructor panel and the header-avatar placeholder still land here
   //   without a studio) and keeps the legacy partner-scoped add flow unchanged.
   return studioId ? <StudioRosterAddFlow /> : <LegacyAddInstructorFlow />;
+}
+
+/** Solo setup already identifies the teacher: reuse the account's canonical self profile. */
+function SoloOwnProfileFlow() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { capabilities, isLoading, refetch } = usePartnerCapabilities();
+
+  useEffect(() => {
+    if (capabilities?.businessMode) router.replace("/account/partner/solo-booking");
+  }, [capabilities?.businessMode, router]);
+
+  if (isLoading) return <p className="p-4">Ładowanie profilu…</p>;
+  if (!capabilities) return <p className="p-4">Nie udało się załadować ustawień konta.</p>;
+  if (capabilities.businessMode) return null;
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 pb-28">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold">Uzupełnij swój profil instruktora</h1>
+        <p className="text-sm text-muted-foreground">
+          Następnie ustawisz zasady zapisów na swoje zajęcia.
+        </p>
+      </div>
+      <InstructorFullProfileForm
+        instructorId={capabilities.selfInstructorId ?? undefined}
+        createSelfName={user?.name?.trim() ?? ""}
+        onSaved={() => {
+          refetch();
+          router.replace("/account/partner/solo-booking");
+        }}
+      />
+      <Button variant="outline" onClick={() => router.push("/account/partner/menu")}>
+        Wróć do menu
+      </Button>
+    </div>
+  );
 }
 
 function StudioRosterAddFlow() {
@@ -569,6 +610,7 @@ type EmailForm = z.infer<typeof emailSchema>;
 
 function LegacyAddInstructorFlow() {
   const router = useRouter();
+  const { refetch: refetchCapabilities } = usePartnerCapabilities();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -596,17 +638,8 @@ function LegacyAddInstructorFlow() {
 
   useEffect(() => {
     axiosInstance
-      .get<Array<{ is_claimed: boolean; email: string | null }>>("/instructors")
-      .then(({ data }) => {
-        const claimed =
-          user != null &&
-          data.some(
-            (i) =>
-              i.is_claimed === true ||
-              (i.email && i.email.toLowerCase() === user.email.toLowerCase()),
-          );
-        setAlreadyClaimed(claimed);
-      })
+      .get<{ has_instructor_profile: boolean }>("/partner/capabilities")
+      .then(({ data }) => setAlreadyClaimed(data.has_instructor_profile))
       .catch(() => {
         // silently ignore — just show "It's me" by default
       });
@@ -616,6 +649,7 @@ function LegacyAddInstructorFlow() {
     setIsItsMe(true);
     try {
       const res = await axiosInstance.post<{ id: string }>("/instructors/self", {});
+      refetchCapabilities();
       toast({ description: "Twój profil instruktora gotowy!" });
       router.push(`/account/partner/instructors/${res.data.id}/edit`);
     } catch (err: unknown) {

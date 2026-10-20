@@ -12,6 +12,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Static generation reads the existing public directory API, as Vercel builds do.
+  # The public endpoint belongs in repository variables, not provider secrets.
+  NEXT_PUBLIC_API_ENDPOINT: ${{ vars.NEXT_PUBLIC_API_ENDPOINT }}
+
 jobs:
   verify:
     name: typecheck · lint · build · prototype guarantees

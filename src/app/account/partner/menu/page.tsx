@@ -78,37 +78,38 @@ export default function MenuPage() {
         </div>
       )}
 
-      {!isLoading && hasTeachingOnly && (
+      {!isLoading && capabilities?.soloStudioId && (
+        <StudioWorkspaceRows
+          studioId={capabilities.soloStudioId}
+          studioName="Własne zajęcia"
+          solo
+        />
+      )}
+      {!isLoading && capabilities && !capabilities.businessMode && managedStudios.length === 0 && (
         <section className="space-y-2">
-          <SectionLabel>Studio</SectionLabel>
-          <Link
-            href="/account/partner/studio/create"
-            className="flex items-center justify-center rounded-b2b border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
-          >
-            <div>
-              <p className="text-sm text-gray-500">Prowadzisz własne studio?</p>
-              <p className="text-sm font-semibold text-brand-green-700">Utwórz studio</p>
-            </div>
-          </Link>
+          <SectionLabel>Zarządzanie</SectionLabel>
+          <p className="px-1 text-sm text-gray-500">
+            Jedno konto, jeden sposób zarządzania. Do drugiego trybu możesz założyć osobne konto.
+          </p>
+          <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+            <MenuRow
+              href="/account/partner/solo-booking"
+              title="Włącz zapisy na moje zajęcia"
+              subtitle="Własny grafik, klienci i płatności"
+              Icon={Plus}
+            />
+            <MenuRow
+              href="/account/partner/studio/create"
+              title="Utwórz studio"
+              subtitle="Profil i zarządzanie studiem"
+              Icon={Plus}
+            />
+          </div>
         </section>
       )}
 
-      {!isLoading && managedStudios.length === 0 && !hasTeachingOnly && (
-        <section className="space-y-2">
-          <SectionLabel>Studio</SectionLabel>
-          <Link
-            href="/account/partner/studio/create"
-            className="flex items-center justify-center rounded-b2b border border-dashed bg-white px-4 py-4 text-center hover:bg-gray-50 transition-colors"
-          >
-            <div>
-              <p className="text-sm text-gray-500">Prowadzisz studio jogi?</p>
-              <p className="text-sm font-semibold text-brand-green-700">Utwórz studio</p>
-            </div>
-          </Link>
-        </section>
-      )}
+      {capabilities?.businessMode !== "solo" && <SavedImports />}
 
-      <SavedImports />
       <section className="space-y-2">
         <SectionLabel>Konto</SectionLabel>
         <div className="rounded-b2b border bg-white overflow-hidden divide-y">

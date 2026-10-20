@@ -5,6 +5,7 @@ import type {
 } from "@/app/book/class/[occurrenceId]/types";
 
 export interface PassDetailStudio {
+  organizer_kind?: "studio" | "solo";
   id: string;
   name: string;
   slug?: string | null;
@@ -31,6 +32,8 @@ export interface PassDetail {
 export type PassPurchaseScreen = "checkout" | "confirmation";
 
 export interface PassPurchaseOut {
+  organizer_kind?: "studio" | "solo";
+  instructor_slug?: string | null;
   id: string;
   pass_name: string;
   price: number;

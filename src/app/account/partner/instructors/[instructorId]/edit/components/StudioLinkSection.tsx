@@ -9,8 +9,10 @@ import {
   type AddressValue,
 } from "@/components/common/AddressAutocompleteField";
 import { WyImage } from "@/components/custom/WyImage";
+import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -38,6 +40,8 @@ type Mode =
 
 export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
   const { toast } = useToast();
+  const { capabilities, refetch } = usePartnerCapabilities();
+  const { confirmMode, dialog } = useBusinessModeConfirmation(capabilities?.businessMode);
   const [linkedStudios, setLinkedStudios] = useState<StudioAutocomplete[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -132,6 +136,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
     if (!createName.trim()) return;
     setIsCreating(true);
     try {
+      if (!(await confirmMode("studio"))) return;
       const { data } = await axiosInstance.post("/studios/minimal", {
         name: createName.trim(),
         address: createAddress.address.trim() || null,
@@ -139,6 +144,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
         latitude: createAddress.latitude,
         longitude: createAddress.longitude,
       });
+      refetch();
       await axiosInstance.post(`/studios/${data.id}/instructors/${instructorId}`);
       setLinkedStudios((prev) => [
         ...prev,
@@ -160,6 +166,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
     if (!createName.trim() || !createEmail.trim()) return;
     setIsCreating(true);
     try {
+      if (!(await confirmMode("studio"))) return;
       const { data } = await axiosInstance.post("/studios/minimal", {
         name: createName.trim(),
         address: createAddress.address.trim() || null,
@@ -168,6 +175,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
         longitude: createAddress.longitude,
         owner_email: createEmail.trim(),
       });
+      refetch();
       await axiosInstance.post(`/studios/${data.id}/instructors/${instructorId}`);
       setLinkedStudios((prev) => [
         ...prev,
@@ -196,6 +204,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
 
   return (
     <div className="space-y-3">
+      {dialog}
       <label className="block text-sm font-medium">Gdzie prowadzisz zajęcia?</label>
       <p className="text-sm text-muted-foreground">
         Połącz profil instruktora ze studiami, w których prowadzisz zajęcia
@@ -305,17 +314,19 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
           {searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
             <p className="text-sm text-muted-foreground">Brak wyników.</p>
           )}
-          <button
-            type="button"
-            className="flex items-center gap-2 text-sm font-medium text-brand-blue"
-            onClick={() => {
-              setCreateName(searchQuery);
-              setMode("not-found");
-            }}
-          >
-            <Plus className="size-4" />
-            Nie ma mojego studia — dodaj
-          </button>
+          {capabilities?.businessMode !== "solo" && (
+            <button
+              type="button"
+              className="flex items-center gap-2 text-sm font-medium text-brand-blue"
+              onClick={() => {
+                setCreateName(searchQuery);
+                setMode("not-found");
+              }}
+            >
+              <Plus className="size-4" />
+              Nie ma mojego studia — dodaj
+            </button>
+          )}
           <button
             type="button"
             className="text-sm text-muted-foreground hover:text-foreground"

@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link [ref=e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e11]:
+      - heading "Zaloguj się lub zarejestruj" [level=1] [ref=e12]
+      - generic [ref=e13]:
+        - text: Adres e-mail
+        - textbox "Adres e-mail" [ref=e14]
+      - button "Dalej" [ref=e15] [cursor=pointer]
+      - generic [ref=e16]: lub
+      - link [ref=e18] [cursor=pointer]:
+        - /url: http://localhost:8000/auth/google/login?next=%2Faccount%2Fpartner
+        - button "Kontynuuj, używając Google" [ref=e19]
+      - link [ref=e21] [cursor=pointer]:
+        - /url: http://localhost:8000/auth/facebook/login?next=%2Faccount%2Fpartner
+        - button "Kontynuuj, używając Facebooka" [ref=e22]
+  - region "Notifications (F8)":
+    - list

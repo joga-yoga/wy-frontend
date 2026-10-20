@@ -32,7 +32,9 @@ export function StudioWorkspaceRows({
   studioId,
   studioName,
   studioImageId,
+  solo = false,
 }: {
+  solo?: boolean;
   studioId: string;
   studioName: string;
   studioImageId?: string | null;
@@ -40,32 +42,45 @@ export function StudioWorkspaceRows({
   const [roster, setRoster] = useState<RosterSummary | null>(null);
 
   useEffect(() => {
+    if (solo) return;
     axiosInstance
       .get<RosterSummary>(`/studios/${studioId}/roster`)
       .then(({ data }) => setRoster(data))
       .catch(() => setRoster(null));
-  }, [studioId]);
+  }, [studioId, solo]);
 
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-        {studioName} · Twoje studio
+        {solo ? "Własne zajęcia" : `${studioName} · Twoje studio`}
       </h2>
       <div className="rounded-b2b border bg-white overflow-hidden divide-y">
         {/* R1 leads this row with the studio's own logo rather than a generic icon —
             it is the only row that is *about* a specific studio. */}
-        <MenuRow
-          href={`/account/partner/studio/${studioId}/edit`}
-          title="Profil studia"
-          subtitle="Podstawy, lokalizacja, cennik, zdjęcia"
-          leading={<StudioLogoTile name={studioName} imageId={studioImageId} />}
-        />
-        <MenuRow
-          href={`/account/partner/instructors?studioId=${studioId}`}
-          title="Instruktorzy"
-          subtitle={rosterSubtitle(roster)}
-          Icon={Users}
-        />
+        {!solo && (
+          <MenuRow
+            href={`/account/partner/studio/${studioId}/edit`}
+            title="Profil studia"
+            subtitle="Podstawy, lokalizacja, cennik, zdjęcia"
+            leading={<StudioLogoTile name={studioName} imageId={studioImageId} />}
+          />
+        )}
+        {!solo && (
+          <MenuRow
+            href={`/account/partner/instructors?studioId=${studioId}`}
+            title="Instruktorzy"
+            subtitle={rosterSubtitle(roster)}
+            Icon={Users}
+          />
+        )}
+        {solo && (
+          <MenuRow
+            href="/account/partner/solo-booking/passes"
+            title="Karnety"
+            subtitle="Opcjonalne karnety na moje zajęcia"
+            Icon={CreditCard}
+          />
+        )}
         <MenuRow
           href={`/account/partner/clients?studioId=${studioId}`}
           title="Klienci"

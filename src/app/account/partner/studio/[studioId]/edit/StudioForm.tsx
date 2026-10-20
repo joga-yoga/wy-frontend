@@ -31,6 +31,7 @@ import {
   perEntry,
 } from "@/components/page-contents/studio/pricingHelpers";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
+import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { amenityIcon } from "@/lib/amenityIcons";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -136,6 +138,12 @@ function slugify(text: string): string {
 export function StudioForm({ routeId }: StudioFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { capabilities, refetch: refetchCapabilities } = usePartnerCapabilities();
+  const { confirmMode, dialog: modeDialog } = useBusinessModeConfirmation(
+    capabilities?.businessMode,
+  );
+  const savingRef = useRef(false);
+  const [isSavingBusiness, setIsSavingBusiness] = useState(false);
   const isCreateRoute = routeId === "create";
   const [studioId, setStudioId] = useState<string | null>(isCreateRoute ? null : routeId);
   const [isLoading, setIsLoading] = useState(!isCreateRoute);
@@ -305,6 +313,19 @@ export function StudioForm({ routeId }: StudioFormProps) {
       return;
     }
 
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setIsSavingBusiness(true);
+    try {
+      if (!studioId && !(await confirmMode("studio"))) return;
+      await saveValidatedStudio(intent);
+    } finally {
+      savingRef.current = false;
+      setIsSavingBusiness(false);
+    }
+  }
+
+  async function saveValidatedStudio(intent: SubmitIntent) {
     const values = getValues();
     const payload = buildStudioPayload(values);
     if (intent === "publish") payload.is_listed = true;
@@ -314,6 +335,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
         response = await axiosInstance.put<StudioApiResponse>(`/studios/${studioId}`, payload);
       } else {
         response = await axiosInstance.post<StudioApiResponse>("/studios", payload);
+        refetchCapabilities();
         setStudioId(response.data.id);
         router.replace(`/account/partner/studio/${response.data.id}/edit`);
       }
@@ -1171,7 +1193,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
           viewPublicIcon={<ExternalLink className="size-4" />}
           showPublishButton={!migrationPending}
           isPublished={currentIsPublic}
-          isPublishing={isSubmitting}
+          isPublishing={isSubmitting || isSavingBusiness}
           onPublishToggle={() => persist("publish")}
           publishButtonLabel="Opublikuj studio"
           publishButtonLabelShort="Opublikuj"
@@ -1183,10 +1205,11 @@ export function StudioForm({ routeId }: StudioFormProps) {
           updateLabel="Zapisz"
           updateLabelShort="Zapisz"
           updateIcon={<Save className="size-4" />}
-          isSaveDisabled={isSubmitting}
+          isSaveDisabled={isSubmitting || isSavingBusiness}
         />
       </form>
 
+      {modeDialog}
       <PhoneVerificationDialog
         open={isPhoneVerificationOpen}
         onOpenChange={setIsPhoneVerificationOpen}

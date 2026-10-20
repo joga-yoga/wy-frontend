@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
+import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,7 @@ const CHIP_TONE: Record<InboxState, "green" | "amber" | "gray"> = {
  */
 export function NotificationsBell() {
   const { toast } = useToast();
+  const { confirmMode, dialog: modeDialog } = useBusinessModeConfirmation();
   const [isOpen, setIsOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState<InboxItem[] | null>(null);
@@ -78,6 +80,12 @@ export function NotificationsBell() {
     if (!urls) return;
     setIsActing(true);
     try {
+      if (
+        action === "accept" &&
+        item.commits_business_mode &&
+        !(await confirmMode("studio", "Potwierdź i przyjmij"))
+      )
+        return;
       await axiosInstance.post(action === "accept" ? urls.accept : urls.reject);
       toast({
         description: action === "accept" ? "Zaakceptowano." : "Odrzucono.",
@@ -99,6 +107,7 @@ export function NotificationsBell() {
 
   return (
     <>
+      {modeDialog}
       <button
         type="button"
         aria-label={unread > 0 ? `Powiadomienia (${unread})` : "Powiadomienia"}
