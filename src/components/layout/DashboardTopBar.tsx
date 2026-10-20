@@ -47,6 +47,12 @@ function getPageTitle(pathname: string, searchParams: URLSearchParams): string |
   if (pathname === "/account/partner/instructors") return "Instruktorzy";
   if (pathname.startsWith("/account/partner/instructors/") && pathname.endsWith("/edit"))
     return "Edytuj instruktora";
+  if (
+    pathname === "/account/partner/instructors/create" &&
+    !searchParams.get("studioId") &&
+    searchParams.get("returnTo") === "solo"
+  )
+    return "Twój profil instruktora";
   if (pathname === "/account/partner/instructors/create")
     return searchParams.get("step") === "new" ? "Nowy instruktor" : "Dodaj instruktora";
   if (pathname === "/account/partner/clients") return "Klienci";
@@ -116,6 +122,8 @@ function getBackHref(
   if (pathname.startsWith("/account/partner/menu/studio/")) return "/account/partner/menu";
   if (pathname === "/account/partner/instructors") return "/account/partner/menu";
   if (pathname === "/account/partner/instructors/create") {
+    if (!searchParams.get("studioId") && searchParams.get("returnTo") === "solo")
+      return "/account/partner/menu";
     // Studio-scoped roster screens carry `studioId` through every step — never let a
     // 2+-studio partner's back-navigation silently drop which studio they were in.
     const studioQuery = searchParams.get("studioId")

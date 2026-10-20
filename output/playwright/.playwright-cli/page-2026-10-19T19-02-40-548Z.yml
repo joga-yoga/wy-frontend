@@ -1,0 +1,9 @@
+- generic [active] [ref=f2e1]:
+  - banner [ref=f2e2]:
+    - button "Wróć" [ref=f2e3] [cursor=pointer]
+    - heading "Edytuj instruktora" [level=1] [ref=f2e8]
+  - main [ref=f2e10]
+  - region "Notifications (F8)":
+    - list
+  - button "Open Next.js Dev Tools" [ref=f2e19] [cursor=pointer]
+  - alert [ref=f2e23]

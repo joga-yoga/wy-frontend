@@ -87,7 +87,7 @@ export function TemplateEditor({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
-  const [level, setLevel] = useState(initial?.level ?? "");
+  const [level, setLevel] = useState(initial ? (initial.level ?? "") : "all_levels");
   const [styleId, setStyleId] = useState<string | null>(initial?.style_id ?? null);
   const [language, setLanguage] = useState(initial?.language ?? "polski");
   const [color, setColor] = useState<ClassColor | null>(initial?.color ?? null);

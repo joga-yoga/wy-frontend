@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { IoChevronForward } from "react-icons/io5";
 import { z } from "zod";
 
+import { InstructorFullProfileForm } from "@/app/account/partner/instructors/[instructorId]/edit/InstructorFullProfileForm";
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { WyImage } from "@/components/custom/WyImage";
@@ -36,7 +37,9 @@ export default function AddInstructorPage() {
   const searchParams = useSearchParams();
   const studioId = searchParams.get("studioId");
 
-  // Two entry points share this route:
+  if (!studioId && searchParams.get("returnTo") === "solo") return <SoloOwnProfileFlow />;
+
+  // The shared studio/general entry points retain their existing flows:
   // - Menu → {Studio} → Instruktorzy → "Dodaj instruktora" carries `studioId` and gets
   //   the email-first, live-lookup roster flow below (instructors-clients §3).
   // - Every other "Dodaj instruktora" surface predates T10 (event/course forms via
@@ -44,6 +47,43 @@ export default function AddInstructorPage() {
   //   Oferta's instructor panel and the header-avatar placeholder still land here
   //   without a studio) and keeps the legacy partner-scoped add flow unchanged.
   return studioId ? <StudioRosterAddFlow /> : <LegacyAddInstructorFlow />;
+}
+
+/** Solo setup already identifies the teacher: reuse the account's canonical self profile. */
+function SoloOwnProfileFlow() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { capabilities, isLoading, refetch } = usePartnerCapabilities();
+
+  useEffect(() => {
+    if (capabilities?.businessMode) router.replace("/account/partner/solo-booking");
+  }, [capabilities?.businessMode, router]);
+
+  if (isLoading) return <p className="p-4">Ładowanie profilu…</p>;
+  if (!capabilities) return <p className="p-4">Nie udało się załadować ustawień konta.</p>;
+  if (capabilities.businessMode) return null;
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 pb-28">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold">Uzupełnij swój profil instruktora</h1>
+        <p className="text-sm text-muted-foreground">
+          Następnie ustawisz zasady zapisów na swoje zajęcia.
+        </p>
+      </div>
+      <InstructorFullProfileForm
+        instructorId={capabilities.selfInstructorId ?? undefined}
+        createSelfName={user?.name?.trim() ?? ""}
+        onSaved={() => {
+          refetch();
+          router.replace("/account/partner/solo-booking");
+        }}
+      />
+      <Button variant="outline" onClick={() => router.push("/account/partner/menu")}>
+        Wróć do menu
+      </Button>
+    </div>
+  );
 }
 
 function StudioRosterAddFlow() {
@@ -570,8 +610,6 @@ type EmailForm = z.infer<typeof emailSchema>;
 
 function LegacyAddInstructorFlow() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnToSolo = searchParams.get("returnTo") === "solo";
   const { refetch: refetchCapabilities } = usePartnerCapabilities();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -613,11 +651,7 @@ function LegacyAddInstructorFlow() {
       const res = await axiosInstance.post<{ id: string }>("/instructors/self", {});
       refetchCapabilities();
       toast({ description: "Twój profil instruktora gotowy!" });
-      router.push(
-        returnToSolo
-          ? "/account/partner/solo-booking"
-          : `/account/partner/instructors/${res.data.id}/edit`,
-      );
+      router.push(`/account/partner/instructors/${res.data.id}/edit`);
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({ description: detail || "Nie udało się utworzyć profilu.", variant: "destructive" });

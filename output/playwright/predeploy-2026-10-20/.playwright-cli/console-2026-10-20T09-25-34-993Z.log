@@ -1,0 +1,38 @@
+[    1107ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[    1227ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[    1359ms] [WARNING] Mixpanel token or mode is missing! Check your .env file. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[   28434ms] [ERROR] Access to XMLHttpRequest at 'http://localhost:8000/check-email' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/account/login:0
+[   28436ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/check-email:0
+[  144063ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/account/login:0
+[  163538ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[  163598ms] [LOG] [Fast Refresh] done in 160ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[  163777ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[  163801ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[  163869ms] [WARNING] Mixpanel token or mode is missing! Check your .env file. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2506541ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2506546ms] [LOG] [Fast Refresh] done in 106ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2507698ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2508547ms] [LOG] [Fast Refresh] done in 949ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2534413ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2534444ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2629899ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2629932ms] [LOG] [Fast Refresh] done in 134ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2630604ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2630704ms] [LOG] [Fast Refresh] done in 201ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2634930ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2635070ms] [LOG] [Fast Refresh] done in 240ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2663065ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2663564ms] [LOG] [Fast Refresh] done in 598ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0ifwd0~._.js:2925
+[ 2733055ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2734057ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2735059ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2736065ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2737070ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2742077ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2747088ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2752105ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2757143ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2762194ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2767298ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2772417ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=eSv5hkaGCsFrzZR36kkVL' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13339
+[ 2809009ms] [WARNING] Mixpanel token or mode is missing! Check your .env file. @ http://localhost:3000/_next/static/chunks/0wdxyzcul36qt.js:0

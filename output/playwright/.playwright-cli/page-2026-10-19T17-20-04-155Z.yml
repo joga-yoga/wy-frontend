@@ -1,0 +1,23 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - link [ref=f3e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f3e34]:
+      - heading "Zarejestruj się" [level=1] [ref=f3e35]
+      - generic [ref=f3e36]:
+        - text: Adres e-mail
+        - textbox "Adres e-mail" [ref=f3e37]:
+          - /placeholder: Twój e-mail
+          - text: solo-connectivity-check@example.com
+      - generic [ref=f3e38]:
+        - text: Hasło
+        - generic [ref=f3e39]:
+          - textbox "Hasło" [ref=f3e40]:
+            - /placeholder: Stwórz hasło
+          - button "Pokaż hasło" [ref=f3e41] [cursor=pointer]: Pokaż
+      - button "Zarejestruj się" [ref=f3e45] [cursor=pointer]
+      - paragraph [ref=f3e47]: Użyj innego konta
+  - region "Notifications (F8)":
+    - list
+  - button "Open Next.js Dev Tools" [ref=f3e29] [cursor=pointer]
+  - alert [ref=f3e33]

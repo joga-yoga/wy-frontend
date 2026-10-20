@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CancellationPolicyFields } from "@/components/partner/CancellationPolicyFields";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
@@ -25,6 +25,16 @@ export default function SoloBookingSetupPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [verifyPhone, setVerifyPhone] = useState(false);
   const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !isLoading &&
+      capabilities &&
+      !capabilities.businessMode &&
+      !capabilities.hasInstructorProfile
+    )
+      router.replace("/account/partner/instructors/create?returnTo=solo");
+  }, [capabilities, isLoading, router]);
 
   async function save() {
     if (savingRef.current) return;
@@ -81,17 +91,7 @@ export default function SoloBookingSetupPage() {
       </div>
     );
   if (!capabilities.hasInstructorProfile)
-    return (
-      <div className="mx-auto max-w-lg space-y-4 p-4">
-        <h1 className="text-xl font-semibold">Włącz zapisy na moje zajęcia</h1>
-        <p>Połącz własny profil instruktora, aby pokazywać zajęcia w swoim grafiku.</p>
-        <Button asChild>
-          <Link href="/account/partner/instructors/create?returnTo=solo">
-            Mój profil instruktora
-          </Link>
-        </Button>
-      </div>
-    );
+    return <p className="p-4">Ładowanie profilu instruktora…</p>;
 
   return (
     <div className="mx-auto max-w-lg space-y-6 p-4">

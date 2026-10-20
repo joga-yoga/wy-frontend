@@ -711,13 +711,23 @@ function BookClassContent() {
     options.buy_and_use_options.length === 0 &&
     !(options.accepts_sport_cards && options.sport_card_options.length > 0);
 
-  const contactHref = detail.studio.slug ? `/studio/${detail.studio.slug}` : null;
+  const isSolo = detail.studio.organizer_kind === "solo";
+  const contactHref =
+    isSolo && detail.instructor?.slug
+      ? `/instruktor/${detail.instructor.slug}`
+      : detail.studio.slug
+        ? `/studio/${detail.studio.slug}`
+        : null;
 
   if (noPaymentMethods) {
     return (
       <BlockedState
         title="Rezerwacja online niedostępna"
-        body="To studio nie udostępniło jeszcze płatności online. Zarezerwuj miejsce bezpośrednio w studiu."
+        body={
+          isSolo
+            ? "Płatności online nie są jeszcze dostępne. Zarezerwuj miejsce bezpośrednio u organizatora."
+            : "To studio nie udostępniło jeszcze płatności online. Zarezerwuj miejsce bezpośrednio w studiu."
+        }
         contactHref={contactHref}
       />
     );
@@ -727,7 +737,11 @@ function BookClassContent() {
     return (
       <BlockedState
         title="Rezerwacja niedostępna"
-        body="To studio nie udostępniło jeszcze żadnej metody płatności dla tych zajęć. Zarezerwuj miejsce bezpośrednio w studiu."
+        body={
+          isSolo
+            ? "Nie ma jeszcze dostępnej metody płatności dla tych zajęć. Zarezerwuj miejsce bezpośrednio u organizatora."
+            : "To studio nie udostępniło jeszcze żadnej metody płatności dla tych zajęć. Zarezerwuj miejsce bezpośrednio w studiu."
+        }
         contactHref={contactHref}
       />
     );

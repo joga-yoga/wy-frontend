@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ExternalLink, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -103,23 +103,33 @@ export function InstructorFullProfileForm({
   instructorId,
   statusBanner,
   extraActions,
+  onSaved,
+  createSelfName,
 }: {
-  instructorId: string;
+  instructorId?: string;
+  /** Self-profile creation uses account identity; nothing is created until explicit save. */
+  createSelfName?: string;
   /** R5's amber "profile is yours until they claim it" banner, when the roster supplies it. */
   statusBanner?: React.ReactNode;
   /** e.g. the roster's "Odłącz od studia", which belongs to the link and not the profile. */
   extraActions?: React.ReactNode;
+  /** Optional continuation after a successful save during self-profile setup. */
+  onSaved?: () => void;
 }) {
   const router = useRouter();
   const { toast } = useToast();
   const { studio } = useCurrentStudio();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(instructorId));
   const [slug, setSlug] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(true);
   const [deleteBlockers, setDeleteBlockers] = useState<DeleteBlockers | null>(null);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
-  const [isOwnClaimedInstructor, setIsOwnClaimedInstructor] = useState(false);
+  const [isOwnClaimedInstructor, setIsOwnClaimedInstructor] = useState(
+    createSelfName !== undefined,
+  );
+  // If the following update fails, retry the same explicitly created/claimed profile.
+  const createdSelfId = useRef<string | null>(null);
   const [isInviting, setIsInviting] = useState(false);
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string | null>(null);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
@@ -128,13 +138,13 @@ export function InstructorFullProfileForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "",
+      name: createSelfName ?? "",
       email: "",
       description: "",
       short_bio: "",
       image_id: "",
       photo_ids: [],
-      languages: [],
+      languages: createSelfName !== undefined ? ["pl"] : [],
       cities: [],
       certificates: [],
       yoga_styles: [],
@@ -147,6 +157,7 @@ export function InstructorFullProfileForm({
   });
 
   useEffect(() => {
+    if (!instructorId) return;
     axiosInstance
       .get<InstructorProfile>(`/instructors/${instructorId}`)
       .then(({ data }) => {
@@ -256,9 +267,30 @@ export function InstructorFullProfileForm({
           position: index,
         })),
       };
+      let targetId = instructorId ?? createdSelfId.current;
+      if (!targetId && createSelfName !== undefined) {
+        const { data: self } = await axiosInstance.post<{ id: string }>("/instructors/self", {
+          name: values.name,
+          description: payload.description,
+        });
+        targetId = self.id;
+        createdSelfId.current = self.id;
+      }
+      if (!targetId) return;
+      // A self-claim can reuse an existing stub. Keep content the user hasn't edited.
+      const updatePayload = instructorId
+        ? payload
+        : Object.fromEntries(
+            Object.entries(payload).filter(
+              ([key]) =>
+                key === "name" ||
+                form.getFieldState(key as keyof FormValues).isDirty ||
+                (key === "image_id" && (Boolean(values.image_id) || isProfileImageRemoved)),
+            ),
+          );
       const { data: updated } = await axiosInstance.put<InstructorProfile>(
-        `/instructors/${instructorId}`,
-        payload,
+        `/instructors/${targetId}`,
+        updatePayload,
       );
       setSlug(updated.slug);
       setIsPublished(updated.is_published);
@@ -273,6 +305,7 @@ export function InstructorFullProfileForm({
       } else {
         toast({ title: "Profil zapisany", description: "Zmiany zostały pomyślnie zapisane." });
       }
+      onSaved?.();
     } catch (err: unknown) {
       const detail =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "";
@@ -680,7 +713,7 @@ export function InstructorFullProfileForm({
 
           <Separator />
 
-          <StudioLinkSection instructorId={instructorId} />
+          {instructorId && <StudioLinkSection instructorId={instructorId} />}
 
           {extraActions}
 
@@ -737,7 +770,10 @@ export function InstructorFullProfileForm({
 
           {/* Strefa niebezpieczna */}
           <Separator />
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+          <div
+            hidden={!instructorId}
+            className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-3"
+          >
             <div>
               <p className="text-sm font-medium text-destructive">Usuń instruktora</p>
               <p className="text-sm text-muted-foreground mt-1">

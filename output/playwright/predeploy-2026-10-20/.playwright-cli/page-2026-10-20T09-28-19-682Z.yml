@@ -1,0 +1,47 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - banner [ref=f1e3]:
+      - button "Zamknij" [ref=f1e4] [cursor=pointer]
+      - heading "Profil" [level=1] [ref=f1e8]
+    - generic [ref=f1e9]:
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]: MI
+        - generic [ref=f1e13]:
+          - paragraph [ref=f1e14]: Maria Solo Instructor
+          - paragraph [ref=f1e15]: manual-solo-20261017093343-a9d5@example.com
+      - link [ref=f1e16] [cursor=pointer]:
+        - /url: /account/bookings
+        - generic [ref=f1e20]:
+          - paragraph [ref=f1e21]: Twoje rezerwacje
+          - paragraph [ref=f1e22]: Brak rezerwacji
+      - generic [ref=f1e25]:
+        - heading "Twoje karnety" [level=2] [ref=f1e26]
+        - generic [ref=f1e27]:
+          - paragraph [ref=f1e28]: Nie masz jeszcze karnetu.
+          - link "Znajdź studio" [ref=f1e29] [cursor=pointer]:
+            - /url: /wyjazdy
+      - generic [ref=f1e30]:
+        - heading "Konto" [level=2] [ref=f1e31]
+        - generic [ref=f1e32]:
+          - link [ref=f1e33] [cursor=pointer]:
+            - /url: /account/profile
+            - generic [ref=f1e38]:
+              - paragraph [ref=f1e39]: Dane konta
+              - paragraph [ref=f1e40]: Imię, e-mail, zdjęcie
+          - generic [ref=f1e43]:
+            - generic [ref=f1e48]:
+              - paragraph [ref=f1e49]: Powiadomienia
+              - paragraph [ref=f1e50]: Przypomnienia o zajęciach
+            - generic [ref=f1e51]: Wkrótce
+          - generic [ref=f1e52]:
+            - generic [ref=f1e57]:
+              - paragraph [ref=f1e58]: Pomoc i kontakt
+              - paragraph [ref=f1e59]: Napisz do nas
+            - generic [ref=f1e60]: Wkrótce
+      - button "Wyloguj się" [ref=f1e61] [cursor=pointer]
+    - link "Przełącz na konto partnera" [ref=f1e67] [cursor=pointer]:
+      - /url: /account/partner
+  - region "Notifications (F8)":
+    - list
+  - button "Open Next.js Dev Tools" [ref=f1e73] [cursor=pointer]
+  - alert [ref=f1e77]
