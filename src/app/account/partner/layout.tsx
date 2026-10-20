@@ -5,7 +5,7 @@ import React, { Suspense, useEffect, useState } from "react";
 
 import { BottomTabBar, TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { DashboardTopBar } from "@/components/layout/DashboardTopBar";
-import { useAuth } from "@/context/AuthContext";
+import { type Partner, useAuth } from "@/context/AuthContext";
 import { OfferCreateMenuProvider } from "@/context/OfferCreateMenuContext";
 import { PageHeaderProvider } from "@/context/PageHeaderContext";
 import { PartnerCapabilitiesProvider } from "@/context/PartnerCapabilitiesContext";
@@ -23,7 +23,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 }
 
 function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -51,20 +51,23 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     setHasPartner(null);
 
+    const acceptPartner = (partner: Partner) => {
+      if (cancelled) return;
+      // The account CTA may have just created the Partner without refreshing /me.
+      // Keep auth in sync with the confirmed API response before capabilities load.
+      if (!user.partner) setUser({ ...user, partner });
+      setHasPartner(true);
+    };
+
     axiosInstance
-      .get("/partner/me")
-      .then(() => {
-        if (!cancelled) setHasPartner(true);
-      })
+      .get<Partner>("/partner/me")
+      .then(({ data }) => acceptPartner(data))
       .catch((err) => {
         if (cancelled) return;
         if (err.response?.status === 404) {
           axiosInstance
-            .post("/partner/instant")
-            .then(() => refreshUser())
-            .then(() => {
-              if (!cancelled) setHasPartner(true);
-            })
+            .post<Partner>("/partner/instant")
+            .then(({ data }) => acceptPartner(data))
             .catch(() => {
               // A concurrent tab may have already created it — re-check once rather
               // than stranding the user on a spinner.
@@ -79,7 +82,7 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [loading, user, refreshUser]);
+  }, [loading, user, setUser]);
 
   const isMainTab = (TAB_PATHS as readonly string[]).includes(pathname);
 

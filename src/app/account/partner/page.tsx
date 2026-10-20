@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { Button } from "@/components/ui/button";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
 /**
@@ -13,7 +14,7 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
  */
 export default function PartnerRootPage() {
   const router = useRouter();
-  const { capabilities, isLoading } = usePartnerCapabilities();
+  const { capabilities, isLoading, refetch } = usePartnerCapabilities();
 
   useEffect(() => {
     if (isLoading || !capabilities) return;
@@ -23,6 +24,15 @@ export default function PartnerRootPage() {
         : "/account/partner/bookings",
     );
   }, [isLoading, capabilities, router]);
+
+  if (!isLoading && !capabilities) {
+    return (
+      <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6 text-center">
+        <p role="alert">Nie udało się wczytać konta partnera.</p>
+        <Button onClick={refetch}>Spróbuj ponownie</Button>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-2 px-6 text-center">
