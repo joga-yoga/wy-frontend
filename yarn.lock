@@ -12,6 +12,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@altcha/crypto@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "@altcha/crypto@npm:0.0.1"
+  checksum: 10c0/686cfb4a2ab536bcc041cff0acaff97862f4bd27570f63306ad9c948ba8d579c76770088542b1056784b43e5daa9417ba2346ebece00f234cd6aade839e06fa9
+  languageName: node
+  linkType: hard
+
 "@ampproject/remapping@npm:^2.3.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -3275,6 +3282,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rollup/rollup-linux-x64-gnu@npm:4.18.0":
+  version: 4.18.0
+  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.18.0"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@rtsao/scc@npm:^1.1.0":
   version: 1.1.0
   resolution: "@rtsao/scc@npm:1.1.0"
@@ -3928,6 +3942,7 @@ __metadata:
     "@types/node": "npm:^22"
     "@types/react": "npm:19.2.14"
     "@types/react-dom": "npm:19.2.3"
+    altcha: "npm:2.3.0"
     autoprefixer: "npm:^10.4.21"
     axios: "npm:^1.8.4"
     class-variance-authority: "npm:^0.7.1"
@@ -4027,6 +4042,19 @@ __metadata:
     json-schema-traverse: "npm:^0.4.1"
     uri-js: "npm:^4.2.2"
   checksum: 10c0/41e23642cbe545889245b9d2a45854ebba51cda6c778ebced9649420d9205f2efb39cb43dbc41e358409223b1ea43303ae4839db682c848b891e4811da1a5a71
+  languageName: node
+  linkType: hard
+
+"altcha@npm:2.3.0":
+  version: 2.3.0
+  resolution: "altcha@npm:2.3.0"
+  dependencies:
+    "@altcha/crypto": "npm:^0.0.1"
+    "@rollup/rollup-linux-x64-gnu": "npm:4.18.0"
+  dependenciesMeta:
+    "@rollup/rollup-linux-x64-gnu":
+      optional: true
+  checksum: 10c0/5ce8cc2671c827d57ee62797ad9bd209c5c1d5736a113af10a74e81aa1be907626d8aea9c6c0eceff84d97511eeeeb88fa7082dc07e991e4f08416555999333b
   languageName: node
   linkType: hard
 
