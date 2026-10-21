@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { isAxiosError } from "axios";
+import React, { useRef, useState } from "react";
 
+import { useContactProof } from "@/components/contact/useContactProof";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,10 +26,14 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({ eventId 
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<string | null>(null);
+  const submittingRef = useRef(false);
+  const { hostRef, prepare, resetProof, resetSubmission } = useContactProof();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !message.trim()) return;
+    if (submittingRef.current || !email.trim() || !message.trim()) return;
+    const website = new FormData(e.currentTarget as HTMLFormElement).get("website") || "";
+    submittingRef.current = true;
     setSubmitting(true);
     setSubmitResult(null);
     try {
@@ -43,18 +49,31 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({ eventId 
         .filter(Boolean)
         .join("\n");
 
-      await axiosInstance.post("/utils/contact", {
-        email: email.trim(),
-        contact_info: phone.trim() || undefined,
-        message: formattedMessage,
-      });
+      const proof = website ? undefined : await prepare();
+      await axiosInstance.post(
+        "/utils/contact",
+        {
+          email: email.trim(),
+          contact_info: phone.trim() || undefined,
+          message: formattedMessage,
+          website,
+          altcha: proof?.altcha,
+          submission_id: proof?.submission_id,
+        },
+        { timeout: 15_000 },
+      );
       setEmail("");
       setPhone("");
       setMessage("");
+      resetSubmission();
       setSubmitResult("Dziękujemy! Wiadomość została wysłana.");
     } catch (err) {
+      // Refreshing a proof must keep the original message identity after a lost response.
+      if (isAxiosError(err) && err.response?.status === 400) resetProof();
+      if (isAxiosError(err) && err.response?.status === 409) resetSubmission();
       setSubmitResult("Nie udało się wysłać wiadomości. Spróbuj ponownie później.");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -67,29 +86,52 @@ export const ContactPageContent: React.FC<ContactPageContentProps> = ({ eventId 
         </CardHeader>
         <CardContent>
           <p className="text-left text-gray-600 dark:text-gray-400 mb-6">{pageDescription}</p>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div ref={hostRef} hidden aria-hidden="true" inert />
+          <form
+            onSubmit={handleSubmit}
+            onFocus={() => {
+              void prepare().catch(() => undefined);
+            }}
+            className="space-y-4"
+          >
+            <div hidden aria-hidden="true" inert>
+              <input type="text" name="website" autoComplete="off" tabIndex={-1} />
+            </div>
             <Input
               type="email"
+              name="email"
+              autoComplete="email"
+              maxLength={254}
               placeholder="Adres e-mail*"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              readOnly={submitting}
             />
             <Input
               type="tel"
+              name="phone"
+              autoComplete="tel"
+              maxLength={300}
               placeholder="Telefon (opcjonalnie)"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              readOnly={submitting}
             />
             <Textarea
+              name="message"
+              maxLength={9500}
               placeholder="Opisz swoją sprawę*"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
               required
+              readOnly={submitting}
             />
             {submitResult && (
-              <p className="text-sm text-center text-gray-600 dark:text-gray-400">{submitResult}</p>
+              <p role="status" className="text-sm text-center text-gray-600 dark:text-gray-400">
+                {submitResult}
+              </p>
             )}
             <Button
               type="submit"
