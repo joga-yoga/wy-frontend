@@ -4,24 +4,25 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { importsApi } from "./api";
-export function ImportEntry() {
+export function ImportEntry({ studioId }: { studioId?: string }) {
   const [enabled, setEnabled] = useState(false);
   useEffect(() => {
     let active = true;
+    setEnabled(false);
     importsApi
-      .config()
+      .offer(studioId)
       .then((config) => {
-        if (active) setEnabled(config.enabled);
+        if (active) setEnabled(config.enabled && config.eligible);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, []);
+  }, [studioId]);
   if (!enabled) return null;
   return (
     <Link
-      href="/account/partner/studio/import/fitssey"
+      href={`/account/partner/studio/import/fitssey${studioId ? `?studioId=${studioId}` : ""}`}
       className="mx-auto my-4 flex max-w-lg items-center gap-3 rounded-xl border bg-white p-4"
     >
       <Download className="size-5 text-brand-green-700" />

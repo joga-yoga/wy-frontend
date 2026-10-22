@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Download, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 import { importError, importsApi } from "./api";
+import { TransferOptOut } from "./TransferOptOut";
 import type { ImportJob } from "./types";
 
 function localDate(date: Date) {
@@ -19,6 +21,11 @@ function localDate(date: Date) {
 }
 export default function FitsseyConnectPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const studioId = useSearchParams().get("studioId") || undefined;
+  const backHref = studioId
+    ? `/account/partner/menu/studio/${studioId}`
+    : "/account/partner/studio/create";
   const [uuid, setUuid] = useState("");
   const [key, setKey] = useState("");
   const [start, setStart] = useState(() => localDate(new Date()));
@@ -33,11 +40,27 @@ export default function FitsseyConnectPage() {
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    Promise.all([importsApi.config(), importsApi.list()])
+    setEnabled(null);
+    Promise.all([importsApi.offer(studioId), importsApi.list()])
       .then(([config, list]) => {
         if (active) {
+          if (!config.eligible) {
+            toast({
+              description: "Przenoszenie dla tego studia zostało już zakończone lub wyłączone.",
+            });
+            router.replace(backHref);
+            return;
+          }
           setEnabled(config.enabled);
-          setJobs(list);
+          setJobs(
+            studioId
+              ? list.filter(
+                  (job) =>
+                    job.origin_studio_id === studioId ||
+                    job.branches.some((branch) => branch.targets.studio_id === studioId),
+                )
+              : list,
+          );
         }
       })
       .catch(() => {
@@ -46,13 +69,14 @@ export default function FitsseyConnectPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [studioId, router, backHref, toast]);
   async function connect(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError("");
     try {
       const job = await importsApi.create({
+        origin_studio_id: studioId,
         source_uuid: uuid.trim(),
         api_key: key.trim(),
         start_date: start,
@@ -62,19 +86,20 @@ export default function FitsseyConnectPage() {
       setKey("");
       router.push(`/account/partner/studio/import/fitssey/${job.id}`);
     } catch (error) {
-      setError(importError(error).message);
+      const info = importError(error);
+      if (info.code === "migration_transfer_closed") {
+        toast({ description: info.message });
+        router.replace(backHref);
+      } else setError(info.message);
     } finally {
       setBusy(false);
     }
   }
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-6 pb-28">
-      <Link
-        className="inline-flex items-center gap-2 text-sm text-gray-600"
-        href="/account/partner/studio/create"
-      >
+      <Link className="inline-flex items-center gap-2 text-sm text-gray-600" href={backHref}>
         <ArrowLeft size={16} />
-        Tworzenie studia
+        {studioId ? "Wróć do studia" : "Tworzenie studia"}
       </Link>
       <header className="space-y-2">
         <p className="text-sm font-medium text-brand-green-700">Przenieś konfigurację studia</p>
@@ -82,6 +107,7 @@ export default function FitsseyConnectPage() {
         <p className="text-gray-600">
           Najpierw zobaczysz dane i wybierzesz, co przenieść. Każda lokalizacja stanie się nowym,
           prywatnym studiem.
+          {studioId && " Import nie zastąpi ani nie połączy danych obecnego studia."}
         </p>
       </header>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -192,6 +218,9 @@ export default function FitsseyConnectPage() {
           )}
         </CardContent>
       </Card>
+      {studioId && enabled !== null && (
+        <TransferOptOut studioId={studioId} onClosed={() => router.replace(backHref)} />
+      )}
       {jobs.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Zapisane importy</h2>
@@ -221,9 +250,11 @@ export default function FitsseyConnectPage() {
           ))}
         </section>
       )}
-      <Button asChild variant="outline">
-        <Link href="/account/partner/studio/create">Utwórz studio ręcznie</Link>
-      </Button>
+      {!studioId && (
+        <Button asChild variant="outline">
+          <Link href="/account/partner/studio/create?step=manual">Utwórz studio ręcznie</Link>
+        </Button>
+      )}
     </main>
   );
 }

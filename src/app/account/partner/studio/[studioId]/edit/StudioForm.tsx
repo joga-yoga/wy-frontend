@@ -75,6 +75,7 @@ import type {
 
 interface StudioFormProps {
   routeId: string;
+  initialName?: string;
 }
 
 type SubmitIntent = "draft" | "publish";
@@ -135,7 +136,7 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function StudioForm({ routeId }: StudioFormProps) {
+export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { capabilities, refetch: refetchCapabilities } = usePartnerCapabilities();
@@ -236,7 +237,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
     setPendingImages([]);
     setLocationQuery("");
     setLocationSuggestions([]);
-    reset(emptyStudioFormValues);
+    reset({ ...emptyStudioFormValues, name: initialName });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load existing studio

@@ -23,6 +23,8 @@ function record(kind: ImportRecord["kind"], key: string, data: ImportRecord["dat
 function job(state: ImportJob["state"] = "review"): ImportJob {
   return {
     id: "fixture-job",
+    origin_studio_id: null,
+    transfer_closed: state === "completed",
     source_uuid: "fixture-source",
     state,
     stage: "review",
@@ -95,6 +97,7 @@ async function mock(page: Page, initial = job()) {
       else if (path === "/partner/me") json = { id: "fixture-partner", phone_verified: true };
       else if (path === "/partner/capabilities")
         json = {
+          business_mode: "studio",
           managed_studios: [],
           teaching_studios: [],
           has_events: false,
@@ -102,6 +105,8 @@ async function mock(page: Page, initial = job()) {
           landing_tab: "grafik",
         };
       else if (path === "/studio-migrations/config") json = { enabled: true };
+      else if (path === "/studio-migrations/transfer-offer")
+        json = { enabled: true, eligible: true };
       else if (path === "/studio-migrations" && method === "GET") json = [current];
       else if (path === "/studio-migrations" && method === "POST") {
         secrets.push(request.postDataJSON().api_key);
@@ -130,7 +135,12 @@ async function mock(page: Page, initial = job()) {
         };
         json = current;
       } else if (path.endsWith("/import")) {
-        current = { ...current, state: "completed", imported_count: current.selected_count };
+        current = {
+          ...current,
+          state: "completed",
+          transfer_closed: true,
+          imported_count: current.selected_count,
+        };
         branch.targets = {
           studio_id: "new-studio",
           slug: "studio-centrum",
@@ -212,7 +222,7 @@ test("connect, correct, reopen, import and explicitly publish without booking ac
 });
 
 for (const width of [375, 1440])
-  test(`review supports keyboard and has no overflow at ${width}px`, async ({ page }) => {
+  test(`review supports keyboard and has no overflow at ${width}px`, async ({ page }, testInfo) => {
     await mock(page);
     await page.setViewportSize({ width, height: 850 });
     await page.goto(`${base}/fixture-job`);
@@ -226,7 +236,10 @@ for (const width of [375, 1440])
     ).toBe(false);
     await page.getByRole("button", { name: "Grafik 1", exact: true }).click();
     await expect(page.getByText("Limit: 12", { exact: false })).toBeVisible();
-    await page.screenshot({ path: `/private/tmp/wy-fitssey-review-${width}.png`, fullPage: true });
+    await page.screenshot({
+      path: testInfo.outputPath(`wy-fitssey-review-${width}.png`),
+      fullPage: true,
+    });
     const checkbox = page.getByRole("checkbox", { name: "Przenieś: Hatha" });
     await checkbox.focus();
     await page.keyboard.press("Space");

@@ -1,6 +1,7 @@
 "use client";
 import { ArrowLeft, Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
@@ -29,10 +30,12 @@ import { importError, importsApi } from "./api";
 import { ImportProgress } from "./ImportProgress";
 import { ImportResults } from "./ImportResults";
 import { ReviewRecords } from "./ReviewRecords";
+import { TransferOptOut } from "./TransferOptOut";
 import { issueLabels, kinds, type ReviewIssue } from "./types";
 import { useImportJob } from "./useImportJob";
 
 export function ImportWorkspace({ id }: { id: string }) {
+  const router = useRouter();
   const { capabilities } = usePartnerCapabilities();
   const { job, setJob, error: loadError, refresh } = useImportJob(id);
   const [phone, setPhone] = useState(false);
@@ -69,6 +72,19 @@ export function ImportWorkspace({ id }: { id: string }) {
         </Button>
       </main>
     );
+  if (
+    job.transfer_closed &&
+    !["completed", "importing"].includes(job.state) &&
+    !["apply", "asset"].includes(job.stage)
+  )
+    return (
+      <main className="mx-auto max-w-lg space-y-4 p-6">
+        <p>Przenoszenie dla tego studia zostało wyłączone.</p>
+        <Button asChild>
+          <Link href="/account/partner/menu">Wróć do menu</Link>
+        </Button>
+      </main>
+    );
   const stages = ["Połączenie", "Analiza", "Wybór danych", "Import", "Sprawdź i opublikuj"];
   const active =
     job.state === "review" ? 2 : job.state === "importing" ? 3 : job.state === "completed" ? 4 : 1;
@@ -76,10 +92,10 @@ export function ImportWorkspace({ id }: { id: string }) {
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-32">
       <Link
         className="inline-flex items-center gap-2 text-sm text-gray-600"
-        href="/account/partner/studio/import/fitssey"
+        href="/account/partner/menu"
       >
         <ArrowLeft size={16} />
-        Zapisane importy
+        Wróć do menu
       </Link>
       <header>
         <p className="text-sm font-medium text-brand-green-700">Fitssey · {job.source_uuid}</p>
@@ -95,6 +111,11 @@ export function ImportWorkspace({ id }: { id: string }) {
           {String(job.scope.timezone || "Europe/Warsaw")}
         </p>
       </header>
+      {!job.transfer_closed &&
+        ["analyzing", "review", "failed", "reconnect_required"].includes(job.state) &&
+        !["apply", "asset"].includes(job.stage) && (
+          <TransferOptOut jobId={job.id} onClosed={() => router.replace("/account/partner/menu")} />
+        )}
       <ol aria-label="Etapy importu" className="grid grid-cols-5 gap-2">
         {stages.map((label, index) => (
           <li
@@ -164,7 +185,7 @@ export function ImportWorkspace({ id }: { id: string }) {
           </EmptyHeader>
           <EmptyContent>
             <Button asChild variant="green">
-              <Link href="/account/partner/studio/create">Utwórz studio ręcznie</Link>
+              <Link href="/account/partner/studio/create?step=manual">Utwórz studio ręcznie</Link>
             </Button>
             <Button
               variant="outline"

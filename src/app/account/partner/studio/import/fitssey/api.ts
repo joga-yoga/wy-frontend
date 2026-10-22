@@ -5,9 +5,20 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import type { ImportJob, ImportRecord, RecordKind, RecordPage, ReviewIssue, Value } from "./types";
 const root = "/studio-migrations";
 export const importsApi = {
+  offer: (studioId?: string, jobId?: string) =>
+    axiosInstance
+      .get<{ enabled: boolean; eligible: boolean }>(`${root}/transfer-offer`, {
+        params: { studio_id: studioId, job_id: jobId },
+      })
+      .then((r) => r.data),
+  optOut: (studioId?: string, jobId?: string) =>
+    axiosInstance.post(`${root}/transfer-offer/opt-out`, null, {
+      params: { studio_id: studioId, job_id: jobId },
+    }),
   config: () => axiosInstance.get<{ enabled: boolean }>(`${root}/config`).then((r) => r.data),
   list: () => axiosInstance.get<ImportJob[]>(root).then((r) => r.data),
   create: (body: {
+    origin_studio_id?: string;
     source_uuid: string;
     api_key: string;
     start_date: string;
@@ -59,6 +70,9 @@ export function importError(error: unknown): {
       ? (detail as { code?: string; issues?: ReviewIssue[] })
       : {};
   const messages: Record<string, string> = {
+    migration_transfer_closed: "Przenoszenie dla tego studia zostało już zakończone lub wyłączone.",
+    migration_context_conflict:
+      "Ten import jest już rozpoczęty dla innego studia. Wróć do zapisanego importu.",
     migration_encryption_unavailable: "Import jest chwilowo niedostępny. Skontaktuj się z obsługą.",
     migration_snapshot_expired:
       "Podgląd źródłowy wygasł. Dodaj brakujące zdjęcia ręcznie w edytorze studia.",

@@ -15,6 +15,8 @@ export interface ImportRecord {
 }
 export interface ImportJob {
   id: string;
+  origin_studio_id: string | null;
+  transfer_closed: boolean;
   source_uuid: string;
   state:
     | "analyzing"
