@@ -1,5 +1,21 @@
 import { expect, test } from "@playwright/test";
 
+import { getCertificateMark } from "../../src/components/page-contents/instructor/components/certificateMarks";
+
+test("certificate marks match only explicitly stated supported qualifications", () => {
+  for (const [label, file] of [
+    ["RYT200", "ryt-200"],
+    ["  ryt 500  ", "ryt-500"],
+    ["E-RYT200", "e-ryt-200"],
+    ["E‑RYT 500", "e-ryt-500"],
+  ]) {
+    expect(getCertificateMark(label)).toBe(`/images/certificates/${file}.png`);
+  }
+  for (const label of ["", "200 hours", "RYT 300", "My RYT200 training", "RYT500/YACEP"]) {
+    expect(getCertificateMark(label)).toBeNull();
+  }
+});
+
 function expectCloseTo(value: number, expected: number, tolerance = 3) {
   expect(Math.abs(value - expected)).toBeLessThanOrEqual(tolerance);
 }

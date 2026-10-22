@@ -52,10 +52,10 @@ export function ProfileLinks({ links }: { links?: SocialLinkOut[] | null }) {
             // double the width of every chip — but it is the one thing that distinguishes two
             // links to the same platform, so it goes to screen readers.
             aria-label={link.handle ? `${label} — ${link.handle}` : label}
-            className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#EBEBEB] bg-white px-3.5 py-2 text-sm font-medium text-[#222222] transition-colors hover:bg-[#FAFAFA]"
+            className="inline-flex h-10 min-w-0 max-w-full items-center gap-2 rounded-full border border-[#EBEBEB] bg-white px-3.5 text-sm font-medium leading-5 text-[#222222] transition-colors hover:bg-[#FAFAFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <Icon className="h-4 w-4 shrink-0 text-[#717171]" aria-hidden="true" />
-            <span className="truncate">{label}</span>
+            <span className="min-w-0 truncate">{label}</span>
           </a>
         );
       })}

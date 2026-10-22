@@ -4,11 +4,11 @@ import { Award, GraduationCap, Languages, MapPin } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { PhotoGallery } from "@/components/custom/PhotoGallery";
-import { WyImage } from "@/components/custom/WyImage";
 import TagYogaLotosIcon from "@/components/icons/tags/TagYogaLotosIcon";
 import { scrollTo } from "@/lib/scrollTo";
 import { cn } from "@/lib/utils";
 
+import { InstructorCertificateCard } from "./InstructorCertificateCard";
 import type {
   InstructorCertificateViewModel,
   InstructorHighlightViewModel,
@@ -223,17 +223,10 @@ export function InstructorCertificates({
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
         {certificates.map((certificate, index) => (
-          <article
-            key={`${certificate.name}-${index}`}
-            className="flex items-center gap-3 rounded-2xl border border-[#EBEBEB] bg-white p-4"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F1F1F1] text-[#717171]">
-              <Award className="h-5 w-5" />
-            </div>
-            <p className="min-w-0 text-[15px] font-semibold leading-5 text-[#222222]">
-              {certificate.name}
-            </p>
-          </article>
+          <InstructorCertificateCard
+            key={`${certificate.name}-${certificate.imageId}-${index}`}
+            certificate={certificate}
+          />
         ))}
       </div>
     </section>
