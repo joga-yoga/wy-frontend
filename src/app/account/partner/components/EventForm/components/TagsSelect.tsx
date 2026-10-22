@@ -3,8 +3,8 @@
 import { Control, Controller, FieldErrors } from "react-hook-form";
 
 import { PREDEFINED_TAGS } from "@/components/custom/TagsSelect";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { EventFormData } from "@/lib/schemas/event";
-import { cn } from "@/lib/utils";
 
 interface TagsSelectProps {
   control: Control<EventFormData>;
@@ -18,15 +18,16 @@ export const TagsSelect = ({ control, errors }: TagsSelectProps) => {
       control={control}
       render={({ field, fieldState }) => (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-2">
+          <div className="flex flex-wrap gap-2">
             {PREDEFINED_TAGS.map((tag) => {
               const isSelected = field.value?.includes(tag.id);
               const Icon = tag.icon;
 
               return (
-                <button
+                <SelectionChip
                   key={tag.id}
-                  type="button"
+                  selected={Boolean(isSelected)}
+                  icon={<Icon />}
                   onClick={() => {
                     const currentTags = field.value || [];
                     if (isSelected) {
@@ -35,28 +36,9 @@ export const TagsSelect = ({ control, errors }: TagsSelectProps) => {
                       field.onChange([...currentTags, tag.id]);
                     }
                   }}
-                  className={cn(
-                    "flex items-center justify-center gap-3 rounded-full border-2 px-4 py-2 transition-all duration-200 hover:scale-105",
-                    isSelected
-                      ? "border-[#2CBF5E] bg-white"
-                      : "border-gray-200 bg-white hover:border-gray-300",
-                  )}
                 >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5 flex-shrink-0",
-                      isSelected ? "text-[#2CBF5E]" : "text-gray-600",
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "text-sm font-medium whitespace-nowrap",
-                      isSelected ? "text-[#2CBF5E]" : "text-gray-700",
-                    )}
-                  >
-                    {tag.label}
-                  </span>
-                </button>
+                  {tag.label}
+                </SelectionChip>
               );
             })}
           </div>

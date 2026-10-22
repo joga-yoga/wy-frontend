@@ -32,7 +32,6 @@ import {
 } from "@/components/page-contents/studio/pricingHelpers";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
 import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { Textarea } from "@/components/ui/textarea";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
@@ -863,19 +863,14 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                       {allAmenities.map((amenity) => {
                         const Icon = amenityIcon(amenity.icon_id);
                         return (
-                          <Badge
+                          <SelectionChip
                             key={amenity.id}
-                            variant={
-                              (values.amenity_ids ?? []).includes(amenity.id)
-                                ? "default"
-                                : "outline"
-                            }
-                            className="cursor-pointer gap-1.5"
+                            selected={(values.amenity_ids ?? []).includes(amenity.id)}
+                            icon={<Icon />}
                             onClick={() => toggleAmenity(amenity.id)}
                           >
-                            <Icon className="h-3.5 w-3.5" />
                             {amenity.name}
-                          </Badge>
+                          </SelectionChip>
                         );
                       })}
                     </div>

@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -120,13 +121,13 @@ export const CourseMetaSection = ({ control, register, errors }: CourseMetaSecti
           name="skill_level"
           control={control}
           render={({ field, fieldState }) => (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {SKILL_LEVELS.map(({ value, label }) => {
                 const selected = (field.value ?? []).includes(value);
                 return (
-                  <button
+                  <SelectionChip
                     key={value}
-                    type="button"
+                    selected={selected}
                     onClick={() => {
                       const current = field.value ?? [];
                       if (selected) {
@@ -135,14 +136,9 @@ export const CourseMetaSection = ({ control, register, errors }: CourseMetaSecti
                         field.onChange([...current, value]);
                       }
                     }}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                      selected
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
-                    }`}
                   >
                     {label}
-                  </button>
+                  </SelectionChip>
                 );
               })}
               {fieldState.error && (

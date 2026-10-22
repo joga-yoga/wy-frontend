@@ -5,8 +5,8 @@ import { useState } from "react";
 
 import { ManageStudioDrawer } from "@/components/directory/ManageStudioDrawer";
 import { Button } from "@/components/ui/button";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { studios } from "@/lib/directoryCopy";
-import { cn } from "@/lib/utils";
 import type { CityDirectoryPayload, StudioDirectoryItem } from "@/types/studio";
 
 import { RaisedStudioCard, RecessedStudioCard } from "./StudioCards";
@@ -135,23 +135,14 @@ function StyleFilter({
         {facets.map((facet) => {
           const on = active === facet.name;
           return (
-            <button
+            <SelectionChip
               key={facet.name}
-              type="button"
+              selected={on}
               onClick={() => onChange(on ? null : facet.name)}
-              aria-pressed={on}
-              className={cn(
-                "text-filter-subtitle rounded-full border-2 bg-white px-3 py-1.5 transition-colors",
-                // The same active-filter idiom as the events list: a green border, not a
-                // black fill.
-                on
-                  ? "border-brand-green-700 text-gray-900"
-                  : "border-gray-200 text-gray-700 hover:border-gray-400",
-              )}
             >
               {facet.name}{" "}
               <span className={on ? "text-gray-500" : "text-gray-400"}>{facet.count}</span>
-            </button>
+            </SelectionChip>
           );
         })}
       </div>
