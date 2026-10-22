@@ -14,6 +14,7 @@ import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
+import { isValidTime } from "@/lib/timeInput";
 import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
@@ -202,7 +203,14 @@ export default function CreateScheduleWizard() {
   };
 
   const buildPayload = useCallback((): ScheduleCreatePayload | null => {
-    if (!selectedTemplate || !studioId || !fromDate || !roomState.roomValid) return null;
+    if (
+      !selectedTemplate ||
+      !studioId ||
+      !fromDate ||
+      !roomState.roomValid ||
+      !isValidTime(startTime)
+    )
+      return null;
 
     let effectiveToDate: Date | undefined;
     if (frequency === "once") {
@@ -294,6 +302,7 @@ export default function CreateScheduleWizard() {
 
   const canAdvanceStep2 =
     roomState.roomValid &&
+    isValidTime(startTime) &&
     studioId &&
     fromDate &&
     (frequency === "once" || (selectedDays.length > 0 && (endDateMode !== "custom" || toDate)));

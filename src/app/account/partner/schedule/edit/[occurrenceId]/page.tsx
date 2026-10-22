@@ -13,6 +13,7 @@ import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { addCalendarMonthClamped, formatDateYMD } from "@/lib/formatDateRange";
 import { isFewForm, plural } from "@/lib/polishPlural";
+import { isValidTime } from "@/lib/timeInput";
 
 import {
   type EndDateMode,
@@ -142,6 +143,7 @@ export default function EditSessionPage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(true);
 
   const [startTime, setStartTime] = useState("");
+  const timeValid = isSubstitution || isValidTime(startTime);
   const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
@@ -291,7 +293,7 @@ export default function EditSessionPage() {
   };
 
   const goToPreview = async () => {
-    if (!roomState.roomValid) return;
+    if (!roomState.roomValid || !timeValid) return;
     setIsLoadingPreview(true);
     try {
       const r = await axiosInstance.post<SessionEditPreviewResponse>(
@@ -308,7 +310,7 @@ export default function EditSessionPage() {
   };
 
   const handleCommit = async () => {
-    if (!roomState.roomValid) {
+    if (!roomState.roomValid || !timeValid) {
       setStep("form");
       return;
     }
@@ -430,7 +432,7 @@ export default function EditSessionPage() {
               variant="green"
               className="flex-1"
               onClick={goToPreview}
-              disabled={isLoadingPreview || !roomState.roomValid}
+              disabled={isLoadingPreview || !roomState.roomValid || !timeValid}
             >
               {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>
@@ -492,7 +494,7 @@ export default function EditSessionPage() {
               variant="green"
               className="flex-1"
               onClick={goToPreview}
-              disabled={isLoadingPreview || !roomState.roomValid}
+              disabled={isLoadingPreview || !roomState.roomValid || !timeValid}
             >
               {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>

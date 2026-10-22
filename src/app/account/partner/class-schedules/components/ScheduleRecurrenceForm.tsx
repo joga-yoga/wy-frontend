@@ -2,6 +2,7 @@
 
 import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
+import { TimePicker } from "@/components/common/TimePicker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -286,12 +287,8 @@ export function ScheduleRecurrenceForm({
       {/* Godzina + Sala side by side (S4) */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label>Godzina</Label>
-          <Input
-            type="time"
-            value={startTime}
-            onChange={(e) => onStartTimeChange(e.target.value)}
-          />
+          <Label htmlFor="schedule-start-time">Godzina</Label>
+          <TimePicker id="schedule-start-time" value={startTime} onChange={onStartTimeChange} />
         </div>
         <ScheduleRoomField
           solo={solo}
