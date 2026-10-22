@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import type { EventDetail } from "@/app/(public)/retreats/[slug]/types";
 import { joinPolish } from "@/lib/joinPolish";
+import { stripHtml } from "@/lib/plainText";
 import type { InstructorPublic } from "@/types/instructor";
 import type { StudioDirectoryItem, StudioPublic } from "@/types/studio";
 
@@ -78,13 +79,6 @@ function compactRecord<T extends Record<string, unknown>>(record: T) {
       ([, value]) => value !== null && value !== undefined && value !== "",
     ),
   );
-}
-
-function stripHtml(value: string | null | undefined) {
-  return value
-    ?.replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 export function buildEventJsonLd({

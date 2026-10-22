@@ -3,34 +3,15 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IoChevronForward } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { szablony } from "@/lib/polishPlural";
-import { cn } from "@/lib/utils";
 
+import { TemplateRowContent } from "./components/TemplateRowContent";
 import type { ClassTemplate } from "./types";
-
-const LEVEL_LABELS: Record<string, string> = {
-  beginner: "początkujący",
-  intermediate: "średni",
-  advanced: "zaawansowany",
-  all_levels: "wszystkie poziomy",
-};
-
-function templateSubtitle(t: ClassTemplate): string {
-  // U1 renders an unset default as an explicit "— brak —" rather than dropping the slot,
-  // so every row has the same shape and a missing default is visible instead of implied.
-  return [
-    `${t.duration_minutes} min`,
-    t.level && LEVEL_LABELS[t.level] ? LEVEL_LABELS[t.level] : "— brak —",
-    t.style || "— brak —",
-  ].join(" · ");
-}
 
 export default function ClassTemplatesPage() {
   const [templates, setTemplates] = useState<ClassTemplate[]>([]);
@@ -86,19 +67,9 @@ export default function ClassTemplatesPage() {
             <Link
               key={t.id}
               href={`/account/partner/class-templates/${t.id}/edit`}
-              className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50"
+              className="flex items-start gap-3 px-3 py-4 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
             >
-              <span
-                className={cn(
-                  "h-2.5 w-2.5 shrink-0 rounded-full",
-                  t.color ? COLOR_SWATCH_MAP[t.color] : "bg-gray-200",
-                )}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-900">{t.title}</p>
-                <p className="mt-0.5 truncate text-xs text-gray-500">{templateSubtitle(t)}</p>
-              </div>
-              <IoChevronForward className="h-4 w-4 shrink-0 text-gray-300" />
+              <TemplateRowContent template={t} showMissingDefaults />
             </Link>
           ))}
           <Link

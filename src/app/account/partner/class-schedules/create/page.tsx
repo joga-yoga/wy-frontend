@@ -1,7 +1,7 @@
 "use client";
 
 import { isAxiosError } from "axios";
-import { ArrowLeft, Check, ChevronRight, Plus, Search } from "lucide-react";
+import { ArrowLeft, Check, Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -12,12 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAssignableInstructors } from "@/hooks/useAssignableInstructors";
 import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
 import { isValidTime } from "@/lib/timeInput";
-import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
+import { TemplateRowContent } from "../../class-templates/components/TemplateRowContent";
 import type { ClassTemplate, ClassTemplateCreate } from "../../class-templates/types";
 import { type EndDateMode, ScheduleRecurrenceForm } from "../components/ScheduleRecurrenceForm";
 import type { PreviewOccurrence, ScheduleCreatePayload, SchedulePreviewResponse } from "../types";
@@ -367,24 +366,11 @@ export default function CreateScheduleWizard() {
                       setSelectedTemplate(t);
                       setStep("recurrence");
                     }}
-                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                    className={`flex w-full items-start gap-3 px-3 py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                       selectedTemplate?.id === t.id ? "bg-gray-50" : "hover:bg-gray-50"
                     }`}
                   >
-                    <span
-                      className={cn(
-                        "h-2.5 w-2.5 shrink-0 rounded-full",
-                        t.color ? COLOR_SWATCH_MAP[t.color] : "bg-gray-200",
-                      )}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-900">{t.title}</p>
-                      <p className="mt-0.5 text-xs text-gray-500">
-                        {t.duration_minutes} min{t.level ? ` · ${levelLabel(t.level)}` : ""}
-                        {t.default_capacity ? ` · limit ${t.default_capacity}` : ""}
-                      </p>
-                    </div>
-                    <ChevronRight size={16} className="shrink-0 text-gray-300" />
+                    <TemplateRowContent template={t} />
                   </button>
                 ))}
               </div>
