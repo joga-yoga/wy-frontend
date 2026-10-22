@@ -167,6 +167,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
   // Pass modal
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [editingPass, setEditingPass] = useState<StudioPass | null>(null);
+  const [editingPassIndex, setEditingPassIndex] = useState<number | null>(null);
   // Sport card modal
   const [isSportCardModalOpen, setIsSportCardModalOpen] = useState(false);
   const [editingSportCard, setEditingSportCard] = useState<StudioSportCard | null>(null);
@@ -968,6 +969,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                               className="flex min-w-0 flex-1 items-center gap-3 text-left"
                               onClick={() => {
                                 setEditingPass(pass);
+                                setEditingPassIndex(index);
                                 setIsPassModalOpen(true);
                               }}
                             >
@@ -1015,6 +1017,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                       className="mt-2 flex min-h-10 items-center gap-3 text-base font-medium text-brand-blue"
                       onClick={() => {
                         setEditingPass(null);
+                        setEditingPassIndex(null);
                         setIsPassModalOpen(true);
                       }}
                     >
@@ -1026,16 +1029,17 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                       onClose={() => setIsPassModalOpen(false)}
                       onSaved={(pass) => {
                         const current = values.passes ?? [];
-                        if (editingPass?.id) {
+                        if (editingPassIndex !== null) {
                           setDirtyValue(
                             "passes",
-                            current.map((p) => (p.id === editingPass.id ? pass : p)),
+                            current.map((p, index) => (index === editingPassIndex ? pass : p)),
                           );
                         } else {
                           setDirtyValue("passes", [...current, pass]);
                         }
                       }}
                       studioId={studioId}
+                      studioName={values.name}
                       dropInPrice={
                         values.drop_in_price !== "" ? Number(values.drop_in_price) : null
                       }
