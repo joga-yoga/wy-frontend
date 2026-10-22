@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -69,9 +68,6 @@ export default function MyPassesPage() {
         {passes.length === 0 && (
           <div className="rounded-b2b border border-dashed bg-white px-4 py-6 text-center">
             <p className="text-sm text-gray-500">Nie masz jeszcze karnetu.</p>
-            <Link href="/wyjazdy" className="text-sm font-semibold text-brand-green-700">
-              Znajdź studio
-            </Link>
           </div>
         )}
 
