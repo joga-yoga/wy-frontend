@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { PickableInstructor } from "@/app/account/partner/schedule/components/InstructorPicker";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
@@ -55,43 +55,64 @@ export function useAssignableInstructors(
   studioId: string | null,
   whenNoStudio: "partner-list" | "empty" = "empty",
 ): PickableInstructor[] {
+  return useAssignableInstructorSource(studioId, whenNoStudio).instructors;
+}
+
+/** Same source, with an explicit refresh for contextual instructor additions. */
+export function useAssignableInstructorSource(
+  studioId: string | null,
+  whenNoStudio: "partner-list" | "empty" = "empty",
+) {
   const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
+  const requestRef = useRef(0);
 
-  useEffect(() => {
-    // A slow response for a studio the user has since switched away from must not overwrite
-    // a newer one — the same race the instructor lookup guards against.
-    let cancelled = false;
-    const apply = (rows: PickableInstructor[]) => {
-      if (!cancelled) setInstructors(rows);
-    };
-
-    if (studioId) {
-      axiosInstance
-        .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
-        .then((r) =>
-          apply(
-            r.data.items.map(({ id, name, image_id, row_state }) => ({
-              id,
-              name,
-              image_id,
-              row_state,
-            })),
-          ),
-        )
-        .catch(() => apply([]));
-    } else if (whenNoStudio === "partner-list") {
-      axiosInstance
-        .get<{ id: string; name: string }[]>("/instructors")
-        .then((r) => apply((r.data ?? []).map(({ id, name }) => ({ id, name }))))
-        .catch(() => apply([]));
-    } else {
-      apply([]);
+  const refresh = useCallback(async (): Promise<PickableInstructor[] | null> => {
+    const request = ++requestRef.current;
+    try {
+      let rows: PickableInstructor[] = [];
+      if (studioId) {
+        const { data } = await axiosInstance.get<{ items: PickableInstructor[] }>(
+          `/studios/${studioId}/roster`,
+        );
+        rows = data.items.map(({ id, name, image_id, row_state }) => ({
+          id,
+          name,
+          image_id,
+          row_state,
+        }));
+      } else if (whenNoStudio === "partner-list") {
+        const { data } = await axiosInstance.get<
+          Array<{
+            id: string;
+            name: string;
+            image_id?: string | null;
+            claim_status?: string | null;
+          }>
+        >("/instructors");
+        rows = (data ?? []).map(({ id, name, image_id, claim_status }) => ({
+          id,
+          name,
+          image_id,
+          row_state: claim_status === "invited" ? "awaiting" : undefined,
+        }));
+      }
+      if (request !== requestRef.current) return null;
+      const unique = [...new Map(rows.map((row) => [row.id, row])).values()];
+      setInstructors(unique);
+      return unique;
+    } catch {
+      if (request === requestRef.current) setInstructors([]);
+      return null;
     }
-
-    return () => {
-      cancelled = true;
-    };
   }, [studioId, whenNoStudio]);
 
-  return instructors;
+  useEffect(() => {
+    setInstructors([]);
+    void refresh();
+    return () => {
+      requestRef.current += 1;
+    };
+  }, [refresh]);
+
+  return { instructors, refresh };
 }

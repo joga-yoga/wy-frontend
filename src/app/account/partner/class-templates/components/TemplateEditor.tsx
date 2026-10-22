@@ -1,12 +1,15 @@
 "use client";
 
-import { Ban, Check, X } from "lucide-react";
-import { useState } from "react";
+import { Ban, Check, Plus, X } from "lucide-react";
+import { useRef, useState } from "react";
 
+import { StudioRosterAddForm } from "@/app/account/partner/instructors/components/StudioRosterAddForm";
 import { InstructorPicker } from "@/app/account/partner/schedule/components/InstructorPicker";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { YogaStyleChips } from "@/components/common/YogaStyleChips";
+import { InstructorModal } from "@/components/instructors/InstructorModal";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,7 +22,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
-import { useAssignableInstructors, useAssignableStudioId } from "@/hooks/useAssignableInstructors";
+import {
+  useAssignableInstructorSource,
+  useAssignableStudioId,
+} from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { CLASS_COLORS, type ClassColor, COLOR_LABELS, COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
@@ -101,7 +107,36 @@ export function TemplateEditor({
   // every instructor the partner has rather than to none — see the hook for why this differs
   // from the schedule wizard, which needs a studio before the question means anything.
   const studioId = useAssignableStudioId();
-  const instructors = useAssignableInstructors(studioId, "partner-list");
+  const { instructors, refresh: refreshInstructors } = useAssignableInstructorSource(
+    studioId,
+    "partner-list",
+  );
+  const [isInstructorOpen, setIsInstructorOpen] = useState(false);
+  const [instructorStep, setInstructorStep] = useState<"identify" | "new">("identify");
+  const [pendingInstructorId, setPendingInstructorId] = useState<string | null>(null);
+  const [instructorNotice, setInstructorNotice] = useState("");
+  const addInstructorRef = useRef<HTMLButtonElement>(null);
+
+  async function refreshAndSelectInstructor(id: string) {
+    const rows = await refreshInstructors();
+    if (rows?.some((row) => row.id === id)) {
+      setDefaultInstructorId(id);
+      setPendingInstructorId(null);
+      setInstructorNotice("");
+    } else {
+      setPendingInstructorId(id);
+      setInstructorNotice(
+        rows
+          ? "Instruktor nie jest jeszcze dostępny na tej liście. Dotychczasowy wybór pozostaje bez zmian."
+          : "Instruktor dodany. Nie udało się odświeżyć listy instruktorów.",
+      );
+    }
+  }
+
+  function handleInstructorAdded(id: string) {
+    setIsInstructorOpen(false);
+    void refreshAndSelectInstructor(id);
+  }
 
   const [imageId, setImageId] = useState(initial?.image_ids?.[0] ?? "");
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -187,6 +222,40 @@ export function TemplateEditor({
 
   return (
     <div className="space-y-6">
+      {!isSolo &&
+        (studioId ? (
+          <Dialog open={isInstructorOpen} onOpenChange={setIsInstructorOpen}>
+            <DialogContent
+              finalFocus={addInstructorRef}
+              closeLabel="Zamknij"
+              className="max-h-[90dvh] overflow-y-auto"
+            >
+              <DialogTitle>Dodaj instruktora</DialogTitle>
+              {isInstructorOpen && (
+                <StudioRosterAddForm
+                  key={studioId}
+                  studioId={studioId}
+                  step={instructorStep}
+                  onNew={() => setInstructorStep("new")}
+                  onAdded={handleInstructorAdded}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <InstructorModal
+            isOpen={isInstructorOpen}
+            usage="template"
+            returnFocusRef={addInstructorRef}
+            onClose={() => setIsInstructorOpen(false)}
+            onInstructorSaved={(instructor) => handleInstructorAdded(instructor.id)}
+            existingInstructors={instructors.map((instructor) => ({
+              ...instructor,
+              image_id: instructor.image_id ?? null,
+              is_claimed: instructor.id === capabilities?.selfInstructorId,
+            }))}
+          />
+        ))}
       <div>
         <Label>Zdjęcie</Label>
         <div className="mt-1.5">
@@ -401,7 +470,7 @@ export function TemplateEditor({
                 makes the argument, and the two forms asking the same question differently was
                 the complaint.
 
-                `allowNone` supplies the "Brak prowadzącego" row, which replaces the separate
+                `allowNone` supplies the optional default row, which replaces the separate
                 `X` clear button — a template's default instructor is optional, and clearing it
                 is a choice in the list rather than a control beside it.
 
@@ -414,8 +483,42 @@ export function TemplateEditor({
                   currentId={null}
                   onSelect={setDefaultInstructorId}
                   allowNone
+                  noneLabel="Wybiorę później"
+                  emptyHint=""
                   otherLabel=""
                 />
+                <p className="mt-2 px-1 text-sm text-gray-500">
+                  Prowadzącego wybierzesz przy dodawaniu zajęć do grafiku
+                </p>
+                <Button
+                  ref={addInstructorRef}
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={() => {
+                    setInstructorStep("identify");
+                    setIsInstructorOpen(true);
+                  }}
+                >
+                  <Plus className="mr-1.5 size-4" />
+                  Dodaj instruktora
+                </Button>
+                {instructorNotice && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-sm text-gray-500" role="status">
+                      {instructorNotice}
+                    </p>
+                    {pendingInstructorId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void refreshAndSelectInstructor(pendingInstructorId)}
+                      >
+                        Odśwież listę instruktorów
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
