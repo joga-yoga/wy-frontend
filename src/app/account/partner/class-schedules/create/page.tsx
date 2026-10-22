@@ -1,5 +1,6 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { ArrowLeft, Check, ChevronRight, Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAssignableInstructors } from "@/hooks/useAssignableInstructors";
+import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
@@ -17,12 +19,7 @@ import { cn } from "@/lib/utils";
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
 import type { ClassTemplate, ClassTemplateCreate } from "../../class-templates/types";
 import { type EndDateMode, ScheduleRecurrenceForm } from "../components/ScheduleRecurrenceForm";
-import type {
-  PreviewOccurrence,
-  RoomOption,
-  ScheduleCreatePayload,
-  SchedulePreviewResponse,
-} from "../types";
+import type { PreviewOccurrence, ScheduleCreatePayload, SchedulePreviewResponse } from "../types";
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -66,7 +63,6 @@ export default function CreateScheduleWizard() {
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   // Step 2
-  const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [studioId, setStudioId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
@@ -114,19 +110,17 @@ export default function CreateScheduleWizard() {
       setStudioId(match.id);
     } else if (capabilities.managedStudios.length === 1) {
       setStudioId(capabilities.managedStudios[0].id);
+    } else {
+      setStudioId("");
     }
   }, [capabilities, searchParams]);
 
-  useEffect(() => {
-    if (!studioId) {
-      setRooms([]);
-      return;
-    }
-    axiosInstance
-      .get<RoomOption[]>(`/studios/${studioId}/rooms`)
-      .then((r) => setRooms(r.data ?? []))
-      .catch(() => setRooms([]));
-  }, [studioId]);
+  const roomState = useScheduleRooms(
+    studioId,
+    roomId,
+    setRoomId,
+    Boolean(capabilities?.soloStudioId),
+  );
 
   // Roster (not the flat `/instructors` list) — carries `image_id`/`row_state` for the avatar
   // picker, and matches the edit flow's Zastępstwo picker data source. Shared with the
@@ -208,7 +202,7 @@ export default function CreateScheduleWizard() {
   };
 
   const buildPayload = useCallback((): ScheduleCreatePayload | null => {
-    if (!selectedTemplate || !studioId || !fromDate) return null;
+    if (!selectedTemplate || !studioId || !fromDate || !roomState.roomValid) return null;
 
     let effectiveToDate: Date | undefined;
     if (frequency === "once") {
@@ -240,6 +234,7 @@ export default function CreateScheduleWizard() {
     };
   }, [
     selectedTemplate,
+    roomState.roomValid,
     capabilities?.soloStudioId,
     studioId,
     roomId,
@@ -280,8 +275,16 @@ export default function CreateScheduleWizard() {
       const r = await axiosInstance.post("/class-schedules", payload);
       setTotalCreated(r.data.total_created);
       setStep("success");
-    } catch {
-      toast({ description: "Nie udało się utworzyć grafiku.", variant: "destructive" });
+    } catch (error: unknown) {
+      const detail: unknown = isAxiosError(error) ? error.response?.data?.detail : null;
+      toast({
+        description: typeof detail === "string" ? detail : "Nie udało się utworzyć grafiku.",
+        variant: "destructive",
+      });
+      if (isAxiosError(error) && error.response?.status === 400) {
+        roomState.retryRooms();
+        setStep("recurrence");
+      }
     } finally {
       setIsCommitting(false);
     }
@@ -290,6 +293,7 @@ export default function CreateScheduleWizard() {
   const stepNumber = step === "select" ? 1 : step === "recurrence" ? 2 : step === "preview" ? 3 : 3;
 
   const canAdvanceStep2 =
+    roomState.roomValid &&
     studioId &&
     fromDate &&
     (frequency === "once" || (selectedDays.length > 0 && (endDateMode !== "custom" || toDate)));
@@ -425,7 +429,7 @@ export default function CreateScheduleWizard() {
               selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""
             }`}
             onChangeTemplate={() => setStep("select")}
-            rooms={rooms}
+            {...roomState}
             roomId={roomId}
             onRoomChange={setRoomId}
             instructors={instructors}
@@ -508,7 +512,12 @@ export default function CreateScheduleWizard() {
               <ArrowLeft size={14} className="mr-1" />
               Wstecz
             </Button>
-            <Button size="action" className="flex-1" onClick={commit} disabled={isCommitting}>
+            <Button
+              size="action"
+              className="flex-1"
+              onClick={commit}
+              disabled={isCommitting || !roomState.roomValid}
+            >
               {isCommitting ? "Tworzenie..." : "Utwórz grafik"}
             </Button>
           </div>
