@@ -62,6 +62,8 @@ export interface WalkInCandidate {
   email: string;
   name: string | null;
   pass_context: string | null;
+  past_booking_count?: number;
+  last_past_booking_at?: string | null;
 }
 
 export interface WalkInSearchResponse {

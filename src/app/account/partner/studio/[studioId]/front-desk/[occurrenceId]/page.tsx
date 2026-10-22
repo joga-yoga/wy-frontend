@@ -160,6 +160,9 @@ export default function FrontDeskRosterPage() {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<WalkInSearchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [searchAttempt, setSearchAttempt] = useState(0);
+  const candidateRequestRef = useRef(0);
   const [selectedCandidate, setSelectedCandidate] = useState<WalkInCandidate | null>(null);
   // Third state of the add-participant drawer, alongside "search" and "candidate picked":
   // creating a person who isn't in the system yet. Its own field rather than the search
@@ -234,22 +237,40 @@ export default function FrontDeskRosterPage() {
   }, [roster, oczekujeCount]);
 
   useEffect(() => {
-    if (!isAddOpen || query.trim().length < 2) {
-      setSearchResults(null);
+    setSearchResults(null);
+    setSearchError(false);
+    if (!isAddOpen || selectedCandidate || isCreatingUser) {
+      setIsSearching(false);
       return;
     }
+    let active = true;
+    const controller = new AbortController();
     setIsSearching(true);
-    const handle = setTimeout(() => {
-      axiosInstance
-        .get<WalkInSearchResponse>(`/studios/${studioId}/front-desk/search-users`, {
-          params: { q: query },
-        })
-        .then((r) => setSearchResults(r.data))
-        .catch(() => setSearchResults(null))
-        .finally(() => setIsSearching(false));
-    }, 300);
-    return () => clearTimeout(handle);
-  }, [isAddOpen, query, studioId]);
+    const handle = setTimeout(
+      () => {
+        axiosInstance
+          .get<WalkInSearchResponse>(`/studios/${studioId}/front-desk/search-users`, {
+            params: { q: query.trim() },
+            signal: controller.signal,
+          })
+          .then((r) => {
+            if (active) setSearchResults(r.data);
+          })
+          .catch(() => {
+            if (active) setSearchError(true);
+          })
+          .finally(() => {
+            if (active) setIsSearching(false);
+          });
+      },
+      query.trim() ? 300 : 0,
+    );
+    return () => {
+      active = false;
+      clearTimeout(handle);
+      controller.abort();
+    };
+  }, [isAddOpen, query, studioId, selectedCandidate, isCreatingUser, searchAttempt]);
 
   // Undo (spec §6) persists until the next resolving action or 10s, whichever comes first —
   // so every other resolving action below clears it before doing its own thing.
@@ -303,13 +324,26 @@ export default function FrontDeskRosterPage() {
     }
   }
 
+  const clearCandidate = useCallback(() => {
+    candidateRequestRef.current += 1;
+    setSelectedCandidate(null);
+    setOptions(null);
+    setFundingType(undefined);
+    setSelectedUserPassId(null);
+    setSelectedSportCardId(null);
+    setSelectedPassId(null);
+  }, []);
+
   async function selectCandidate(candidate: WalkInCandidate) {
+    clearCandidate();
+    const request = candidateRequestRef.current;
     setSelectedCandidate(candidate);
     try {
       const { data: opts } = await axiosInstance.get<BookingOptionsResponse>(
         `/studios/${studioId}/occurrences/${occurrenceId}/walk-in-options`,
         { params: { user_id: candidate.user_id } },
       );
+      if (request !== candidateRequestRef.current) return;
       setOptions(opts);
       if (opts.existing_passes.length > 0) {
         setFundingType("use_pass");
@@ -324,7 +358,8 @@ export default function FrontDeskRosterPage() {
         setSelectedPassId(opts.buy_and_use_options[0].pass_id);
       }
     } catch {
-      toast({ description: "Nie udało się wczytać opcji.", variant: "destructive" });
+      if (request === candidateRequestRef.current)
+        toast({ description: "Nie udało się wczytać opcji.", variant: "destructive" });
     }
   }
 
@@ -335,6 +370,8 @@ export default function FrontDeskRosterPage() {
   }
 
   function cancelCreateUser() {
+    candidateRequestRef.current += 1;
+    setIsSubmittingNewUser(false);
     setIsCreatingUser(false);
     setNewUserEmail("");
   }
@@ -342,14 +379,17 @@ export default function FrontDeskRosterPage() {
   async function createNewUser() {
     if (!isValidEmail(newUserEmail) || isSubmittingNewUser) return;
     setIsSubmittingNewUser(true);
+    const request = ++candidateRequestRef.current;
     try {
       const { data } = await axiosInstance.post<{
         user_id: string;
         email: string;
         name: string | null;
       }>(`/studios/${studioId}/front-desk/new-user`, { email: newUserEmail.trim() });
+      if (request !== candidateRequestRef.current) return;
       setIsCreatingUser(false);
       setNewUserEmail("");
+      setIsSubmittingNewUser(false);
       await selectCandidate({
         user_id: data.user_id,
         email: data.email,
@@ -357,25 +397,34 @@ export default function FrontDeskRosterPage() {
         pass_context: null,
       });
     } catch (err: unknown) {
+      if (request !== candidateRequestRef.current) return;
       toast({
         description: extractErrorMessage(err, "Nie udało się utworzyć konta."),
         variant: "destructive",
       });
     } finally {
-      setIsSubmittingNewUser(false);
+      if (request === candidateRequestRef.current) setIsSubmittingNewUser(false);
     }
   }
 
-  function resetAddFlow() {
+  const resetAddFlow = useCallback(() => {
     setIsAddOpen(false);
     setQuery("");
     setSearchResults(null);
-    setSelectedCandidate(null);
+    setSearchError(false);
+    setIsSearching(false);
+    clearCandidate();
     setIsCreatingUser(false);
     setNewUserEmail("");
-    setOptions(null);
-    setFundingType(undefined);
-  }
+    setIsSubmittingNewUser(false);
+  }, [clearCandidate]);
+
+  useEffect(() => {
+    resetAddFlow();
+    return () => {
+      candidateRequestRef.current += 1;
+    };
+  }, [studioId, occurrenceId, resetAddFlow]);
 
   async function handleWalkInSubmit() {
     if (!selectedCandidate || !fundingType) return;
@@ -792,24 +841,42 @@ export default function FrontDeskRosterPage() {
                   <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    aria-label="Imię, nazwisko lub email"
                     placeholder="Imię, nazwisko lub email"
                     className="pl-9"
                   />
                 </div>
 
-                {isSearching && <p className="text-xs text-gray-400">Szukam...</p>}
+                {isSearching && (
+                  <p className="text-sm text-gray-500" role="status">
+                    Ładowanie klientów...
+                  </p>
+                )}
+                {searchError && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-destructive" role="alert">
+                      Nie udało się załadować klientów.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSearchAttempt((attempt) => attempt + 1)}
+                    >
+                      Spróbuj ponownie
+                    </Button>
+                  </div>
+                )}
 
                 {searchResults && searchResults.studio_clients.length > 0 && (
                   <div className="space-y-1.5">
                     <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                      Klienci studia
+                      {session?.organizer_kind === "solo" ? "Twoi klienci" : "Klienci studia"}
                     </p>
                     <div className="rounded-b2b border bg-white overflow-hidden divide-y">
                       {searchResults.studio_clients.map((c) => (
                         <button
                           key={c.user_id}
                           onClick={() => selectCandidate(c)}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                         >
                           <HashedAvatar
                             seed={c.user_id}
@@ -825,6 +892,15 @@ export default function FrontDeskRosterPage() {
                             <span className="block truncate text-xs text-gray-500">
                               {c.pass_context ?? personLabel(c.name, c.email).secondary ?? ""}
                             </span>
+                            <span className="mt-1 block text-xs leading-5 text-gray-500">
+                              Odbyte rezerwacje: {c.past_booking_count ?? 0}
+                              <span className="block">
+                                Ostatnia:{" "}
+                                {c.last_past_booking_at
+                                  ? new Date(c.last_past_booking_at).toLocaleDateString("pl-PL")
+                                  : "—"}
+                              </span>
+                            </span>
                           </span>
                           <StatusChip tone="green">Klient</StatusChip>
                         </button>
@@ -833,21 +909,13 @@ export default function FrontDeskRosterPage() {
                   </div>
                 )}
 
-                {/* "Not on the list" is only worth saying once a search has actually come
-                    back empty; the CTA below stands on its own before that. */}
                 {searchResults && searchResults.studio_clients.length === 0 && !isSearching && (
-                  <div className="flex items-center gap-3">
-                    <span className="h-px flex-1 bg-gray-200" />
-                    <span className="text-xs text-gray-400">nie ma na liście</span>
-                    <span className="h-px flex-1 bg-gray-200" />
-                  </div>
+                  <p className="text-sm text-gray-500" role="status">
+                    {query.trim() ? "Nie znaleziono klientów." : "Brak klientów."}
+                  </p>
                 )}
 
-                {/* Shown in exactly two situations: the default state (nothing searched
-                    yet) and a search that came back empty. Once there are matches on
-                    screen the manager is scanning them, and a competing primary action
-                    there is just noise. */}
-                {(searchResults?.studio_clients.length ?? 0) === 0 && (
+                {(!query.trim() || searchResults?.studio_clients.length === 0) && (
                   <Button size="action" className="w-full" onClick={openCreateUser}>
                     <Plus size={18} className="mr-1.5" />
                     Utwórz użytkownika
@@ -944,11 +1012,7 @@ export default function FrontDeskRosterPage() {
                 variant="outline"
                 aria-label="Wybierz inną osobę"
                 className="h-12 w-12 shrink-0 rounded-full p-0"
-                onClick={() => {
-                  setSelectedCandidate(null);
-                  setOptions(null);
-                  setFundingType(undefined);
-                }}
+                onClick={clearCandidate}
               >
                 <ArrowLeft size={18} />
               </Button>
