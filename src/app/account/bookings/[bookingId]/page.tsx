@@ -38,9 +38,8 @@ import { cn } from "@/lib/utils";
  * That costs one extra request: `GET /bookings/{id}` resolves ownership *and* the occurrence,
  * then `GET /public/occurrences/{id}/detail` supplies the session, the instructor, the studio,
  * the location and — since WY-73 — the money and cancellation facts on `viewer_booking`.
- * Loading the detail alone would not do: it answers about the *viewer's* booking on that
- * occurrence, which is the right one here only because the first call proved the booking is
- * theirs and is on this occurrence.
+ * Only use occurrence-level booking facts when their ID matches the requested reservation;
+ * a cancelled booking may coexist with a later rebooking of the same session.
  */
 
 const FUNDING_LABEL: Record<string, string> = {
@@ -59,11 +58,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   online: "Płatność online",
 };
 
-/** `BookingOut` — the subset this screen uses. It is fetched to resolve the occurrence and to
- *  prove ownership, and it doubles as the money source for a **cancelled** booking, which
- *  `viewer_booking` cannot supply: the occurrence-detail endpoint only attaches a booking with
- *  `status == "booked"`, so a cancelled reservation would otherwise lose its payment facts
- *  entirely — exactly when a customer is most likely to be checking what they paid. */
+/** Ownership, reservation state and exact-reservation payment projection from BookingOut. */
 interface BookingSummary {
   id: string;
   occurrence_id: string | null;
@@ -71,6 +66,14 @@ interface BookingSummary {
   funding_type?: string;
   amount_owed?: number | null;
   sport_card_surcharge?: number | null;
+  confirmation_pending?: boolean;
+  payment_required?: boolean;
+  payment?: {
+    method: string | null;
+    amount: number | null;
+    currency: string | null;
+    is_paid: boolean | null;
+  } | null;
 }
 
 function formatDateTime(iso: string): string {
@@ -186,31 +189,43 @@ function ReservationDetailContent() {
     );
   }
 
-  const booking = detail?.viewer_booking ?? null;
-  const isCancelled = (summary?.status ?? booking?.status) === "cancelled";
+  const booking = detail?.viewer_booking?.id === summary?.id ? detail?.viewer_booking : null;
+  const isCancelled = summary?.status === "cancelled";
+  const isNoShow = summary?.status === "no_show";
+  const isBooked = summary?.status === "booked";
+  const isPending = summary?.confirmation_pending === true || summary?.payment_required === true;
 
-  // `viewer_booking` where it exists, `BookingOut` where it does not — the latter carries no
-  // payment method and no paid state, so those simply go missing rather than being guessed.
+  // Prefer exact-reservation facts. Older servers may omit the new projection;
+  // their occurrence facts are usable only after the ID check above.
   const money =
-    booking != null
+    summary?.payment != null
       ? {
-          funding: booking.funding_type,
-          method: booking.payment_method,
-          amount: booking.amount_owed,
-          currency: booking.currency,
-          surcharge: booking.sport_card_surcharge,
-          isPaid: booking.is_paid ?? null,
+          funding: summary.funding_type,
+          method: summary.payment.method,
+          amount: summary.payment.amount,
+          currency: summary.payment.currency,
+          surcharge: summary.sport_card_surcharge,
+          isPaid: summary.payment.is_paid,
         }
-      : summary != null && summary.amount_owed != null
+      : booking != null
         ? {
-            funding: summary.funding_type,
-            method: null,
-            amount: summary.amount_owed,
-            currency: null,
-            surcharge: summary.sport_card_surcharge,
-            isPaid: null,
+            funding: booking.funding_type,
+            method: booking.payment_method,
+            amount: booking.amount_owed,
+            currency: booking.currency,
+            surcharge: booking.sport_card_surcharge,
+            isPaid: booking.is_paid ?? null,
           }
-        : null;
+        : summary != null && summary.amount_owed != null
+          ? {
+              funding: summary.funding_type,
+              method: null,
+              amount: summary.amount_owed,
+              currency: null,
+              surcharge: summary.sport_card_surcharge,
+              isPaid: null,
+            }
+          : null;
   const isPast = detail ? new Date(detail.start_time) < new Date() : false;
 
   return (
@@ -241,8 +256,28 @@ function ReservationDetailContent() {
             <section className="px-4 py-5">
               <div className="flex flex-wrap items-center gap-1.5">
                 {isCancelled && <StatusChip tone="rose">Odwołana</StatusChip>}
-                {!isCancelled && isPast && <StatusChip tone="gray">Zakończone</StatusChip>}
-                {!isCancelled && !isPast && <StatusChip tone="green">Potwierdzona</StatusChip>}
+                {isNoShow && <StatusChip tone="gray">Nieobecność</StatusChip>}
+                {!isCancelled && !isNoShow && isPast && (
+                  <StatusChip tone="gray">Zakończone</StatusChip>
+                )}
+                {isBooked && !isPast && (
+                  <StatusChip
+                    tone={
+                      isPending
+                        ? "amber"
+                        : summary?.confirmation_pending === false
+                          ? "green"
+                          : "gray"
+                    }
+                    className="max-w-full shrink whitespace-normal"
+                  >
+                    {isPending
+                      ? "Oczekuje na potwierdzenie"
+                      : summary?.confirmation_pending === false
+                        ? "Rezerwacja potwierdzona"
+                        : "Rezerwacja"}
+                  </StatusChip>
+                )}
               </div>
               <h2
                 className={cn(
@@ -304,10 +339,12 @@ function ReservationDetailContent() {
                   <Fact
                     label="Status płatności"
                     value={
-                      // Silent on a cancelled booking: `is_paid` is only known from
-                      // `viewer_booking`, and inventing "Do zapłaty" for a reservation that no
-                      // longer exists would be a debt claim we cannot stand behind.
-                      money.isPaid == null || money.amount == null ? null : money.isPaid ? (
+                      // Preserve the neutral cancelled-history presentation. Missing money
+                      // or unknown funding must not invent a paid state or a debt.
+                      isCancelled ||
+                      money.funding === "unknown" ||
+                      money.isPaid == null ||
+                      money.amount == null ? null : money.isPaid ? (
                         <span className="text-b2b-green-text">Opłacona</span>
                       ) : (
                         <span className="text-b2b-amber-text">Do zapłaty</span>
@@ -328,7 +365,7 @@ function ReservationDetailContent() {
             <LocationSection detail={detail} />
 
             {/* ── 4. Cancellation ──────────────────────────────────────── */}
-            {booking && !isCancelled && (
+            {booking && isBooked && (
               <section className="border-t border-gray-100 px-4 py-5">
                 <p className="text-[18px] font-semibold text-[#222222]">Odwołanie</p>
                 {booking.cancellation_policy_text && (
