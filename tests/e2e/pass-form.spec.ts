@@ -75,7 +75,9 @@ for (const width of [375, 1440])
     await page.getByRole("button", { name: "Dodaj karnet", exact: true }).click();
     const dialog = form(page);
     const save = dialog.getByRole("button", { name: "Utwórz karnet" });
-    await expect(dialog.getByLabel("Nazwa karnetu", { exact: true })).toHaveValue("");
+    await expect(dialog.getByLabel("Nazwa karnetu", { exact: true })).toHaveValue(
+      "Karnet na 8 wejść",
+    );
     await expect(dialog.getByLabel("Cena karnetu", { exact: true })).toHaveValue("");
     await expect(save).toBeDisabled();
     await expect(dialog.locator('[aria-invalid="true"]')).toHaveCount(0);
@@ -245,7 +247,8 @@ test("all dismissal paths share dirty confirmation and untouched close is immedi
   await page.getByRole("button", { name: "Dodaj karnet", exact: true }).click();
   await form(page).getByLabel("Nazwa karnetu", { exact: true }).fill("Moje zmiany");
   await page.keyboard.press("Tab");
-  await expect(form(page).getByRole("switch", { name: "Bez limitu", exact: true })).toBeFocused();
+  await expect(form(page).getByRole("button", { name: "Anuluj", exact: true })).toBeFocused();
+  await form(page).getByRole("switch", { name: "Bez limitu", exact: true }).focus();
   await page.keyboard.press("Space");
   await expect(form(page).getByRole("switch", { name: "Bez limitu", exact: true })).toBeChecked();
   for (const close of [
@@ -306,4 +309,131 @@ test("unsaved studio receives a local pass without a pass API request", async ({
   await expect(page.getByText("Karnet lokalny", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Karnet lokalny poprawiony", { exact: true })).toHaveCount(1);
   expect(requests).toHaveLength(0);
+});
+
+for (const local of [false, true])
+  test(`generated names, bottom field and ${local ? "local studio" : "API solo"} save`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: local ? 390 : 1440, height: 900 });
+    const { requests } = await setup(page, [], local);
+    await page.getByRole("button", { name: "Dodaj karnet", exact: true }).click();
+    const dialog = form(page);
+    const name = dialog.getByLabel("Nazwa karnetu", { exact: true });
+    await dialog.getByRole("button", { name: "Inna", exact: true }).click();
+    const visits = dialog.getByRole("textbox", { name: "Liczba wejść", exact: true });
+    for (const [count, expected] of [
+      ["1", "1 wejście"],
+      ["4", "4 wejścia"],
+      ["8", "8 wejść"],
+      ["12", "12 wejść"],
+      ["22", "22 wejścia"],
+    ]) {
+      await visits.fill(count);
+      await expect(name).toHaveValue(`Karnet na ${expected}`);
+    }
+    await visits.fill("");
+    await expect(name).toHaveValue("");
+    await expect(dialog.getByRole("button", { name: "Utwórz karnet" })).toBeDisabled();
+    await visits.fill("8");
+    await dialog.getByRole("button", { name: "60 dni", exact: true }).click();
+    await expect(name).toHaveValue("Karnet na 8 wejść");
+    await dialog.getByRole("switch", { name: "Bez limitu", exact: true }).click();
+    await expect(name).toHaveValue("Karnet OPEN — 2 mies.");
+    await dialog.getByRole("button", { name: "Inny", exact: true }).click();
+    const days = dialog.getByRole("textbox", { name: "Ważność", exact: true });
+    for (const [count, expected] of [
+      ["30", "1 mies."],
+      ["60", "2 mies."],
+      ["180", "6 mies."],
+      ["45", "45 dni"],
+      ["365", "365 dni"],
+      ["1", "1 dzień"],
+    ]) {
+      await days.fill(count);
+      await expect(name).toHaveValue(`Karnet OPEN — ${expected}`);
+    }
+    await days.fill("0");
+    await expect(name).toHaveValue("Karnet OPEN");
+    await expect(dialog.getByRole("button", { name: "Utwórz karnet" })).toBeDisabled();
+    await dialog.getByRole("switch", { name: "Bez terminu", exact: true }).click();
+    await expect(name).toHaveValue("Karnet OPEN — bez terminu");
+    await dialog.getByRole("switch", { name: "Bez terminu", exact: true }).click();
+    await days.fill("60");
+    await dialog.getByLabel("Cena karnetu", { exact: true }).fill("120");
+    await dialog.getByRole("button", { name: /Dodaj opis/ }).click();
+    await dialog.getByLabel("Opis · opcjonalnie").fill("Regularna praktyka");
+    await page.keyboard.press("Tab");
+    await expect(name).toBeFocused();
+    const labels = await dialog.locator("form label[for]").allTextContents();
+    expect(labels.at(-1)?.trim()).toBe("Nazwa karnetu");
+    await name.scrollIntoViewIfNeeded();
+    await expect(name).toBeInViewport();
+    if (!local)
+      await expect(
+        dialog.getByRole("complementary", { name: "Podgląd karnetu" }).getByRole("heading"),
+      ).toHaveText("Karnet OPEN — 2 mies.");
+    await page.screenshot({
+      path: info.outputPath(`generated-${local ? "mobile" : "desktop"}.png`),
+    });
+    await dialog.getByRole("button", { name: "Utwórz karnet" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText("Karnet OPEN — 2 mies.", { exact: true })).toBeVisible();
+    if (local) {
+      expect(requests).toHaveLength(0);
+      await page.getByRole("button", { name: /Karnet OPEN — 2 mies\./ }).click();
+      await expect(form(page).getByLabel("Nazwa karnetu", { exact: true })).toHaveValue(
+        "Karnet OPEN — 2 mies.",
+      );
+      await expect(form(page).getByRole("button", { name: "60 dni", exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await form(page).getByRole("button", { name: "30 dni", exact: true }).click();
+      await expect(form(page).getByLabel("Nazwa karnetu", { exact: true })).toHaveValue(
+        "Karnet OPEN — 2 mies.",
+      );
+    } else {
+      expect(requests).toHaveLength(1);
+      expect(requests[0].body).toMatchObject({
+        name: "Karnet OPEN — 2 mies.",
+        session_count: null,
+        duration_days: 60,
+        price: 120,
+        description: "Regularna praktyka",
+      });
+    }
+  });
+
+test("manual override and clearing persist through changes and retry; fresh form resets automation", async ({
+  page,
+}) => {
+  const { requests, control } = await setup(page);
+  await page.getByRole("button", { name: "Dodaj karnet", exact: true }).click();
+  const dialog = form(page);
+  const name = dialog.getByLabel("Nazwa karnetu", { exact: true });
+  await name.fill("Mój karnet");
+  await dialog.getByRole("button", { name: "4", exact: true }).click();
+  await expect(name).toHaveValue("Mój karnet");
+  await name.fill("");
+  await name.blur();
+  await dialog.getByRole("switch", { name: "Bez limitu", exact: true }).click();
+  await expect(name).toHaveValue("");
+  await expect(dialog.getByText("Wpisz nazwę karnetu.")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Utwórz karnet" })).toBeDisabled();
+  await name.fill("Mój OPEN");
+  await dialog.getByLabel("Cena karnetu", { exact: true }).fill("150");
+  control.fail = true;
+  await dialog.getByRole("button", { name: "Utwórz karnet" }).click();
+  await expect(dialog.getByRole("alert")).toBeVisible();
+  await dialog.getByRole("button", { name: "60 dni", exact: true }).click();
+  await expect(name).toHaveValue("Mój OPEN");
+  control.fail = false;
+  await dialog.getByRole("button", { name: "Utwórz karnet" }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(requests[1].body).toMatchObject({ name: "Mój OPEN", duration_days: 60 });
+  await page.getByRole("button", { name: "Dodaj karnet", exact: true }).click();
+  await expect(name).toHaveValue("Karnet na 8 wejść");
+  await dialog.getByRole("button", { name: "4", exact: true }).click();
+  await expect(name).toHaveValue("Karnet na 4 wejścia");
 });

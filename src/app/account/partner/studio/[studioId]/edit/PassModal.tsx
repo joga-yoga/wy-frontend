@@ -59,7 +59,7 @@ function initialValues(pass?: StudioPass | null): FormValues {
     unlimited: value == null || value === "",
     custom: value != null && value !== "" && !presets.includes(Number(value)),
   });
-  return {
+  const form: FormValues = {
     name: pass?.name ?? "",
     price: pass ? decimal(Number(pass.price)) : "",
     description: pass?.description ?? "",
@@ -70,6 +70,21 @@ function initialValues(pass?: StudioPass | null): FormValues {
       ? limit(pass.duration_days, DAYS, 30)
       : { value: "30", unlimited: false, custom: false },
   };
+  if (!pass) form.name = generatedName(form);
+  return form;
+}
+
+function generatedName({ visits, days }: Pick<FormValues, "visits" | "days">): string {
+  if (!visits.unlimited) {
+    const count = positiveInteger(visits.value);
+    return count === null ? "" : `Karnet na ${wejscia(count)}`;
+  }
+  if (days.unlimited) return "Karnet OPEN — bez terminu";
+  const count = positiveInteger(days.value);
+  if (count === null) return "Karnet OPEN";
+  const validity =
+    count % 30 === 0 ? `${count / 30} mies.` : `${count} ${count === 1 ? "dzień" : "dni"}`;
+  return `Karnet OPEN — ${validity}`;
 }
 
 function positiveInteger(value: string): number | null {
@@ -279,6 +294,7 @@ export function PassModal({
   const id = useId();
   const [form, setForm] = useState(() => initialValues(editPass));
   const baseline = useRef(signature(form));
+  const nameEdited = useRef(Boolean(editPass));
   const saving = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
@@ -290,13 +306,21 @@ export function PassModal({
     const next = initialValues(editPass);
     setForm(next);
     baseline.current = signature(next);
+    nameEdited.current = Boolean(editPass);
     setTouched({});
     setError(null);
     setDescriptionOpen(Boolean(editPass?.description));
     setDiscardOpen(false);
   }, [isOpen, editPass]);
-  const field = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
-    setForm((current) => ({ ...current, [key]: value }));
+  const field = <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
+    if (key === "name") nameEdited.current = true;
+    const shouldGenerate = !nameEdited.current && (key === "visits" || key === "days");
+    setForm((current) => {
+      const next = { ...current, [key]: value };
+      if (shouldGenerate) next.name = generatedName(next);
+      return next;
+    });
+  };
   const touch = (key: Field) => setTouched((current) => ({ ...current, [key]: true }));
   const visits = positiveInteger(form.visits.value);
   const days = positiveInteger(form.days.value);
@@ -411,28 +435,6 @@ export function PassModal({
                 }}
               >
                 <fieldset disabled={isSaving} className="min-w-0 space-y-5">
-                  <div className="space-y-2">
-                    <label htmlFor={`${id}-name`} className="block text-sm font-semibold">
-                      Nazwa karnetu
-                    </label>
-                    <Input
-                      id={`${id}-name`}
-                      value={form.name}
-                      onChange={(e) => field("name", e.target.value)}
-                      onBlur={() => touch("name")}
-                      className={inputClass}
-                      placeholder="np. Karnet 8 wejść"
-                      aria-invalid={Boolean(touched.name && errors.name)}
-                      aria-describedby={
-                        touched.name && errors.name ? `${id}-name-error` : undefined
-                      }
-                    />
-                    {touched.name && errors.name && (
-                      <p id={`${id}-name-error`} className="text-xs text-destructive">
-                        {errors.name}
-                      </p>
-                    )}
-                  </div>
                   <LimitField
                     id={`${id}-visits`}
                     label="Liczba wejść"
@@ -536,6 +538,28 @@ export function PassModal({
                       Dodaj opis <span className="font-normal text-zinc-600">· opcjonalnie</span>
                     </Button>
                   )}
+                  <div className="space-y-2">
+                    <label htmlFor={`${id}-name`} className="block text-sm font-semibold">
+                      Nazwa karnetu
+                    </label>
+                    <Input
+                      id={`${id}-name`}
+                      value={form.name}
+                      onChange={(e) => field("name", e.target.value)}
+                      onBlur={() => touch("name")}
+                      className={inputClass}
+                      placeholder="np. Karnet 8 wejść"
+                      aria-invalid={Boolean(touched.name && errors.name)}
+                      aria-describedby={
+                        touched.name && errors.name ? `${id}-name-error` : undefined
+                      }
+                    />
+                    {touched.name && errors.name && (
+                      <p id={`${id}-name-error`} className="text-xs text-destructive">
+                        {errors.name}
+                      </p>
+                    )}
+                  </div>
                 </fieldset>
               </form>
               <aside aria-label="Podgląd karnetu" className="hidden min-w-0 space-y-5 md:block">
