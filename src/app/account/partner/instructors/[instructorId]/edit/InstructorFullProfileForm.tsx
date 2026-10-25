@@ -45,12 +45,28 @@ import type {
   InstructorYogaStyleIn,
 } from "@/types/instructor";
 
+import { refreshInstructorProfileCache } from "../../actions";
 import { CertificatesField } from "./components/CertificatesField";
 import { CitySearchField } from "./components/CitySearchField";
 import { InstructorPhotoGallery } from "./components/InstructorPhotoGallery";
 import { LanguageMultiSelect } from "./components/LanguageMultiSelect";
 import { StudioLinkSection } from "./components/StudioLinkSection";
 import { YogaStyleSelector } from "./components/YogaStyleSelector";
+
+async function refreshSavedProfile(instructorId: string, previousSlug: string | null) {
+  try {
+    return await refreshInstructorProfileCache(
+      instructorId,
+      previousSlug,
+      localStorage.getItem("access_token"),
+    );
+  } catch {
+    return false;
+  }
+}
+
+const PUBLIC_REFRESH_WARNING =
+  "Zmiany zapisano, ale nie udało się odświeżyć strony publicznej. Spróbuj ponownie za chwilę.";
 
 /** Per-kind counts of what still references an instructor, as returned by the 409. */
 type DeleteBlockers = Partial<Record<"events" | "occurrences" | "schedules" | "classes", number>>;
@@ -297,7 +313,14 @@ export function InstructorFullProfileForm({
       setClaimStatus(updated.claim_status ?? null);
       setExistingEmail(updated.email ?? (isOwnClaimedInstructor ? existingEmail : emailValue));
       setIsOwnClaimedInstructor(updated.is_claimed || updated.claim_status === "claimed");
-      if (didChangeEmail && updated.claim_status === "invited") {
+      const publicProfileRefreshed = await refreshSavedProfile(targetId, slug);
+      if (!publicProfileRefreshed) {
+        toast({
+          title: "Profil zapisany",
+          description: PUBLIC_REFRESH_WARNING,
+          variant: "destructive",
+        });
+      } else if (didChangeEmail && updated.claim_status === "invited") {
         toast({
           title: "Profil zapisany",
           description: `Poprzednie zaproszenie zostało wyłączone. Nowe zaproszenie wysłano na ${updated.email ?? emailValue}.`,
@@ -323,15 +346,20 @@ export function InstructorFullProfileForm({
   };
 
   const handlePublish = async () => {
+    if (!instructorId) return;
     try {
       const { data: published } = await axiosInstance.post<InstructorProfile>(
         `/instructors/${instructorId}/publish`,
       );
       setSlug(published.slug);
       setIsPublished(published.is_published);
+      const publicProfileRefreshed = await refreshSavedProfile(instructorId, slug);
       toast({
         title: "Profil opublikowany",
-        description: "Publiczna strona nauczyciela jogi jest już dostępna.",
+        description: publicProfileRefreshed
+          ? "Publiczna strona nauczyciela jogi jest już dostępna."
+          : PUBLIC_REFRESH_WARNING,
+        variant: publicProfileRefreshed ? "default" : "destructive",
       });
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data

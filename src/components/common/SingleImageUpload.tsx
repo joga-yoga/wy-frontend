@@ -19,6 +19,8 @@ interface SingleImageUploadBaseProps {
   previewClassName?: string;
   /** Styles the empty drop target. R4 draws a circular avatar well, not a square one. */
   placeholderClassName?: string;
+  /** Optional local artwork inside the empty upload target; never a stored image. */
+  placeholderContent?: React.ReactNode;
 }
 
 interface ControlledSingleImageUploadProps extends SingleImageUploadBaseProps {
@@ -106,6 +108,7 @@ export const SingleImageUpload = ({
   onFileSelect,
   previewClassName,
   placeholderClassName,
+  placeholderContent,
 }: SingleImageUploadProps) => {
   const existingImageUrl =
     !isRemoved && existingImageId
@@ -163,7 +166,7 @@ export const SingleImageUpload = ({
             <Loader2 className="h-8 w-8 animate-spin" />
           ) : (
             <>
-              <Plus className="h-8 w-8" />
+              {placeholderContent ?? <Plus className="h-8 w-8" />}
               <span className="mt-2 text-sm text-center">Dodaj zdjęcie</span>
             </>
           )}

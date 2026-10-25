@@ -21,17 +21,8 @@ export function InstructorCertificateCard({
 
   const content = (
     <>
-      <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-[#F7F7F7] text-[#717171]">
-        {mark && !markFailed ? (
-          <Image
-            src={mark}
-            alt=""
-            width={80}
-            height={80}
-            className="h-full w-full object-contain"
-            onError={() => setMarkFailed(true)}
-          />
-        ) : !mark && certificate.imageId && !documentFailed ? (
+      <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg text-[#717171]">
+        {certificate.imageId && !documentFailed ? (
           <WyImage
             src={certificate.imageId}
             alt=""
@@ -39,6 +30,15 @@ export function InstructorCertificateCard({
             sizes="80px"
             className="object-contain"
             onError={() => setDocumentFailed(true)}
+          />
+        ) : mark && !markFailed ? (
+          <Image
+            src={mark}
+            alt=""
+            width={80}
+            height={80}
+            className="h-full w-full object-contain"
+            onError={() => setMarkFailed(true)}
           />
         ) : (
           <Award className="h-6 w-6" aria-hidden="true" />

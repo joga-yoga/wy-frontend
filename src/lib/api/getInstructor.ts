@@ -2,20 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 import type { InstructorDetails } from "@/types/instructor";
 
-export class InstructorNotFoundError extends Error {
-  constructor(readonly slug: string) {
-    super(`Instructor not found: ${slug}`);
-    this.name = "InstructorNotFoundError";
-  }
-}
-
-export function isInstructorNotFoundError(error: unknown): error is InstructorNotFoundError {
-  return (
-    error instanceof InstructorNotFoundError || (error as Error)?.name === "InstructorNotFoundError"
-  );
-}
-
-async function getCachedInstructor(slug: string): Promise<InstructorDetails> {
+async function getCachedInstructor(slug: string): Promise<InstructorDetails | null> {
   "use cache";
 
   cacheLife({ stale: 900, revalidate: 900, expire: 3600 });
@@ -29,7 +16,8 @@ async function getCachedInstructor(slug: string): Promise<InstructorDetails> {
   const res = await fetch(`${baseUrl}/instructor/${slug}`);
 
   if (res.status === 404) {
-    throw new InstructorNotFoundError(slug);
+    // Return a sentinel: errors crossing a use-cache boundary lose their identity.
+    return null;
   }
 
   if (!res.ok) {
@@ -43,9 +31,6 @@ export async function getInstructor(slug: string): Promise<InstructorDetails | n
   try {
     return await getCachedInstructor(slug);
   } catch (error) {
-    if (isInstructorNotFoundError(error)) {
-      return null;
-    }
     console.error("Error fetching instructor:", error);
     throw error;
   }

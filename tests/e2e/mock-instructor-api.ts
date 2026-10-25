@@ -4,7 +4,7 @@ import { createServer, type ServerResponse } from "node:http";
 // serve identical data (.plans/proto-workbench/ T04). Relative import, not the "@/" alias, so
 // this file resolves the same way under tsx as it does under the Next bundler.
 import { instructorFixture } from "../../src/fixtures/instructor";
-
+import { handleCertificateFixture } from "./certificate-fixture-api";
 
 const navigationFixture = {
   ...instructorFixture,
@@ -141,13 +141,15 @@ function json(res: ServerResponse, status: number, payload: unknown) {
   res.end(JSON.stringify(payload));
 }
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://127.0.0.1:4010");
 
   if (req.method === "OPTIONS") {
     json(res, 204, {});
     return;
   }
+
+  if (await handleCertificateFixture(req, res)) return;
 
   if (url.pathname === "/health") {
     res.writeHead(200, { "content-type": "application/json" });
@@ -198,9 +200,7 @@ const server = createServer((req, res) => {
   }
 
   if (url.pathname === "/directory/cities") {
-    json(res, 200, [
-      { slug: "warszawa", name: "Warszawa", active_count: 0, published_count: 0 },
-    ]);
+    json(res, 200, [{ slug: "warszawa", name: "Warszawa", active_count: 0, published_count: 0 }]);
     return;
   }
 

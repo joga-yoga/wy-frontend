@@ -64,10 +64,18 @@ export function InstructorHighlights({
                 {highlightIcon(item.kind)}
               </span>
               <span
-                className="min-w-0 truncate text-[15px] font-medium leading-5 md:text-[28px] md:leading-[34px]"
-                title={item.label}
+                className="flex min-w-0 items-center gap-2 text-[15px] font-medium leading-5 md:text-[28px] md:leading-[34px]"
+                title={`${item.label}${item.additionalCount ? ` +${item.additionalCount}` : ""}`}
               >
-                {item.label}
+                <span className="min-w-0 truncate">{item.label}</span>
+                {Boolean(item.additionalCount) && (
+                  <span
+                    className="shrink-0"
+                    aria-label={`Pozostałe certyfikaty: ${item.additionalCount}`}
+                  >
+                    +{item.additionalCount}
+                  </span>
+                )}
               </span>
             </div>
           );
