@@ -104,13 +104,14 @@ export function TemplateEditor({
     initial?.default_capacity != null ? String(initial.default_capacity) : "",
   );
   // A template is partner-scoped, so when no single studio resolves the picker falls back to
-  // every instructor the partner has rather than to none — see the hook for why this differs
-  // from the schedule wizard, which needs a studio before the question means anything.
+  // editable profiles and usable studio rosters; profile ownership is not assignment consent.
   const studioId = useAssignableStudioId();
-  const { instructors, refresh: refreshInstructors } = useAssignableInstructorSource(
-    studioId,
-    "partner-list",
-  );
+  const {
+    instructors,
+    refresh: refreshInstructors,
+    loading: instructorsLoading,
+    error: instructorsError,
+  } = useAssignableInstructorSource(studioId, "partner-list");
   const [isInstructorOpen, setIsInstructorOpen] = useState(false);
   const [instructorStep, setInstructorStep] = useState<"identify" | "new">("identify");
   const [pendingInstructorId, setPendingInstructorId] = useState<string | null>(null);
@@ -477,6 +478,23 @@ export function TemplateEditor({
                 `currentId={null}` + `otherLabel=""`: a template has no assignment being
                 replaced, so the default "Zastępstwo" subtitle would be nonsense here. */}
               <div className="mt-1">
+                {instructorsLoading && (
+                  <p role="status" className="text-sm text-gray-500">
+                    Ładowanie instruktorów…
+                  </p>
+                )}
+                {instructorsError && (
+                  <div role="alert" className="space-y-2 text-sm">
+                    <p>Nie udało się wczytać instruktorów.</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void refreshInstructors()}
+                    >
+                      Spróbuj ponownie
+                    </Button>
+                  </div>
+                )}
                 <InstructorPicker
                   instructors={instructors}
                   selectedId={defaultInstructorId}

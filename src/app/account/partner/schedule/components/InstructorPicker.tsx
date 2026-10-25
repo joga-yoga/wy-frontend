@@ -11,6 +11,7 @@ export interface PickableInstructor {
   image_id?: string | null;
   /** Roster row state — "awaiting" means the invite or link acceptance is still outstanding. */
   row_state?: string | null;
+  eligible_studio_ids?: string[];
 }
 
 /**

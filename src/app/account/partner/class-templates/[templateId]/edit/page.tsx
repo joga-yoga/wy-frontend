@@ -8,6 +8,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { useAssignableStudioId } from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
 
 import { TemplateEditor } from "../../components/TemplateEditor";
@@ -16,6 +17,7 @@ import type { ClassTemplate, ClassTemplateCreate } from "../../types";
 export default function EditTemplatePage() {
   const params = useParams<{ templateId: string }>();
   const router = useRouter();
+  const studioId = useAssignableStudioId();
   const { toast } = useToast();
   const [template, setTemplate] = useState<ClassTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,7 +103,9 @@ export default function EditTemplatePage() {
           then asked you to pick the template you were already looking at. */}
       <div className="mt-6 border-t pt-4">
         <Button size="action" variant="outline" className="w-full" asChild>
-          <Link href={`/account/partner/class-schedules/create?templateId=${params.templateId}`}>
+          <Link
+            href={`/account/partner/class-schedules/create?${new URLSearchParams({ templateId: params.templateId, ...(studioId ? { studio_id: studioId } : {}) })}`}
+          >
             <CalendarPlus size={15} className="mr-1.5" />
             Dodaj do grafiku
           </Link>

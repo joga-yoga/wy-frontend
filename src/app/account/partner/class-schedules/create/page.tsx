@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
-import { useAssignableInstructors } from "@/hooks/useAssignableInstructors";
+import { useAssignableInstructorSource } from "@/hooks/useAssignableInstructors";
 import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
@@ -67,6 +67,39 @@ export default function CreateScheduleWizard() {
   const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
+  const [pendingDefault, setPendingDefault] = useState<string | null>(null);
+  const [instructorNotice, setInstructorNotice] = useState("");
+  const studioChosenRef = useRef(false);
+  const inferredTemplateRef = useRef<string | null>(null);
+  const unionSource = useAssignableInstructorSource(null, "partner-list");
+
+  const selectTemplate = useCallback(
+    (template: ClassTemplate) => {
+      setSelectedTemplate(template);
+      setInstructorId("");
+      setPendingDefault(template.default_instructor_id ?? "");
+      setInstructorNotice("");
+      setCapacity(template.default_capacity != null ? String(template.default_capacity) : "");
+      inferredTemplateRef.current = null;
+      if (
+        !capabilities?.soloStudioId &&
+        !studioChosenRef.current &&
+        (capabilities?.managedStudios.length ?? 0) > 1 &&
+        !capabilities?.managedStudios.some((studio) => studio.id === searchParams.get("studio_id"))
+      ) {
+        setStudioId("");
+        setRoomId("");
+      }
+    },
+    [capabilities, searchParams],
+  );
+
+  function changeStudio(id: string) {
+    studioChosenRef.current = true;
+    setStudioId(id);
+    setRoomId("");
+  }
+
   const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
   // No weekday preselected: the form should not silently commit the user to Monday.
   // `canSubmit` already requires >=1 day for a weekly series, so the empty default just
@@ -93,27 +126,43 @@ export default function CreateScheduleWizard() {
       .catch(() => {});
   }, []);
 
-  // Studio comes from the same source as the top-level Grafik switcher
-  // (`managedStudios`, `is_owner=True` links only) — not the flow's own picker, which used to
-  // fetch every studio the partner has *any* link to, disagreeing with the switcher whenever a
-  // non-owner link existed. The "+" button on the Grafik pages already carries the active
-  // studio via `?studio_id=`; fall back to the partner's one managed studio otherwise.
+  // Explicit context and user choices outrank an inferred template studio.
   useEffect(() => {
-    if (!capabilities) return;
+    if (!capabilities || studioChosenRef.current) return;
     if (capabilities.soloStudioId) {
       setStudioId(capabilities.soloStudioId);
       return;
     }
+    const managed = capabilities.managedStudios;
     const requested = searchParams.get("studio_id");
-    const match = requested && capabilities.managedStudios.find((s) => s.id === requested);
-    if (match) {
-      setStudioId(match.id);
-    } else if (capabilities.managedStudios.length === 1) {
-      setStudioId(capabilities.managedStudios[0].id);
-    } else {
-      setStudioId("");
+    const match = managed.find((studio) => studio.id === requested);
+    if (match || managed.length === 1) {
+      setStudioId(match?.id ?? managed[0].id);
+      return;
     }
-  }, [capabilities, searchParams]);
+    if (
+      !selectedTemplate ||
+      unionSource.loading ||
+      unionSource.error ||
+      inferredTemplateRef.current === selectedTemplate.id
+    )
+      return;
+    const eligible =
+      unionSource.instructors.find(
+        (instructor) => instructor.id === selectedTemplate.default_instructor_id,
+      )?.eligible_studio_ids ?? [];
+    const matches = managed.filter((studio) => eligible.includes(studio.id));
+    inferredTemplateRef.current = selectedTemplate.id;
+    setStudioId(matches.length === 1 ? matches[0].id : "");
+    setRoomId("");
+  }, [
+    capabilities,
+    searchParams,
+    selectedTemplate,
+    unionSource.loading,
+    unionSource.error,
+    unionSource.instructors,
+  ]);
 
   const roomState = useScheduleRooms(
     studioId,
@@ -122,21 +171,35 @@ export default function CreateScheduleWizard() {
     Boolean(capabilities?.soloStudioId),
   );
 
-  // Roster (not the flat `/instructors` list) — carries `image_id`/`row_state` for the avatar
-  // picker, and matches the edit flow's Zastępstwo picker data source. Shared with the
-  // class-template form (WY-67), which asks the same question and used to answer it with a
-  // plain `<Select>`; "empty" because a session belongs to one studio, so before one is
-  // chosen there is no correct list to show.
-  const instructors = useAssignableInstructors(studioId, "empty");
-
+  const instructorSource = useAssignableInstructorSource(studioId, "empty");
+  const instructors = instructorSource.instructors;
   useEffect(() => {
-    if (selectedTemplate) {
-      if (selectedTemplate.default_instructor_id)
-        setInstructorId(selectedTemplate.default_instructor_id);
-      if (selectedTemplate.default_capacity != null)
-        setCapacity(String(selectedTemplate.default_capacity));
-    }
-  }, [selectedTemplate]);
+    if (
+      !studioId ||
+      instructorSource.loading ||
+      instructorSource.error ||
+      capabilities?.soloStudioId
+    )
+      return;
+    const wanted = pendingDefault ?? instructorId;
+    const available = !wanted || instructors.some((instructor) => instructor.id === wanted);
+    if (pendingDefault !== null) {
+      setInstructorId(available ? wanted : "");
+      setPendingDefault(null);
+    } else if (!available) setInstructorId("");
+    if (!available)
+      setInstructorNotice(
+        "Ten instruktor nie jest dostępny w wybranym studiu. Wybierz inną osobę lub prowadzącego później.",
+      );
+  }, [
+    studioId,
+    instructorSource.loading,
+    instructorSource.error,
+    instructors,
+    pendingDefault,
+    instructorId,
+    capabilities?.soloStudioId,
+  ]);
 
   // "Dodaj do grafiku" from a template's own screen arrives with ?templateId= and should
   // skip step 1 — the user has already chosen, and asking again is the thing that link
@@ -154,9 +217,9 @@ export default function CreateScheduleWizard() {
     const match = templates.find((t) => t.id === wanted);
     if (!match) return;
     preselectAppliedRef.current = true;
-    setSelectedTemplate(match);
+    selectTemplate(match);
     setStep("recurrence");
-  }, [templates, searchParams]);
+  }, [templates, searchParams, selectTemplate]);
 
   const filteredTemplates = useMemo(
     () => templates.filter((t) => t.title.toLowerCase().includes(search.toLowerCase())),
@@ -169,7 +232,9 @@ export default function CreateScheduleWizard() {
       const r = await axiosInstance.post<ClassTemplate>("/class-templates", data);
       const created = r.data;
       setTemplates((prev) => [created, ...prev]);
-      setSelectedTemplate(created);
+      // Contextual addition may have changed eligibility since the wizard first loaded.
+      await unionSource.refresh();
+      selectTemplate(created);
       setShowInlineCreate(false);
       setStep("recurrence");
       toast({ description: "Szablon utworzony i wybrany." });
@@ -207,6 +272,8 @@ export default function CreateScheduleWizard() {
       !studioId ||
       !fromDate ||
       !roomState.roomValid ||
+      (!capabilities?.soloStudioId &&
+        (instructorSource.loading || instructorSource.error || pendingDefault !== null)) ||
       !isValidTime(startTime)
     )
       return null;
@@ -228,11 +295,7 @@ export default function CreateScheduleWizard() {
       studio_id: studioId,
       room_id: roomId || undefined,
       capacity: capacity ? parseInt(capacity, 10) : undefined,
-      instructor_ids: capabilities?.soloStudioId
-        ? undefined
-        : instructorId
-          ? [instructorId]
-          : undefined,
+      instructor_ids: capabilities?.soloStudioId ? undefined : instructorId ? [instructorId] : [],
       frequency,
       days: frequency === "weekly" ? selectedDays : undefined,
       from_date: formatDate(fromDate),
@@ -247,6 +310,9 @@ export default function CreateScheduleWizard() {
     roomId,
     capacity,
     instructorId,
+    instructorSource.loading,
+    instructorSource.error,
+    pendingDefault,
     frequency,
     selectedDays,
     fromDate,
@@ -301,6 +367,8 @@ export default function CreateScheduleWizard() {
 
   const canAdvanceStep2 =
     roomState.roomValid &&
+    (capabilities?.soloStudioId ||
+      (!instructorSource.loading && !instructorSource.error && pendingDefault === null)) &&
     isValidTime(startTime) &&
     studioId &&
     fromDate &&
@@ -363,7 +431,7 @@ export default function CreateScheduleWizard() {
                   <button
                     key={t.id}
                     onClick={() => {
-                      setSelectedTemplate(t);
+                      selectTemplate(t);
                       setStep("recurrence");
                     }}
                     className={`flex w-full items-start gap-3 px-3 py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
@@ -417,6 +485,49 @@ export default function CreateScheduleWizard() {
       {/* Step 2: Recurrence */}
       {step === "recurrence" && selectedTemplate && (
         <div className="space-y-5">
+          {!capabilities?.soloStudioId && (capabilities?.managedStudios.length ?? 0) > 1 && (
+            <div className="space-y-2">
+              <label htmlFor="schedule-studio" className="text-sm font-semibold">
+                Studio
+              </label>
+              <select
+                id="schedule-studio"
+                value={studioId}
+                onChange={(event) => changeStudio(event.target.value)}
+                className="h-12 w-full rounded-md border bg-white px-3"
+              >
+                <option value="">Wybierz studio</option>
+                {capabilities?.managedStudios.map((studio) => (
+                  <option key={studio.id} value={studio.id}>
+                    {studio.name}
+                  </option>
+                ))}
+              </select>
+              {unionSource.error && !studioId && (
+                <Button variant="outline" onClick={() => void unionSource.refresh()}>
+                  Odśwież listę instruktorów
+                </Button>
+              )}
+            </div>
+          )}
+          {instructorSource.loading && (
+            <p role="status" className="text-sm text-gray-500">
+              Ładowanie instruktorów…
+            </p>
+          )}
+          {instructorSource.error && (
+            <div role="alert">
+              <p>Nie udało się wczytać instruktorów.</p>
+              <Button variant="outline" onClick={() => void instructorSource.refresh()}>
+                Spróbuj ponownie
+              </Button>
+            </div>
+          )}
+          {instructorNotice && (
+            <p role="status" className="text-sm text-gray-500">
+              {instructorNotice}
+            </p>
+          )}
           <ScheduleRecurrenceForm
             solo={Boolean(capabilities?.soloStudioId)}
             templateTitle={selectedTemplate.title}
@@ -429,7 +540,11 @@ export default function CreateScheduleWizard() {
             onRoomChange={setRoomId}
             instructors={instructors}
             instructorId={instructorId}
-            onInstructorChange={setInstructorId}
+            onInstructorChange={(id) => {
+              setPendingDefault(null);
+              setInstructorId(id);
+              setInstructorNotice("");
+            }}
             defaultInstructorId={selectedTemplate.default_instructor_id}
             capacity={capacity}
             onCapacityChange={setCapacity}
@@ -447,6 +562,23 @@ export default function CreateScheduleWizard() {
             startTime={startTime}
             onStartTimeChange={setStartTime}
           />
+          {!canAdvanceStep2 && (
+            <p className="text-sm text-gray-500" role="status">
+              {!studioId
+                ? "Wybierz studio."
+                : !roomState.roomValid
+                  ? "Wybierz salę lub poczekaj na wczytanie sal."
+                  : !isValidTime(startTime)
+                    ? "Podaj godzinę w formacie HH:mm."
+                    : !fromDate
+                      ? "Wybierz datę rozpoczęcia."
+                      : frequency === "weekly" && !selectedDays.length
+                        ? "Wybierz co najmniej jeden dzień tygodnia."
+                        : frequency === "weekly" && endDateMode === "custom" && !toDate
+                          ? "Wybierz datę zakończenia."
+                          : "Poczekaj na wczytanie instruktorów lub ponów próbę."}
+            </p>
+          )}
           {/* Footer */}
           <div className="flex gap-3 pt-4">
             <Button size="action" variant="outline" onClick={() => setStep("select")}>

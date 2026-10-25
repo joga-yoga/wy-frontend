@@ -50,7 +50,7 @@ async function setup(page: Page, mode: "multi" | "single" | "solo" = "multi", em
         contentType: "image/webp",
       });
     if (!["localhost", "127.0.0.1"].includes(url.hostname)) return route.abort();
-    if (url.port !== "8010") return route.continue();
+    if (!["8000", "8010"].includes(url.port)) return route.continue();
     const path = url.pathname,
       method = route.request().method();
     const data =
@@ -86,7 +86,21 @@ async function setup(page: Page, mode: "multi" | "single" | "solo" = "multi", em
         has_instructor_profile: false,
         landing_tab: "grafik",
       };
-    else if (path.endsWith("/roster") && method === "GET") {
+    else if (path === "/instructors/assignable") {
+      if (state.failRefresh) {
+        status = 503;
+        json = { detail: "Błąd odświeżania" };
+      } else
+        json = url.searchParams.has("studio_id")
+          ? state.roster
+          : [
+              ...state.partnerList.map((row) => ({
+                ...row,
+                row_state: row.claim_status === "invited" ? "awaiting" : undefined,
+              })),
+              ...state.roster,
+            ];
+    } else if (path.endsWith("/roster") && method === "GET") {
       if (state.failRefresh) {
         status = 503;
         json = { detail: "Błąd odświeżania" };

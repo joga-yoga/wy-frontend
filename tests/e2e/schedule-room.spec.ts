@@ -25,7 +25,7 @@ async function mock(page: Page, count: number, editRoom: string | null = "room-a
     });
   });
   await page.route(
-    /https?:\/\/[^/]+\/(?:me|partner\/.*|studios.*|class-templates.*|class-schedules.*|class-sessions.*|notifications.*)(?:\?.*)?$/,
+    /https?:\/\/[^/]+\/(?:me|partner\/.*|instructors.*|studios.*|class-templates.*|class-schedules.*|class-sessions.*|notifications.*)(?:\?.*)?$/,
     async (route) => {
       const url = new URL(route.request().url());
       const path = url.pathname;
@@ -68,7 +68,8 @@ async function mock(page: Page, count: number, editRoom: string | null = "room-a
               ? []
               : [{ id: "room-a", name: "Sala A" }];
         if (state.deleted) json = [{ id: "room-c", name: "Sala C" }];
-      } else if (path.endsWith("/roster")) json = { items: [] };
+      } else if (path === "/instructors/assignable") json = [];
+      else if (path.endsWith("/roster")) json = { items: [] };
       else if (path === "/class-templates")
         json = [
           {
