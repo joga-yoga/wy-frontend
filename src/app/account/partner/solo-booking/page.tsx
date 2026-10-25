@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { isValidTime } from "@/lib/timeInput";
 
 export default function SoloBookingSetupPage() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function SoloBookingSetupPage() {
     if (savingRef.current) return;
     if (
       cancellationMode === "by_time_of_day" &&
-      (!morningDeadline || afternoonHoursBefore === "")
+      (!isValidTime(morningDeadline) || afternoonHoursBefore === "")
     ) {
       toast({
         description:

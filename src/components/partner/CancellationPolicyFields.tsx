@@ -1,7 +1,10 @@
 "use client";
 
+import { useId } from "react";
+
 import { InfoNote } from "@/components/b2b/InfoNote";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
+import { TimePicker } from "@/components/common/TimePicker";
 import { Input } from "@/components/ui/input";
 
 interface Props {
@@ -21,6 +24,7 @@ export function CancellationPolicyFields({
   afternoonHoursBefore,
   setAfternoonHoursBefore,
 }: Props) {
+  const id = useId();
   return (
     <section className="space-y-4">
       <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
@@ -39,26 +43,27 @@ export function CancellationPolicyFields({
         {cancellationMode === "by_time_of_day" && (
           <>
             <div>
-              <label className="mb-1 block text-sm font-semibold">
+              <label htmlFor={`${id}-morning`} className="mb-1 block text-sm font-semibold">
                 Zajęcia poranne (start przed 12:00)
               </label>
               <p className="mb-2 text-xs text-muted-foreground">
                 Bezpłatne odwołanie możliwe do tej godziny dnia poprzedniego.
               </p>
-              <Input
-                type="time"
+              <TimePicker
+                id={`${id}-morning`}
                 value={morningDeadline}
-                onChange={(e) => setMorningDeadline(e.target.value)}
+                onChange={setMorningDeadline}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold">
+              <label htmlFor={`${id}-afternoon`} className="mb-1 block text-sm font-semibold">
                 Zajęcia popołudniowe (start od 12:00)
               </label>
               <p className="mb-2 text-xs text-muted-foreground">
                 Bezpłatne odwołanie możliwe do tylu godzin przed startem zajęć.
               </p>
               <Input
+                id={`${id}-afternoon`}
                 type="number"
                 min="0"
                 value={afternoonHoursBefore}
