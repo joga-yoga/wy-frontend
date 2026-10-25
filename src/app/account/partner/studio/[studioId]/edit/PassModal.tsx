@@ -2,7 +2,8 @@
 
 import { isAxiosError } from "axios";
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { IoInfinite as InfiniteIcon } from "react-icons/io5";
 
 import {
   AlertDialog,
@@ -156,7 +157,7 @@ function LimitField({
   unit: string;
   unlimitedLabel: string;
   unlimitedText: string;
-  icon: string;
+  icon: ReactNode;
   error?: string;
   onChange: (next: Limit) => void;
   onBlur: () => void;
@@ -192,7 +193,7 @@ function LimitField({
       </div>
       {value.unlimited ? (
         <p className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--pass-tint)] px-3 text-[var(--pass-green)]">
-          <DesignIcon name={icon} />
+          {icon}
           {unlimitedText}
         </p>
       ) : (
@@ -444,7 +445,7 @@ export function PassModal({
                     unit="wejść"
                     unlimitedLabel="Bez limitu"
                     unlimitedText="Dowolna liczba zajęć"
-                    icon="icon-ticket"
+                    icon={<InfiniteIcon aria-hidden="true" className="size-[18px] shrink-0" />}
                     onChange={(next) => field("visits", next)}
                     onBlur={() => touch("visits")}
                     error={touched.visits ? errors.visits : undefined}
@@ -458,7 +459,7 @@ export function PassModal({
                     unit="dni"
                     unlimitedLabel="Bez terminu"
                     unlimitedText="Bez terminu ważności"
-                    icon="icon-clock"
+                    icon={<DesignIcon name="icon-clock" />}
                     onChange={(next) => field("days", next)}
                     onBlur={() => touch("days")}
                     error={touched.days ? errors.days : undefined}
@@ -574,7 +575,11 @@ export function PassModal({
                   </h3>
                   <div className="space-y-3 text-[15px]">
                     <p className="flex items-center gap-2.5">
-                      <DesignIcon name="icon-ticket" />
+                      {form.visits.unlimited ? (
+                        <InfiniteIcon aria-hidden="true" className="size-[18px] shrink-0" />
+                      ) : (
+                        <DesignIcon name="icon-ticket" />
+                      )}
                       {form.visits.unlimited
                         ? "Dowolna liczba zajęć"
                         : `${visitSummary} na zajęcia`}
