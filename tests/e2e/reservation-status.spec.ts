@@ -75,7 +75,7 @@ async function setup(page: Page) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (!["localhost", "127.0.0.1"].includes(url.hostname)) return route.abort();
-    if (url.port !== "8010") return route.continue();
+    if (!["8000", "8010"].includes(url.port)) return route.continue();
     expect(route.request().method()).toBe("GET");
     state.reads.push(url.pathname);
     let json: unknown = [];
@@ -233,3 +233,44 @@ test("no-show, past, unknown payment and existing pass retain truthful presentat
   await page.reload();
   await expect(page.getByText("Status płatności", { exact: true })).toHaveCount(0);
 });
+
+for (const width of [390, 1440]) {
+  test(`reservation navigation exits detail and list without looping (${width}px)`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 844 });
+    await setup(page);
+    await page.goto("/account");
+    const cookies = page.getByRole("button", { name: "Tylko niezbędne" });
+    if (await cookies.isVisible()) await cookies.click();
+    await page.getByRole("link", { name: /Twoje rezerwacje/ }).click();
+    await page.getByRole("button").filter({ hasText: "Restorative Yoga" }).click();
+    await expect(page.getByRole("heading", { name: "Rezerwacja", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Wróć", exact: true }).click();
+    await expect(page).toHaveURL(/\/account\/bookings$/);
+    await page.getByRole("button", { name: "Wróć", exact: true }).click();
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByRole("heading", { name: "Profil", exact: true })).toBeVisible();
+    await page.screenshot({ path: info.outputPath("returned-profile.png") });
+    await page.getByRole("button", { name: "Zamknij", exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+
+    // Browser history remains usable on the ordinary forward journey.
+    await page.goto("/account");
+    await page.getByRole("link", { name: /Twoje rezerwacje/ }).click();
+    await page.getByRole("button").filter({ hasText: "Restorative Yoga" }).click();
+    await expect(page).toHaveURL(/\/bookings\/original$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/account\/bookings$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/account$/);
+
+    // A refreshed deep link has the same deterministic way out.
+    await open(page);
+    await page.reload();
+    await page.getByRole("button", { name: "Wróć", exact: true }).click();
+    await expect(page).toHaveURL(/\/account\/bookings$/);
+    await page.getByRole("button", { name: "Wróć", exact: true }).click();
+    await expect(page).toHaveURL(/\/account$/);
+  });
+}

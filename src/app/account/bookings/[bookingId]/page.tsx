@@ -232,7 +232,7 @@ function ReservationDetailContent() {
     <div className="min-h-[100dvh] bg-background pb-10">
       <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b bg-background px-4">
         <button
-          onClick={() => router.push("/account/bookings")}
+          onClick={() => router.replace("/account/bookings")}
           aria-label="Wróć"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
         >
