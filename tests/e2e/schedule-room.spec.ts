@@ -194,7 +194,9 @@ test("mobile requires explicit room, retries lookup, resets studio and handles d
   state.failCommit = true;
   await page.getByRole("button", { name: "Utwórz grafik" }).click();
   await expect(
-    page.getByText("Wybrana sala nie jest dostępna w tym studiu. Wybierz salę ponownie."),
+    page.getByText("Wybrana sala nie jest dostępna w tym studiu. Wybierz salę ponownie.", {
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(selector).toHaveText("Wybierz salę");
   await expect(page.getByRole("button", { name: "Podgląd →" })).toBeDisabled();
