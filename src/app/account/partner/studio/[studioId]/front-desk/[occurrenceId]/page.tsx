@@ -871,6 +871,7 @@ export default function FrontDeskRosterPage() {
                     <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
                       {session?.organizer_kind === "solo" ? "Twoi klienci" : "Klienci studia"}
                     </p>
+                    <p className="px-1 text-xs text-gray-500">Rezerwacje na zakończone zajęcia</p>
                     <div className="rounded-b2b border bg-white overflow-hidden divide-y">
                       {searchResults.studio_clients.map((c) => (
                         <button
@@ -893,16 +894,16 @@ export default function FrontDeskRosterPage() {
                               {c.pass_context ?? personLabel(c.name, c.email).secondary ?? ""}
                             </span>
                             <span className="mt-1 block text-xs leading-5 text-gray-500">
-                              Odbyte rezerwacje: {c.past_booking_count ?? 0}
-                              <span className="block">
-                                Ostatnia:{" "}
-                                {c.last_past_booking_at
-                                  ? new Date(c.last_past_booking_at).toLocaleDateString("pl-PL")
-                                  : "—"}
-                              </span>
+                              Ostatnia:{" "}
+                              {c.last_past_booking_at
+                                ? new Date(c.last_past_booking_at).toLocaleDateString("pl-PL")
+                                : "—"}
                             </span>
                           </span>
-                          <StatusChip tone="green">Klient</StatusChip>
+                          <StatusChip tone="gray" className="self-start tabular-nums text-xs">
+                            <span className="sr-only">Rezerwacje na zakończone zajęcia: </span>
+                            {c.past_booking_count ?? 0}
+                          </StatusChip>
                         </button>
                       ))}
                     </div>
