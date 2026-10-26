@@ -20,6 +20,7 @@ import {
   FormDrawerHeader,
 } from "@/components/ui/form-drawer";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useSetPageHeaderAction,
   useSetPageSubtitle,
@@ -169,6 +170,8 @@ export default function FrontDeskRosterPage() {
   // box, so "look someone up" and "create someone" stay two separate intents.
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserNote, setNewUserNote] = useState("");
   const [isSubmittingNewUser, setIsSubmittingNewUser] = useState(false);
 
   const [options, setOptions] = useState<BookingOptionsResponse | null>(null);
@@ -366,6 +369,8 @@ export default function FrontDeskRosterPage() {
   /** Enter the create step, carrying over an email the desk has already typed into search. */
   function openCreateUser() {
     setNewUserEmail(isValidEmail(query) ? query.trim() : "");
+    setNewUserName("");
+    setNewUserNote("");
     setIsCreatingUser(true);
   }
 
@@ -374,6 +379,8 @@ export default function FrontDeskRosterPage() {
     setIsSubmittingNewUser(false);
     setIsCreatingUser(false);
     setNewUserEmail("");
+    setNewUserName("");
+    setNewUserNote("");
   }
 
   async function createNewUser() {
@@ -385,10 +392,16 @@ export default function FrontDeskRosterPage() {
         user_id: string;
         email: string;
         name: string | null;
-      }>(`/studios/${studioId}/front-desk/new-user`, { email: newUserEmail.trim() });
+      }>(`/studios/${studioId}/front-desk/new-user`, {
+        email: newUserEmail.trim(),
+        name: newUserName.trim() || undefined,
+        note: newUserNote.trim() || undefined,
+      });
       if (request !== candidateRequestRef.current) return;
       setIsCreatingUser(false);
       setNewUserEmail("");
+      setNewUserName("");
+      setNewUserNote("");
       setIsSubmittingNewUser(false);
       await selectCandidate({
         user_id: data.user_id,
@@ -416,6 +429,8 @@ export default function FrontDeskRosterPage() {
     clearCandidate();
     setIsCreatingUser(false);
     setNewUserEmail("");
+    setNewUserName("");
+    setNewUserNote("");
     setIsSubmittingNewUser(false);
   }, [clearCandidate]);
 
@@ -822,6 +837,35 @@ export default function FrontDeskRosterPage() {
                   )}
                 </div>
 
+                <div>
+                  <label htmlFor="new-user-name" className="mb-1 block text-sm font-semibold">
+                    Imię <span className="font-normal text-gray-500">(opcjonalnie)</span>
+                  </label>
+                  <Input
+                    id="new-user-name"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                    maxLength={200}
+                    placeholder="Np. Anna / grupa poranna"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="new-user-note" className="mb-1 block text-sm font-semibold">
+                    Notatka <span className="font-normal text-gray-500">(opcjonalnie)</span>
+                  </label>
+                  <Textarea
+                    id="new-user-note"
+                    value={newUserNote}
+                    onChange={(e) => setNewUserNote(e.target.value)}
+                    maxLength={2000}
+                    rows={3}
+                    aria-describedby="new-user-note-hint"
+                  />
+                  <p id="new-user-note-hint" className="mt-1 text-xs text-gray-500">
+                    Wewnętrzna notatka dla recepcji · do 2000 znaków.
+                  </p>
+                </div>
+
                 <Button
                   size="action"
                   className="w-full"
@@ -899,6 +943,11 @@ export default function FrontDeskRosterPage() {
                                 ? new Date(c.last_past_booking_at).toLocaleDateString("pl-PL")
                                 : "—"}
                             </span>
+                            {c.note?.trim() && (
+                              <span className="mt-1 block whitespace-pre-wrap [overflow-wrap:anywhere] text-xs leading-5 text-gray-500">
+                                {c.note}
+                              </span>
+                            )}
                           </span>
                           <StatusChip tone="gray" className="self-start tabular-nums text-xs">
                             <span className="sr-only">Rezerwacje na zakończone zajęcia: </span>

@@ -64,6 +64,7 @@ export interface WalkInCandidate {
   pass_context: string | null;
   past_booking_count?: number;
   last_past_booking_at?: string | null;
+  note?: string | null;
 }
 
 export interface WalkInSearchResponse {
