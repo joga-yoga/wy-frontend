@@ -14,6 +14,7 @@ async function setup(page: Page, eligible = ["b"]) {
     delays: {} as Record<string, Promise<void> | undefined>,
     returned: [] as string[],
     failScope: false,
+    failAssignable: false,
     template: {
       id: "flow",
       title: "Flow",
@@ -22,6 +23,8 @@ async function setup(page: Page, eligible = ["b"]) {
       default_instructor_id: "olga" as string | null,
       default_capacity: 14,
       description: "Opis",
+      style: "Vinyasa",
+      color: "green",
       language: "polski",
       image_ids: [],
     },
@@ -82,7 +85,7 @@ async function setup(page: Page, eligible = ["b"]) {
         (row) => scope === "union" || row.eligible_studio_ids.includes(scope),
       );
       if (state.delays[scope]) await state.delays[scope];
-      if (scope !== "union" && state.failScope) {
+      if (state.failAssignable || (scope !== "union" && state.failScope)) {
         status = 503;
         json = { detail: "Unavailable" };
       } else json = rows;
@@ -222,10 +225,9 @@ test("studio changes clear rooms and invalid instructor; template changes clear 
   await page.getByRole("button", { name: "Zmień", exact: true }).click();
   await page.getByRole("button", { name: /Bez domyślnych/ }).click();
   await expect(page.getByLabel("Studio", { exact: true })).toHaveValue("a");
-  await expect(page.getByRole("button", { name: "Brak prowadzącego", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(
+    page.getByRole("button", { name: "Brak prowadzącego", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('input[type="number"]')).toHaveValue("");
   await page.getByRole("button", { name: "Pn", exact: true }).click();
   await page.getByRole("button", { name: "Podgląd →" }).click();
@@ -283,10 +285,9 @@ test("scope retry, stale response and explicit later choice preserve empty selec
   delayed.release();
   await expect.poll(() => state.returned.includes("a")).toBe(true);
   await expect(page.getByRole("button", { name: /Anna/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Brak prowadzącego", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(
+    page.getByRole("button", { name: "Brak prowadzącego", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await room(page, "B");
   await page.getByRole("button", { name: "Pn", exact: true }).click();
   await page.getByRole("button", { name: "Podgląd →" }).click();
@@ -297,3 +298,43 @@ test("scope retry, stale response and explicit later choice preserve empty selec
   ))
     expect(r.data.instructor_ids).toEqual([]);
 });
+
+for (const width of [390, 1440]) {
+  test(`template catalogue and picker show only duration and saved default (${width}px)`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 844 });
+    const state = await setup(page);
+    state.failAssignable = true;
+    await page.goto("/account/partner/class-templates");
+    await cookies(page);
+    const flow = page.getByRole("link", { name: /^Flow/ });
+    await expect(flow).toContainText("Nie udało się wczytać prowadzącego");
+    await expect(flow).not.toContainText("nie został jeszcze wybrany");
+    state.failAssignable = false;
+    await page.getByRole("button", { name: "Odśwież prowadzących" }).click();
+    await expect(flow).toContainText("60 min · Olga Testowa");
+    for (const removed of ["Opis", "Vinyasa", "wszystkie poziomy", "limit 14"])
+      await expect(flow).not.toContainText(removed);
+    await expect(flow.locator("img")).toHaveCount(0);
+    await expect(flow.locator('span[aria-hidden="true"]')).toHaveClass(/bg-class-green-600/);
+    await expect(page.getByRole("link", { name: /^Bez domyślnych/ })).toContainText(
+      "Prowadzący nie został jeszcze wybrany",
+    );
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({ path: info.outputPath("catalogue.png"), fullPage: true });
+    await page.goto("/account/partner/class-schedules/create");
+    const choice = page.getByRole("button", { name: /^Flow/ });
+    await expect(choice).toContainText("60 min · Olga Testowa");
+    await expect(choice).not.toContainText("Opis");
+    expect(state.requests.some((r) => r.path.startsWith("/class-sessions"))).toBe(false);
+    await page.screenshot({ path: info.outputPath("template-picker.png"), fullPage: true });
+    await choice.click();
+    await expect(page.getByRole("button", { name: /Olga Testowa/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+}

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSetPageSubtitle } from "@/context/PageHeaderContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAssignableInstructorSource } from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { szablony } from "@/lib/polishPlural";
 
@@ -17,6 +18,7 @@ export default function ClassTemplatesPage() {
   const [templates, setTemplates] = useState<ClassTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const instructorSource = useAssignableInstructorSource(null, "partner-list");
 
   // U1 subtitles the header with the count. It also names the studio — templates are
   // partner-scoped and belong to no single studio, so that half is deliberately omitted
@@ -39,6 +41,11 @@ export default function ClassTemplatesPage() {
 
   return (
     <div className="mx-auto max-w-lg p-4">
+      {instructorSource.error && templates.some((template) => template.default_instructor_id) && (
+        <Button variant="outline" className="mb-3" onClick={() => void instructorSource.refresh()}>
+          Odśwież prowadzących
+        </Button>
+      )}
       {isLoading ? (
         <p className="text-center text-gray-400 py-8">Ładowanie...</p>
       ) : templates.length === 0 ? (
@@ -69,7 +76,16 @@ export default function ClassTemplatesPage() {
               href={`/account/partner/class-templates/${t.id}/edit`}
               className="flex items-start gap-3 px-3 py-4 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
             >
-              <TemplateRowContent template={t} showMissingDefaults />
+              <TemplateRowContent
+                template={t}
+                instructorName={
+                  instructorSource.instructors.find(
+                    (person) => person.id === t.default_instructor_id,
+                  )?.name
+                }
+                instructorsLoading={instructorSource.loading}
+                instructorsError={instructorSource.error}
+              />
             </Link>
           ))}
           <Link

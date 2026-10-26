@@ -401,6 +401,11 @@ export default function CreateScheduleWizard() {
       {/* Step 1: Select template or create inline */}
       {step === "select" && !showInlineCreate && (
         <div className="space-y-4">
+          {unionSource.error && (
+            <Button variant="outline" onClick={() => void unionSource.refresh()}>
+              Odśwież prowadzących
+            </Button>
+          )}
           <div className="relative">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <Input
@@ -438,7 +443,16 @@ export default function CreateScheduleWizard() {
                       selectedTemplate?.id === t.id ? "bg-gray-50" : "hover:bg-gray-50"
                     }`}
                   >
-                    <TemplateRowContent template={t} />
+                    <TemplateRowContent
+                      template={t}
+                      instructorName={
+                        unionSource.instructors.find(
+                          (person) => person.id === t.default_instructor_id,
+                        )?.name
+                      }
+                      instructorsLoading={unionSource.loading}
+                      instructorsError={unionSource.error}
+                    />
                   </button>
                 ))}
               </div>
