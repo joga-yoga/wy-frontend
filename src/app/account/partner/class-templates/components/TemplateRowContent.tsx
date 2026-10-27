@@ -1,7 +1,9 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ImageIcon } from "lucide-react";
+import { useState } from "react";
 
+import { WyImage } from "@/components/custom/WyImage";
 import { COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +21,8 @@ export function TemplateRowContent({
   instructorsLoading?: boolean;
   instructorsError?: boolean;
 }) {
+  const imageId = template.image_ids?.find((id) => id.trim())?.trim();
+  const [failedImage, setFailedImage] = useState<string | null>(null);
   const instructorLabel = !template.default_instructor_id
     ? "Prowadzący nie został jeszcze wybrany"
     : instructorName ||
@@ -30,6 +34,20 @@ export function TemplateRowContent({
 
   return (
     <>
+      <div className="relative flex h-20 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 text-gray-400">
+        {imageId && failedImage !== imageId ? (
+          <WyImage
+            src={imageId}
+            alt=""
+            fill
+            sizes="96px"
+            className="object-cover"
+            onError={() => setFailedImage(imageId)}
+          />
+        ) : (
+          <ImageIcon className="h-6 w-6" aria-hidden="true" />
+        )}
+      </div>
       <div className="min-w-0 flex-1">
         <p className="break-words text-base font-semibold leading-6 text-gray-900">
           {template.title}

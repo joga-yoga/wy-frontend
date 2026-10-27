@@ -15,6 +15,8 @@ async function setup(page: Page, eligible = ["b"]) {
     returned: [] as string[],
     failScope: false,
     failAssignable: false,
+    imageRequests: [] as string[],
+    extraTemplates: [] as { id: string; title: string; image_ids: string[] }[],
     template: {
       id: "flow",
       title: "Flow",
@@ -26,7 +28,7 @@ async function setup(page: Page, eligible = ["b"]) {
       style: "Vinyasa",
       color: "green",
       language: "polski",
-      image_ids: [],
+      image_ids: [] as string[],
     },
   };
   const olga = {
@@ -50,6 +52,14 @@ async function setup(page: Page, eligible = ["b"]) {
   });
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
+    if (url.hostname === "res.cloudinary.com" && url.pathname.includes("template-test-")) {
+      state.imageRequests.push(url.pathname);
+      if (url.pathname.includes("template-test-broken")) return route.fulfill({ status: 404 });
+      return route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="80"><rect width="96" height="80" fill="#89a794"/><circle cx="48" cy="40" r="18" fill="#dce8dc"/></svg>',
+      });
+    }
     if (!["localhost", "127.0.0.1"].includes(url.hostname)) return route.abort();
     if (!["8000", "8010"].includes(url.port)) return route.continue();
     const path = url.pathname,
@@ -103,9 +113,11 @@ async function setup(page: Page, eligible = ["b"]) {
           ...state.template,
           id: "empty",
           title: "Bez domyślnych",
+          image_ids: [],
           default_instructor_id: null,
           default_capacity: null,
         },
+        ...state.extraTemplates.map((template) => ({ ...state.template, ...template })),
       ];
     else if (path === "/class-schedules/preview")
       json = {
@@ -124,6 +136,62 @@ async function setup(page: Page, eligible = ["b"]) {
     await route.fulfill({ status, json });
   });
   return state;
+}
+
+for (const width of [390, 1440]) {
+  test(`template thumbnails load and fall back in both lists (${width}px)`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await setup(page);
+    state.template.image_ids = ["  ", "template-test-present"];
+    state.extraTemplates = [
+      { id: "broken", title: "Nieudane zdjęcie", image_ids: ["template-test-broken"] },
+    ];
+
+    for (const [url, role] of [
+      ["/account/partner/class-templates", "link"],
+      ["/account/partner/class-schedules/create", "button"],
+    ] as const) {
+      await page.goto(url);
+      await cookies(page);
+      const present = page.getByRole(role, { name: /^Flow/ });
+      const missing = page.getByRole(role, { name: /^Bez domyślnych/ });
+      const broken = page.getByRole(role, { name: /^Nieudane zdjęcie/ });
+      await expect(present).toContainText("60 min · Olga Testowa");
+      await expect(present.locator('span[aria-hidden="true"]')).toHaveClass(/bg-class-green-600/);
+      for (const removed of ["Opis", "Vinyasa", "wszystkie poziomy", "limit 14"])
+        await expect(present).not.toContainText(removed);
+      const image = present.locator("img");
+      await expect(image).toHaveCount(1);
+      await expect(image).toHaveAttribute("alt", "");
+      await expect
+        .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))
+        .toBe(96);
+      await expect(present.locator("svg.lucide-image")).toHaveCount(0);
+      await expect(missing.locator("img")).toHaveCount(0);
+      await expect(missing.locator("svg.lucide-image")).toBeVisible();
+      await expect(broken.locator("img")).toHaveCount(0);
+      await expect(broken.locator("svg.lucide-image")).toBeVisible();
+      expect(state.imageRequests.some((request) => request.includes("template-test-present"))).toBe(
+        true,
+      );
+      expect(state.imageRequests.some((request) => request.includes("template-test-broken"))).toBe(
+        true,
+      );
+      for (const row of [present, missing, broken]) {
+        const bounds = await row.boundingBox();
+        expect(bounds!.width).toBeGreaterThan(96);
+        expect(await row.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+          true,
+        );
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      await page.screenshot({ path: info.outputPath(`${role}-thumbnails.png`), fullPage: true });
+    }
+  });
 }
 async function cookies(page: Page) {
   const button = page.getByRole("button", { name: "Tylko niezbędne" });
