@@ -13,6 +13,7 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import { ImportEntry } from "../studio/import/fitssey/ImportEntry";
 import { SavedImports } from "../studio/import/fitssey/SavedImports";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -28,7 +29,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
  */
 export default function MenuPage() {
   const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { capabilities, isLoading } = usePartnerCapabilities();
   // Invitations moved to the header bell (WY-65). They used to be listed here *and* on
   // Rezerwacje, both reading `/users/me/invitations` through their own copy of the
@@ -108,7 +109,12 @@ export default function MenuPage() {
         </section>
       )}
 
-      {capabilities?.businessMode !== "solo" && <SavedImports />}
+      {!isLoading && capabilities && capabilities.businessMode !== "solo" && user && (
+        <div key={user.id} className="space-y-6">
+          <ImportEntry />
+          <SavedImports />
+        </div>
+      )}
 
       <section className="space-y-2">
         <SectionLabel>Konto</SectionLabel>

@@ -437,3 +437,33 @@ test("manual override and clearing persist through changes and retry; fresh form
   await dialog.getByRole("button", { name: "4", exact: true }).click();
   await expect(name).toHaveValue("Karnet na 4 wejścia");
 });
+
+test("source pass with unknown validity requires an explicit owner term", async ({ page }) => {
+  const { requests } = await setup(page, [
+    {
+      id: "source-pass",
+      name: "Source four visits",
+      price: 140,
+      currency: "PLN",
+      session_count: 4,
+      duration_days: null,
+      duration_unknown: true,
+    },
+  ]);
+  await page.getByRole("button", { name: "Edytuj", exact: true }).click();
+  const dialog = form(page);
+  await expect(dialog.getByRole("switch", { name: "Bez terminu" })).toHaveAttribute(
+    "aria-checked",
+    "false",
+  );
+  const save = dialog.getByRole("button", { name: "Zapisz zmiany", exact: true });
+  await expect(save).toBeDisabled();
+  await dialog.getByRole("button", { name: "30 dni", exact: true }).click();
+  await save.click();
+  await expect.poll(() => requests.length).toBe(1);
+  expect(requests[0].body).toMatchObject({
+    duration_days: 30,
+    duration_unknown: false,
+    session_count: 4,
+  });
+});

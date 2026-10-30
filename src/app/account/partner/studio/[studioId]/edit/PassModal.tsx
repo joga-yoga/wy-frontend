@@ -71,6 +71,8 @@ function initialValues(pass?: StudioPass | null): FormValues {
       ? limit(pass.duration_days, DAYS, 30)
       : { value: "30", unlimited: false, custom: false },
   };
+  if (pass?.duration_unknown) form.days = { value: "", unlimited: false, custom: true };
+  if (pass?.session_count_unknown) form.visits = { value: "", unlimited: false, custom: true };
   if (!pass) form.name = generatedName(form);
   return form;
 }
@@ -367,6 +369,8 @@ export function PassModal({
       description: form.description.trim(),
       session_count: form.visits.unlimited ? null : visits,
       duration_days: form.days.unlimited ? null : days,
+      duration_unknown: false,
+      session_count_unknown: false,
     };
     try {
       let saved: StudioPass;

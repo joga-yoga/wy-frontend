@@ -16,6 +16,8 @@ export interface StudioPass {
   photo?: string | null;
   duration_days?: number | null;
   session_count?: number | null;
+  duration_unknown?: boolean | null;
+  session_count_unknown?: boolean | null;
 }
 
 export interface SportCard {
@@ -82,6 +84,7 @@ export interface StudioPublic {
   status: string;
   rooms: StudioRoom[];
   passes: StudioPass[];
+  other_offers?: DirectoryOffer[];
   sport_card_acceptances: StudioSportCardAcceptance[];
   amenities: StudioAmenity[];
   /** Computed server-side from the classes with future sessions scheduled here —
@@ -244,6 +247,8 @@ export interface DirectoryPass {
   description: string | null;
   session_count: number | null;
   duration_days: number | null;
+  duration_unknown?: boolean;
+  session_count_unknown?: boolean;
 }
 
 /** Everything the classifier could not honestly call a pass — private classes,

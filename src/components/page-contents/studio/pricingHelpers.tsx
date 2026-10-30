@@ -42,14 +42,16 @@ export function sportCardPhoto(item: StudioSportCardAcceptance) {
 
 export function LightPassTile({
   sessionCount,
+  sessionCountUnknown = false,
   durationDays,
   size = 72,
 }: {
   sessionCount?: number | null;
+  sessionCountUnknown?: boolean | null;
   durationDays?: number | null;
   size?: number;
 }) {
-  const isUnlimitedSessions = sessionCount == null;
+  const isUnlimitedSessions = !sessionCountUnknown && sessionCount == null;
   const isUnlimitedDays = durationDays == null;
   const hideDuration = durationDays === 0;
   const compact = size <= 48;
@@ -71,7 +73,7 @@ export function LightPassTile({
             "font-semibold leading-none text-[#222222]",
           )}
         >
-          {sessionCount}
+          {sessionCountUnknown ? "—" : sessionCount}
         </span>
       )}
       {!hideDuration && (

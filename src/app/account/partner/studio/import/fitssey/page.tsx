@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 import { importError, importsApi } from "./api";
-import { TransferOptOut } from "./TransferOptOut";
 import type { ImportJob } from "./types";
 
 function localDate(date: Date) {
@@ -22,10 +21,14 @@ function localDate(date: Date) {
 export default function FitsseyConnectPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const studioId = useSearchParams().get("studioId") || undefined;
+  const params = useSearchParams();
+  const studioId = params.get("studioId") || undefined;
+  const context = params.toString();
   const backHref = studioId
     ? `/account/partner/menu/studio/${studioId}`
-    : "/account/partner/studio/create";
+    : context
+      ? `/account/partner/studio/create?step=manual&${context}`
+      : "/account/partner/menu";
   const [uuid, setUuid] = useState("");
   const [key, setKey] = useState("");
   const [start, setStart] = useState(() => localDate(new Date()));
@@ -44,13 +47,6 @@ export default function FitsseyConnectPage() {
     Promise.all([importsApi.offer(studioId), importsApi.list()])
       .then(([config, list]) => {
         if (active) {
-          if (!config.eligible) {
-            toast({
-              description: "Przenoszenie dla tego studia zostało już zakończone lub wyłączone.",
-            });
-            router.replace(backHref);
-            return;
-          }
           setEnabled(config.enabled);
           setJobs(
             studioId
@@ -84,7 +80,7 @@ export default function FitsseyConnectPage() {
         timezone: "Europe/Warsaw",
       });
       setKey("");
-      router.push(`/account/partner/studio/import/fitssey/${job.id}`);
+      router.push(`/account/partner/studio/import/fitssey/${job.id}?${context}`);
     } catch (error) {
       const info = importError(error);
       if (info.code === "migration_transfer_closed") {
@@ -99,14 +95,14 @@ export default function FitsseyConnectPage() {
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-6 pb-28">
       <Link className="inline-flex items-center gap-2 text-sm text-gray-600" href={backHref}>
         <ArrowLeft size={16} />
-        {studioId ? "Wróć do studia" : "Tworzenie studia"}
+        {studioId ? "Wróć do studia" : context ? "Tworzenie studia" : "Wróć do menu"}
       </Link>
       <header className="space-y-2">
         <p className="text-sm font-medium text-brand-green-700">Przenieś konfigurację studia</p>
         <h1 className="text-2xl font-semibold">Zacznij od Fitssey</h1>
         <p className="text-gray-600">
-          Najpierw zobaczysz dane i wybierzesz, co przenieść. Każda lokalizacja stanie się nowym,
-          prywatnym studiem.
+          Najpierw zobaczysz dane i wybierzesz, co przenieść. Wybierzesz istniejące lub nowe studio.
+          Nowe studio pozostanie prywatne.
           {studioId && " Import nie zastąpi ani nie połączy danych obecnego studia."}
         </p>
       </header>
@@ -218,9 +214,6 @@ export default function FitsseyConnectPage() {
           )}
         </CardContent>
       </Card>
-      {studioId && enabled !== null && (
-        <TransferOptOut studioId={studioId} onClosed={() => router.replace(backHref)} />
-      )}
       {jobs.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Zapisane importy</h2>

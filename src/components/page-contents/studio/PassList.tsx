@@ -87,7 +87,11 @@ export function PassList({
               onClick={() => setSelectedPass(pass)}
               className="flex w-full items-center gap-4 py-3 text-left"
             >
-              <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
+              <LightPassTile
+                sessionCount={pass.session_count}
+                sessionCountUnknown={pass.session_count_unknown}
+                durationDays={pass.duration_unknown ? 0 : pass.duration_days}
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-semibold text-[#222222]">{pass.name}</h3>
@@ -134,16 +138,19 @@ export function PassList({
           {selectedPass && (
             <div className="px-4 pb-6">
               <PassDetailBody pass={selectedPass} dropInPrice={dropInPrice} currency={currency} />
-              {purchasable && (
-                <Button
-                  variant="green"
-                  size="cta"
-                  className="mt-5 w-full"
-                  onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
-                >
-                  Kup karnet · {formatMoney(selectedPass.price, selectedPass.currency || currency)}
-                </Button>
-              )}
+              {purchasable &&
+                !selectedPass.duration_unknown &&
+                !selectedPass.session_count_unknown && (
+                  <Button
+                    variant="green"
+                    size="cta"
+                    className="mt-5 w-full"
+                    onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
+                  >
+                    Kup karnet ·{" "}
+                    {formatMoney(selectedPass.price, selectedPass.currency || currency)}
+                  </Button>
+                )}
             </div>
           )}
         </DrawerContent>

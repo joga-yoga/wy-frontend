@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 
 import { BottomTabBar, TAB_PATHS } from "@/components/layout/BottomTabBar";
@@ -26,15 +26,18 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // null = partner status not yet resolved for the current session
   const [hasPartner, setHasPartner] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/account/login");
+      router.replace(
+        `/account/login?next=${encodeURIComponent(`${pathname}${searchParams.size ? `?${searchParams.toString()}` : ""}`)}`,
+      );
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname, searchParams]);
 
   useEffect(() => {
     setLastMode("b2b");

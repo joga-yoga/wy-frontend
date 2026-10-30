@@ -1,7 +1,7 @@
 "use client";
+import { isAxiosError } from "axios";
 import { ArrowLeft, Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
@@ -27,15 +27,16 @@ import {
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
 import { importError, importsApi } from "./api";
+import { type DestinationProblem, ImportDestinations } from "./ImportDestinations";
 import { ImportProgress } from "./ImportProgress";
 import { ImportResults } from "./ImportResults";
 import { ReviewRecords } from "./ReviewRecords";
-import { TransferOptOut } from "./TransferOptOut";
 import { issueLabels, kinds, type ReviewIssue } from "./types";
 import { useImportJob } from "./useImportJob";
 
 export function ImportWorkspace({ id }: { id: string }) {
-  const router = useRouter();
+  const [destinationReady, setDestinationReady] = useState(false);
+  const [destinationProblem, setDestinationProblem] = useState<DestinationProblem | null>(null);
   const { capabilities } = usePartnerCapabilities();
   const { job, setJob, error: loadError, refresh } = useImportJob(id);
   const [phone, setPhone] = useState(false);
@@ -45,7 +46,7 @@ export function ImportWorkspace({ id }: { id: string }) {
   const [confirm, setConfirm] = useState(false);
   const [ack, setAck] = useState(false);
   async function start() {
-    if (!job) return;
+    if (!job || !destinationReady) return;
     setBusy(true);
     setError("");
     setIssues([]);
@@ -53,6 +54,7 @@ export function ImportWorkspace({ id }: { id: string }) {
       setJob(await importsApi.start(id, job.revision));
       setConfirm(false);
     } catch (error) {
+      if (isAxiosError(error)) setDestinationProblem(error.response?.data?.detail ?? null);
       const info = importError(error);
       setError(info.message);
       if (info.code === "phone_verification_required") setPhone(true);
@@ -69,19 +71,6 @@ export function ImportWorkspace({ id }: { id: string }) {
         <p role="status">{loadError || "Wczytywanie importu…"}</p>
         <Button asChild variant="outline" className="mt-4">
           <Link href="/account/partner/studio/import/fitssey">Zapisane importy</Link>
-        </Button>
-      </main>
-    );
-  if (
-    job.transfer_closed &&
-    !["completed", "importing"].includes(job.state) &&
-    !["apply", "asset"].includes(job.stage)
-  )
-    return (
-      <main className="mx-auto max-w-lg space-y-4 p-6">
-        <p>Przenoszenie dla tego studia zostało wyłączone.</p>
-        <Button asChild>
-          <Link href="/account/partner/menu">Wróć do menu</Link>
         </Button>
       </main>
     );
@@ -111,11 +100,14 @@ export function ImportWorkspace({ id }: { id: string }) {
           {String(job.scope.timezone || "Europe/Warsaw")}
         </p>
       </header>
-      {!job.transfer_closed &&
-        ["analyzing", "review", "failed", "reconnect_required"].includes(job.state) &&
-        !["apply", "asset"].includes(job.stage) && (
-          <TransferOptOut jobId={job.id} onClosed={() => router.replace("/account/partner/menu")} />
-        )}
+      {job.state === "review" && (
+        <ImportDestinations
+          job={job}
+          onChange={setJob}
+          problem={destinationProblem}
+          onReady={setDestinationReady}
+        />
+      )}
       <ol aria-label="Etapy importu" className="grid grid-cols-5 gap-2">
         {stages.map((label, index) => (
           <li
@@ -219,7 +211,7 @@ export function ImportWorkspace({ id }: { id: string }) {
             </div>
             <Button
               variant="green"
-              disabled={busy || !job.branches.some((b) => b.selected)}
+              disabled={busy || !destinationReady || !job.branches.some((b) => b.selected)}
               onClick={() => {
                 setConfirm(true);
                 setAck(false);
@@ -250,11 +242,11 @@ export function ImportWorkspace({ id }: { id: string }) {
             <DialogDescription>
               {capabilities?.businessMode == null
                 ? "Wybierasz zarządzanie studiem. Po zapisaniu to konto pozostanie w tym trybie. Aby prowadzić również własny grafik jako samodzielny instruktor, załóż osobne konto z innym adresem e-mail."
-                : "Powstaną prywatne studia. Możesz edytować je przed publikacją."}
+                : "Dane trafią do wybranych studiów. Sprawdzisz nowe pozycje przed ich udostępnieniem."}
             </DialogDescription>
           </DialogHeader>
           <p>
-            {job.branches.filter((b) => b.selected).length} nowych studiów · {job.selected_count}{" "}
+            {job.branches.filter((b) => b.selected).length} lokalizacji · {job.selected_count}{" "}
             rekordów
           </p>
           <p className="text-sm">
@@ -263,13 +255,13 @@ export function ImportWorkspace({ id }: { id: string }) {
           </p>
           <label className="flex items-start gap-3 text-sm">
             <Checkbox checked={ack} onCheckedChange={(value) => setAck(value === true)} />
-            Sprawdzono wybór. Chcę utworzyć prywatne wersje studiów.
+            Sprawdzono wybór i studia docelowe. Chcę przenieść wybrane dane.
           </label>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirm(false)}>
               Wróć do wyboru
             </Button>
-            <Button variant="green" disabled={!ack || busy} onClick={start}>
+            <Button variant="green" disabled={!ack || busy || !destinationReady} onClick={start}>
               {busy
                 ? "Uruchamianie…"
                 : capabilities?.businessMode == null

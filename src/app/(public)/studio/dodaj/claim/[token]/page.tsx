@@ -1,114 +1,11 @@
 "use client";
-
-import { AxiosError } from "axios";
-import Link from "next/link";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
-
-import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { axiosInstance } from "@/lib/axiosInstance";
-
-type ClaimResponse = { studio_id: string; edit_url: string; status: string; review_status: string };
-
-function errorCode(error: unknown) {
-  if (!(error instanceof AxiosError)) return null;
-  const detail = error.response?.data?.detail;
-  return detail && typeof detail === "object" && "code" in detail ? String(detail.code) : null;
-}
-
-function ClaimStudioDraft() {
+export default function ClaimStudioPage() {
   const params = useParams<{ token: string }>();
   const router = useRouter();
-  const { user, loading } = useAuth();
-  const { toast } = useToast();
-  const { confirmMode, dialog } = useBusinessModeConfirmation();
-  const [cancelled, setCancelled] = useState(false);
-  const started = useRef(false);
-  const [message, setMessage] = useState<string | null>(null);
-
   useEffect(() => {
-    if (loading || started.current) return;
-    const claimPath = `/studio/dodaj/claim/${params.token}`;
-    if (!user) {
-      router.replace(`/profile/login?next=${encodeURIComponent(claimPath)}`);
-      return;
-    }
-    if (!user.partner) {
-      router.replace(`/account/partner/become-partner?next=${encodeURIComponent(claimPath)}`);
-      return;
-    }
-    started.current = true;
-    void (async () => {
-      if (!(await confirmMode("studio", "Potwierdź i przejmij"))) {
-        setCancelled(true);
-        return;
-      }
-      await axiosInstance
-        .post<ClaimResponse>(`/studio-profile-drafts/${params.token}/claim`)
-        .then(({ data }) => router.replace(data.edit_url))
-        .catch((error: unknown) => {
-          const status = error instanceof AxiosError ? error.response?.status : undefined;
-          if (status === 403 && errorCode(error) === "partner_required") {
-            router.replace(`/profile/become-partner?next=${encodeURIComponent(claimPath)}`);
-            return;
-          }
-          const text =
-            status === 404 || status === 410
-              ? "Ten szkic wygasł albo nie istnieje. Przygotuj go ponownie."
-              : status === 409
-                ? "To studio jest już zarządzane przez innego właściciela."
-                : "Nie udało się przypisać studia. Spróbuj ponownie za chwilę.";
-          setMessage(text);
-          toast({ description: text, variant: "destructive" });
-        });
-    })().catch(() => setMessage("Nie udało się załadować ustawień konta. Spróbuj ponownie."));
-  }, [loading, params.token, router, toast, user, cancelled]);
-
-  if (cancelled)
-    return (
-      <main className="mx-auto max-w-lg space-y-4 p-4">
-        <p>Wybór nie został zapisany.</p>
-        <Button
-          onClick={() => {
-            started.current = false;
-            setCancelled(false);
-          }}
-        >
-          Kontynuuj
-        </Button>
-        <Link href="/account/partner/menu">Wróć do menu</Link>
-        {dialog}
-      </main>
-    );
-
-  if (message) {
-    return (
-      <main className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <h1 className="text-2xl font-semibold">Nie udało się przypisać studia</h1>
-        <p className="max-w-md text-sm text-muted-foreground">{message}</p>
-        <Button asChild>
-          <Link href="/studio/dodaj">Wróć do generatora</Link>
-        </Button>
-      </main>
-    );
-  }
-  return (
-    <main className="flex min-h-[70vh] flex-col items-center justify-center gap-3 px-4 text-center">
-      {dialog}
-      <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      <h1 className="text-xl font-semibold">Przygotowujemy profil studia...</h1>
-      <p className="text-sm text-muted-foreground">Za chwilę otworzymy edytor strony studia.</p>
-    </main>
-  );
-}
-
-export default function StudioDraftClaimPage() {
-  return (
-    <Suspense fallback={null}>
-      <ClaimStudioDraft />
-    </Suspense>
-  );
+    router.replace(`/account/partner/studio/create?draft=${encodeURIComponent(params.token)}`);
+  }, [params.token, router]);
+  return <p className="p-6">Otwieramy szkic studia…</p>;
 }

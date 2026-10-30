@@ -1,6 +1,5 @@
 "use client";
 
-import type { AxiosError } from "axios";
 import {
   BadgeCheck,
   CalendarDays,
@@ -13,8 +12,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
 
 import { JogaYogaLogo } from "@/components/brand/JogaYogaLogo";
 import { WyImage } from "@/components/custom/WyImage";
@@ -36,30 +33,24 @@ import {
   SearchProcessIcon,
   StylesPropertyIcon,
 } from "@/components/instructor-cta/InstructorCtaIcons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { axiosInstance } from "@/lib/axiosInstance";
-import { cn } from "@/lib/utils";
-import type {
-  GeneratedStudioProfileDraft,
-  StudioPublicListItem,
-  StudioPublicSearchItem,
-} from "@/types/studio";
+import type { StudioPublicListItem } from "@/types/studio";
+
+import { StudioDiscovery } from "./StudioDiscovery";
 
 const processSteps: CtaProcessStep[] = [
   {
-    title: "Sprawdzimy informacje o studiu",
-    description: "Szukamy danych udostępnionych w sieci",
+    title: "Znajdź swoje studio",
+    description: "Wybierz profil z katalogu, dodaj studio ręcznie lub przenieś dane z Fitssey.",
     icon: SearchProcessIcon,
   },
   {
-    title: "Przygotujemy szkic strony",
+    title: "Sprawdź dane studia",
     description: "Najważniejsze informacje trafią do prostego widoku, który można poprawić.",
     icon: DraftProcessIcon,
   },
   {
     title: "Rejestracja",
-    description: "Załóż profil studia i zacznij zarządzać swoją stroną",
+    description: "Zaloguj się i zapisz sprawdzone dane studia.",
     icon: RegisterProcessIcon,
   },
 ];
@@ -80,112 +71,12 @@ const properties: CtaPageProperty[] = [
 const headingClass =
   "text-[20px] font-semibold leading-[30px] text-[#3F3F46] md:text-[30px] md:tracking-[-0.6px]";
 
-type MatchRequired = {
-  detail?: {
-    code?: string;
-    message?: string;
-    matches?: StudioPublicSearchItem[];
-  };
-};
-
 export function StudioCtaPageContent({ studios }: { studios: StudioPublicListItem[] }) {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<StudioPublicSearchItem | null>(null);
-  const [suggestions, setSuggestions] = useState<StudioPublicSearchItem[]>([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const value = query.trim();
-    if (value.length < 3 || selected) {
-      setSuggestions([]);
-      setLoadingSuggestions(false);
-      return;
-    }
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      setLoadingSuggestions(true);
-      axiosInstance
-        .get<StudioPublicSearchItem[]>("/public/studios/search", {
-          params: { q: value, limit: 10 },
-          signal: controller.signal,
-        })
-        .then(({ data }) => setSuggestions(data))
-        .catch((requestError) => {
-          if ((requestError as { code?: string }).code !== "ERR_CANCELED") setSuggestions([]);
-        })
-        .finally(() => setLoadingSuggestions(false));
-    }, 300);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [query, selected]);
-
-  const changeQuery = (value: string) => {
-    setQuery(value);
-    setSelected(null);
-    setError(null);
-  };
-
-  const submit = async () => {
-    const input = query.trim();
-    if (input.length < 2 || generating) {
-      setError("Wpisz nazwę studia.");
-      return;
-    }
-    if (selected?.is_claimed) {
-      setError("To studio jest już zarządzane.");
-      return;
-    }
-    setGenerating(true);
-    setError(null);
-    try {
-      const { data } = await axiosInstance.post<GeneratedStudioProfileDraft>(
-        "/studio-profile-drafts/generate",
-        { input, existing_studio_id: selected?.id },
-      );
-      router.push(`/studio/dodaj/preview/${data.public_token}`);
-    } catch (requestError) {
-      const axiosError = requestError as AxiosError<MatchRequired>;
-      const detail = axiosError.response?.data?.detail;
-      if (axiosError.response?.status === 409 && detail?.code === "studio_match_required") {
-        setSuggestions(detail.matches ?? []);
-        setError(detail.message ?? "Wybierz studio z listy.");
-        setGenerating(false);
-        return;
-      }
-      setError("Nie udało się przygotować szkicu. Spróbuj ponownie.");
-      setGenerating(false);
-    }
-  };
-
-  if (generating) return <StudioGenerationScreen />;
-
-  const formProps = {
-    query,
-    selected,
-    suggestions,
-    loadingSuggestions,
-    error,
-    onChange: changeQuery,
-    onSelect: (item: StudioPublicSearchItem) => {
-      if (item.is_claimed) return;
-      setSelected(item);
-      setQuery(item.name);
-      setSuggestions([]);
-      setError(null);
-    },
-    onSubmit: submit,
-  };
-
   return (
     <main className="overflow-x-hidden bg-white text-[#3F3F46]">
-      <HeroSection formProps={formProps} />
+      <HeroSection />
       <div className="px-6 py-6 md:hidden">
-        <StudioDraftForm {...formProps} variant="mobile" />
+        <StudioDiscovery />
       </div>
       <SectionDivider className="md:hidden" />
       <ProcessSection />
@@ -199,20 +90,9 @@ export function StudioCtaPageContent({ studios }: { studios: StudioPublicListIte
   );
 }
 
-type FormProps = {
-  query: string;
-  selected: StudioPublicSearchItem | null;
-  suggestions: StudioPublicSearchItem[];
-  loadingSuggestions: boolean;
-  error: string | null;
-  onChange: (value: string) => void;
-  onSelect: (item: StudioPublicSearchItem) => void;
-  onSubmit: () => void;
-};
-
-function HeroSection({ formProps }: { formProps: FormProps }) {
+function HeroSection() {
   return (
-    <section className="relative h-[430px] overflow-hidden rounded-b-lg md:h-[620px] md:rounded-none">
+    <section className="relative h-[430px] overflow-hidden rounded-b-lg md:h-auto md:min-h-[620px] md:rounded-none">
       <Image
         src="/images/cta/studios/hero.webp"
         alt="Wnętrze studia jogi"
@@ -222,7 +102,7 @@ function HeroSection({ formProps }: { formProps: FormProps }) {
         sizes="100vw"
       />
       <div className="absolute inset-0 bg-black/10" />
-      <div className="relative flex h-full flex-col items-center px-8 pt-[116px] text-center text-white md:px-20 md:pt-14">
+      <div className="relative flex h-full flex-col items-center px-8 pt-[116px] text-center text-white md:px-20 md:pt-14 md:pb-14">
         <JogaYogaLogo variant="on-dark" size="desktop" className="scale-[0.62] md:scale-100" />
         <div className="mt-7 md:mt-10 md:grid md:w-full md:max-w-[1120px] md:grid-cols-[1fr_518px] md:items-center md:gap-20 md:text-left">
           <div>
@@ -234,155 +114,11 @@ function HeroSection({ formProps }: { formProps: FormProps }) {
             </p>
           </div>
           <div className="hidden md:block">
-            <StudioDraftForm {...formProps} variant="desktop" />
+            <StudioDiscovery />
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function StudioDraftForm(props: FormProps & { variant: "mobile" | "desktop" }) {
-  const { query, selected, suggestions, loadingSuggestions, error, onChange, onSelect, onSubmit } =
-    props;
-  const isDesktop = props.variant === "desktop";
-  const id = useId();
-  const listId = `${id}-listbox`;
-  const [active, setActive] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const open = suggestions.length > 0 && !selected;
-
-  useEffect(() => setActive(open ? 0 : -1), [open, suggestions]);
-
-  const move = (direction: number) => {
-    if (!open) return;
-    let next = active;
-    do next = (next + direction + suggestions.length) % suggestions.length;
-    while (suggestions[next]?.is_claimed && next !== active);
-    setActive(next);
-  };
-
-  return (
-    <form
-      className={cn(
-        "relative bg-[#FAFAFA] text-left text-[#3F3F46]",
-        isDesktop
-          ? "w-[518px] rounded-2xl p-8"
-          : "mx-auto min-h-[260px] w-full max-w-[354px] rounded-2xl p-6 shadow-[0_6px_18px_rgba(39,39,42,0.12)]",
-      )}
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-      aria-label="Generator strony studia jogi"
-    >
-      <h2
-        className={cn(
-          "font-semibold text-[#52525B]",
-          isDesktop ? "text-[30px] leading-[32px]" : "text-[24px] leading-[30px]",
-        )}
-      >
-        Sprawdź, jak może wyglądać strona studia
-      </h2>
-      <label
-        htmlFor={id}
-        className="mt-5 block text-[15px] font-medium text-[#71717A] md:text-[18px]"
-      >
-        Wpisz nazwę studia
-      </label>
-      <div className="relative mt-2">
-        <Input
-          ref={inputRef}
-          id={id}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-activedescendant={active >= 0 ? `${id}-option-${active}` : undefined}
-          aria-invalid={Boolean(error)}
-          value={query}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              move(1);
-            }
-            if (event.key === "ArrowUp") {
-              event.preventDefault();
-              move(-1);
-            }
-            if (event.key === "Escape") setActive(-1);
-            if (event.key === "Enter" && open && active >= 0) {
-              event.preventDefault();
-              onSelect(suggestions[active]);
-            }
-          }}
-          placeholder="np. Święta Krowa Studio Jogi"
-          autoComplete="off"
-          className="h-11 rounded-xl border-[#71717A] bg-white px-3 text-[16px] shadow-none placeholder:text-[#B9B9C0]"
-        />
-        {loadingSuggestions && (
-          <span
-            className="absolute right-3 top-3 size-5 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent"
-            aria-label="Szukamy studiów"
-          />
-        )}
-        {open && (
-          <ul
-            id={listId}
-            role="listbox"
-            className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-zinc-200 bg-white p-1 shadow-xl"
-          >
-            {suggestions.map((item, index) => (
-              <li
-                key={item.id}
-                id={`${id}-option-${index}`}
-                role="option"
-                aria-selected={false}
-                aria-disabled={item.is_claimed}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  onSelect(item);
-                }}
-                className={cn(
-                  "rounded-lg px-3 py-2",
-                  item.is_claimed
-                    ? "cursor-not-allowed bg-zinc-50 text-zinc-400"
-                    : "cursor-pointer",
-                  active === index && !item.is_claimed && "bg-zinc-100",
-                )}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium">{item.name}</span>
-                  {item.is_claimed && <span className="text-xs">już zarządzane</span>}
-                </div>
-                {(item.address || item.city) && (
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {[item.address, item.city].filter(Boolean).join(" · ")}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      {selected && (
-        <p className="mt-2 flex items-center gap-1 text-sm text-emerald-700">
-          <BadgeCheck className="size-4" /> Wybrano istniejące studio
-        </p>
-      )}
-      {error && (
-        <p role="alert" className="mt-2 text-sm font-medium text-red-600">
-          {error}
-        </p>
-      )}
-      <Button
-        type="submit"
-        className="mt-5 h-11 w-full rounded-full bg-[#3F3F46] text-[16px] hover:bg-[#29292d]"
-      >
-        Zobacz szkic
-      </Button>
-    </form>
   );
 }
 
@@ -534,40 +270,5 @@ function StudioExampleCard({ studio }: { studio: StudioPublicListItem }) {
       </div>
       <span className="mt-auto pt-5 text-sm font-medium text-[#52525B]">Zobacz stronę →</span>
     </Link>
-  );
-}
-
-function StudioGenerationScreen() {
-  const [status, setStatus] = useState(0);
-  const statuses = [
-    "Sprawdzamy bazę studiów",
-    "Szukamy publicznych informacji",
-    "Przygotowujemy szkic strony",
-  ];
-  useEffect(() => {
-    const timer = window.setInterval(
-      () => setStatus((value) => (value + 1) % statuses.length),
-      8000,
-    );
-    return () => window.clearInterval(timer);
-  }, [statuses.length]);
-  return (
-    <main className="flex min-h-svh items-center justify-center bg-[#F7F7F7] px-5 text-center text-[#3F3F46]">
-      <section
-        className="flex min-h-[500px] w-full max-w-[402px] flex-col items-center justify-center rounded-[32px] border border-zinc-200 bg-white px-7 shadow-sm"
-        aria-live="polite"
-      >
-        <span className="text-5xl">🧘</span>
-        <h1 className="mt-7 text-[38px] font-semibold leading-[42px] text-[#52525B]">
-          Proces tworzenia
-        </h1>
-        <p className="mt-4 min-h-12 text-[18px] text-[#71717A]">
-          {statuses[status]}
-          <br />
-          <span className="text-sm">To może potrwać około 2 minut.</span>
-        </p>
-        <div className="mt-10 size-12 animate-spin rounded-full border-[3px] border-zinc-300 border-t-zinc-700" />
-      </section>
-    </main>
   );
 }

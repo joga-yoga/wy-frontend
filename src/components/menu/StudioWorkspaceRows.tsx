@@ -3,7 +3,6 @@
 import { CreditCard, Layers, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { ImportEntry } from "@/app/account/partner/studio/import/fitssey/ImportEntry";
 import { StudioLogoTile } from "@/components/b2b/StudioLogoTile";
 import { MenuRow } from "@/components/menu/MenuRow";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -101,7 +100,6 @@ export function StudioWorkspaceRows({
           Icon={CreditCard}
         />
       </div>
-      {!solo && <ImportEntry studioId={studioId} />}
     </section>
   );
 }

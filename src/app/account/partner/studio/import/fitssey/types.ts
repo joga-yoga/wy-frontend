@@ -10,6 +10,7 @@ export interface ImportRecord {
   selected: boolean;
   issues: string[];
   targets: Record<string, Value>;
+  destination?: Record<string, Value>;
   asset_state: string;
   image_id: string | null;
 }
