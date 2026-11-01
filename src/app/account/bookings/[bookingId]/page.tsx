@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
  */
 
 const FUNDING_LABEL: Record<string, string> = {
+  trial: "Pierwsze zajęcia próbne — bezpłatnie",
   drop_in: "Wejście jednorazowe",
   use_pass: "Karnet",
   sport_card: "Karta sportowa",
@@ -60,6 +61,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 
 /** Ownership, reservation state and exact-reservation payment projection from BookingOut. */
 interface BookingSummary {
+  entry_terms?: { name: string; conditions: string | null } | null;
   id: string;
   occurrence_id: string | null;
   status: string;
@@ -314,8 +316,14 @@ function ReservationDetailContent() {
                 <div className="mt-2 divide-y divide-gray-100">
                   <Fact
                     label="Sposób opłaty"
-                    value={money.funding ? (FUNDING_LABEL[money.funding] ?? null) : null}
+                    value={
+                      summary?.entry_terms?.name ??
+                      (money.funding ? (FUNDING_LABEL[money.funding] ?? null) : null)
+                    }
                   />
+                  {summary?.entry_terms?.conditions && (
+                    <Fact label="Warunki" value={summary.entry_terms.conditions} />
+                  )}
                   <Fact
                     label="Płatność"
                     value={

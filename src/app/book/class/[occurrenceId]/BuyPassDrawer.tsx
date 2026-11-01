@@ -30,7 +30,8 @@ function PassRow({
 }) {
   const asPass = buyAndUseAsStudioPass(option);
   const entry = perEntry(asPass);
-  const discount = discountPercent(asPass, dropInPrice);
+  const discount =
+    (option.currency || currency) === currency ? discountPercent(asPass, dropInPrice) : null;
   const rowCurrency = option.currency || currency;
 
   return (
@@ -113,7 +114,7 @@ export function BuyPassDrawer({
               passId: picked.pass_id,
               passName: picked.name,
               price: picked.price,
-              currency: picked.currency ?? null,
+              currency: picked.currency || currency || null,
             });
             onClose();
           }}

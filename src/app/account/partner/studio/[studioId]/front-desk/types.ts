@@ -1,4 +1,6 @@
 export interface RosterEntry {
+  currency?: string | null;
+  entry_terms?: { name: string; conditions: string | null; currency: string } | null;
   organizer_kind?: "studio" | "solo";
   booking_id: string;
   user_id: string;
@@ -42,7 +44,7 @@ export interface FrontDeskSessionsResponse {
   needs_review: ReviewItem[];
 }
 
-export type FundingType = "drop_in" | "use_pass" | "sport_card" | "buy_and_use";
+export type FundingType = "drop_in" | "trial" | "use_pass" | "sport_card" | "buy_and_use";
 
 export interface WalkInRequest {
   user_id: string;

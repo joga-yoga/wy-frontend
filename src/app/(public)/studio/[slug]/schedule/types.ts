@@ -83,6 +83,11 @@ export interface OccurrenceDetailStudioLocation {
 }
 
 export interface OccurrenceDetailStudio {
+  entry_name?: string;
+  entry_conditions?: string | null;
+  trial_enabled?: boolean;
+  studio_drop_in_price?: number | null;
+  studio_currency?: string | null;
   organizer_kind?: "studio" | "solo";
   id: string;
   name: string;
@@ -104,7 +109,8 @@ export interface OccurrenceDetailStudio {
 export interface OccurrenceDetailBooking {
   id: string;
   status: string;
-  funding_type: "drop_in" | "use_pass" | "sport_card" | "buy_and_use" | "unknown";
+  entry_terms?: { name: string; conditions: string | null } | null;
+  funding_type: "trial" | "drop_in" | "use_pass" | "sport_card" | "buy_and_use" | "unknown";
   sport_card_surcharge?: number | null;
 
   // ── money (WY-73) ────────────────────────────────────────────────────────

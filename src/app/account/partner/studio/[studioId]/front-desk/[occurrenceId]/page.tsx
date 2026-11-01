@@ -9,6 +9,11 @@ import type {
   BuyAndUsePassOption,
   SportCardOption,
 } from "@/app/book/class/[occurrenceId]/types";
+import {
+  entryQuoteChanged,
+  TRIAL_CONDITIONS,
+  TRIAL_LABEL,
+} from "@/app/book/class/[occurrenceId]/types";
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
@@ -154,6 +159,7 @@ export default function FrontDeskRosterPage() {
     bookingId: string;
     label: string;
     amount: number | null;
+    currency?: string | null;
   } | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -300,6 +306,7 @@ export default function FrontDeskRosterPage() {
         bookingId: entry.booking_id,
         label: personLabel(entry.user_name, entry.user_email).primary,
         amount: entry.amount_owed ?? null,
+        currency: entry.currency,
       });
       undoTimerRef.current = setTimeout(() => setUndoState(null), 10_000);
     } catch (err: unknown) {
@@ -348,7 +355,9 @@ export default function FrontDeskRosterPage() {
       );
       if (request !== candidateRequestRef.current) return;
       setOptions(opts);
-      if (opts.existing_passes.length > 0) {
+      if (opts.trial_available) {
+        setFundingType("trial");
+      } else if (opts.existing_passes.length > 0) {
         setFundingType("use_pass");
         setSelectedUserPassId(opts.existing_passes[0].user_pass_id);
       } else if (opts.drop_in_price != null) {
@@ -442,12 +451,13 @@ export default function FrontDeskRosterPage() {
   }, [studioId, occurrenceId, resetAddFlow]);
 
   async function handleWalkInSubmit() {
-    if (!selectedCandidate || !fundingType) return;
+    if (!selectedCandidate || !fundingType || options?.existing_booking_id) return;
     setIsSubmittingWalkIn(true);
     try {
       await axiosInstance.post(`/studios/${studioId}/occurrences/${occurrenceId}/walk-in`, {
         user_id: selectedCandidate.user_id,
         funding_type: fundingType,
+        entry_quote: options?.entry_quote,
         user_pass_id: fundingType === "use_pass" ? selectedUserPassId : undefined,
         studio_sport_card_id: fundingType === "sport_card" ? selectedSportCardId : undefined,
         pass_id: fundingType === "buy_and_use" ? selectedPassId : undefined,
@@ -455,6 +465,24 @@ export default function FrontDeskRosterPage() {
       fetchRoster();
       resetAddFlow();
     } catch (err: unknown) {
+      if (entryQuoteChanged(err)) {
+        setFundingType(undefined);
+        try {
+          const refreshed = await axiosInstance.get<BookingOptionsResponse>(
+            `/studios/${studioId}/occurrences/${occurrenceId}/walk-in-options`,
+            { params: { user_id: selectedCandidate.user_id } },
+          );
+          setOptions(refreshed.data);
+          if (refreshed.data.trial_available) setFundingType("trial");
+        } catch {
+          setOptions(null);
+        }
+        toast({
+          description: "Warunki wejścia zmieniły się. Sprawdź je i potwierdź ponownie.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         description: extractErrorMessage(err, "Nie udało się dodać uczestnika."),
         variant: "destructive",
@@ -484,9 +512,9 @@ export default function FrontDeskRosterPage() {
   };
 
   const paymentChoices: PaymentChoice[] = [];
-  if (options) {
+  if (options && !options.existing_booking_id) {
     const sym = getCurrencySymbol(currency);
-    for (const pass of options.existing_passes) {
+    for (const pass of options.trial_available ? [] : options.existing_passes) {
       const left =
         pass.entries_remaining != null
           ? `po rezerwacji ${plural(pass.entries_remaining - 1, "zostanie", "zostaną", "zostanie")} ${pass.entries_remaining - 1}`
@@ -500,19 +528,33 @@ export default function FrontDeskRosterPage() {
         userPassId: pass.user_pass_id,
       });
     }
-    if (options.drop_in_price != null) {
+    if (!options.trial_available && options.drop_in_price != null) {
       paymentChoices.push({
         key: "drop_in",
         fundingType: "drop_in",
-        label: `Pojedyncze wejście · ${options.drop_in_price.toLocaleString("pl-PL")} ${sym}`,
-        detail: session?.organizer_kind === "solo" ? "Płatność na miejscu" : "Gotówka na miejscu",
+        label: `${options.entry_name || "Wejście jednorazowe"} · ${options.drop_in_price.toLocaleString("pl-PL")} ${sym}`,
+        detail:
+          options.entry_conditions ||
+          (session?.organizer_kind === "solo" ? "Płatność na miejscu" : "Gotówka na miejscu"),
       });
     }
+    if (options.trial_available)
+      paymentChoices.push({
+        key: "trial",
+        fundingType: "trial",
+        label: TRIAL_LABEL,
+        detail: TRIAL_CONDITIONS,
+      });
     // A studio can offer a dozen passes. T4-v2 collapses them behind one "Kup karnet" row
     // summarising the cheapest per-entry price and the count, so buying a pass does not crowd
     // out the two choices the desk makes most often (existing pass, cash at the door).
-    if (options.buy_and_use_options.length > 0) {
+    if (!options.trial_available && options.buy_and_use_options.length > 0) {
       const perEntry = options.buy_and_use_options
+        .filter(
+          (pass) =>
+            (pass.currency || options.studio_currency || "PLN") ===
+            (options.studio_currency || "PLN"),
+        )
         .map((pass) => (pass.session_count ? pass.price / pass.session_count : null))
         .filter((v): v is number => v != null);
       const cheapest = perEntry.length > 0 ? Math.min(...perEntry) : null;
@@ -522,7 +564,7 @@ export default function FrontDeskRosterPage() {
         label: "Kup karnet",
         detail: [
           cheapest != null
-            ? `Od ${cheapest.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${sym}/wejście`
+            ? `Od ${cheapest.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(options.studio_currency)}/wejście`
             : null,
           `${options.buy_and_use_options.length} ${plural(options.buy_and_use_options.length, "karnet", "karnety", "karnetów")}`,
         ]
@@ -533,7 +575,11 @@ export default function FrontDeskRosterPage() {
     }
     // Collapsed for the same reason as the passes (T4-v2): a studio accepting five card brands
     // should not push the everyday choices off the screen.
-    if (options.accepts_sport_cards && options.sport_card_options.length > 0) {
+    if (
+      !options.trial_available &&
+      options.accepts_sport_cards &&
+      options.sport_card_options.length > 0
+    ) {
       const names = options.sport_card_options.map((c) => c.name).filter(Boolean) as string[];
       paymentChoices.push({
         key: "card",
@@ -548,6 +594,7 @@ export default function FrontDeskRosterPage() {
 
   const selectedChoiceKey = (() => {
     if (fundingType === "use_pass" && selectedUserPassId) return `pass:${selectedUserPassId}`;
+    if (fundingType === "trial") return "trial";
     if (fundingType === "drop_in") return "drop_in";
     if (fundingType === "buy_and_use") return "buy";
     if (fundingType === "sport_card") return "card";
@@ -565,13 +612,15 @@ export default function FrontDeskRosterPage() {
 
   /** The CTA names the chosen instrument, as drawn ("Dodaj rezerwację z karnetu"). */
   const submitLabel =
-    fundingType === "use_pass"
-      ? "Dodaj rezerwację z karnetu"
-      : fundingType === "buy_and_use"
-        ? "Kup karnet i dodaj rezerwację"
-        : fundingType === "sport_card"
-          ? "Dodaj rezerwację z karty"
-          : "Dodaj rezerwację";
+    fundingType === "trial"
+      ? "Zarezerwuj bezpłatnie"
+      : fundingType === "use_pass"
+        ? "Dodaj rezerwację z karnetu"
+        : fundingType === "buy_and_use"
+          ? "Kup karnet i dodaj rezerwację"
+          : fundingType === "sport_card"
+            ? "Dodaj rezerwację z karty"
+            : "Dodaj rezerwację";
 
   const byPolishName = (a: RosterEntry, b: RosterEntry) =>
     personSortKey(a.user_name, a.user_email).localeCompare(
@@ -602,6 +651,7 @@ export default function FrontDeskRosterPage() {
           key={entry.booking_id}
           label={undoState.label}
           amount={undoState.amount}
+          currency={undoState.currency}
           isBusy={busyBookingId === entry.booking_id}
           onUndo={undoConfirm}
         />
@@ -985,7 +1035,9 @@ export default function FrontDeskRosterPage() {
                 ) : (
                   options && (
                     <>
-                      {paymentChoices.length === 0 ? (
+                      {options.existing_booking_id ? (
+                        <p className="text-sm">Ta osoba ma już rezerwację na te zajęcia.</p>
+                      ) : paymentChoices.length === 0 ? (
                         <p className="text-sm text-gray-500">
                           Brak dostępnych opcji płatności dla tych zajęć.
                         </p>
@@ -1009,7 +1061,7 @@ export default function FrontDeskRosterPage() {
                                         <PaymentOptionRow
                                           key={pass.pass_id}
                                           label={pass.name}
-                                          detail={`${pass.price.toLocaleString("pl-PL")} ${getCurrencySymbol(pass.currency || currency)}`}
+                                          detail={`${pass.price.toLocaleString("pl-PL")} ${getCurrencySymbol(pass.currency || options?.studio_currency || "PLN")}`}
                                           isSelected={selectedPassId === pass.pass_id}
                                           onClick={() => setSelectedPassId(pass.pass_id)}
                                         />
@@ -1027,7 +1079,7 @@ export default function FrontDeskRosterPage() {
                                         label={card.name || "Karta sportowa"}
                                         detail={
                                           card.fee
-                                            ? `Dopłata ${card.fee.toLocaleString("pl-PL")} ${getCurrencySymbol(currency)}`
+                                            ? `Dopłata ${card.fee.toLocaleString("pl-PL")} ${getCurrencySymbol(options?.studio_currency || "PLN")}`
                                             : "Bez dopłaty"
                                         }
                                         isSelected={

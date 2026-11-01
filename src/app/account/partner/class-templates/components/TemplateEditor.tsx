@@ -30,8 +30,9 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { CLASS_COLORS, type ClassColor, COLOR_LABELS, COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 
-import type { ClassTemplate, ClassTemplateCreate } from "../types";
+import type { ClassTemplate, ClassTemplateCreate, TemplateStudioPricing } from "../types";
 import { type SoloVenue, SoloVenueInput } from "./SoloVenueInput";
+import { TemplatePricing } from "./TemplatePricing";
 
 interface TemplateEditorProps {
   initial?: ClassTemplate | null;
@@ -82,6 +83,7 @@ export function TemplateEditor({
 }: TemplateEditorProps) {
   const { capabilities } = usePartnerCapabilities();
   const isSolo = Boolean(capabilities?.soloStudioId);
+  const [pricingChanges, setPricingChanges] = useState<TemplateStudioPricing[]>([]);
   const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : "");
   const [currency, setCurrency] = useState(initial?.currency ?? "PLN");
   const [venue, setVenue] = useState<SoloVenue>({
@@ -180,6 +182,7 @@ export function TemplateEditor({
       title: title.trim(),
       duration_minutes: parseInt(durationMinutes, 10),
     };
+    if (!isSolo && pricingChanges.length) data.studio_pricing = pricingChanges;
     if (description.trim()) data.description = description.trim();
     if (level) data.level = level;
     data.style_id = styleId;
@@ -415,6 +418,18 @@ export function TemplateEditor({
         </div>
       </section>
 
+      {!isSolo && (
+        <TemplatePricing
+          initial={initial?.studio_pricing ?? []}
+          changes={pricingChanges}
+          onChange={(setting) =>
+            setPricingChanges((rows) => [
+              ...rows.filter((row) => row.studio_id !== setting.studio_id),
+              setting,
+            ])
+          }
+        />
+      )}
       {isSolo && (
         <section className="space-y-4">
           <div className="grid grid-cols-2 gap-3">

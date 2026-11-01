@@ -12,6 +12,7 @@ import { PassDetailBody, PassPriceHeader } from "./PassDetailBody";
 import { discountPercent, formatMoney, LightPassTile, perEntry } from "./pricingHelpers";
 
 interface PassListProps {
+  hideDropIn?: boolean;
   passes: StudioPass[];
   dropInPrice?: number | null;
   currency?: string | null;
@@ -37,9 +38,10 @@ export function PassList({
   dropInPrice,
   currency = "PLN",
   purchasable = true,
+  hideDropIn = false,
 }: PassListProps) {
   const router = useRouter();
-  const hasDropIn = dropInPrice != null;
+  const hasDropIn = !hideDropIn && dropInPrice != null;
   const [selectedPass, setSelectedPass] = useState<StudioPass | null>(null);
   const [showDropIn, setShowDropIn] = useState(false);
   const [showAllPasses, setShowAllPasses] = useState(false);
@@ -71,7 +73,8 @@ export function PassList({
         )}
         {visiblePasses.map((pass) => {
           const entryPrice = perEntry(pass);
-          const discount = discountPercent(pass, dropInPrice);
+          const discount =
+            (pass.currency || currency) === currency ? discountPercent(pass, dropInPrice) : null;
           const subtitle = [
             pass.description,
             entryPrice != null
@@ -137,7 +140,11 @@ export function PassList({
           </div>
           {selectedPass && (
             <div className="px-4 pb-6">
-              <PassDetailBody pass={selectedPass} dropInPrice={dropInPrice} currency={currency} />
+              <PassDetailBody
+                pass={selectedPass}
+                dropInPrice={(selectedPass.currency || currency) === currency ? dropInPrice : null}
+                currency={currency}
+              />
               {purchasable &&
                 !selectedPass.duration_unknown &&
                 !selectedPass.session_count_unknown && (

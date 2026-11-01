@@ -112,7 +112,9 @@ export function ResolveSheet({
               {amount != null && owesMoney && (
                 <>
                   {detail ? " · do zapłaty " : "do zapłaty "}
-                  <span className="font-semibold text-gray-900">{formatMoney(amount)}</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatMoney(amount, displayEntry.currency)}
+                  </span>
                 </>
               )}
             </p>
@@ -128,7 +130,9 @@ export function ResolveSheet({
               onClick={() => run("confirm", onConfirm)}
               disabled={busyKey !== null}
             >
-              {amount != null ? `Potwierdź · ${formatMoney(amount)}` : "Potwierdź"}
+              {amount != null
+                ? `Potwierdź · ${formatMoney(amount, displayEntry.currency)}`
+                : "Potwierdź"}
             </Button>
           )}
 

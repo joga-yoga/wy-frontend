@@ -30,6 +30,8 @@ function formatEntriesLeft(entry: RosterEntry): string {
 
 export function fundingDetailLine(entry: RosterEntry): string | null {
   switch (entry.funding_type) {
+    case "trial":
+      return "Pierwsze zajęcia próbne — bezpłatnie";
     case "use_pass": {
       if (!entry.pass_name) return "Karnet";
       // Once the entry has actually been spent, the debit is the useful fact
@@ -53,7 +55,13 @@ export function fundingDetailLine(entry: RosterEntry): string | null {
           ? "płatność na miejscu"
           : (PAYMENT_METHOD_LABELS[entry.payment_method] ?? entry.payment_method)
         : null;
-      return method ? `${method} · drop-in` : "drop-in";
+      return [
+        entry.entry_terms?.name || "Wejście jednorazowe",
+        entry.entry_terms?.conditions,
+        method,
+      ]
+        .filter(Boolean)
+        .join(" · ");
     }
     default:
       return null;

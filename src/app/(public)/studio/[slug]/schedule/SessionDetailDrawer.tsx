@@ -218,7 +218,8 @@ function fundingSubline(booking: OccurrenceDetail["viewer_booking"]): string | n
   if (booking.funding_type === "use_pass" || booking.funding_type === "buy_and_use") {
     return "Opłacone karnetem";
   }
-  if (booking.funding_type === "drop_in") return "Wejście jednorazowe";
+  if (booking.funding_type === "trial") return "Pierwsze zajęcia próbne — bezpłatnie";
+  if (booking.funding_type === "drop_in") return booking.entry_terms?.name || "Wejście jednorazowe";
   if (booking.funding_type === "sport_card") {
     return booking.sport_card_surcharge
       ? `Opłacone kartą sportową · dopłata ${formatMoney(booking.sport_card_surcharge)}`
@@ -274,7 +275,8 @@ function ChangedNoticeBanner({
 function lateCancelCostClause(booking: OccurrenceDetail["viewer_booking"]): string {
   if (!booking) return "wejście z karnetu nie zostanie zwrócone";
   if (booking.funding_type === "drop_in") return "opłata nie zostanie zwrócona";
-  if (booking.funding_type === "sport_card") return "nic nie stracisz";
+  if (booking.funding_type === "sport_card" || booking.funding_type === "trial")
+    return "nic nie stracisz";
   return "wejście z karnetu nie zostanie zwrócone";
 }
 
@@ -287,6 +289,13 @@ function CancellationStrip({
   withinWindow: boolean;
   booking: OccurrenceDetail["viewer_booking"];
 }) {
+  if (booking?.funding_type === "trial") {
+    return (
+      <p className="rounded-xl bg-gray-50 px-3.5 py-3 text-sm text-gray-600">
+        {booking.cancellation_policy_text}
+      </p>
+    );
+  }
   if (withinWindow) {
     return <CancellationChip deadline={deadline} />;
   }
@@ -379,7 +388,7 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
   const hasDropIn = studio.drop_in_price != null;
   const hasPricing = hasPassPricing(studio.passes, studio.drop_in_price);
   const hasSportCards = studio.organizer_kind !== "solo" && studio.accepts_sport_cards != null;
-  if (!hasPricing && !hasSportCards) return null;
+  if (!hasPricing && !hasSportCards && !studio.trial_enabled) return null;
 
   return (
     <Drawer showSwipeHandle>
@@ -419,18 +428,36 @@ function PricingRow({ studio }: { studio: OccurrenceDetail["studio"] }) {
 
         <div className="overflow-y-auto px-4 pb-6">
           <div className="space-y-4">
+            {hasDropIn && (
+              <div>
+                <p className="font-semibold">
+                  {studio.entry_name || "Wejście jednorazowe"} ·{" "}
+                  {formatMoney(studio.drop_in_price, studio.currency)}
+                </p>
+                {studio.entry_conditions && <p className="text-sm">{studio.entry_conditions}</p>}
+              </div>
+            )}
+            {studio.trial_enabled && (
+              <div>
+                <p className="font-semibold">Pierwsze zajęcia próbne — bezpłatnie</p>
+                <p className="text-sm">
+                  Dla nowych uczestników tych zajęć. Dostępność sprawdzisz przy rezerwacji.
+                </p>
+              </div>
+            )}
             {hasPricing && (
               <PassList
+                hideDropIn
                 passes={studio.passes}
-                dropInPrice={studio.drop_in_price}
-                currency={studio.currency}
+                dropInPrice={studio.studio_drop_in_price}
+                currency={studio.studio_currency ?? studio.currency}
               />
             )}
             {hasSportCards && (
               <SportCardList
                 acceptsSportCards={studio.accepts_sport_cards}
                 acceptances={studio.sport_card_acceptances}
-                currency={studio.currency}
+                currency={studio.studio_currency ?? studio.currency}
               />
             )}
           </div>
@@ -457,6 +484,16 @@ function buildCancelCopy(
 ): CancelCopy {
   const { funding_type: fundingType, sport_card_surcharge: surcharge } = booking;
 
+  if (fundingType === "trial")
+    return {
+      stateLabel: "Pierwsze zajęcia próbne — bezpłatnie",
+      showPositiveIcon: false,
+      body:
+        booking.cancellation_policy_text ||
+        "Odwołanie jest bezpłatne. Prawo do kolejnego próbnego wejścia wraca tylko po terminowym odwołaniu przed zajęciami.",
+      primaryLabel: "Odwołaj rezerwację",
+      primaryVariant: "green",
+    };
   if (fundingType === "sport_card") {
     const hasSurcharge = surcharge != null && surcharge > 0;
     if (!hasSurcharge || !withinWindow) {
@@ -482,7 +519,7 @@ function buildCancelCopy(
       return {
         stateLabel: "Wejście jednorazowe",
         showPositiveIcon: true,
-        body: `Odwołujesz w bezpłatnym terminie — otrzymasz zwrot ${formatMoney(dropInPrice)}.`,
+        body: `Odwołujesz w bezpłatnym terminie — otrzymasz zwrot ${formatMoney(booking.amount_owed ?? dropInPrice, booking.currency)}.`,
         primaryLabel: "Tak, odwołaj",
         primaryVariant: "green",
       };
@@ -490,7 +527,7 @@ function buildCancelCopy(
     return {
       stateLabel: "Wejście jednorazowe",
       showPositiveIcon: false,
-      body: `Bezpłatny termin minął. Po odwołaniu opłata ${formatMoney(dropInPrice)} nie zostanie zwrócona. Twoje miejsce wróci jednak do puli.`,
+      body: `Bezpłatny termin minął. Po odwołaniu opłata ${formatMoney(booking.amount_owed ?? dropInPrice, booking.currency)} nie zostanie zwrócona. Twoje miejsce wróci jednak do puli.`,
       primaryLabel: "Odwołaj — bez zwrotu",
       primaryVariant: "redOutline",
     };

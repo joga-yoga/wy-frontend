@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { MyBookingItem } from "../types";
 
 const FUNDING_LABEL: Record<string, string> = {
+  trial: "Pierwsze zajęcia próbne — bezpłatnie",
   drop_in: "wejście jednorazowe",
   use_pass: "Karnet · 1 wejście",
   sport_card: "karta sportowa",
