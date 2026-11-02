@@ -1,6 +1,8 @@
 "use client";
 import { useSearchParams } from "next/navigation";
+
 import { StudioDiscovery } from "@/components/studio-cta/StudioDiscovery";
+
 import { StudioForm } from "../[studioId]/edit/StudioForm";
 
 export default function CreateStudioPage() {

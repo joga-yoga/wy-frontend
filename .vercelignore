@@ -1,0 +1,15 @@
+# Tests stay in Git/CI, but are not deployment inputs.
+tests/
+playwright.config.ts
+test-results/
+playwright-report/
+.playwright-cli/
+output/
+coverage/
+
+# Planning and local editor metadata are not application assets.
+.plans/
+docs/
+AGENTS.md
+.vscode/
+.cursor/

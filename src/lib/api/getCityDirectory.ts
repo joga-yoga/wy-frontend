@@ -196,4 +196,3 @@ export async function getCityStyle(city: string, style: string): Promise<CitySty
   }
   return response.json();
 }
-
