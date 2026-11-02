@@ -24,7 +24,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
 import { importError, importsApi } from "./api";
 import { type DestinationProblem, ImportDestinations } from "./ImportDestinations";
@@ -37,7 +36,6 @@ import { useImportJob } from "./useImportJob";
 export function ImportWorkspace({ id }: { id: string }) {
   const [destinationReady, setDestinationReady] = useState(false);
   const [destinationProblem, setDestinationProblem] = useState<DestinationProblem | null>(null);
-  const { capabilities } = usePartnerCapabilities();
   const { job, setJob, error: loadError, refresh } = useImportJob(id);
   const [phone, setPhone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -202,7 +200,10 @@ export function ImportWorkspace({ id }: { id: string }) {
             </AlertDescription>
           </Alert>
           <ReviewRecords job={job} onJob={setJob} refresh={refresh} />
-          <footer className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4 shadow-sm">
+          <footer
+            data-toast-anchor=""
+            className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4 shadow-sm"
+          >
             <div>
               <p className="font-semibold">{job.selected_count} rekordów do importu</p>
               <p className="text-xs text-gray-500">
@@ -234,15 +235,9 @@ export function ImportWorkspace({ id }: { id: string }) {
       <Dialog open={confirm} onOpenChange={setConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {capabilities?.businessMode == null
-                ? "Zarządzanie studiem"
-                : "Przenieść wybrane dane?"}
-            </DialogTitle>
+            <DialogTitle>Przenieść wybrane dane?</DialogTitle>
             <DialogDescription>
-              {capabilities?.businessMode == null
-                ? "Wybierasz zarządzanie studiem. Po zapisaniu to konto pozostanie w tym trybie. Aby prowadzić również własny grafik jako samodzielny instruktor, załóż osobne konto z innym adresem e-mail."
-                : "Dane trafią do wybranych studiów. Sprawdzisz nowe pozycje przed ich udostępnieniem."}
+              Dane trafią do wybranych studiów. Sprawdzisz nowe pozycje przed ich udostępnieniem.
             </DialogDescription>
           </DialogHeader>
           <p>
@@ -262,11 +257,7 @@ export function ImportWorkspace({ id }: { id: string }) {
               Wróć do wyboru
             </Button>
             <Button variant="green" disabled={!ack || busy || !destinationReady} onClick={start}>
-              {busy
-                ? "Uruchamianie…"
-                : capabilities?.businessMode == null
-                  ? "Potwierdź i importuj"
-                  : "Rozpocznij import"}
+              {busy ? "Uruchamianie…" : "Rozpocznij import"}
             </Button>
           </DialogFooter>
         </DialogContent>

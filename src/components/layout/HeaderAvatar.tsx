@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, MapPin, Sparkles, User } from "lucide-react";
+import { Calendar, LogOut, MapPin, Sparkles, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,9 +13,11 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 import type { InstructorProfile } from "@/types/instructor";
 
@@ -35,6 +37,7 @@ interface PublicPreview {
  * surface; account settings live in Menu (T09), not here.
  */
 export function HeaderAvatar() {
+  const { signOut } = useAuth();
   const [instructor, setInstructor] = useState<InstructorProfile | null | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -103,115 +106,130 @@ export function HeaderAvatar() {
 
       <Drawer open={isOpen} onOpenChange={setIsOpen} showSwipeHandle>
         <DrawerContent className="sm:mx-auto sm:max-w-md">
-          {instructor ? (
-            <>
-              <DrawerHeader className="flex-row items-center justify-between">
-                <DrawerTitle className="sr-only">Twój profil instruktora</DrawerTitle>
-                <DrawerClose className="text-sm text-muted-foreground">Zamknij</DrawerClose>
-                {/* V3's caption: "Ten sam edytor, którym manager edytuje stuby (R5)" —
-                    one editor, not a drawer-sized copy of it. A profile with certificates,
-                    a gallery and social links does not belong in a bottom sheet. */}
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push(`/account/partner/instructors/${instructor.id}/edit`);
-                  }}
-                  className="text-sm font-semibold text-b2b-green-strong"
-                >
-                  Edytuj
-                </button>
-              </DrawerHeader>
-              <div className="space-y-5 px-4 pb-6 text-center">
-                <HashedAvatar
-                  seed={instructor.id}
-                  name={instructor.name}
-                  imageId={instructor.image_id}
-                  size={96}
-                  className="mx-auto"
-                />
-                <div>
-                  <p className="text-lg font-semibold text-gray-900">{instructor.name}</p>
-                  {instructor.yoga_styles.length > 0 && (
-                    <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                      {instructor.yoga_styles.map((s, i) => (
-                        <Badge key={i} variant="secondary">
-                          {s.yoga_style?.name ?? s.custom_name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {instructor.short_bio && (
-                  <p className="text-sm text-gray-600">{instructor.short_bio}</p>
-                )}
-                {instructor.slug && (
-                  <a
-                    href={`/instruktor/${instructor.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-sm font-medium text-brand-blue hover:underline"
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {instructor ? (
+              <>
+                <DrawerHeader className="flex-row items-center justify-between">
+                  <DrawerTitle className="sr-only">Twój profil instruktora</DrawerTitle>
+                  <DrawerClose className="text-sm text-muted-foreground">Zamknij</DrawerClose>
+                  {/* V3's caption: "Ten sam edytor, którym manager edytuje stuby (R5)" —
+                      one editor, not a drawer-sized copy of it. A profile with certificates,
+                      a gallery and social links does not belong in a bottom sheet. */}
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push(`/account/partner/instructors/${instructor.id}/edit`);
+                    }}
+                    className="text-sm font-semibold text-b2b-green-strong"
                   >
-                    joga.yoga/i/{instructor.slug}
-                  </a>
-                )}
-
-                <div className="space-y-2 pt-2 text-left">
-                  <div className="flex items-center gap-3 rounded-xl border px-4 py-3">
-                    <Calendar size={18} className="shrink-0 text-gray-400" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900">Nadchodzące wydarzenia</p>
-                      <p className="text-xs text-gray-500">
-                        {preview || !instructor.slug
-                          ? `${preview?.upcomingCount ?? 0} opublikowane`
-                          : "Ładowanie..."}
-                      </p>
-                    </div>
+                    Edytuj
+                  </button>
+                </DrawerHeader>
+                <div className="space-y-5 px-4 pb-6 text-center">
+                  <HashedAvatar
+                    seed={instructor.id}
+                    name={instructor.name}
+                    imageId={instructor.image_id}
+                    size={96}
+                    className="mx-auto"
+                  />
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">{instructor.name}</p>
+                    {instructor.yoga_styles.length > 0 && (
+                      <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                        {instructor.yoga_styles.map((s, i) => (
+                          <Badge key={i} variant="secondary">
+                            {s.yoga_style?.name ?? s.custom_name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {preview && preview.studios.length > 0 && (
+                  {instructor.short_bio && (
+                    <p className="text-sm text-gray-600">{instructor.short_bio}</p>
+                  )}
+                  {instructor.slug && (
+                    <a
+                      href={`/instruktor/${instructor.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-sm font-medium text-brand-blue hover:underline"
+                    >
+                      joga.yoga/i/{instructor.slug}
+                    </a>
+                  )}
+
+                  <div className="space-y-2 pt-2 text-left">
                     <div className="flex items-center gap-3 rounded-xl border px-4 py-3">
-                      <MapPin size={18} className="shrink-0 text-gray-400" />
+                      <Calendar size={18} className="shrink-0 text-gray-400" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900">Prowadzi zajęcia w</p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {preview.studios.map((s) => s.name).join(" · ")}
+                        <p className="text-sm font-semibold text-gray-900">
+                          Nadchodzące wydarzenia
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {preview || !instructor.slug
+                            ? `${preview?.upcomingCount ?? 0} opublikowane`
+                            : "Ładowanie..."}
                         </p>
                       </div>
                     </div>
-                  )}
+                    {preview && preview.studios.length > 0 && (
+                      <div className="flex items-center gap-3 rounded-xl border px-4 py-3">
+                        <MapPin size={18} className="shrink-0 text-gray-400" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-900">Prowadzi zajęcia w</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {preview.studios.map((s) => s.name).join(" · ")}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <DrawerHeader>
-                <DrawerTitle className="sr-only">Pokaż się uczniom</DrawerTitle>
-                <DrawerDescription className="sr-only">
-                  Utwórz publiczny profil instruktora
-                </DrawerDescription>
-              </DrawerHeader>
-              <div className="space-y-4 px-4 pb-6 text-center">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-300">
-                  <User size={28} />
+              </>
+            ) : (
+              <>
+                <DrawerHeader>
+                  <DrawerTitle className="sr-only">Pokaż się uczniom</DrawerTitle>
+                  <DrawerDescription className="sr-only">
+                    Utwórz publiczny profil instruktora
+                  </DrawerDescription>
+                </DrawerHeader>
+                <div className="space-y-4 px-4 pb-6 text-center">
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-300">
+                    <User size={28} />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="flex items-center justify-center gap-1.5 text-lg font-semibold text-gray-900">
+                      <Sparkles size={16} className="text-brand-green-700" />
+                      Pokaż się uczniom
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Publiczny profil instruktora możesz utworzyć w każdej chwili — zdjęcie, bio,
+                      style, Twoje wydarzenia i grafik zajęć. Twoja wizytówka z linkiem do
+                      udostępniania.
+                    </p>
+                  </div>
+                  <Link href="/account/partner/instructors/create" onClick={() => setIsOpen(false)}>
+                    <Button variant="green" className="w-full rounded-full">
+                      Utwórz profil instruktora
+                    </Button>
+                  </Link>
                 </div>
-                <div className="space-y-1">
-                  <p className="flex items-center justify-center gap-1.5 text-lg font-semibold text-gray-900">
-                    <Sparkles size={16} className="text-brand-green-700" />
-                    Pokaż się uczniom
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Publiczny profil instruktora możesz utworzyć w każdej chwili — zdjęcie, bio,
-                    style, Twoje wydarzenia i grafik zajęć. Twoja wizytówka z linkiem do
-                    udostępniania.
-                  </p>
-                </div>
-                <Link href="/account/partner/instructors/create" onClick={() => setIsOpen(false)}>
-                  <Button variant="green" className="w-full rounded-full">
-                    Utwórz profil instruktora
-                  </Button>
-                </Link>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
+          <DrawerFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={signOut}
+              className="h-11 self-center rounded-full px-4 text-b2b-red-solid hover:bg-b2b-red-bg hover:text-b2b-red-solid focus-visible:ring-b2b-red-solid/30"
+            >
+              <LogOut size={14} aria-hidden="true" />
+              Wyloguj się
+            </Button>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </>

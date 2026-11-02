@@ -89,7 +89,7 @@ export function CookieConsentManager() {
   return (
     <>
       {isBannerOpen ? (
-        <div className="fixed inset-x-0 bottom-3 z-50 px-3 sm:px-4">
+        <div data-toast-anchor="" className="fixed inset-x-0 bottom-3 z-50 px-3 sm:px-4">
           <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-gray-50 px-5 py-5 shadow-2xl sm:px-6 sm:py-6">
             <h2 className="text-2xl leading-tight font-semibold text-gray-900">
               Twoje dane, Twoja przestrzeń

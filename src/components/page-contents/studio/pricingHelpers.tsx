@@ -1,6 +1,7 @@
 import { IoInfinite as InfiniteIcon } from "react-icons/io5";
 
 import { getCurrencySymbol } from "@/lib/currency";
+import { sportCardImage } from "@/lib/sportCardImages";
 import { cn } from "@/lib/utils";
 import type { StudioSportCardAcceptance } from "@/types/studio";
 
@@ -37,7 +38,7 @@ export function sportCardName(item: StudioSportCardAcceptance) {
 }
 
 export function sportCardPhoto(item: StudioSportCardAcceptance) {
-  return item.sport_card?.photo ?? item.photo ?? null;
+  return sportCardImage(item.sport_card?.slug, item.sport_card?.photo ?? item.photo);
 }
 
 export function LightPassTile({

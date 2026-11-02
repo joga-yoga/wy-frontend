@@ -75,6 +75,7 @@ export const EventReservation: React.FC<EventReservationProps> = ({ event, proje
 
       {isRendered && (
         <div
+          data-toast-anchor=""
           className={cn(
             "fixed bottom-0 left-0 right-0 z-50",
             "flex justify-end w-full mx-auto container-wy md:pr-[32px]",

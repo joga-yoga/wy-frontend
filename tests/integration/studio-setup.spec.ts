@@ -70,7 +70,7 @@ for (const device of ["desktop", "mobile"] as const) {
     await page.getByRole("button", { name: "Utwórz studio ręcznie", exact: true }).click();
     await expect(page.locator("input#name")).toHaveValue(`${identity.name} ręcznie`);
     await page.getByRole("button", { name: "Zapisz", exact: true }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i zapisz" }).click();
+    await expect(page.getByRole("dialog", { name: "Zarządzanie studiem" })).toHaveCount(0);
     await expect(page).toHaveURL(/\/studio\/[a-f0-9-]+\/edit$/);
     const studioId = page.url().split("/").at(-2)!;
     await page.goto("/account/partner/menu");

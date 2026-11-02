@@ -238,7 +238,10 @@ export function ClassLandingPage({
       <StudioCardSection studio={studio} />
       <ClassLocationSection studio={studio} />
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
+      <div
+        data-toast-anchor=""
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]"
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-end px-4 py-3">
           <Button asChild variant="cta" size="cta" className="w-full">
             <Link href={`/studio/${studio.slug}/grafik?class=${classTemplate.slug}`}>

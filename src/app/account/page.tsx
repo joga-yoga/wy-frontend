@@ -252,6 +252,7 @@ export default function AccountHubPage() {
           overlapped the home indicator by 3px for exactly this reason. */}
       {isPartner && (
         <div
+          data-toast-anchor=""
           className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background px-4 pt-3"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >

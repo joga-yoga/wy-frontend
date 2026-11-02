@@ -418,6 +418,7 @@ export default function SchedulePage() {
       {(!isInstructorView || capabilities?.soloStudioId) && reconciliation.sessionCount > 0 && (
         <Link
           href="/account/partner/reconciliation"
+          data-toast-anchor=""
           className="fixed inset-x-4 bottom-[calc(var(--bottom-tab-h)+0.5rem)] z-30 mx-auto flex h-14 max-w-lg items-center justify-between rounded-xl border border-b2b-amber-border bg-b2b-amber-bg px-4 text-sm font-medium text-b2b-amber-text shadow-md transition-opacity hover:opacity-90 md:bottom-6"
         >
           <span className="flex items-center gap-2">
@@ -441,6 +442,7 @@ export default function SchedulePage() {
         <Link
           href={`/account/partner/class-schedules/create?studio_id=${capabilities?.soloStudioId ?? studioId}`}
           aria-label="Dodaj zajęcia"
+          data-toast-anchor=""
           className={cn(
             "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",
             reconciliation.sessionCount > 0

@@ -417,7 +417,10 @@ export function StudioPageContent({
       <LinksSection studio={studio} />
       <LocationSection studio={studio} />
       {bottomPrimaryAction && (
-        <section className="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">
+        <section
+          data-toast-anchor=""
+          className="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur"
+        >
           <div className="mx-auto max-w-5xl">
             <Button asChild className="h-12 w-full rounded-full text-base">
               <Link href={bottomPrimaryAction.href}>{bottomPrimaryAction.label}</Link>

@@ -1,4 +1,4 @@
-import { WyImage } from "@/components/custom/WyImage";
+import { SportCardImage } from "@/components/booking/SportCardImage";
 import { cn } from "@/lib/utils";
 
 export function SportCardLogo({
@@ -23,7 +23,7 @@ export function SportCardLogo({
       style={{ width, height }}
     >
       {photo ? (
-        <WyImage
+        <SportCardImage
           src={photo}
           alt={alt}
           width={width}

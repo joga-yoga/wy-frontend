@@ -9,6 +9,7 @@ export interface ExistingPassOption {
 
 export interface SportCardOption {
   studio_sport_card_id: string;
+  slug?: string | null;
   name?: string | null;
   photo?: string | null;
   fee?: number | null;

@@ -20,6 +20,7 @@ import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
+import { SportCardImage } from "@/components/booking/SportCardImage";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
@@ -31,7 +32,6 @@ import {
   perEntry,
 } from "@/components/page-contents/studio/pricingHelpers";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
-import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import type { StudioCandidate, StudioIdentity } from "@/components/studio-cta/StudioDiscovery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,7 @@ import { useToast } from "@/hooks/use-toast";
 import { amenityIcon } from "@/lib/amenityIcons";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
+import { sportCardImage } from "@/lib/sportCardImages";
 import {
   readSetup,
   removeSetup,
@@ -175,10 +176,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
   const [publicSource, setPublicSource] = useState<{ slug: string } | null>(null);
   const [enrichment, setEnrichment] = useState<string | null>(null);
   const { toast } = useToast();
-  const { capabilities, refetch: refetchCapabilities } = usePartnerCapabilities();
-  const { confirmMode, dialog: modeDialog } = useBusinessModeConfirmation(
-    capabilities?.businessMode,
-  );
+  const { refetch: refetchCapabilities } = usePartnerCapabilities();
   const savingRef = useRef(false);
   const [isSavingBusiness, setIsSavingBusiness] = useState(false);
   const isCreateRoute = routeId === "create";
@@ -538,7 +536,6 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
     savingRef.current = true;
     setIsSavingBusiness(true);
     try {
-      if (!studioId && !(await confirmMode("studio"))) return;
       await saveValidatedStudio(intent);
     } finally {
       savingRef.current = false;
@@ -1442,9 +1439,17 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                                 setIsSportCardModalOpen(true);
                               }}
                             >
-                              {sc.sport_card?.photo || sc.photo ? (
-                                <WyImage
-                                  src={(sc.sport_card?.photo || sc.photo)!}
+                              {sportCardImage(
+                                sc.sport_card?.slug,
+                                sc.sport_card?.photo || sc.photo,
+                              ) ? (
+                                <SportCardImage
+                                  src={
+                                    sportCardImage(
+                                      sc.sport_card?.slug,
+                                      sc.sport_card?.photo || sc.photo,
+                                    )!
+                                  }
                                   alt={sc.sport_card?.name ?? sc.name ?? ""}
                                   width={80}
                                   height={50}
@@ -1583,7 +1588,6 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
         />
       </form>
 
-      {modeDialog}
       <PhoneVerificationDialog
         open={isPhoneVerificationOpen}
         onOpenChange={setIsPhoneVerificationOpen}

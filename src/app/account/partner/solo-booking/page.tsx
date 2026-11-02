@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { CancellationPolicyFields } from "@/components/partner/CancellationPolicyFields";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
-import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import { Button } from "@/components/ui/button";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +16,6 @@ export default function SoloBookingSetupPage() {
   const router = useRouter();
   const { capabilities, isLoading, refetch } = usePartnerCapabilities();
   const { toast } = useToast();
-  const { confirmMode, dialog } = useBusinessModeConfirmation(capabilities?.businessMode);
   const [cancellationMode, setCancellationMode] = useState<"always_free" | "by_time_of_day">(
     "always_free",
   );
@@ -53,7 +51,6 @@ export default function SoloBookingSetupPage() {
     savingRef.current = true;
     setIsSaving(true);
     try {
-      if (!(await confirmMode("solo"))) return;
       await axiosInstance.post("/partner/solo-booking", {
         cancellation_policy_mode: cancellationMode,
         cancellation_morning_deadline_time:
@@ -122,7 +119,6 @@ export default function SoloBookingSetupPage() {
           {isSaving ? "Zapisywanie…" : "Zapisz ustawienia"}
         </Button>
       </div>
-      {dialog}
       <PhoneVerificationDialog
         open={verifyPhone}
         onOpenChange={setVerifyPhone}

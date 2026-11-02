@@ -824,7 +824,10 @@ export default function FrontDeskRosterPage() {
        * still reachable from the Klienci screen's "Sprzedaj karnet" entry point, but it's
        * redundant here: the add-participant flow already offers "Kup karnet i dodaj
        * rezerwację" as one of its payment choices. */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8">
+      <div
+        data-toast-anchor=""
+        className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8"
+      >
         <div className="mx-auto max-w-lg px-4">
           <Button size="action" className="w-full" onClick={() => setIsAddOpen(true)}>
             Dodaj uczestnika

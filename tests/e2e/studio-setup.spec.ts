@@ -176,7 +176,8 @@ test("navigation restores this account's edits; logout and another account keep 
   await page.goBack();
   await expect(name).toHaveValue("Account A private edit");
   await page.goto("/account/partner/menu");
-  await page.getByRole("button", { name: "Wyloguj się" }).click();
+  await page.getByRole("button", { name: "Twój profil instruktora" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Wyloguj się" }).click();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("access_token"))).toBeNull();
   await page.route("http://localhost:8000/me", (route) =>
     route.fulfill({
@@ -321,7 +322,8 @@ for (const studioCount of [0, 1, 2]) {
     await page.reload();
     await expect(saved).toBeVisible();
     await expect(entry).toHaveCount(0);
-    await page.getByRole("button", { name: "Wyloguj się" }).click();
+    await page.getByRole("button", { name: "Twój profil instruktora" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Wyloguj się" }).click();
     await expect.poll(() => page.evaluate(() => localStorage.getItem("access_token"))).toBeNull();
     async function login(id: string) {
       account = id;
@@ -331,7 +333,11 @@ for (const studioCount of [0, 1, 2]) {
         id,
       );
       await page.goto("/account/partner/menu");
-      await expect(page.getByRole("button", { name: "Wyloguj się" })).toBeVisible();
+      await page.getByRole("button", { name: "Twój profil instruktora" }).click();
+      const drawer = page.getByRole("dialog");
+      await expect(drawer.getByRole("button", { name: "Wyloguj się" })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(drawer).toBeHidden();
     }
     await login("fixture-user");
     await expect(saved).toBeVisible();

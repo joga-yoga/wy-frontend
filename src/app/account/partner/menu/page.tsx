@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowLeftRight, ChevronRight, LogOut, Plus, UserRound } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, Plus, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { StudioLogoTile } from "@/components/b2b/StudioLogoTile";
+import { BusinessDirectionCards } from "@/components/menu/BusinessDirectionCards";
 import { MenuRow } from "@/components/menu/MenuRow";
 import { StudioWorkspaceRows } from "@/components/menu/StudioWorkspaceRows";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
  */
 export default function MenuPage() {
   const { toast } = useToast();
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const { capabilities, isLoading } = usePartnerCapabilities();
   // Invitations moved to the header bell (WY-65). They used to be listed here *and* on
   // Rezerwacje, both reading `/users/me/invitations` through their own copy of the
@@ -92,20 +93,7 @@ export default function MenuPage() {
           <p className="px-1 text-sm text-gray-500">
             Jedno konto, jeden sposób zarządzania. Do drugiego trybu możesz założyć osobne konto.
           </p>
-          <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-            <MenuRow
-              href="/account/partner/solo-booking"
-              title="Włącz zapisy na moje zajęcia"
-              subtitle="Własny grafik, klienci i płatności"
-              Icon={Plus}
-            />
-            <MenuRow
-              href="/account/partner/studio/create"
-              title="Utwórz studio"
-              subtitle="Profil i zarządzanie studiem"
-              Icon={Plus}
-            />
-          </div>
+          <BusinessDirectionCards />
         </section>
       )}
 
@@ -147,14 +135,6 @@ export default function MenuPage() {
         </div>
         <ChevronRight size={16} className="shrink-0 text-gray-400" />
       </Link>
-
-      <button
-        onClick={signOut}
-        className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-b2b-red-solid hover:text-b2b-red-solid"
-      >
-        <LogOut size={14} />
-        Wyloguj się
-      </button>
     </div>
   );
 }
