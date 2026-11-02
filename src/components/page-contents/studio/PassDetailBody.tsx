@@ -7,6 +7,8 @@ interface PassDetailBodyPass {
   description?: string | null;
   duration_days?: number | null;
   session_count?: number | null;
+  duration_unknown?: boolean | null;
+  session_count_unknown?: boolean | null;
 }
 
 interface PassDetailBodyProps {
@@ -21,6 +23,7 @@ interface PassPriceHeaderProps {
   currency?: string | null;
   discount?: number | null;
   sessionCount?: number | null;
+  sessionCountUnknown?: boolean | null;
   durationDays?: number | null;
 }
 
@@ -32,11 +35,16 @@ export function PassPriceHeader({
   currency,
   discount,
   sessionCount,
+  sessionCountUnknown,
   durationDays,
 }: PassPriceHeaderProps) {
   return (
     <div className="flex items-center gap-4">
-      <LightPassTile sessionCount={sessionCount} durationDays={durationDays} />
+      <LightPassTile
+        sessionCountUnknown={sessionCountUnknown}
+        sessionCount={sessionCount}
+        durationDays={durationDays}
+      />
       <div className="min-w-0 flex-1">
         <h2 className="text-lg font-bold text-[#222222]">{title}</h2>
         <div className="mt-1 flex items-baseline gap-2">
@@ -72,7 +80,8 @@ export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDeta
         currency={passCurrency}
         discount={discount}
         sessionCount={pass.session_count}
-        durationDays={pass.duration_days}
+        sessionCountUnknown={pass.session_count_unknown}
+        durationDays={pass.duration_unknown ? 0 : pass.duration_days}
       />
 
       {pass.description && (
@@ -83,14 +92,22 @@ export function PassDetailBody({ pass, dropInPrice, currency = "PLN" }: PassDeta
         <div className="flex items-center justify-between py-3">
           <span className="text-base text-[#717171]">Wejścia</span>
           <span className="text-base font-medium text-[#222222]">
-            {isUnlimitedSessions ? "Bez limitu" : pass.session_count}
+            {pass.session_count_unknown
+              ? "Brak danych"
+              : isUnlimitedSessions
+                ? "Bez limitu"
+                : pass.session_count}
           </span>
         </div>
         {!hideDuration && (
           <div className="flex items-center justify-between py-3">
             <span className="text-base text-[#717171]">Ważność</span>
             <span className="text-base font-medium text-[#222222]">
-              {isUnlimitedDays ? "Bezterminowo" : `${pass.duration_days} dni`}
+              {pass.duration_unknown
+                ? "Brak danych"
+                : isUnlimitedDays
+                  ? "Bezterminowo"
+                  : `${pass.duration_days} dni`}
             </span>
           </div>
         )}

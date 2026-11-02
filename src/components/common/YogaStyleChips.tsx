@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 import type { YogaStyle } from "@/types/instructor";
@@ -72,20 +72,9 @@ export function YogaStyleChips({ catalog, className, ...selection }: YogaStyleCh
       {styles.map((style) => {
         const isSelected = selectedIds.includes(style.id);
         return (
-          <Badge
-            key={style.id}
-            variant={isSelected ? "default" : "outline"}
-            // The outline variant's border is brand green, which on a grid of
-            // *unselected* chips reads as "all selected". R5 draws unselected chips in a
-            // neutral outline and only the chosen ones solid.
-            className={cn(
-              "cursor-pointer",
-              !isSelected && "border-gray-200 text-gray-600 hover:bg-gray-50",
-            )}
-            onClick={() => toggle(style)}
-          >
+          <SelectionChip key={style.id} selected={isSelected} onClick={() => toggle(style)}>
             {style.name}
-          </Badge>
+          </SelectionChip>
         );
       })}
     </div>

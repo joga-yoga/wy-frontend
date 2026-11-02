@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { axiosInstance } from "@/lib/axiosInstance";
 
 export type BusinessMode = "studio" | "solo";
 
@@ -26,11 +25,11 @@ const copy = {
   },
 };
 
-/** In-memory intent only. The original business operation commits the mode. */
-export function useBusinessModeConfirmation(knownMode?: BusinessMode | null) {
-  const [pending, setPending] = useState<{ mode: BusinessMode; label: string } | null>(null);
+/** Menu navigation only. The original business operation still commits the mode. */
+export function useBusinessModeConfirmation() {
+  const [pending, setPending] = useState<BusinessMode | null>(null);
   const resolveRef = useRef<((confirmed: boolean) => void) | null>(null);
-  const checkingRef = useRef(false);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(
     () => () => {
@@ -46,27 +45,13 @@ export function useBusinessModeConfirmation(knownMode?: BusinessMode | null) {
     resolve?.(confirmed);
   }
 
-  async function confirmMode(mode: BusinessMode, label = "Potwierdź i zapisz"): Promise<boolean> {
-    if (resolveRef.current || checkingRef.current) return false;
-    checkingRef.current = true;
-    try {
-      // Public claim/inbox surfaces also reuse this hook outside the partner shell.
-      const current =
-        knownMode === undefined
-          ? (
-              await axiosInstance.get<{ business_mode: BusinessMode | null }>(
-                "/partner/capabilities",
-              )
-            ).data.business_mode
-          : knownMode;
-      if (current) return true;
-      return await new Promise<boolean>((resolve) => {
-        resolveRef.current = resolve;
-        setPending({ mode, label });
-      });
-    } finally {
-      checkingRef.current = false;
-    }
+  function confirmMode(mode: BusinessMode, trigger: HTMLElement): Promise<boolean> {
+    if (resolveRef.current) return Promise.resolve(false);
+    returnFocusRef.current = trigger;
+    return new Promise<boolean>((resolve) => {
+      resolveRef.current = resolve;
+      setPending(mode);
+    });
   }
 
   const dialog = (
@@ -76,17 +61,17 @@ export function useBusinessModeConfirmation(knownMode?: BusinessMode | null) {
         if (!open) finish(false);
       }}
     >
-      <DialogContent closeLabel="Zamknij">
+      <DialogContent closeLabel="Zamknij" className="sm:max-w-sm" finalFocus={returnFocusRef}>
         <DialogHeader>
-          <DialogTitle>{pending ? copy[pending.mode].title : ""}</DialogTitle>
-          <DialogDescription>{pending ? copy[pending.mode].body : ""}</DialogDescription>
+          <DialogTitle className="pr-6">{pending ? copy[pending].title : ""}</DialogTitle>
+          <DialogDescription>{pending ? copy[pending].body : ""}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => finish(false)}>
+          <Button type="button" variant="outline" onClick={() => finish(false)}>
             Wróć
           </Button>
-          <Button variant="green" onClick={() => finish(true)}>
-            {pending?.label}
+          <Button type="button" variant="green" onClick={() => finish(true)}>
+            Potwierdź i kontynuuj
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -11,6 +11,7 @@ export interface PickableInstructor {
   image_id?: string | null;
   /** Roster row state — "awaiting" means the invite or link acceptance is still outstanding. */
   row_state?: string | null;
+  eligible_studio_ids?: string[];
 }
 
 /**
@@ -31,6 +32,8 @@ export function InstructorPicker({
    * creation) where leaving the session unassigned is a valid choice, unlike a
    * substitution, which always needs someone selected. */
   allowNone = false,
+  noneLabel = "Brak prowadzącego",
+  emptyHint = "Brak instruktorów w tym studiu. Dodaj kogoś w Menu → Instruktorzy.",
   /** Subtitle for a non-current, non-awaiting instructor. Defaults to "Zastępstwo",
    * which only makes sense when `currentId` names a real existing assignment being
    * replaced — pass "" to suppress it (e.g. picking an instructor for a brand-new
@@ -42,12 +45,14 @@ export function InstructorPicker({
   currentId: string | null;
   onSelect: (id: string) => void;
   allowNone?: boolean;
+  noneLabel?: string;
+  emptyHint?: string;
   otherLabel?: string;
 }) {
   if (instructors.length === 0 && !allowNone) {
     return (
       <p className="rounded-b2b border border-dashed bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-        Brak instruktorów w tym studiu. Dodaj kogoś w Menu → Instruktorzy.
+        {emptyHint}
       </p>
     );
   }
@@ -58,6 +63,7 @@ export function InstructorPicker({
         <button
           type="button"
           onClick={() => onSelect("")}
+          aria-pressed={selectedId === ""}
           className={cn(
             "flex w-full items-center gap-3 rounded-b2b border bg-white px-3 py-3 text-left transition-colors",
             selectedId === ""
@@ -76,9 +82,7 @@ export function InstructorPicker({
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-400">
             <X size={14} />
           </span>
-          <span className="min-w-0 flex-1 text-sm font-semibold text-gray-900">
-            Brak prowadzącego
-          </span>
+          <span className="min-w-0 flex-1 text-sm font-semibold text-gray-900">{noneLabel}</span>
         </button>
       )}
       {instructors.map((instructor) => {
@@ -95,6 +99,7 @@ export function InstructorPicker({
             key={instructor.id}
             type="button"
             onClick={() => onSelect(instructor.id)}
+            aria-pressed={isSelected}
             className={cn(
               "flex w-full items-center gap-3 rounded-b2b border bg-white px-3 py-3 text-left transition-colors",
               isSelected ? "border-b2b-green-text ring-1 ring-b2b-green-text" : "border-gray-200",
@@ -123,10 +128,8 @@ export function InstructorPicker({
           </button>
         );
       })}
-      {instructors.length === 0 && allowNone && (
-        <p className="px-1 text-xs text-gray-400">
-          Brak instruktorów w tym studiu. Dodaj kogoś w Menu → Instruktorzy.
-        </p>
+      {instructors.length === 0 && allowNone && emptyHint && (
+        <p className="px-1 text-xs text-gray-400">{emptyHint}</p>
       )}
     </div>
   );

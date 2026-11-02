@@ -45,7 +45,7 @@ test.beforeEach(async ({ context, page }) => {
   });
 });
 
-test("solo entry edits self directly, reuses it and commits mode only after setup confirmation", async ({
+test("solo entry edits self directly, reuses it and confirms direction before setup and commits mode only after saving", async ({
   context,
   page,
 }, testInfo) => {
@@ -68,7 +68,8 @@ test("solo entry edits self directly, reuses it and commits mode only after setu
   await page.goto("/account/partner/menu");
   const cookies = page.getByRole("button", { name: "Tylko niezbędne" });
   if (await cookies.isVisible()) await cookies.click();
-  await page.getByRole("link", { name: /Włącz zapisy na moje zajęcia/ }).click();
+  await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
   await expect(
     page.getByRole("heading", { name: "Uzupełnij swój profil instruktora" }),
   ).toBeVisible();
@@ -86,7 +87,8 @@ test("solo entry edits self directly, reuses it and commits mode only after setu
   await expect(page.getByText("Imię i nazwisko jest wymagane", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Wróć do menu" }).click();
   expect((await capabilities(context, identity)).self_instructor_id).toBeNull();
-  await page.getByRole("link", { name: /Włącz zapisy na moje zajęcia/ }).click();
+  await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
   await expect(name).toHaveValue(identity.name);
   await name.fill("Alicja Instruktorka Testowa");
   await page
@@ -111,16 +113,14 @@ test("solo entry edits self directly, reuses it and commits mode only after setu
     short_bio: "Prowadzę własne zajęcia testowe.",
     languages: ["pl"],
   });
-  await page.getByRole("button", { name: "Zapisz ustawienia" }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText("Własny grafik zajęć", { exact: true })).toBeVisible();
-  await dialog.getByRole("button", { name: "Wróć", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Własny grafik zajęć" })).toHaveCount(0);
   expect(businessRequests).toBe(0);
   expect((await capabilities(context, identity)).business_mode).toBeNull();
 
   // Re-entering with an existing self profile goes straight to business settings.
   await page.goto("/account/partner/menu");
-  await page.getByRole("link", { name: /Włącz zapisy na moje zajęcia/ }).click();
+  await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
   await expect(page.getByRole("button", { name: "Zapisz ustawienia" })).toBeVisible();
   // Old solo profile URLs also reuse the same identity instead of creating a duplicate.
   await page.goto("/account/partner/instructors/create?returnTo=solo");
@@ -132,7 +132,7 @@ test("solo entry edits self directly, reuses it and commits mode only after setu
   await page.getByRole("button", { name: "Zapisz profil", exact: true }).click();
   await expect(page).toHaveURL(/\/account\/partner\/solo-booking$/);
   await page.getByRole("button", { name: "Zapisz ustawienia" }).click();
-  await dialog.getByRole("button", { name: "Potwierdź i zapisz" }).click();
+  await expect(page.getByRole("dialog", { name: "Własny grafik zajęć" })).toHaveCount(0);
   await expect(page).toHaveURL(/\/account\/partner\/menu$/);
   const configured = await capabilities(context, identity);
   expect(configured.business_mode).toBe("solo");

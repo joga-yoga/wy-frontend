@@ -12,6 +12,7 @@ import { PassDetailBody, PassPriceHeader } from "./PassDetailBody";
 import { discountPercent, formatMoney, LightPassTile, perEntry } from "./pricingHelpers";
 
 interface PassListProps {
+  hideDropIn?: boolean;
   passes: StudioPass[];
   dropInPrice?: number | null;
   currency?: string | null;
@@ -37,9 +38,10 @@ export function PassList({
   dropInPrice,
   currency = "PLN",
   purchasable = true,
+  hideDropIn = false,
 }: PassListProps) {
   const router = useRouter();
-  const hasDropIn = dropInPrice != null;
+  const hasDropIn = !hideDropIn && dropInPrice != null;
   const [selectedPass, setSelectedPass] = useState<StudioPass | null>(null);
   const [showDropIn, setShowDropIn] = useState(false);
   const [showAllPasses, setShowAllPasses] = useState(false);
@@ -71,7 +73,8 @@ export function PassList({
         )}
         {visiblePasses.map((pass) => {
           const entryPrice = perEntry(pass);
-          const discount = discountPercent(pass, dropInPrice);
+          const discount =
+            (pass.currency || currency) === currency ? discountPercent(pass, dropInPrice) : null;
           const subtitle = [
             pass.description,
             entryPrice != null
@@ -87,7 +90,11 @@ export function PassList({
               onClick={() => setSelectedPass(pass)}
               className="flex w-full items-center gap-4 py-3 text-left"
             >
-              <LightPassTile sessionCount={pass.session_count} durationDays={pass.duration_days} />
+              <LightPassTile
+                sessionCount={pass.session_count}
+                sessionCountUnknown={pass.session_count_unknown}
+                durationDays={pass.duration_unknown ? 0 : pass.duration_days}
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-semibold text-[#222222]">{pass.name}</h3>
@@ -133,17 +140,24 @@ export function PassList({
           </div>
           {selectedPass && (
             <div className="px-4 pb-6">
-              <PassDetailBody pass={selectedPass} dropInPrice={dropInPrice} currency={currency} />
-              {purchasable && (
-                <Button
-                  variant="green"
-                  size="cta"
-                  className="mt-5 w-full"
-                  onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
-                >
-                  Kup karnet · {formatMoney(selectedPass.price, selectedPass.currency || currency)}
-                </Button>
-              )}
+              <PassDetailBody
+                pass={selectedPass}
+                dropInPrice={(selectedPass.currency || currency) === currency ? dropInPrice : null}
+                currency={currency}
+              />
+              {purchasable &&
+                !selectedPass.duration_unknown &&
+                !selectedPass.session_count_unknown && (
+                  <Button
+                    variant="green"
+                    size="cta"
+                    className="mt-5 w-full"
+                    onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
+                  >
+                    Kup karnet ·{" "}
+                    {formatMoney(selectedPass.price, selectedPass.currency || currency)}
+                  </Button>
+                )}
             </div>
           )}
         </DrawerContent>

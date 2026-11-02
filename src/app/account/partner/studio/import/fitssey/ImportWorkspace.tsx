@@ -1,4 +1,5 @@
 "use client";
+import { isAxiosError } from "axios";
 import { ArrowLeft, Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -23,9 +24,9 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 
 import { importError, importsApi } from "./api";
+import { type DestinationProblem, ImportDestinations } from "./ImportDestinations";
 import { ImportProgress } from "./ImportProgress";
 import { ImportResults } from "./ImportResults";
 import { ReviewRecords } from "./ReviewRecords";
@@ -33,7 +34,8 @@ import { issueLabels, kinds, type ReviewIssue } from "./types";
 import { useImportJob } from "./useImportJob";
 
 export function ImportWorkspace({ id }: { id: string }) {
-  const { capabilities } = usePartnerCapabilities();
+  const [destinationReady, setDestinationReady] = useState(false);
+  const [destinationProblem, setDestinationProblem] = useState<DestinationProblem | null>(null);
   const { job, setJob, error: loadError, refresh } = useImportJob(id);
   const [phone, setPhone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -42,7 +44,7 @@ export function ImportWorkspace({ id }: { id: string }) {
   const [confirm, setConfirm] = useState(false);
   const [ack, setAck] = useState(false);
   async function start() {
-    if (!job) return;
+    if (!job || !destinationReady) return;
     setBusy(true);
     setError("");
     setIssues([]);
@@ -50,6 +52,7 @@ export function ImportWorkspace({ id }: { id: string }) {
       setJob(await importsApi.start(id, job.revision));
       setConfirm(false);
     } catch (error) {
+      if (isAxiosError(error)) setDestinationProblem(error.response?.data?.detail ?? null);
       const info = importError(error);
       setError(info.message);
       if (info.code === "phone_verification_required") setPhone(true);
@@ -76,10 +79,10 @@ export function ImportWorkspace({ id }: { id: string }) {
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-32">
       <Link
         className="inline-flex items-center gap-2 text-sm text-gray-600"
-        href="/account/partner/studio/import/fitssey"
+        href="/account/partner/menu"
       >
         <ArrowLeft size={16} />
-        Zapisane importy
+        Wróć do menu
       </Link>
       <header>
         <p className="text-sm font-medium text-brand-green-700">Fitssey · {job.source_uuid}</p>
@@ -95,6 +98,14 @@ export function ImportWorkspace({ id }: { id: string }) {
           {String(job.scope.timezone || "Europe/Warsaw")}
         </p>
       </header>
+      {job.state === "review" && (
+        <ImportDestinations
+          job={job}
+          onChange={setJob}
+          problem={destinationProblem}
+          onReady={setDestinationReady}
+        />
+      )}
       <ol aria-label="Etapy importu" className="grid grid-cols-5 gap-2">
         {stages.map((label, index) => (
           <li
@@ -164,7 +175,7 @@ export function ImportWorkspace({ id }: { id: string }) {
           </EmptyHeader>
           <EmptyContent>
             <Button asChild variant="green">
-              <Link href="/account/partner/studio/create">Utwórz studio ręcznie</Link>
+              <Link href="/account/partner/studio/create?step=manual">Utwórz studio ręcznie</Link>
             </Button>
             <Button
               variant="outline"
@@ -189,7 +200,10 @@ export function ImportWorkspace({ id }: { id: string }) {
             </AlertDescription>
           </Alert>
           <ReviewRecords job={job} onJob={setJob} refresh={refresh} />
-          <footer className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4 shadow-sm">
+          <footer
+            data-toast-anchor=""
+            className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4 shadow-sm"
+          >
             <div>
               <p className="font-semibold">{job.selected_count} rekordów do importu</p>
               <p className="text-xs text-gray-500">
@@ -198,7 +212,7 @@ export function ImportWorkspace({ id }: { id: string }) {
             </div>
             <Button
               variant="green"
-              disabled={busy || !job.branches.some((b) => b.selected)}
+              disabled={busy || !destinationReady || !job.branches.some((b) => b.selected)}
               onClick={() => {
                 setConfirm(true);
                 setAck(false);
@@ -221,19 +235,13 @@ export function ImportWorkspace({ id }: { id: string }) {
       <Dialog open={confirm} onOpenChange={setConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {capabilities?.businessMode == null
-                ? "Zarządzanie studiem"
-                : "Przenieść wybrane dane?"}
-            </DialogTitle>
+            <DialogTitle>Przenieść wybrane dane?</DialogTitle>
             <DialogDescription>
-              {capabilities?.businessMode == null
-                ? "Wybierasz zarządzanie studiem. Po zapisaniu to konto pozostanie w tym trybie. Aby prowadzić również własny grafik jako samodzielny instruktor, załóż osobne konto z innym adresem e-mail."
-                : "Powstaną prywatne studia. Możesz edytować je przed publikacją."}
+              Dane trafią do wybranych studiów. Sprawdzisz nowe pozycje przed ich udostępnieniem.
             </DialogDescription>
           </DialogHeader>
           <p>
-            {job.branches.filter((b) => b.selected).length} nowych studiów · {job.selected_count}{" "}
+            {job.branches.filter((b) => b.selected).length} lokalizacji · {job.selected_count}{" "}
             rekordów
           </p>
           <p className="text-sm">
@@ -242,18 +250,14 @@ export function ImportWorkspace({ id }: { id: string }) {
           </p>
           <label className="flex items-start gap-3 text-sm">
             <Checkbox checked={ack} onCheckedChange={(value) => setAck(value === true)} />
-            Sprawdzono wybór. Chcę utworzyć prywatne wersje studiów.
+            Sprawdzono wybór i studia docelowe. Chcę przenieść wybrane dane.
           </label>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirm(false)}>
               Wróć do wyboru
             </Button>
-            <Button variant="green" disabled={!ack || busy} onClick={start}>
-              {busy
-                ? "Uruchamianie…"
-                : capabilities?.businessMode == null
-                  ? "Potwierdź i importuj"
-                  : "Rozpocznij import"}
+            <Button variant="green" disabled={!ack || busy || !destinationReady} onClick={start}>
+              {busy ? "Uruchamianie…" : "Rozpocznij import"}
             </Button>
           </DialogFooter>
         </DialogContent>

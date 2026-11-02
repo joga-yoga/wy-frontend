@@ -1,5 +1,6 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { ArrowLeft, Info } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,15 +9,17 @@ import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
+import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { addCalendarMonthClamped, formatDateYMD } from "@/lib/formatDateRange";
 import { isFewForm, plural } from "@/lib/polishPlural";
+import { isValidTime } from "@/lib/timeInput";
 
 import {
   type EndDateMode,
   ScheduleRecurrenceForm,
 } from "../../../class-schedules/components/ScheduleRecurrenceForm";
-import type { RoomOption } from "../../../class-schedules/types";
+import { ScheduleRoomField } from "../../../class-schedules/components/ScheduleRoomField";
 import { InstructorPicker, type PickableInstructor } from "../../components/InstructorPicker";
 import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
@@ -140,12 +143,13 @@ export default function EditSessionPage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(true);
 
   const [startTime, setStartTime] = useState("");
+  const timeValid = isSubstitution || isValidTime(startTime);
   const [roomId, setRoomId] = useState("");
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
 
   const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
-  const [rooms, setRooms] = useState<RoomOption[]>([]);
+  const roomState = useScheduleRooms(sessionDetail?.studio_id, roomId, setRoomId, isSolo);
 
   // Recurrence form state
   const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
@@ -244,14 +248,6 @@ export default function EditSessionPage() {
       .catch(() => {});
   }, [sessionDetail?.studio_id, currentStudio?.id]);
 
-  useEffect(() => {
-    if (!sessionDetail?.studio_id) return;
-    axiosInstance
-      .get<RoomOption[]>(`/studios/${sessionDetail.studio_id}/rooms`)
-      .then((r) => setRooms(r.data ?? []))
-      .catch(() => {});
-  }, [sessionDetail?.studio_id]);
-
   const toggleDay = (day: string) => {
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
@@ -297,6 +293,7 @@ export default function EditSessionPage() {
   };
 
   const goToPreview = async () => {
+    if (!roomState.roomValid || !timeValid) return;
     setIsLoadingPreview(true);
     try {
       const r = await axiosInstance.post<SessionEditPreviewResponse>(
@@ -313,6 +310,10 @@ export default function EditSessionPage() {
   };
 
   const handleCommit = async () => {
+    if (!roomState.roomValid || !timeValid) {
+      setStep("form");
+      return;
+    }
     setIsSubmitting(true);
     try {
       // Success-screen figures come from this response, never the preview payload
@@ -325,8 +326,16 @@ export default function EditSessionPage() {
       );
       setCommitResult(data);
       setStep("success");
-    } catch {
-      toast({ description: "Nie udało się zapisać zmian.", variant: "destructive" });
+    } catch (error: unknown) {
+      const detail: unknown = isAxiosError(error) ? error.response?.data?.detail : null;
+      toast({
+        description: typeof detail === "string" ? detail : "Nie udało się zapisać zmian.",
+        variant: "destructive",
+      });
+      if (isAxiosError(error) && error.response?.status === 400) {
+        roomState.retryRooms();
+        setStep("form");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -410,6 +419,7 @@ export default function EditSessionPage() {
             currentId={sessionDetail.instructor_id}
             onSelect={setInstructorId}
           />
+          <ScheduleRoomField {...roomState} roomId={roomId} onRoomChange={setRoomId} />
           <div className="flex gap-3 pt-2">
             {sessionDetail.is_recurring && (
               <Button size="action" variant="outline" onClick={() => setStep("scope")}>
@@ -422,7 +432,7 @@ export default function EditSessionPage() {
               variant="green"
               className="flex-1"
               onClick={goToPreview}
-              disabled={isLoadingPreview}
+              disabled={isLoadingPreview || !roomState.roomValid || !timeValid}
             >
               {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>
@@ -448,7 +458,7 @@ export default function EditSessionPage() {
                 ? { id: sessionDetail.instructor_id, name: sessionDetail.instructor_name }
                 : null
             }
-            rooms={rooms}
+            {...roomState}
             roomId={roomId}
             onRoomChange={setRoomId}
             instructors={instructors}
@@ -484,7 +494,7 @@ export default function EditSessionPage() {
               variant="green"
               className="flex-1"
               onClick={goToPreview}
-              disabled={isLoadingPreview}
+              disabled={isLoadingPreview || !roomState.roomValid || !timeValid}
             >
               {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>
@@ -515,7 +525,7 @@ export default function EditSessionPage() {
               variant="green"
               className="flex-1"
               onClick={handleCommit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !roomState.roomValid}
             >
               {isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
             </Button>

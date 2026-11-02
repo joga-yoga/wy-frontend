@@ -237,7 +237,10 @@ export const RetreatsPageFilters = () => {
   return (
     <>
       {/* Mobile version of filters */}
-      <div className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background">
+      <div
+        data-toast-anchor=""
+        className="block md:hidden fixed bottom-0 z-50 w-full border-t bg-background"
+      >
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
             onClick={() => handleSortClick("start_date")}

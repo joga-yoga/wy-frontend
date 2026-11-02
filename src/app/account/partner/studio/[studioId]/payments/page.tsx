@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { isValidTime } from "@/lib/timeInput";
 import { cn } from "@/lib/utils";
 
 import type { StudioApiResponse } from "../edit/types";
@@ -90,7 +91,8 @@ export default function StudioPaymentsPage() {
         setCancellationMode(
           (data.cancellation_policy_mode as "by_time_of_day" | "always_free") ?? "by_time_of_day",
         );
-        setMorningDeadline(data.cancellation_morning_deadline_time ?? "");
+        // API times include seconds; the shared clock control edits HH:mm.
+        setMorningDeadline(data.cancellation_morning_deadline_time?.slice(0, 5) ?? "");
         setAfternoonHoursBefore(
           data.cancellation_afternoon_hours_before != null
             ? String(data.cancellation_afternoon_hours_before)
@@ -109,7 +111,7 @@ export default function StudioPaymentsPage() {
   async function handleSave() {
     if (
       cancellationMode === "by_time_of_day" &&
-      (!morningDeadline || afternoonHoursBefore === "")
+      (!isValidTime(morningDeadline) || afternoonHoursBefore === "")
     ) {
       toast({
         description:

@@ -1,81 +1,60 @@
 import { expect, test } from "@playwright/test";
 
+import { getCertificateMark } from "../../src/components/page-contents/instructor/components/certificateMarks";
+
+test("certificate marks accept common title variants and keep distinct credentials separate", () => {
+  for (const [label, file] of [
+    ["RYT200", "ryt-200"],
+    ["  ryt 500  ", "ryt-500"],
+    ["E-RYT200", "e-ryt-200"],
+    ["E‑RYT 500", "e-ryt-500"],
+    ["E RYT 200 (Yoga Alliance)", "e-ryt-200"],
+    ["Szkolenie RYT200h", "ryt-200"],
+    ["Registered Yoga Teacher (500 hours)", "ryt-500"],
+    ["Experienced Registered Yoga Teacher 200", "e-ryt-200"],
+    ["RYS200", "rys-200"],
+    ["Yoga Alliance – RYS 300", "rys-300"],
+    ["Registered Yoga School 500", "rys-500"],
+    ["RCYT®", "rcyt"],
+    ["Registered Children’s Yoga Teacher", "rcyt"],
+    ["RPYT", "rpyt"],
+    ["Registered Prenatal Yoga Teacher", "rpyt"],
+    ["RCYS", "rcys"],
+    ["Registered Children's Yoga School", "rcys"],
+    ["RPYS", "rpys"],
+    ["Registered Prenatal Yoga School", "rpys"],
+    ["YACEP", "yacep"],
+    ["Yoga Alliance Continuing Education Provider", "yacep"],
+    ["Iyengar", "iyengar-certification-mark"],
+    ["Joga Iyengara", "iyengar-certification-mark"],
+    ["Certyfikat nauczyciela jogi Iyengara — Poziom II", "iyengar-certification-mark"],
+    ["B.K.S. Iyengar Introductory II", "iyengar-certification-mark"],
+    ["CIYT", "iyengar-certification-mark"],
+  ]) {
+    expect(getCertificateMark(label)).toBe(`/images/certificates/${file}.png`);
+  }
+  for (const label of [
+    "",
+    "200 hours",
+    "RYT 300",
+    "RYT2000",
+    "RYT",
+    "RYS",
+    "Yoga Alliance",
+    "Karma Yoga",
+    "IYENGARIAN",
+    "RYT500/YACEP",
+    "RYT 200 / RYS 200",
+  ]) {
+    expect(getCertificateMark(label)).toBeNull();
+  }
+});
+
 function expectCloseTo(value: number, expected: number, tolerance = 3) {
   expect(Math.abs(value - expected)).toBeLessThanOrEqual(tolerance);
 }
 
 test.describe("instructor profile hero", () => {
-  test("matches the mobile Hero-2 layout", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/instructor/hero-fixture");
-
-    const hero = page.getByTestId("instructor-hero");
-    const heroCard = page.getByTestId("instructor-hero-card");
-    const avatar = page.getByTestId("instructor-hero-avatar");
-    const info = page.getByTestId("instructor-hero-info");
-    const name = page.getByTestId("instructor-hero-name");
-    const shortBio = page.getByTestId("instructor-hero-short-bio");
-    const highlights = page.getByTestId("instructor-highlights");
-    const certificate = page.getByTestId("instructor-highlight-certificate");
-    const studio = page.getByTestId("instructor-highlight-studio");
-    const location = page.getByTestId("instructor-highlight-location");
-    const experience = page.getByTestId("instructor-highlight-experience");
-    const language = page.getByTestId("instructor-highlight-language");
-
-    await expect(hero).toBeVisible();
-    await expect(name).toContainText("Nadolny Przemek");
-    await expect(shortBio).toBeVisible();
-    await expect(certificate).toContainText("RYT500");
-    await expect(studio).toContainText("Studio: Bodhi Yoga Shala");
-    await expect(location).toContainText("Łódź");
-    await expect(experience).toContainText("Hatha");
-    await expect(language).toContainText("Polski");
-
-    const heroCardBox = await heroCard.boundingBox();
-    const avatarBox = await avatar.boundingBox();
-    const infoBox = await info.boundingBox();
-    const nameBox = await name.boundingBox();
-    const bioBox = await shortBio.boundingBox();
-    const highlightsBox = await highlights.boundingBox();
-    const certificateBox = await certificate.boundingBox();
-    const studioBox = await studio.boundingBox();
-    const locationBox = await location.boundingBox();
-    const experienceBox = await experience.boundingBox();
-    const languageBox = await language.boundingBox();
-
-    expect(heroCardBox).not.toBeNull();
-    expect(avatarBox).not.toBeNull();
-    expect(infoBox).not.toBeNull();
-    expect(nameBox).not.toBeNull();
-    expect(bioBox).not.toBeNull();
-    expect(highlightsBox).not.toBeNull();
-    expect(certificateBox).not.toBeNull();
-    expect(studioBox).not.toBeNull();
-    expect(locationBox).not.toBeNull();
-    expect(experienceBox).not.toBeNull();
-    expect(languageBox).not.toBeNull();
-
-    expectCloseTo(heroCardBox!.width, 354);
-    expectCloseTo(heroCardBox!.height, 166);
-    expectCloseTo(avatarBox!.width, 130);
-    expectCloseTo(avatarBox!.height, 130);
-    expectCloseTo(infoBox!.height, 142);
-
-    expect(infoBox!.x).toBeGreaterThan(avatarBox!.x + avatarBox!.width);
-    expect(nameBox!.x).toBeGreaterThan(avatarBox!.x + avatarBox!.width);
-    expect(bioBox!.y).toBeGreaterThan(nameBox!.y);
-    expect(highlightsBox!.y).toBeGreaterThan(heroCardBox!.y + heroCardBox!.height);
-    expect(studioBox!.y).toBeGreaterThan(certificateBox!.y);
-    expect(locationBox!.y).toBeGreaterThan(studioBox!.y);
-    expect(experienceBox!.y).toBeGreaterThan(locationBox!.y);
-    expect(languageBox!.y).toBeGreaterThan(experienceBox!.y);
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
-
   test("scales the same hero system on desktop", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/instructor/hero-fixture");

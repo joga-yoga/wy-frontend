@@ -7,9 +7,9 @@ import { ProfileLinks } from "@/components/common/ProfileLinks";
 import { DirectoryBreadcrumb } from "@/components/directory/DirectoryBreadcrumb";
 import { ManageStudioDrawer } from "@/components/directory/ManageStudioDrawer";
 import { PublicHeader } from "@/components/layout/Header";
+import { OtherStudioOffers } from "@/components/page-contents/studio/OtherStudioOffers";
 import { PassList } from "@/components/page-contents/studio/PassList";
 import { Button } from "@/components/ui/button";
-import { getCurrencySymbol } from "@/lib/currency";
 import { cityStudiosPath } from "@/lib/directoryPaths";
 import type { DirectoryStudioDetail } from "@/types/studio";
 
@@ -202,8 +202,6 @@ function PricingSection({ listing }: { listing: DirectoryStudioDetail }) {
 
   if (dropIn == null && passes.length === 0 && others.length === 0) return null;
 
-  const symbol = getCurrencySymbol(listing.currency);
-
   return (
     <section id="pricing-section" className="px-4 py-5">
       <h2 className="mb-4 text-[18px] font-semibold text-[#222222]">Cennik</h2>
@@ -227,33 +225,7 @@ function PricingSection({ listing }: { listing: DirectoryStudioDetail }) {
         />
       )}
 
-      {others.length > 0 && (
-        <div className={passes.length > 0 || dropIn != null ? "mt-5" : undefined}>
-          <h3 className="text-m-sunscript-font mb-1 text-gray-500">Pozostałe ceny</h3>
-          <div className="divide-y divide-gray-100">
-            {others.slice(0, OTHER_OFFER_LIMIT).map((offer, index) => (
-              <div
-                key={`${offer.name ?? "offer"}-${index}`}
-                className="flex items-center justify-between gap-3 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-base font-semibold text-[#222222]">{offer.name ?? "Oferta"}</p>
-                  {offer.category && (
-                    <p className="mt-0.5 text-sm text-[#717171]">{offer.category}</p>
-                  )}
-                </div>
-                <span className="shrink-0 text-base font-semibold text-[#222222]">
-                  {offer.price_text ?? (offer.amount != null ? `${offer.amount} ${symbol}` : "—")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <OtherStudioOffers offers={others} currency={listing.currency} />
     </section>
   );
 }
-
-/** One studio in the source carries 60 offers. A directory page is not a price list — the
- *  drop-in and the passes are what a reader came for; the rest is context. */
-const OTHER_OFFER_LIMIT = 6;

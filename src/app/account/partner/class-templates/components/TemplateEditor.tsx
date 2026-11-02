@@ -1,12 +1,15 @@
 "use client";
 
-import { Ban, Check, X } from "lucide-react";
-import { useState } from "react";
+import { Ban, Check, Plus, X } from "lucide-react";
+import { useRef, useState } from "react";
 
+import { StudioRosterAddForm } from "@/app/account/partner/instructors/components/StudioRosterAddForm";
 import { InstructorPicker } from "@/app/account/partner/schedule/components/InstructorPicker";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
 import { YogaStyleChips } from "@/components/common/YogaStyleChips";
+import { InstructorModal } from "@/components/instructors/InstructorModal";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,13 +22,17 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
-import { useAssignableInstructors, useAssignableStudioId } from "@/hooks/useAssignableInstructors";
+import {
+  useAssignableInstructorSource,
+  useAssignableStudioId,
+} from "@/hooks/useAssignableInstructors";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { CLASS_COLORS, type ClassColor, COLOR_LABELS, COLOR_SWATCH_MAP } from "@/lib/classColors";
 import { cn } from "@/lib/utils";
 
-import type { ClassTemplate, ClassTemplateCreate } from "../types";
+import type { ClassTemplate, ClassTemplateCreate, TemplateStudioPricing } from "../types";
 import { type SoloVenue, SoloVenueInput } from "./SoloVenueInput";
+import { TemplatePricing } from "./TemplatePricing";
 
 interface TemplateEditorProps {
   initial?: ClassTemplate | null;
@@ -76,6 +83,7 @@ export function TemplateEditor({
 }: TemplateEditorProps) {
   const { capabilities } = usePartnerCapabilities();
   const isSolo = Boolean(capabilities?.soloStudioId);
+  const [pricingChanges, setPricingChanges] = useState<TemplateStudioPricing[]>([]);
   const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : "");
   const [currency, setCurrency] = useState(initial?.currency ?? "PLN");
   const [venue, setVenue] = useState<SoloVenue>({
@@ -98,10 +106,40 @@ export function TemplateEditor({
     initial?.default_capacity != null ? String(initial.default_capacity) : "",
   );
   // A template is partner-scoped, so when no single studio resolves the picker falls back to
-  // every instructor the partner has rather than to none — see the hook for why this differs
-  // from the schedule wizard, which needs a studio before the question means anything.
+  // editable profiles and usable studio rosters; profile ownership is not assignment consent.
   const studioId = useAssignableStudioId();
-  const instructors = useAssignableInstructors(studioId, "partner-list");
+  const {
+    instructors,
+    refresh: refreshInstructors,
+    loading: instructorsLoading,
+    error: instructorsError,
+  } = useAssignableInstructorSource(studioId, "partner-list");
+  const [isInstructorOpen, setIsInstructorOpen] = useState(false);
+  const [instructorStep, setInstructorStep] = useState<"identify" | "new">("identify");
+  const [pendingInstructorId, setPendingInstructorId] = useState<string | null>(null);
+  const [instructorNotice, setInstructorNotice] = useState("");
+  const addInstructorRef = useRef<HTMLButtonElement>(null);
+
+  async function refreshAndSelectInstructor(id: string) {
+    const rows = await refreshInstructors();
+    if (rows?.some((row) => row.id === id)) {
+      setDefaultInstructorId(id);
+      setPendingInstructorId(null);
+      setInstructorNotice("");
+    } else {
+      setPendingInstructorId(id);
+      setInstructorNotice(
+        rows
+          ? "Instruktor nie jest jeszcze dostępny na tej liście. Dotychczasowy wybór pozostaje bez zmian."
+          : "Instruktor dodany. Nie udało się odświeżyć listy instruktorów.",
+      );
+    }
+  }
+
+  function handleInstructorAdded(id: string) {
+    setIsInstructorOpen(false);
+    void refreshAndSelectInstructor(id);
+  }
 
   const [imageId, setImageId] = useState(initial?.image_ids?.[0] ?? "");
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -144,6 +182,7 @@ export function TemplateEditor({
       title: title.trim(),
       duration_minutes: parseInt(durationMinutes, 10),
     };
+    if (!isSolo && pricingChanges.length) data.studio_pricing = pricingChanges;
     if (description.trim()) data.description = description.trim();
     if (level) data.level = level;
     data.style_id = styleId;
@@ -187,6 +226,40 @@ export function TemplateEditor({
 
   return (
     <div className="space-y-6">
+      {!isSolo &&
+        (studioId ? (
+          <Dialog open={isInstructorOpen} onOpenChange={setIsInstructorOpen}>
+            <DialogContent
+              finalFocus={addInstructorRef}
+              closeLabel="Zamknij"
+              className="max-h-[90dvh] overflow-y-auto"
+            >
+              <DialogTitle>Dodaj instruktora</DialogTitle>
+              {isInstructorOpen && (
+                <StudioRosterAddForm
+                  key={studioId}
+                  studioId={studioId}
+                  step={instructorStep}
+                  onNew={() => setInstructorStep("new")}
+                  onAdded={handleInstructorAdded}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <InstructorModal
+            isOpen={isInstructorOpen}
+            usage="template"
+            returnFocusRef={addInstructorRef}
+            onClose={() => setIsInstructorOpen(false)}
+            onInstructorSaved={(instructor) => handleInstructorAdded(instructor.id)}
+            existingInstructors={instructors.map((instructor) => ({
+              ...instructor,
+              image_id: instructor.image_id ?? null,
+              is_claimed: instructor.id === capabilities?.selfInstructorId,
+            }))}
+          />
+        ))}
       <div>
         <Label>Zdjęcie</Label>
         <div className="mt-1.5">
@@ -345,6 +418,18 @@ export function TemplateEditor({
         </div>
       </section>
 
+      {!isSolo && (
+        <TemplatePricing
+          initial={initial?.studio_pricing ?? []}
+          changes={pricingChanges}
+          onChange={(setting) =>
+            setPricingChanges((rows) => [
+              ...rows.filter((row) => row.studio_id !== setting.studio_id),
+              setting,
+            ])
+          }
+        />
+      )}
       {isSolo && (
         <section className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -401,21 +486,72 @@ export function TemplateEditor({
                 makes the argument, and the two forms asking the same question differently was
                 the complaint.
 
-                `allowNone` supplies the "Brak prowadzącego" row, which replaces the separate
+                `allowNone` supplies the optional default row, which replaces the separate
                 `X` clear button — a template's default instructor is optional, and clearing it
                 is a choice in the list rather than a control beside it.
 
                 `currentId={null}` + `otherLabel=""`: a template has no assignment being
                 replaced, so the default "Zastępstwo" subtitle would be nonsense here. */}
               <div className="mt-1">
+                {instructorsLoading && (
+                  <p role="status" className="text-sm text-gray-500">
+                    Ładowanie instruktorów…
+                  </p>
+                )}
+                {instructorsError && (
+                  <div role="alert" className="space-y-2 text-sm">
+                    <p>Nie udało się wczytać instruktorów.</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void refreshInstructors()}
+                    >
+                      Spróbuj ponownie
+                    </Button>
+                  </div>
+                )}
                 <InstructorPicker
                   instructors={instructors}
                   selectedId={defaultInstructorId}
                   currentId={null}
                   onSelect={setDefaultInstructorId}
                   allowNone
+                  noneLabel="Wybiorę później"
+                  emptyHint=""
                   otherLabel=""
                 />
+                <p className="mt-2 px-1 text-sm text-gray-500">
+                  Prowadzącego wybierzesz przy dodawaniu zajęć do grafiku
+                </p>
+                <Button
+                  ref={addInstructorRef}
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={() => {
+                    setInstructorStep("identify");
+                    setIsInstructorOpen(true);
+                  }}
+                >
+                  <Plus className="mr-1.5 size-4" />
+                  Dodaj instruktora
+                </Button>
+                {instructorNotice && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-sm text-gray-500" role="status">
+                      {instructorNotice}
+                    </p>
+                    {pendingInstructorId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void refreshAndSelectInstructor(pendingInstructorId)}
+                      >
+                        Odśwież listę instruktorów
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -438,7 +574,10 @@ export function TemplateEditor({
           Desk roster page's action bar: a full-width fade-gradient outer bar (so the fade
           reaches both viewport edges) with the buttons constrained/centred inside it. */}
       {pinFooter ? (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8">
+        <div
+          data-toast-anchor=""
+          className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8"
+        >
           <div className="mx-auto flex max-w-lg gap-3 px-4">
             {onCancel && (
               <Button

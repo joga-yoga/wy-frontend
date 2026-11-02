@@ -23,6 +23,7 @@ export function PinnedFooter({
 }) {
   return (
     <div
+      data-toast-anchor=""
       className={cn("fixed inset-x-0 bottom-0 z-40 bg-background px-4 pt-3", className)}
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >

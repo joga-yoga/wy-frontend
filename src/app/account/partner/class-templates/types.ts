@@ -1,3 +1,12 @@
+export interface TemplateStudioPricing {
+  studio_id: string;
+  amount: number | string | null;
+  currency: string | null;
+  name: string | null;
+  conditions: string | null;
+  trial_enabled: boolean;
+}
+
 export interface ClassLocation {
   title?: string | null;
   address_line1?: string | null;
@@ -13,6 +22,7 @@ export interface ClassLocation {
 }
 
 export interface SoloTemplateTerms {
+  studio_pricing?: TemplateStudioPricing[];
   price?: number | null;
   currency?: string | null;
   location_id?: string | null;

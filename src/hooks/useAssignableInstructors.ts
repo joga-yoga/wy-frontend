@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { PickableInstructor } from "@/app/account/partner/schedule/components/InstructorPicker";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
@@ -33,65 +33,61 @@ export function useAssignableStudioId(): string | null {
   return managed.length === 1 ? managed[0].id : null;
 }
 
-/**
- * The instructors an `InstructorPicker` can offer.
- *
- * The roster — not the flat `/instructors` list — is the source whenever a studio is in
- * scope: it carries `image_id` and `row_state`, which are what make the picker a picker
- * rather than a dropdown of names (an avatar, and "Oczekuje na zaproszenie" for someone whose
- * invite is still outstanding).
- *
- * @param studioId      the studio whose roster to read, or `null` when none is in scope.
- * @param whenNoStudio  what `null` means for this caller, which is genuinely different in
- *                      the two places this is used:
- *                      - `"empty"` — the schedule wizard. A session belongs to exactly one
- *                        studio, so before one is chosen there is no correct list to show.
- *                      - `"partner-list"` — the class-template form. A template is
- *                        partner-scoped, so falling back to every instructor the partner has
- *                        is better than showing none. Those rows carry no `image_id` or
- *                        `row_state`; `InstructorPicker` degrades to initials without them.
- */
+/** Assignment candidates are separate from independently editable profiles. */
 export function useAssignableInstructors(
   studioId: string | null,
   whenNoStudio: "partner-list" | "empty" = "empty",
 ): PickableInstructor[] {
-  const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
+  return useAssignableInstructorSource(studioId, whenNoStudio).instructors;
+}
+
+/** Scope-keyed results keep old rows from flashing when the selected studio changes. */
+export function useAssignableInstructorSource(
+  studioId: string | null,
+  whenNoStudio: "partner-list" | "empty" = "empty",
+) {
+  const key = studioId || whenNoStudio;
+  const empty = !studioId && whenNoStudio === "empty";
+  const [result, setResult] = useState<{
+    key: string;
+    instructors: PickableInstructor[];
+    error: boolean;
+  } | null>(null);
+  const requestRef = useRef(0);
+
+  const refresh = useCallback(async (): Promise<PickableInstructor[] | null> => {
+    const request = ++requestRef.current;
+    setResult(null);
+    try {
+      const rows = empty
+        ? []
+        : (
+            await axiosInstance.get<PickableInstructor[]>("/instructors/assignable", {
+              params: studioId ? { studio_id: studioId } : undefined,
+            })
+          ).data;
+      if (request !== requestRef.current) return null;
+      const unique = [...new Map(rows.map((row) => [row.id, row])).values()];
+      setResult({ key, instructors: unique, error: false });
+      return unique;
+    } catch {
+      if (request === requestRef.current) setResult({ key, instructors: [], error: true });
+      return null;
+    }
+  }, [studioId, key, empty]);
 
   useEffect(() => {
-    // A slow response for a studio the user has since switched away from must not overwrite
-    // a newer one — the same race the instructor lookup guards against.
-    let cancelled = false;
-    const apply = (rows: PickableInstructor[]) => {
-      if (!cancelled) setInstructors(rows);
-    };
-
-    if (studioId) {
-      axiosInstance
-        .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
-        .then((r) =>
-          apply(
-            r.data.items.map(({ id, name, image_id, row_state }) => ({
-              id,
-              name,
-              image_id,
-              row_state,
-            })),
-          ),
-        )
-        .catch(() => apply([]));
-    } else if (whenNoStudio === "partner-list") {
-      axiosInstance
-        .get<{ id: string; name: string }[]>("/instructors")
-        .then((r) => apply((r.data ?? []).map(({ id, name }) => ({ id, name }))))
-        .catch(() => apply([]));
-    } else {
-      apply([]);
-    }
-
+    void refresh();
     return () => {
-      cancelled = true;
+      requestRef.current += 1;
     };
-  }, [studioId, whenNoStudio]);
+  }, [refresh]);
 
-  return instructors;
+  const current = result?.key === key ? result : null;
+  return {
+    instructors: current?.instructors ?? [],
+    loading: !empty && !current,
+    error: current?.error ?? false,
+    refresh,
+  };
 }

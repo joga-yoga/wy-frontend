@@ -33,6 +33,7 @@ import {
   type BookingOut,
   type BookingScreen,
   buyAndUseAsStudioPass,
+  entryQuoteChanged,
   type ExistingPassOption,
   type FundingSelection,
   isMethodFundingSelection,
@@ -40,6 +41,8 @@ import {
   skipsMethodScreen,
   type StartPaymentResponse,
   toBookingCreateRequest,
+  TRIAL_CONDITIONS,
+  TRIAL_LABEL,
 } from "./types";
 
 // ── Formatting helpers ────────────────────────────────────────────────
@@ -57,7 +60,7 @@ function formatDeadline(iso: string): string {
 
 function extractErrorDetail(err: unknown, fallback: string): string {
   const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-  return detail || fallback;
+  return typeof detail === "string" ? detail : fallback;
 }
 
 function pluralKarnetow(n: number): string {
@@ -122,6 +125,13 @@ function checkoutCtaCopy(
   }
 
   switch (selection.kind) {
+    case "trial":
+      return {
+        label: "Zarezerwuj bezpłatnie",
+        receipt: TRIAL_LABEL,
+        disabled: false,
+        icon: "wallet" as const,
+      };
     case "use_pass":
       return {
         label: "Zarezerwuj z karnetu",
@@ -168,6 +178,7 @@ function checkoutCtaCopy(
 // ── Funding screen (§3) ─────────────────────────────────────────────────
 
 function FundingScreen({
+  requireChoice,
   detail,
   options,
   selection,
@@ -181,6 +192,7 @@ function FundingScreen({
 }: {
   detail: OccurrenceDetail;
   options: BookingOptionsResponse;
+  requireChoice: boolean;
   selection: FundingSelection | null;
   onSelect: (selection: FundingSelection) => void;
   onOpenDrawer: (drawer: BookingDrawer) => void;
@@ -191,9 +203,28 @@ function FundingScreen({
   onPaymentMethodChange: (method: PaymentMethod) => void;
 }) {
   const currency = options.currency;
+  const studioCurrency = options.studio_currency ?? currency;
+  const selectedCurrency =
+    selection?.kind === "sport_card"
+      ? studioCurrency
+      : selection?.kind === "buy_and_use"
+        ? selection.currency || studioCurrency
+        : currency;
+  const onlineMethods =
+    selection?.kind === "drop_in"
+      ? (options.drop_in_online_payment_methods ?? options.online_payment_methods)
+      : selectedCurrency === "PLN"
+        ? options.online_payment_methods
+        : [];
+  const methodUnavailable = Boolean(
+    selection &&
+      !skipsMethodScreen(selection) &&
+      (paymentMethod === "cash" ? !options.accepts_cash : !onlineMethods?.length),
+  );
   const [expanded, setExpanded] = useState(() => options.existing_passes.length === 0);
 
   const buyAndUsePerEntries = options.buy_and_use_options
+    .filter((o) => (o.currency || studioCurrency) === studioCurrency)
     .map((o) => perEntry(buyAndUseAsStudioPass(o)))
     .filter((v): v is number => v != null);
   const minPerEntry = buyAndUsePerEntries.length > 0 ? Math.min(...buyAndUsePerEntries) : null;
@@ -209,10 +240,20 @@ function FundingScreen({
         ) ?? null)
       : null;
   const showFullFundingList = expanded || options.existing_passes.length === 0;
-  const ctaCopy = checkoutCtaCopy(selection, currency, detail.studio.organizer_kind === "solo");
+  const ctaCopy = checkoutCtaCopy(
+    selection,
+    selectedCurrency,
+    detail.studio.organizer_kind === "solo",
+  );
 
   useEffect(() => {
-    if (selection || options.existing_passes.length === 0) return;
+    if (
+      options.trial_available ||
+      requireChoice ||
+      selection ||
+      options.existing_passes.length === 0
+    )
+      return;
     const pass = options.existing_passes[0];
     onSelect({
       kind: "use_pass",
@@ -220,7 +261,7 @@ function FundingScreen({
       passName: pass.pass_name,
       entriesRemaining: pass.entries_remaining ?? null,
     });
-  }, [onSelect, options.existing_passes, selection]);
+  }, [onSelect, options.existing_passes, options.trial_available, requireChoice, selection]);
 
   return (
     <div className="mx-auto max-w-md p-4 pb-8">
@@ -245,42 +286,47 @@ function FundingScreen({
       />
 
       <div className="mt-3">
-        <CancellationChip deadline={options.free_cancellation_deadline} />
+        <CancellationChip
+          deadline={options.trial_available ? null : options.free_cancellation_deadline}
+        />
       </div>
 
-      <h1 className="mt-6 text-xl font-extrabold text-gray-900">Jak chcesz zapłacić?</h1>
+      <h1 className="mt-6 text-xl font-extrabold text-gray-900">
+        {options.trial_available ? "Pierwsze zajęcia próbne" : "Jak chcesz zapłacić?"}
+      </h1>
       <p className="mt-1.5 text-sm text-gray-500">Miejsce rezerwujemy od razu.</p>
 
       <div className="mt-5 space-y-2">
-        {options.existing_passes.map((pass) => {
-          const isSelected =
-            selection?.kind === "use_pass" && selection.userPassId === pass.user_pass_id;
-          return (
-            <OptionRow
-              key={pass.user_pass_id}
-              icon={<Wallet className="h-5 w-5 text-gray-700" />}
-              title={
-                <>
-                  {pass.pass_name}
-                  <OwnTag />
-                </>
-              }
-              subtitle={passSubtitle(pass, isSelected)}
-              right={<OptionRadio selected={isSelected} />}
-              selected={isSelected}
-              onClick={() =>
-                onSelect({
-                  kind: "use_pass",
-                  userPassId: pass.user_pass_id,
-                  passName: pass.pass_name,
-                  entriesRemaining: pass.entries_remaining ?? null,
-                })
-              }
-            />
-          );
-        })}
+        {!options.trial_available &&
+          options.existing_passes.map((pass) => {
+            const isSelected =
+              selection?.kind === "use_pass" && selection.userPassId === pass.user_pass_id;
+            return (
+              <OptionRow
+                key={pass.user_pass_id}
+                icon={<Wallet className="h-5 w-5 text-gray-700" />}
+                title={
+                  <>
+                    {pass.pass_name}
+                    <OwnTag />
+                  </>
+                }
+                subtitle={passSubtitle(pass, isSelected)}
+                right={<OptionRadio selected={isSelected} />}
+                selected={isSelected}
+                onClick={() =>
+                  onSelect({
+                    kind: "use_pass",
+                    userPassId: pass.user_pass_id,
+                    passName: pass.pass_name,
+                    entriesRemaining: pass.entries_remaining ?? null,
+                  })
+                }
+              />
+            );
+          })}
 
-        {!showFullFundingList && (
+        {!options.trial_available && !showFullFundingList && (
           <button
             type="button"
             onClick={() => setExpanded(true)}
@@ -291,13 +337,13 @@ function FundingScreen({
           </button>
         )}
 
-        {showFullFundingList && (
+        {(options.trial_available || showFullFundingList) && (
           <>
-            {options.drop_in_price != null && (
+            {!options.trial_available && options.drop_in_price != null && (
               <OptionRow
                 icon={<Ticket className="h-5 w-5 text-gray-700" />}
-                title="Pojedyncze wejście"
-                subtitle="Bez karnetu"
+                title={options.entry_name || "Wejście jednorazowe"}
+                subtitle={options.entry_conditions || "Bez karnetu"}
                 right={
                   <PriceRadioSlot
                     price={formatMoney(options.drop_in_price, currency)}
@@ -309,7 +355,18 @@ function FundingScreen({
               />
             )}
 
-            {options.buy_and_use_options.length > 0 &&
+            {options.trial_available && (
+              <OptionRow
+                icon={<Ticket className="h-5 w-5 text-gray-700" />}
+                title={TRIAL_LABEL}
+                subtitle={<span className="block whitespace-normal">{TRIAL_CONDITIONS}</span>}
+                right={<OptionRadio selected={selection?.kind === "trial"} />}
+                selected={selection?.kind === "trial"}
+                onClick={() => onSelect({ kind: "trial" })}
+              />
+            )}
+            {!options.trial_available &&
+              options.buy_and_use_options.length > 0 &&
               (selection?.kind === "buy_and_use" ? (
                 <PickedOptionRow
                   left={
@@ -338,7 +395,7 @@ function FundingScreen({
                   title="Kup karnet"
                   subtitle={
                     minPerEntry != null
-                      ? `Od ${formatMoney(minPerEntry, currency)}/wejście · ${pluralKarnetow(options.buy_and_use_options.length)}`
+                      ? `Od ${formatMoney(minPerEntry, studioCurrency)}/wejście · ${pluralKarnetow(options.buy_and_use_options.length)}`
                       : pluralKarnetow(options.buy_and_use_options.length)
                   }
                   right={<Chevron />}
@@ -347,7 +404,8 @@ function FundingScreen({
                 />
               ))}
 
-            {options.accepts_sport_cards &&
+            {!options.trial_available &&
+              options.accepts_sport_cards &&
               options.sport_card_options.length > 0 &&
               (selection?.kind === "sport_card" ? (
                 <PickedOptionRow
@@ -367,7 +425,7 @@ function FundingScreen({
                   sub="Sprawdzimy kartę w studiu"
                   price={
                     selection.fee && selection.fee > 0
-                      ? `dopłata ${formatMoney(selection.fee, currency)}`
+                      ? `dopłata ${formatMoney(selection.fee, studioCurrency)}`
                       : "bez dopłaty"
                   }
                   priceAccent={!selection.fee || selection.fee <= 0}
@@ -392,11 +450,16 @@ function FundingScreen({
           solo={detail.studio.organizer_kind === "solo"}
           method={paymentMethod}
           onChange={onPaymentMethodChange}
-          onlineMethods={options.online_payment_methods ?? []}
+          onlineMethods={onlineMethods ?? []}
           acceptsCash={options.accepts_cash ?? true}
         />
       )}
 
+      {methodUnavailable && (
+        <p className="mt-4 text-sm">
+          Wybierz dostępny sposób płatności. Płatność online jest dostępna tylko w PLN.
+        </p>
+      )}
       {submitError && <p className="mt-4 text-sm text-destructive">{submitError}</p>}
 
       <div className="mt-6">
@@ -415,7 +478,7 @@ function FundingScreen({
           style={!ctaCopy.disabled ? { background: "#4F8A62" } : undefined}
           variant={ctaCopy.disabled ? "secondary" : undefined}
           size="cta"
-          disabled={ctaCopy.disabled || isSubmitting}
+          disabled={ctaCopy.disabled || isSubmitting || methodUnavailable}
           onClick={() => {
             if (selection) onSubmit(selection);
           }}
@@ -447,11 +510,13 @@ function DetailRow({
 }
 
 function ConfirmationScreen({
+  passes,
   booking,
   selection,
   detail,
   currency,
 }: {
+  passes: BookingOptionsResponse["buy_and_use_options"];
   booking: BookingOut;
   selection: FundingSelection | null;
   detail: OccurrenceDetail;
@@ -471,6 +536,7 @@ function ConfirmationScreen({
   // (which pass/card) aren't on BookingOut, so those still come from the pre-submit selection —
   // both paths (immediate-submit from Funding, or via Method) leave `fundingSelection` populated.
   const paymentRow = (() => {
+    if (booking.funding_type === "trial") return { label: "Wejście", value: TRIAL_LABEL };
     if (booking.funding_type === "use_pass") {
       const passName = selection?.kind === "use_pass" ? selection.passName : "Karnet";
       return { label: "Płatność", value: `${passName} · 1 wejście` };
@@ -492,11 +558,13 @@ function ConfirmationScreen({
 
   const payNote = owesCash
     ? `Zapłać ${formatMoney(booking.amount_owed, currency)} ${isSolo ? "na miejscu" : "gotówką w recepcji"} przed zajęciami. Miejsce trzymamy dla Ciebie.`
-    : selection?.kind === "use_pass"
-      ? selection.entriesRemaining == null
-        ? "Wykorzystano 1 wejście z karnetu. Karnet bez limitu wejść."
-        : `Wykorzystano 1 wejście z karnetu. Zostały ${selection.entriesRemaining - 1} wejścia.`
-      : "Rezerwacja opłacona kartą sportową — bez dopłaty.";
+    : booking.funding_type === "trial"
+      ? TRIAL_CONDITIONS
+      : selection?.kind === "use_pass"
+        ? selection.entriesRemaining == null
+          ? "Wykorzystano 1 wejście z karnetu. Karnet bez limitu wejść."
+          : `Wykorzystano 1 wejście z karnetu. Zostały ${selection.entriesRemaining - 1} wejścia.`
+        : "Rezerwacja opłacona kartą sportową — bez dopłaty.";
 
   function handleAddToCalendar() {
     downloadIcs({
@@ -542,8 +610,29 @@ function ConfirmationScreen({
 
       <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-left text-sm text-gray-600">
         {payNote}
+        {booking.funding_type === "trial" && booking.cancellation_policy_text && (
+          <p className="mt-2">{booking.cancellation_policy_text}</p>
+        )}
       </div>
 
+      {booking.funding_type === "trial" && passes.length > 0 && (
+        <section className="mt-6 space-y-3 text-left">
+          <h2 className="font-semibold">Karnety na kolejne zajęcia</h2>
+          <p className="text-sm text-gray-500">
+            Zakup jest dobrowolny. Ważność karnetu liczy się od zakupu.
+          </p>
+          {passes.map((pass) => (
+            <div key={pass.pass_id} className="flex items-center justify-between gap-3">
+              <span>
+                {pass.name} · {formatMoney(pass.price, pass.currency)}
+              </span>
+              <Button variant="outline" onClick={() => router.push(`/book/pass/${pass.pass_id}`)}>
+                Kup karnet
+              </Button>
+            </div>
+          ))}
+        </section>
+      )}
       <div className="mt-6 space-y-2.5">
         <Button variant="outline" className="w-full" size="cta" onClick={handleAddToCalendar}>
           Dodaj do kalendarza
@@ -571,6 +660,7 @@ function BookClassContent() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
+  const [requireChoice, setRequireChoice] = useState(false);
   const [screen, setScreen] = useState<BookingScreen>("checkout");
   const [drawer, setDrawer] = useState<BookingDrawer>(null);
   const [fundingSelection, setFundingSelection] = useState<FundingSelection | null>(null);
@@ -604,15 +694,35 @@ function BookClassContent() {
   }, [occurrenceId]);
 
   useEffect(() => {
+    let active = true;
+    setOptions(null);
+    setBooking(null);
+    setScreen("checkout");
+    setFundingSelection(null);
+    setRequireChoice(false);
+    setDrawer(null);
+    setSubmitError(null);
+    setOptionsError(null);
     if (!user || !occurrenceId) return;
     setOptionsLoading(true);
     axiosInstance
       .get<BookingOptionsResponse>(`/occurrences/${occurrenceId}/booking-options`)
-      .then((r) => setOptions(r.data))
-      .catch((err) =>
-        setOptionsError(extractErrorDetail(err, "Nie udało się wczytać opcji rezerwacji.")),
-      )
-      .finally(() => setOptionsLoading(false));
+      .then((r) => {
+        if (active) {
+          setOptions(r.data);
+          setFundingSelection(r.data.trial_available ? { kind: "trial" } : null);
+        }
+      })
+      .catch((err) => {
+        if (active)
+          setOptionsError(extractErrorDetail(err, "Nie udało się wczytać opcji rezerwacji."));
+      })
+      .finally(() => {
+        if (active) setOptionsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [user, occurrenceId]);
 
   /**
@@ -629,7 +739,7 @@ function BookClassContent() {
     try {
       const { data } = await axiosInstance.post<BookingOut>(
         `/occurrences/${occurrenceId}/bookings`,
-        toBookingCreateRequest(selection, paymentMethod),
+        toBookingCreateRequest(selection, paymentMethod, options?.entry_quote),
       );
 
       if (data.payment_required) {
@@ -644,7 +754,21 @@ function BookClassContent() {
       setScreen("confirmation");
       setIsSubmitting(false);
     } catch (err) {
-      setSubmitError(extractErrorDetail(err, "Nie udało się zarezerwować zajęć."));
+      if (entryQuoteChanged(err)) {
+        setFundingSelection(null);
+        setRequireChoice(true);
+        setDrawer(null);
+        try {
+          const refreshed = await axiosInstance.get<BookingOptionsResponse>(
+            `/occurrences/${occurrenceId}/booking-options`,
+          );
+          setOptions(refreshed.data);
+          setFundingSelection(refreshed.data.trial_available ? { kind: "trial" } : null);
+          setSubmitError("Warunki wejścia zmieniły się. Sprawdź je i potwierdź ponownie.");
+        } catch {
+          setOptionsError("Nie udało się odświeżyć warunków. Odśwież stronę.");
+        }
+      } else setSubmitError(extractErrorDetail(err, "Nie udało się zarezerwować zajęć."));
       setIsSubmitting(false);
     }
   }
@@ -673,6 +797,20 @@ function BookClassContent() {
     );
   }
 
+  if (options.existing_booking_id && !booking) {
+    return (
+      <div className="mx-auto max-w-md p-6 text-center">
+        <h1 className="text-xl font-bold">Masz już rezerwację na te zajęcia</h1>
+        <Button
+          className="mt-4"
+          onClick={() => router.push(`/account/bookings/${options.existing_booking_id}`)}
+        >
+          Zobacz rezerwację
+        </Button>
+      </div>
+    );
+  }
+
   if (!options.seat_available) {
     return (
       <div className="mx-auto max-w-md px-4 py-10 text-center">
@@ -687,10 +825,11 @@ function BookClassContent() {
   if (screen === "confirmation" && booking) {
     return (
       <ConfirmationScreen
+        passes={options.buy_and_use_options}
         booking={booking}
         selection={fundingSelection}
         detail={detail}
-        currency={options.currency}
+        currency={booking.payment?.currency ?? booking.entry_terms?.currency ?? options.currency}
       />
     );
   }
@@ -700,12 +839,14 @@ function BookClassContent() {
   // still be redeemable in principle, but the brief's edge-case screen blocks the whole funding
   // list here — treated as a deliberate studio-level "not bookable online yet" gate, not just a
   // cash-dependent-rows gate.
-  const noPaymentMethods = !detail.studio.accepts_cash && !detail.studio.accepts_stripe;
+  const noPaymentMethods =
+    !options.trial_available && !detail.studio.accepts_cash && !detail.studio.accepts_stripe;
 
   // §7.2 — no usable funding option at all, i.e. every Funding-screen row would be hidden (same
   // conditions FundingScreen itself uses to decide row visibility, reused here rather than
   // re-derived).
   const noUsableFunding =
+    !options.trial_available &&
     options.existing_passes.length === 0 &&
     options.drop_in_price == null &&
     options.buy_and_use_options.length === 0 &&
@@ -750,6 +891,7 @@ function BookClassContent() {
   return (
     <>
       <FundingScreen
+        requireChoice={requireChoice}
         detail={detail}
         options={options}
         selection={fundingSelection}
@@ -764,8 +906,8 @@ function BookClassContent() {
       <BuyPassDrawer
         open={drawer === "buy-pass"}
         options={options.buy_and_use_options}
-        dropInPrice={options.drop_in_price}
-        currency={options.currency}
+        dropInPrice={options.studio_drop_in_price}
+        currency={options.studio_currency ?? options.currency}
         selectedPassId={fundingSelection?.kind === "buy_and_use" ? fundingSelection.passId : null}
         onClose={() => setDrawer(null)}
         onConfirm={(selection) => {
@@ -776,7 +918,7 @@ function BookClassContent() {
       <SportCardDrawer
         open={drawer === "sport-card"}
         options={options.sport_card_options}
-        currency={options.currency}
+        currency={options.studio_currency ?? options.currency}
         selectedSportCardId={
           fundingSelection?.kind === "sport_card" ? fundingSelection.studioSportCardId : null
         }

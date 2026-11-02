@@ -1,21 +1,13 @@
 "use client";
 
-import { X } from "lucide-react";
-
 import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
+import { TimePicker } from "@/components/common/TimePicker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +15,7 @@ import {
   InstructorPicker,
   type PickableInstructor,
 } from "../../schedule/components/InstructorPicker";
-import type { RoomOption } from "../types";
+import { ScheduleRoomField, type ScheduleRoomFieldProps } from "./ScheduleRoomField";
 
 export type EndDateMode = "endless" | "1month" | "custom";
 
@@ -37,7 +29,7 @@ const DAYS = [
   { key: "SU", label: "Nd" },
 ] as const;
 
-interface ScheduleRecurrenceFormProps {
+interface ScheduleRecurrenceFormProps extends ScheduleRoomFieldProps {
   solo?: boolean;
   // Template info (pinned card)
   templateTitle: string;
@@ -52,11 +44,6 @@ interface ScheduleRecurrenceFormProps {
   templateColor?: string | null;
   templateInstructor?: { id?: string | null; name: string; imageId?: string | null } | null;
   onChangeTemplate?: () => void; // if undefined → hide the "Zmień" button
-
-  // Rooms (shown when rooms.length > 0)
-  rooms: RoomOption[];
-  roomId: string;
-  onRoomChange: (id: string) => void;
 
   // Instructors
   instructors: PickableInstructor[];
@@ -110,6 +97,9 @@ export function ScheduleRecurrenceForm({
   rooms,
   roomId,
   onRoomChange,
+  roomsLoading,
+  roomsError,
+  retryRooms,
   instructors,
   instructorId,
   onInstructorChange,
@@ -297,41 +287,18 @@ export function ScheduleRecurrenceForm({
       {/* Godzina + Sala side by side (S4) */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label>Godzina</Label>
-          <Input
-            type="time"
-            value={startTime}
-            onChange={(e) => onStartTimeChange(e.target.value)}
-          />
+          <Label htmlFor="schedule-start-time">Godzina</Label>
+          <TimePicker id="schedule-start-time" value={startTime} onChange={onStartTimeChange} />
         </div>
-        {rooms.length > 0 && (
-          <div>
-            <Label>Sala</Label>
-            <div className="flex gap-1.5">
-              <Select value={roomId || undefined} onValueChange={onRoomChange}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Wybierz salę" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {roomId && (
-                <button
-                  type="button"
-                  onClick={() => onRoomChange("")}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] border-[1.5px] border-input text-gray-400 hover:text-gray-600"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <ScheduleRoomField
+          solo={solo}
+          rooms={rooms}
+          roomId={roomId}
+          onRoomChange={onRoomChange}
+          roomsLoading={roomsLoading}
+          roomsError={roomsError}
+          retryRooms={retryRooms}
+        />
       </div>
 
       {!solo && (

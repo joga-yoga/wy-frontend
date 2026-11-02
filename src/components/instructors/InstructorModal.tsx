@@ -76,6 +76,8 @@ interface InstructorModalProps {
   existingInstructors?: Instructor[];
   availableInstructors?: Instructor[];
   selectedInstructorIds?: string[];
+  returnFocusRef?: React.RefObject<HTMLButtonElement | null>;
+  usage?: "event" | "template";
 }
 
 export function InstructorModal({
@@ -87,6 +89,8 @@ export function InstructorModal({
   existingInstructors,
   availableInstructors = [],
   selectedInstructorIds = [],
+  returnFocusRef,
+  usage = "event",
 }: InstructorModalProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -403,7 +407,9 @@ export function InstructorModal({
     };
     const hint =
       resolvedPreview.resolution_type === "existing_instructor"
-        ? "Istniejący profil instruktora zostanie dodany do wydarzenia."
+        ? usage === "template"
+          ? "Profil instruktora wybrany."
+          : "Istniejący profil instruktora zostanie dodany do wydarzenia."
         : "Instruktor dodany.";
     toast({ description: hint });
     onInstructorSaved(instructor);
@@ -453,7 +459,10 @@ export function InstructorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal>
-      <DialogContent className="flex flex-col w-full h-full md:h-auto rounded-none md:rounded-lg overflow-y-scroll max-h-screen max-w-full md:max-w-[425px]">
+      <DialogContent
+        finalFocus={returnFocusRef}
+        className="flex flex-col w-full h-full md:h-auto rounded-none md:rounded-lg overflow-y-scroll max-h-screen max-w-full md:max-w-[425px]"
+      >
         <DialogHeader>
           <DialogTitle>{isCreateMode ? "Dodaj instruktora" : "Edytuj instruktora"}</DialogTitle>
           <DialogDescription>
@@ -532,7 +541,9 @@ export function InstructorModal({
                       htmlFor="isMe"
                       className="cursor-pointer text-sm font-medium pointer-events-none"
                     >
-                      To ja — jestem instruktorem tego wydarzenia
+                      {usage === "template"
+                        ? "To ja — prowadzę zajęcia osobiście"
+                        : "To ja — jestem instruktorem tego wydarzenia"}
                     </Label>
                   </button>
                 )}
@@ -551,7 +562,9 @@ export function InstructorModal({
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Sprawdzimy e-mail i dodamy instruktora — pojawi się na wydarzeniu od razu.
+                    {usage === "template"
+                      ? "Sprawdzimy e-mail i odświeżymy listę dostępnych instruktorów."
+                      : "Sprawdzimy e-mail i dodamy instruktora — pojawi się na wydarzeniu od razu."}
                   </p>
                 </div>
 
@@ -594,8 +607,9 @@ export function InstructorModal({
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Ten instruktor jest już na joga.yoga. Dodamy istniejący profil do wydarzenia bez
-                  wysyłania nowego zaproszenia.
+                  {usage === "template"
+                    ? "Ten instruktor jest już na joga.yoga. Sprawdzimy jego dostępność na Twojej liście."
+                    : "Ten instruktor jest już na joga.yoga. Dodamy istniejący profil do wydarzenia bez wysyłania nowego zaproszenia."}
                 </p>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button
@@ -609,7 +623,7 @@ export function InstructorModal({
                     ← Zmień e-mail
                   </Button>
                   <Button type="button" onClick={handleConnect}>
-                    Połącz z wydarzeniem
+                    {usage === "template" ? "Wybierz instruktora" : "Połącz z wydarzeniem"}
                   </Button>
                 </DialogFooter>
               </div>
@@ -619,9 +633,11 @@ export function InstructorModal({
             {createStep === "details" && (
               <form onSubmit={detailsForm.handleSubmit(onDetailsSubmit)} className="space-y-4 py-2">
                 <p className="text-sm text-muted-foreground">
-                  {resolvedPreview?.resolution_type === "existing_user"
-                    ? "Wyślemy e-mail z prośbą o przejęcie profilu instruktora. Instruktor pojawi się na wydarzeniu od razu."
-                    : "Wyślemy zaproszenie do dołączenia i przejęcia profilu instruktora. Instruktor pojawi się na wydarzeniu od razu."}
+                  {usage === "template"
+                    ? `Uzupełnij podstawowe dane. Status profilu: ${CLAIM_STATUS_LABEL[resolvedPreview?.claim_status ?? ""] ?? "—"}.`
+                    : resolvedPreview?.resolution_type === "existing_user"
+                      ? "Wyślemy e-mail z prośbą o przejęcie profilu instruktora. Instruktor pojawi się na wydarzeniu od razu."
+                      : "Wyślemy zaproszenie do dołączenia i przejęcia profilu instruktora. Instruktor pojawi się na wydarzeniu od razu."}
                 </p>
                 <div className="space-y-1">
                   <Label htmlFor="details-name">Imię i nazwisko *</Label>

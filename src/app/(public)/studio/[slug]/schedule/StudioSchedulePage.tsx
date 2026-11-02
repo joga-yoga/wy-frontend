@@ -370,6 +370,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
       )}
 
       <div
+        data-toast-anchor=""
         className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between px-4"
         style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
       >

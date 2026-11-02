@@ -47,6 +47,7 @@ export type InstructorHighlightViewModel = {
   id: string;
   kind: InstructorHighlightKind;
   label: string;
+  additionalCount?: number;
 };
 
 export type InstructorProfileSection =
@@ -165,7 +166,12 @@ function buildHighlights({
     .join(", ");
 
   if (primaryCertificate) {
-    highlights.push({ id: "certificate", kind: "certificate", label: primaryCertificate });
+    highlights.push({
+      id: "certificate",
+      kind: "certificate",
+      label: primaryCertificate,
+      additionalCount: certificates.length - 1,
+    });
   }
   if (primaryLocation) {
     highlights.push({ id: "location", kind: "location", label: primaryLocation });

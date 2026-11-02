@@ -15,11 +15,12 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
+import { SportCardImage } from "@/components/booking/SportCardImage";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SocialLinksField } from "@/components/common/SocialLinksField";
 import { WyImage } from "@/components/custom/WyImage";
@@ -31,8 +32,7 @@ import {
   perEntry,
 } from "@/components/page-contents/studio/pricingHelpers";
 import { PhoneVerificationDialog } from "@/components/partner/PhoneVerificationDialog";
-import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
-import { Badge } from "@/components/ui/badge";
+import type { StudioCandidate, StudioIdentity } from "@/components/studio-cta/StudioDiscovery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,12 +42,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/context/AuthContext";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { amenityIcon } from "@/lib/amenityIcons";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
+import { sportCardImage } from "@/lib/sportCardImages";
+import {
+  readSetup,
+  removeSetup,
+  type SetupSession,
+  untouchedDraftValues,
+  writeSetup,
+} from "@/lib/studioSetup";
 import { cn } from "@/lib/utils";
 
 import { EventPhotosSection } from "../../../components/EventForm/components/EventPhotosSection";
@@ -55,6 +65,7 @@ import { EventHelpBarProvider } from "../../../components/EventForm/contexts/Eve
 import { PassModal } from "./PassModal";
 import { SportCardModal } from "./SportCardModal";
 import { StudioDashboardSidebar } from "./StudioDashboardSidebar";
+import { draftFormValues, type StudioDraftProfile } from "./studioDraftPrefill";
 import {
   buildStudioPayload,
   emptyStudioFormValues,
@@ -75,6 +86,7 @@ import type {
 
 interface StudioFormProps {
   routeId: string;
+  initialName?: string;
 }
 
 type SubmitIntent = "draft" | "publish";
@@ -135,17 +147,41 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function StudioForm({ routeId }: StudioFormProps) {
+export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
-  const { capabilities, refetch: refetchCapabilities } = usePartnerCapabilities();
-  const { confirmMode, dialog: modeDialog } = useBusinessModeConfirmation(
-    capabilities?.businessMode,
+  const params = useSearchParams();
+  const draftToken = params.get("draft");
+  const importJob = params.get("importJob");
+  const importBranch = params.get("importBranch");
+  const { user } = useAuth();
+  const ownerId = user?.id || "";
+  const [setupKey, setSetupKey] = useState(
+    params.get("setup") || draftToken || (routeId === "create" ? "" : routeId),
   );
+  const contextKey = `${ownerId}:${setupKey}:${routeId}`;
+  const [reviewInput, setReviewInput] = useState<SetupSession | null>(null);
+  const touchedFields = useRef(new Set<keyof StudioFormValues>());
+  const sourceIdentity = useRef<StudioIdentity | undefined>(undefined);
+  const operationKey = useRef("");
+  const [readyKey, setReadyKey] = useState<string | null>(null);
+  const restoredDirty = useRef<(keyof StudioFormValues)[]>([]);
+  const [identity, setIdentity] = useState<StudioIdentity | undefined>();
+  const [duplicateAck, setDuplicateAck] = useState<string | undefined>();
+  const [duplicateResult, setDuplicateResult] = useState<{
+    matches: StudioCandidate[];
+    fingerprint: string;
+    requires_choice?: boolean;
+  } | null>(null);
+  const [draftCity, setDraftCity] = useState("");
+  const [publicSource, setPublicSource] = useState<{ slug: string } | null>(null);
+  const [enrichment, setEnrichment] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { refetch: refetchCapabilities } = usePartnerCapabilities();
   const savingRef = useRef(false);
   const [isSavingBusiness, setIsSavingBusiness] = useState(false);
   const isCreateRoute = routeId === "create";
   const [studioId, setStudioId] = useState<string | null>(isCreateRoute ? null : routeId);
+  const pendingPublicClaim = !studioId && Boolean(publicSource);
   const [isLoading, setIsLoading] = useState(!isCreateRoute);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [currentIsPublic, setCurrentIsPublic] = useState(false);
@@ -166,6 +202,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
   // Pass modal
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [editingPass, setEditingPass] = useState<StudioPass | null>(null);
+  const [editingPassIndex, setEditingPassIndex] = useState<number | null>(null);
   // Sport card modal
   const [isSportCardModalOpen, setIsSportCardModalOpen] = useState(false);
   const [editingSportCard, setEditingSportCard] = useState<StudioSportCard | null>(null);
@@ -204,6 +241,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
     getValues,
     watch,
     trigger,
+    getFieldState,
     formState: { errors, isDirty, isSubmitting },
   } = useForm<StudioFormValues>({
     resolver,
@@ -222,9 +260,18 @@ export function StudioForm({ routeId }: StudioFormProps) {
       .catch(() => {});
   }, []);
 
-  // Reset on create mount
   useEffect(() => {
-    if (!isCreateRoute) return;
+    if (setupKey) return;
+    const key = crypto.randomUUID();
+    setSetupKey(key);
+    const query = new URLSearchParams(params.toString());
+    query.set("setup", key);
+    router.replace(`/account/partner/studio/create?${query}`);
+  }, [setupKey, params, router]);
+
+  // Restore only after the session/account is known, before persistence is enabled.
+  useEffect(() => {
+    if (!isCreateRoute || !setupKey || !ownerId) return;
     setStudioId(null);
     setIsLoading(false);
     setLoadError(null);
@@ -236,12 +283,171 @@ export function StudioForm({ routeId }: StudioFormProps) {
     setPendingImages([]);
     setLocationQuery("");
     setLocationSuggestions([]);
-    reset(emptyStudioFormValues);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const saved = readSetup(setupKey, ownerId);
+    operationKey.current = saved?.operationKey || crypto.randomUUID();
+    restoredDirty.current = saved?.dirtyFields || [];
+    touchedFields.current = new Set(restoredDirty.current);
+    setIdentity(saved?.identity);
+    setDuplicateAck(saved?.duplicateAck);
+    setDraftCity(saved?.city || "");
+    reset(saved?.values || { ...emptyStudioFormValues, name: initialName });
+    setReadyKey(contextKey);
+  }, [isCreateRoute, setupKey, ownerId, contextKey, initialName, reset]);
+
+  useEffect(() => {
+    if (readyKey !== contextKey || !ownerId || !setupKey) return;
+    writeSetup(
+      setupKey,
+      {
+        operationKey: operationKey.current,
+        studioId: studioId || undefined,
+        values,
+        identity,
+        duplicateAck,
+        city: draftCity,
+        dirtyFields: [
+          ...new Set([
+            ...restoredDirty.current,
+            ...touchedFields.current,
+            ...(Object.keys(values) as (keyof StudioFormValues)[]).filter(
+              (field) => getFieldState(field).isDirty,
+            ),
+          ]),
+        ],
+      },
+      ownerId,
+    );
+  }, [
+    values,
+    identity,
+    duplicateAck,
+    draftCity,
+    studioId,
+    setupKey,
+    ownerId,
+    readyKey,
+    contextKey,
+    getFieldState,
+  ]);
+
+  useEffect(() => {
+    if (!draftToken || !isCreateRoute || readyKey !== contextKey || studioId) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    async function load() {
+      try {
+        const { data } = await axiosInstance.get<{
+          profile: StudioDraftProfile;
+          identity?: StudioIdentity;
+          enrichment_state: string | null;
+          source_public?: boolean;
+          source_slug?: string | null;
+        }>(`/studio-setup/drafts/${draftToken}`);
+        if (!active) return;
+        sourceIdentity.current = data.identity;
+        setIdentity((chosen) => chosen || data.identity);
+        setDraftCity(data.profile.city || "");
+        setEnrichment(data.enrichment_state);
+        setPublicSource(data.source_public && data.source_slug ? { slug: data.source_slug } : null);
+        const incoming = draftFormValues(data.profile);
+        if (data.source_public && data.source_slug)
+          setValue("slug", data.source_slug, { shouldDirty: false });
+        const protectedFields = new Set([
+          ...touchedFields.current,
+          ...restoredDirty.current,
+          ...(Object.keys(getValues()).filter(
+            (field) => getFieldState(field as keyof StudioFormValues).isDirty,
+          ) as (keyof StudioFormValues)[]),
+        ]);
+        const focused = document.activeElement;
+        const activeField =
+          focused?.getAttribute("name") ||
+          focused?.closest("[data-setup-field]")?.getAttribute("data-setup-field") ||
+          focused?.id;
+        const available = untouchedDraftValues(incoming, protectedFields, activeField);
+        for (const field of Object.keys(available) as (keyof StudioFormValues)[]) {
+          setValue(field, available[field] as StudioFormValues[typeof field], {
+            shouldDirty: false,
+          });
+        }
+        if (data.enrichment_state === "pending") timer = setTimeout(() => void load(), 2500);
+      } catch {
+        if (active) setEnrichment("failed");
+      }
+    }
+    void load();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    draftToken,
+    isCreateRoute,
+    getFieldState,
+    getValues,
+    setValue,
+    initialName,
+    readyKey,
+    contextKey,
+    studioId,
+  ]);
+
+  // Surface text suggestions while editing; final writes recheck under the same lock.
+  useEffect(() => {
+    const city = values.location?.city || draftCity;
+    if (identity || !values.name?.trim() || !(values.address || city)) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      axiosInstance
+        .post<{
+          matches: StudioCandidate[];
+          fingerprint: string;
+          requires_choice: boolean;
+        }>(
+          "/studio-setup/duplicates",
+          {
+            name: values.name,
+            address: values.address,
+            city,
+            latitude: values.location?.latitude,
+            longitude: values.location?.longitude,
+            place_id: values.location?.google_place_id,
+            exclude_studio_id: studioId,
+          },
+          { signal: controller.signal },
+        )
+        .then(({ data }) => {
+          if (!controller.signal.aborted) {
+            setDuplicateResult(
+              data.requires_choice && data.fingerprint !== duplicateAck ? data : null,
+            );
+          }
+        })
+        .catch(() => {
+          /* Final save remains authoritative if suggestions are unavailable. */
+        });
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [
+    values.name,
+    values.address,
+    values.location?.city,
+    values.location?.latitude,
+    values.location?.longitude,
+    values.location?.google_place_id,
+    draftCity,
+    studioId,
+    identity,
+    duplicateAck,
+  ]);
 
   // Load existing studio
   useEffect(() => {
-    if (!studioId) return;
+    if (!studioId || !ownerId) return;
+    let active = true;
     setIsLoading(true);
     setLoadError(null);
     axiosInstance
@@ -261,13 +467,25 @@ export function StudioForm({ routeId }: StudioFormProps) {
             }
           } catch {}
         }
-        reset(formValues);
+        if (!active) return;
+        const saved = readSetup(setupKey, ownerId);
+        const sameStudio = saved?.studioId === studioId;
+        operationKey.current = sameStudio ? saved.operationKey : crypto.randomUUID();
+        restoredDirty.current = sameStudio ? saved.dirtyFields || [] : [];
+        touchedFields.current = new Set(restoredDirty.current);
+        reset(sameStudio && saved.values ? saved.values : formValues);
+        if (params.get("reviewSetup"))
+          setReviewInput(readSetup(params.get("reviewSetup")!, ownerId));
+        setReadyKey(contextKey);
       })
       .catch(() => {
         setLoadError("Nie udało się załadować studia.");
       })
       .finally(() => setIsLoading(false));
-  }, [studioId, reset]);
+    return () => {
+      active = false;
+    };
+  }, [studioId, reset, ownerId, setupKey, contextKey, params]);
 
   // Unsaved changes warning
   useEffect(() => {
@@ -293,6 +511,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
     value: StudioFormValues[K],
     shouldValidate = false,
   ) {
+    touchedFields.current.add(name);
     setValue(name as any, value as any, { shouldDirty: true, shouldValidate });
   }
 
@@ -317,7 +536,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
     savingRef.current = true;
     setIsSavingBusiness(true);
     try {
-      if (!studioId && !(await confirmMode("studio"))) return;
       await saveValidatedStudio(intent);
     } finally {
       savingRef.current = false;
@@ -331,14 +549,40 @@ export function StudioForm({ routeId }: StudioFormProps) {
     if (intent === "publish") payload.is_listed = true;
     try {
       let response;
-      if (studioId) {
-        response = await axiosInstance.put<StudioApiResponse>(`/studios/${studioId}`, payload);
+      if (studioId && !identity) {
+        response = await axiosInstance.put<StudioApiResponse>(`/studios/${studioId}`, {
+          ...payload,
+          duplicate_ack: duplicateAck,
+        });
       } else {
-        response = await axiosInstance.post<StudioApiResponse>("/studios", payload);
+        response = await axiosInstance.post<StudioApiResponse>("/studio-setup/save", {
+          operation_key: operationKey.current || (operationKey.current = crypto.randomUUID()),
+          studio_id: studioId,
+          profile: payload,
+          draft_token:
+            !identity ||
+            !sourceIdentity.current ||
+            (identity.kind === sourceIdentity.current.kind &&
+              identity.id === sourceIdentity.current.id)
+              ? draftToken
+              : null,
+          identity,
+          duplicate_ack: duplicateAck,
+          city: values.location?.city || draftCity,
+        });
+        removeSetup(setupKey, ownerId);
+        setReadyKey(null);
         refetchCapabilities();
+        setIdentity(undefined);
+        operationKey.current = "";
         setStudioId(response.data.id);
-        router.replace(`/account/partner/studio/${response.data.id}/edit`);
+        router.replace(
+          `/account/partner/studio/${response.data.id}/edit${importJob ? `?${new URLSearchParams({ importJob, ...(importBranch ? { importBranch } : {}) })}` : ""}`,
+        );
       }
+      removeSetup(setupKey, ownerId);
+      touchedFields.current.clear();
+      restoredDirty.current = [];
       setCurrentIsPublic(response.data.is_listed !== false);
       reset({
         ...values,
@@ -351,7 +595,14 @@ export function StudioForm({ routeId }: StudioFormProps) {
       router.refresh();
     } catch (error: any) {
       const detail = error.response?.data?.detail;
-      if (!studioId && detail?.error_code === "PHONE_VERIFICATION_REQUIRED") {
+      if (detail?.code === "studio_match_required") {
+        setDuplicateResult(detail);
+        return;
+      }
+      if (
+        detail?.error_code === "PHONE_VERIFICATION_REQUIRED" ||
+        detail?.code === "phone_verification_required"
+      ) {
         setIsPhoneVerificationOpen(true);
         return;
       }
@@ -548,7 +799,18 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <form className="min-h-screen bg-background" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="min-h-screen bg-background"
+        onSubmit={(e) => e.preventDefault()}
+        onChangeCapture={(event) => {
+          const target = event.target as HTMLElement;
+          const field =
+            target.getAttribute("name") ||
+            target.closest("[data-setup-field]")?.getAttribute("data-setup-field");
+          if (field && field in getValues())
+            touchedFields.current.add(field as keyof StudioFormValues);
+        }}
+      >
         {migrationPending && (
           <div className="mx-auto max-w-5xl rounded-lg border bg-amber-50 p-4 text-sm">
             To prywatny szkic z importu. Zapisz zmiany, a następnie wróć do{" "}
@@ -563,6 +825,90 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
           <div className="flex-1 min-w-0">
             <div className="px-4 md:px-8 mx-auto max-w-[600px] pb-20">
+              {reviewInput?.values && (
+                <div className="my-4 rounded border p-3">
+                  <p>
+                    Zachowano niezapisane dane z poprzedniego formularza. Możesz zastosować swoje
+                    zmiany i sprawdzić je przed zapisem.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      for (const field of reviewInput.dirtyFields || []) {
+                        setDirtyValue(field, reviewInput.values![field]);
+                      }
+                      setReviewInput(null);
+                    }}
+                  >
+                    Zastosuj moje zmiany
+                  </Button>
+                </div>
+              )}
+              <div className="my-4 space-y-3">
+                {importJob && (
+                  <Link
+                    className="text-sm underline"
+                    href={`/account/partner/studio/import/fitssey${importJob ? `/${encodeURIComponent(importJob)}` : ""}?${new URLSearchParams({ ...(studioId ? { studioId, setup: setupKey } : { setup: setupKey, ...(draftToken ? { draft: draftToken } : {}) }), ...(importBranch ? { importBranch } : {}) }).toString()}`}
+                  >
+                    Wróć do importu
+                  </Link>
+                )}
+                {enrichment === "pending" && (
+                  <p role="status">Uzupełniamy dane studia. Możesz już je edytować.</p>
+                )}
+                {enrichment === "failed" && (
+                  <p role="status">Nie udało się uzupełnić danych. Możesz zrobić to ręcznie.</p>
+                )}
+                {duplicateResult && (
+                  <section className="rounded border p-3" aria-label="Czy to Twoje studio?">
+                    <h2>Czy to Twoje studio?</h2>
+                    {duplicateResult.matches.length === 0 && (
+                      <p>
+                        Sprawdź nazwę i adres. Jeśli tworzysz osobną lokalizację, potwierdź wybór
+                        poniżej.
+                      </p>
+                    )}
+                    {duplicateResult.matches.map((item) => (
+                      <div key={`${item.kind}:${item.id}`} className="my-2">
+                        <p>
+                          {item.name} · {item.city} · {item.address}
+                        </p>
+                        {item.action === "managed" ? (
+                          <p>Profil jest już zarządzany</p>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (item.action === "edit") {
+                                router.push(
+                                  `/account/partner/studio/${item.id}/edit?reviewSetup=${encodeURIComponent(setupKey)}`,
+                                );
+                                return;
+                              }
+                              setIdentity({ kind: item.kind, id: item.id });
+                              setDuplicateResult(null);
+                            }}
+                          >
+                            To moje studio
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setDuplicateAck(duplicateResult.fingerprint);
+                        setDuplicateResult(null);
+                      }}
+                    >
+                      To inne studio
+                    </Button>
+                  </section>
+                )}
+              </div>
               {/* ── Section 1: Podstawy ── */}
               <Section id="studio-basics-section" title="Podstawy" first>
                 <div className="space-y-4">
@@ -614,6 +960,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                     </p>
                     <Input
                       id="slug"
+                      readOnly={pendingPublicClaim}
                       value={values.slug}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => {
                         slugManuallyEditedRef.current = true;
@@ -664,44 +1011,50 @@ export function StudioForm({ routeId }: StudioFormProps) {
                   </div>
 
                   {/* Widoczność */}
-                  <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {values.is_listed ? "Strona publiczna" : "Strona ukryta"}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {values.is_listed
-                          ? "Studio jest widoczne w wynikach wyszukiwania Google"
-                          : "Studio nie jest indeksowane przez wyszukiwarki"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={migrationPending}
-                      onClick={() => setDirtyValue("is_listed", !values.is_listed)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        values.is_listed ? "bg-b2b-green-text" : "bg-gray-200"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                          values.is_listed ? "translate-x-5" : "translate-x-0"
+                  {!pendingPublicClaim && (
+                    <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {values.is_listed ? "Strona publiczna" : "Strona ukryta"}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {values.is_listed
+                            ? "Studio jest widoczne w wynikach wyszukiwania Google"
+                            : "Studio nie jest indeksowane przez wyszukiwarki"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={migrationPending}
+                        onClick={() => setDirtyValue("is_listed", !values.is_listed)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                          values.is_listed ? "bg-b2b-green-text" : "bg-gray-200"
                         }`}
-                      />
-                    </button>
-                  </div>
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                            values.is_listed ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </Section>
 
               {/* ── Section 2: Lokalizacja ── */}
               <Section id="studio-location-section" title="Lokalizacja">
                 <div className="space-y-4">
-                  <div data-error-field="location_id" className="relative">
+                  <div
+                    data-setup-field="address"
+                    data-error-field="location_id"
+                    className="relative"
+                  >
                     <label className="mb-1 block text-base font-semibold">Adres</label>
                     <p className="mb-2 text-sm text-muted-foreground">
                       Adres studia wyświetlany na profilu z mapą — pomaga uczestnikom Was znaleźć
                     </p>
-                    {values.location && !isEditingLocation ? (
+                    {values.location?.id && !isEditingLocation ? (
                       <div className="flex items-center gap-2 rounded-md border px-3 py-3">
                         <MapPin className="size-4 shrink-0 text-muted-foreground" />
                         <span className="min-w-0 flex-1 text-sm">
@@ -725,10 +1078,12 @@ export function StudioForm({ routeId }: StudioFormProps) {
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
-                            value={locationQuery}
+                            name="address"
+                            value={isEditingLocation ? locationQuery : values.address || ""}
                             onChange={(e) => {
                               const val = e.target.value;
                               setLocationQuery(val);
+                              if (!isEditingLocation) setDirtyValue("address", val);
                               setIsSearchingLocation(true);
                               if (locationDebounceRef.current)
                                 clearTimeout(locationDebounceRef.current);
@@ -844,10 +1199,12 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       Wklej linki do Instagrama, Facebooka i innych profili studia — pojawią się
                       jako ikony na publicznym profilu
                     </p>
-                    <SocialLinksField
-                      value={values.social_links ?? []}
-                      onChange={(next) => setDirtyValue("social_links", next)}
-                    />
+                    <div data-setup-field="social_links">
+                      <SocialLinksField
+                        value={values.social_links ?? []}
+                        onChange={(next) => setDirtyValue("social_links", next)}
+                      />
+                    </div>
                   </div>
 
                   {/* Udogodnienia (amenities) toggle chips */}
@@ -861,19 +1218,14 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       {allAmenities.map((amenity) => {
                         const Icon = amenityIcon(amenity.icon_id);
                         return (
-                          <Badge
+                          <SelectionChip
                             key={amenity.id}
-                            variant={
-                              (values.amenity_ids ?? []).includes(amenity.id)
-                                ? "default"
-                                : "outline"
-                            }
-                            className="cursor-pointer gap-1.5"
+                            selected={(values.amenity_ids ?? []).includes(amenity.id)}
+                            icon={<Icon />}
                             onClick={() => toggleAmenity(amenity.id)}
                           >
-                            <Icon className="h-3.5 w-3.5" />
                             {amenity.name}
-                          </Badge>
+                          </SelectionChip>
                         );
                       })}
                     </div>
@@ -905,9 +1257,16 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       />
                       <Select
                         value={values.currency}
-                        onValueChange={(value) => setDirtyValue("currency", value, true)}
+                        onValueChange={(value) => {
+                          // The Select's hidden native input can emit an empty reset while
+                          // restoring the form. No currency option represents that reset.
+                          if (value) setDirtyValue("currency", value, true);
+                        }}
                       >
-                        <SelectTrigger className="h-12 rounded-md text-base">
+                        <SelectTrigger
+                          data-setup-field="currency"
+                          className="h-12 rounded-md text-base"
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -967,12 +1326,14 @@ export function StudioForm({ routeId }: StudioFormProps) {
                               className="flex min-w-0 flex-1 items-center gap-3 text-left"
                               onClick={() => {
                                 setEditingPass(pass);
+                                setEditingPassIndex(index);
                                 setIsPassModalOpen(true);
                               }}
                             >
                               <LightPassTile
                                 sessionCount={sessionCount}
-                                durationDays={durationDays}
+                                durationDays={pass.duration_unknown ? 0 : durationDays}
+                                sessionCountUnknown={pass.session_count_unknown}
                                 size={48}
                               />
                               <span className="min-w-0 flex-1">
@@ -1014,6 +1375,7 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       className="mt-2 flex min-h-10 items-center gap-3 text-base font-medium text-brand-blue"
                       onClick={() => {
                         setEditingPass(null);
+                        setEditingPassIndex(null);
                         setIsPassModalOpen(true);
                       }}
                     >
@@ -1025,16 +1387,17 @@ export function StudioForm({ routeId }: StudioFormProps) {
                       onClose={() => setIsPassModalOpen(false)}
                       onSaved={(pass) => {
                         const current = values.passes ?? [];
-                        if (editingPass?.id) {
+                        if (editingPassIndex !== null) {
                           setDirtyValue(
                             "passes",
-                            current.map((p) => (p.id === editingPass.id ? pass : p)),
+                            current.map((p, index) => (index === editingPassIndex ? pass : p)),
                           );
                         } else {
                           setDirtyValue("passes", [...current, pass]);
                         }
                       }}
                       studioId={studioId}
+                      studioName={values.name}
                       dropInPrice={
                         values.drop_in_price !== "" ? Number(values.drop_in_price) : null
                       }
@@ -1076,9 +1439,17 @@ export function StudioForm({ routeId }: StudioFormProps) {
                                 setIsSportCardModalOpen(true);
                               }}
                             >
-                              {sc.sport_card?.photo || sc.photo ? (
-                                <WyImage
-                                  src={(sc.sport_card?.photo || sc.photo)!}
+                              {sportCardImage(
+                                sc.sport_card?.slug,
+                                sc.sport_card?.photo || sc.photo,
+                              ) ? (
+                                <SportCardImage
+                                  src={
+                                    sportCardImage(
+                                      sc.sport_card?.slug,
+                                      sc.sport_card?.photo || sc.photo,
+                                    )!
+                                  }
                                   alt={sc.sport_card?.name ?? sc.name ?? ""}
                                   width={80}
                                   height={50}
@@ -1187,12 +1558,20 @@ export function StudioForm({ routeId }: StudioFormProps) {
 
         <DashboardFooter
           title={studioId ? "Edytuj studio" : "Nowe studio"}
-          viewPublicHref={!migrationPending && values.slug ? `/studio/${values.slug}` : undefined}
-          viewPublicLabel="Zobacz stronę publiczną"
+          viewPublicHref={
+            pendingPublicClaim
+              ? `/studio/${publicSource!.slug}`
+              : !migrationPending && values.slug
+                ? `/studio/${values.slug}`
+                : undefined
+          }
+          viewPublicLabel="Zobacz profil"
           viewPublicLabelShort="Zobacz"
           viewPublicIcon={<ExternalLink className="size-4" />}
-          showPublishButton={!migrationPending}
-          isPublished={currentIsPublic}
+          showPublishButton={
+            !migrationPending && !pendingPublicClaim && (!draftToken || enrichment !== null)
+          }
+          isPublished={currentIsPublic || pendingPublicClaim}
           isPublishing={isSubmitting || isSavingBusiness}
           onPublishToggle={() => persist("publish")}
           publishButtonLabel="Opublikuj studio"
@@ -1209,7 +1588,6 @@ export function StudioForm({ routeId }: StudioFormProps) {
         />
       </form>
 
-      {modeDialog}
       <PhoneVerificationDialog
         open={isPhoneVerificationOpen}
         onOpenChange={setIsPhoneVerificationOpen}

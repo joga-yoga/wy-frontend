@@ -26,6 +26,8 @@ export interface PassDetail {
   photo?: string | null;
   duration_days?: number | null;
   session_count?: number | null;
+  duration_unknown?: boolean | null;
+  session_count_unknown?: boolean | null;
   studio: PassDetailStudio;
 }
 

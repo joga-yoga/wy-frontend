@@ -106,7 +106,9 @@ export default function MyBookingsPage() {
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b bg-background px-4">
         <button
-          onClick={() => router.back()}
+          // History may contain this list's own detail screen. Return to the parent
+          // without pushing another entry that can send the user around the same loop.
+          onClick={() => router.replace("/account")}
           aria-label="Wróć"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
         >

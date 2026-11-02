@@ -114,7 +114,10 @@ function getBackHref(
     return "/account/partner/class-templates";
   if (pathname.startsWith("/account/partner/class-templates/") && pathname.endsWith("/edit"))
     return "/account/partner/class-templates";
-  if (pathname === "/account/partner/studio/create") return "/account/partner/menu";
+  if (pathname === "/account/partner/studio/create")
+    return searchParams.get("step") === "manual"
+      ? "/account/partner/studio/create"
+      : "/account/partner/menu";
   if (pathname.startsWith("/account/partner/studio/") && pathname.endsWith("/edit"))
     return "/account/partner/menu";
   if (pathname.startsWith("/account/partner/studio/") && pathname.endsWith("/payments"))

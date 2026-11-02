@@ -7,14 +7,22 @@ import { importsApi } from "./api";
 import type { ImportJob } from "./types";
 export function SavedImports() {
   const [jobs, setJobs] = useState<ImportJob[]>([]);
-  const [enabled, setEnabled] = useState(false);
   useEffect(() => {
     let active = true;
-    Promise.all([importsApi.list(), importsApi.config()])
-      .then(([list, config]) => {
+    importsApi
+      .list()
+      .then((list) => {
         if (active) {
-          setJobs(list.filter((job) => !["expired", "cancelled"].includes(job.state)));
-          setEnabled(config.enabled);
+          setJobs(
+            list.filter(
+              (job) =>
+                !["expired", "cancelled"].includes(job.state) &&
+                (!job.transfer_closed ||
+                  job.state === "importing" ||
+                  ["apply", "asset"].includes(job.stage) ||
+                  job.imported_count > 0),
+            ),
+          );
         }
       })
       .catch(() => {});
@@ -22,7 +30,7 @@ export function SavedImports() {
       active = false;
     };
   }, []);
-  if (!enabled && !jobs.length) return null;
+  if (!jobs.length) return null;
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-xs font-semibold uppercase text-gray-400">Przenoszenie studia</h2>
@@ -49,14 +57,6 @@ export function SavedImports() {
             <ChevronRight size={16} />
           </Link>
         ))}
-        {enabled && (
-          <Link
-            href="/account/partner/studio/import/fitssey"
-            className="block p-4 text-sm font-medium text-brand-green-700"
-          >
-            Przenieś studio z Fitssey →
-          </Link>
-        )}
       </div>
     </section>
   );

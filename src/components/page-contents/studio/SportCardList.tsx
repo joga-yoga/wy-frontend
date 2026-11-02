@@ -3,8 +3,8 @@
 import { CreditCard, X } from "lucide-react";
 import { useState } from "react";
 
+import { SportCardImage } from "@/components/booking/SportCardImage";
 import { SportCardLogo } from "@/components/booking/SportCardLogo";
-import { WyImage } from "@/components/custom/WyImage";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import type { StudioSportCardAcceptance } from "@/types/studio";
 
@@ -103,7 +103,7 @@ export function SportCardList({
             </h2>
             {selectedPhoto ? (
               <div className="mb-4 overflow-hidden rounded-xl">
-                <WyImage
+                <SportCardImage
                   src={selectedPhoto}
                   alt={selectedCard ? sportCardName(selectedCard) : ""}
                   width={560}

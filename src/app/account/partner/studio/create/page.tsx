@@ -1,25 +1,17 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 
-import Link from "next/link";
-
-import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
+import { StudioDiscovery } from "@/components/studio-cta/StudioDiscovery";
 
 import { StudioForm } from "../[studioId]/edit/StudioForm";
-import { ImportEntry } from "../import/fitssey/ImportEntry";
 
 export default function CreateStudioPage() {
-  const { capabilities, isLoading } = usePartnerCapabilities();
-  if (isLoading) return <p className="p-4">Ładowanie…</p>;
-  if (capabilities?.businessMode === "solo")
-    return (
-      <div className="p-4">
-        <Link href="/account/partner/menu">Przejdź do zarządzania własnymi zajęciami</Link>
-      </div>
-    );
+  const params = useSearchParams();
+  if (params.get("step") === "manual" || params.has("draft"))
+    return <StudioForm routeId="create" initialName={params.get("name") ?? ""} />;
   return (
-    <>
-      <ImportEntry />
-      <StudioForm routeId="create" />
-    </>
+    <div className="mx-auto max-w-2xl p-6">
+      <StudioDiscovery />
+    </div>
   );
 }

@@ -16,6 +16,7 @@ function record(kind: ImportRecord["kind"], key: string, data: ImportRecord["dat
     selected: true,
     issues: [],
     targets: {},
+    destination: {},
     asset_state: "none",
     image_id: null,
   };
@@ -23,6 +24,8 @@ function record(kind: ImportRecord["kind"], key: string, data: ImportRecord["dat
 function job(state: ImportJob["state"] = "review"): ImportJob {
   return {
     id: "fixture-job",
+    origin_studio_id: null,
+    transfer_closed: state === "completed",
     source_uuid: "fixture-source",
     state,
     stage: "review",
@@ -95,6 +98,7 @@ async function mock(page: Page, initial = job()) {
       else if (path === "/partner/me") json = { id: "fixture-partner", phone_verified: true };
       else if (path === "/partner/capabilities")
         json = {
+          business_mode: "studio",
           managed_studios: [],
           teaching_studios: [],
           has_events: false,
@@ -102,6 +106,8 @@ async function mock(page: Page, initial = job()) {
           landing_tab: "grafik",
         };
       else if (path === "/studio-migrations/config") json = { enabled: true };
+      else if (path === "/studio-migrations/transfer-offer")
+        json = { enabled: true, eligible: true };
       else if (path === "/studio-migrations" && method === "GET") json = [current];
       else if (path === "/studio-migrations" && method === "POST") {
         secrets.push(request.postDataJSON().api_key);
@@ -122,6 +128,7 @@ async function mock(page: Page, initial = job()) {
         const row = rows.find((row) => row.id === change.id)!;
         row.overrides = { ...row.overrides, ...change.overrides };
         if (change.selected !== undefined) row.selected = change.selected;
+        if (change.destination !== undefined) row.destination = change.destination;
         if (row.overrides.currency) row.issues = [];
         current = {
           ...current,
@@ -130,7 +137,12 @@ async function mock(page: Page, initial = job()) {
         };
         json = current;
       } else if (path.endsWith("/import")) {
-        current = { ...current, state: "completed", imported_count: current.selected_count };
+        current = {
+          ...current,
+          state: "completed",
+          transfer_closed: true,
+          imported_count: current.selected_count,
+        };
         branch.targets = {
           studio_id: "new-studio",
           slug: "studio-centrum",
@@ -212,7 +224,7 @@ test("connect, correct, reopen, import and explicitly publish without booking ac
 });
 
 for (const width of [375, 1440])
-  test(`review supports keyboard and has no overflow at ${width}px`, async ({ page }) => {
+  test(`review supports keyboard and has no overflow at ${width}px`, async ({ page }, testInfo) => {
     await mock(page);
     await page.setViewportSize({ width, height: 850 });
     await page.goto(`${base}/fixture-job`);
@@ -226,7 +238,10 @@ for (const width of [375, 1440])
     ).toBe(false);
     await page.getByRole("button", { name: "Grafik 1", exact: true }).click();
     await expect(page.getByText("Limit: 12", { exact: false })).toBeVisible();
-    await page.screenshot({ path: `/private/tmp/wy-fitssey-review-${width}.png`, fullPage: true });
+    await page.screenshot({
+      path: testInfo.outputPath(`wy-fitssey-review-${width}.png`),
+      fullPage: true,
+    });
     const checkbox = page.getByRole("checkbox", { name: "Przenieś: Hatha" });
     await checkbox.focus();
     await page.keyboard.press("Space");
@@ -307,4 +322,243 @@ test("partial image failure can be retried on the same completed job", async ({ 
   ).toBeVisible();
   expect(fixture.actions).toEqual(["retry-assets"]);
   expect(page.url()).toContain("fixture-job");
+});
+
+test("known destination is saved before import can start", async ({ page }) => {
+  await mock(page);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let selected: unknown;
+  await page.route("**/studio-migrations/fixture-job/selection", async (route) => {
+    selected = route.request().postDataJSON().records[0].destination;
+    await gate;
+    await route.fallback();
+  });
+  await page.goto(`${base}/fixture-job?studioId=new-studio`);
+  await expect.poll(() => selected).toEqual({ studio_id: "new-studio" });
+  await expect(page.getByRole("button", { name: "Sprawdź podsumowanie" })).toBeDisabled();
+  release();
+  await expect(page.getByRole("button", { name: "Sprawdź podsumowanie" })).toBeEnabled();
+});
+
+test("returning from source preview opens the editor with known source fields", async ({
+  page,
+}) => {
+  const fixture = await mock(page);
+  fixture.getJob().branches[0].destination = {
+    identity: { kind: "directory", id: "chosen-directory" },
+  };
+  await page.goto(`${base}/fixture-job`);
+  await page.getByRole("link", { name: "Wróć do edycji studia" }).click();
+  await expect(page.getByRole("textbox", { name: "Nazwa studia", exact: true })).toHaveValue(
+    "Studio Centrum",
+  );
+  await expect(page.getByPlaceholder("Wpisz adres, aby wyszukać...")).toHaveValue("Długa 1");
+  await page.getByRole("textbox", { name: "Nazwa studia", exact: true }).fill("My correction");
+  await page.getByRole("link", { name: "Wróć do importu", exact: true }).click();
+  await expect(page).toHaveURL((url) => url.pathname === `${base}/fixture-job`);
+  await expect
+    .poll(() => fixture.getJob().branches[0].destination?.profile)
+    .toMatchObject({ name: "My correction" });
+  expect(fixture.getJob().branches[0].destination?.identity).toEqual({
+    kind: "directory",
+    id: "chosen-directory",
+  });
+  await page.getByRole("link", { name: "Wróć do edycji studia" }).click();
+  await expect(page.getByRole("textbox", { name: "Nazwa studia", exact: true })).toHaveValue(
+    "My correction",
+  );
+});
+
+test("multiple branches return to separate editor sessions and only update the chosen branch", async ({
+  page,
+}) => {
+  const fixture = await mock(page);
+  const second = record("location", "branch2", {
+    name: "Studio Mokotów",
+    address: "Krótka 2",
+    city: "Warszawa",
+  });
+  fixture.rows.push(second);
+  fixture.getJob().branches.push(second);
+  fixture.getJob().counts.location = 2;
+  await page.goto(`${base}/fixture-job`);
+  await expect(page.getByRole("link", { name: "Wróć do edycji studia" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Edytuj studio: Studio Mokotów" }).click();
+  const name = page.getByRole("textbox", { name: "Nazwa studia", exact: true });
+  await expect(name).toHaveValue("Studio Mokotów");
+  await name.fill("Mokotów correction");
+  await page.getByRole("link", { name: "Wróć do importu", exact: true }).click();
+  await expect(page).toHaveURL(/fixture-job.*importBranch=branch2/);
+  await expect
+    .poll(() => second.destination?.profile)
+    .toMatchObject({ name: "Mokotów correction" });
+  expect(fixture.getJob().branches[0].destination).toEqual({});
+  await page.getByRole("link", { name: "Edytuj studio: Studio Centrum" }).click();
+  await expect(name).toHaveValue("Studio Centrum");
+  await page.getByRole("link", { name: "Wróć do importu", exact: true }).click();
+  await expect(page).toHaveURL(/fixture-job.*importBranch=branch1/);
+  await page.getByRole("link", { name: "Edytuj studio: Studio Mokotów" }).click();
+  await expect(name).toHaveValue("Mokotów correction");
+});
+
+test("existing configuration conflicts require an explicit separate-addition choice", async ({
+  page,
+}) => {
+  const fixture = await mock(page);
+  fixture.getJob().branches[0].issues = [];
+  await page.route("**/studio-migrations/fixture-job/import", async (route) => {
+    if (fixture.getJob().branches[0].destination?.add_separate_configuration)
+      return route.fallback();
+    return route.fulfill({
+      status: 409,
+      json: {
+        detail: {
+          code: "migration_configuration_conflict",
+          record_id: "branch1",
+          configuration: [{ kind: "pass", name: "Karnet" }],
+        },
+      },
+    });
+  });
+  await page.goto(`${base}/fixture-job?studioId=new-studio`);
+  await page.getByRole("button", { name: "Sprawdź podsumowanie" }).click();
+  await page.getByRole("checkbox", { name: "Sprawdzono wybór", exact: false }).check();
+  await page.getByRole("button", { name: "Rozpocznij import", exact: true }).click();
+  await expect(page.getByText("Definicja karnetu: Karnet")).toBeVisible();
+  expect(fixture.actions).toEqual([]);
+  await page.getByRole("button", { name: "Dodaj osobne pozycje" }).click();
+  await expect
+    .poll(() => fixture.getJob().branches[0].destination?.add_separate_configuration)
+    .toBe(true);
+  await page.getByRole("button", { name: "Sprawdź podsumowanie" }).click();
+  await page.getByRole("checkbox", { name: "Sprawdzono wybór", exact: false }).check();
+  await page.getByRole("button", { name: "Rozpocznij import", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Sprawdź studia", exact: true })).toBeVisible();
+  expect(fixture.actions).toEqual(["import"]);
+});
+
+test("import preview precedes SMS and verification resumes the same job and destination", async ({
+  page,
+}) => {
+  const fixture = await mock(page);
+  fixture.getJob().branches[0].issues = [];
+  fixture.getJob().branches[0].overrides = { name: "Reviewed owner name", currency: "PLN" };
+  let verified = false;
+  const requests: unknown[] = [];
+  await page.route("**/partner/send-verification-code", (route) => route.fulfill({ json: {} }));
+  await page.route("http://localhost:8000/partner", (route) => {
+    expect(route.request().postDataJSON().verification_code).toBe("123456");
+    verified = true;
+    return route.fulfill({ json: {} });
+  });
+  await page.route("**/studio-migrations/fixture-job/import", (route) => {
+    requests.push(route.request().postDataJSON());
+    if (!verified)
+      return route.fulfill({
+        status: 403,
+        json: { detail: { code: "phone_verification_required" } },
+      });
+    return route.fallback();
+  });
+  await page.goto(`${base}/fixture-job?studioId=new-studio`);
+  const phone = page.getByRole("dialog", { name: "Zweryfikuj numer telefonu" });
+  await expect(phone).toHaveCount(0);
+  await page.getByRole("button", { name: "Sprawdź podsumowanie" }).click();
+  await page.getByRole("checkbox", { name: "Sprawdzono wybór", exact: false }).check();
+  await page.getByRole("button", { name: "Rozpocznij import", exact: true }).click();
+  await phone.getByLabel("Numer telefonu *").fill("501234567");
+  await phone.getByRole("button", { name: "Wyślij kod SMS" }).click();
+  await phone.getByLabel("Kod weryfikacyjny *").fill("123456");
+  await phone.getByRole("button", { name: "Potwierdź kod" }).click();
+  await expect(page.getByRole("heading", { name: "Sprawdź studia", exact: true })).toBeVisible();
+  expect(requests).toHaveLength(2);
+  expect(requests[1]).toEqual(requests[0]);
+  expect(fixture.getJob().branches[0].destination).toEqual({ studio_id: "new-studio" });
+  expect(fixture.getJob().branches[0].overrides.name).toBe("Reviewed owner name");
+  expect(fixture.actions).toEqual(["import"]);
+});
+
+test("changing the catalogue destination keeps edits and uses the newly selected identity", async ({
+  page,
+}) => {
+  const fixture = await mock(page);
+  fixture.getJob().branches[0].destination = {
+    identity: { kind: "directory", id: "first-source" },
+  };
+  await page.route("**/studio-setup/search*", (route) =>
+    route.fulfill({
+      json: [
+        {
+          kind: "directory",
+          id: "second-source",
+          name: "Second source",
+          address: "Krótka 2",
+          city: "Warszawa",
+          action: "claim",
+        },
+      ],
+    }),
+  );
+  let saved: Record<string, unknown> | undefined;
+  await page.route("**/studio-setup/save", (route) => {
+    saved = route.request().postDataJSON();
+    return route.fulfill({
+      json: { id: "new-studio", name: "Owner correction", is_listed: false },
+    });
+  });
+  await page.goto(`${base}/fixture-job`);
+  await page.getByRole("link", { name: "Wróć do edycji studia" }).click();
+  const name = page.getByRole("textbox", { name: "Nazwa studia", exact: true });
+  await expect(name).toHaveValue("Studio Centrum");
+  await name.fill("Owner correction");
+  await page.getByRole("link", { name: "Wróć do importu", exact: true }).click();
+  await expect(page).toHaveURL(/fixture-job/);
+  await page.getByRole("button", { name: "Zmień", exact: true }).click();
+  await page.getByRole("textbox", { name: "Nazwa studia", exact: true }).fill("Second source");
+  await page.getByRole("button", { name: "To moje studio", exact: true }).click();
+  await expect
+    .poll(() => fixture.getJob().branches[0].destination?.identity)
+    .toEqual({ kind: "directory", id: "second-source" });
+  await page.getByRole("link", { name: "Wróć do edycji studia" }).click();
+  await expect(name).toHaveValue("Owner correction");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await expect.poll(() => saved?.identity).toEqual({ kind: "directory", id: "second-source" });
+  expect(saved?.profile).toMatchObject({ name: "Owner correction" });
+});
+
+test("explicit new destination survives reopening an import with an existing origin", async ({
+  page,
+}) => {
+  const fixture = await mock(page);
+  fixture.getJob().origin_studio_id = "new-studio";
+  await page.goto(`${base}/fixture-job?studioId=new-studio`);
+  await expect.poll(() => fixture.getJob().branches[0].destination?.studio_id).toBe("new-studio");
+  await page.getByRole("button", { name: "Zmień", exact: true }).click();
+  await page.getByRole("button", { name: "Dodaj inną lokalizację" }).click();
+  await expect.poll(() => fixture.getJob().branches[0].destination?.new_studio).toBe(true);
+  await page.reload();
+  await page.getByRole("link", { name: "Wróć do edycji studia" }).click();
+  await expect(page).toHaveURL(/\/studio\/create\?/);
+  await expect(page.getByRole("textbox", { name: "Nazwa studia", exact: true })).toHaveValue(
+    "Studio Centrum",
+  );
+  expect(fixture.getJob().branches[0].destination).toEqual({ new_studio: true });
+});
+
+test("disabled runtime keeps saved jobs readable and prevents a new connection", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route("**/studio-migrations/transfer-offer**", (route) =>
+    route.fulfill({ json: { enabled: false, eligible: true, visible: true } }),
+  );
+  await page.goto(base);
+  await expect(
+    page.getByText("Nowe importy są chwilowo niedostępne.", { exact: false }),
+  ).toBeVisible();
+  await expect(page.getByLabel("UUID konta Fitssey")).toHaveCount(0);
+  await expect(page.locator('a[href$="/fitssey/fixture-job"]')).toBeVisible();
 });

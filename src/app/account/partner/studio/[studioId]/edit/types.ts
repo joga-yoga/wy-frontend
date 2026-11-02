@@ -15,6 +15,8 @@ export interface StudioPass {
   photo?: string | null;
   duration_days?: number | string | null;
   session_count?: number | string | null;
+  duration_unknown?: boolean | null;
+  session_count_unknown?: boolean | null;
 }
 
 export interface SportCard {
@@ -123,6 +125,8 @@ export interface StudioApiResponse {
     photo?: string | null;
     duration_days?: number | null;
     session_count?: number | null;
+    duration_unknown?: boolean | null;
+    session_count_unknown?: boolean | null;
   }>;
   sport_card_acceptances: Array<{
     id: string;
@@ -169,6 +173,8 @@ export interface StudioPayload {
     photo?: string | null;
     duration_days?: number | null;
     session_count?: number | null;
+    duration_unknown?: boolean | null;
+    session_count_unknown?: boolean | null;
   }>;
   sport_card_acceptances?: Array<{
     id?: string | null;

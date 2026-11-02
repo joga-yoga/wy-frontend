@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectionChip } from "@/components/ui/selection-chip";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -653,13 +654,9 @@ export function CourseForm({ routeId }: CourseFormProps) {
                           {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((method) => {
                             const selected = values.balance_payment_methods.includes(method);
                             return (
-                              <button
-                                type="button"
+                              <SelectionChip
                                 key={method}
-                                className={cn(
-                                  "min-h-9 rounded-full border px-3 text-sm font-medium",
-                                  selected && "border-brand-green bg-muted text-black",
-                                )}
+                                selected={selected}
                                 onClick={() => {
                                   const next = selected
                                     ? values.balance_payment_methods.filter(
@@ -670,7 +667,7 @@ export function CourseForm({ routeId }: CourseFormProps) {
                                 }}
                               >
                                 {PAYMENT_METHOD_LABELS[method]}
-                              </button>
+                              </SelectionChip>
                             );
                           })}
                         </div>

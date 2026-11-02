@@ -24,6 +24,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
 import type { StudioPublic } from "@/types/studio";
 
+import { OtherStudioOffers } from "./OtherStudioOffers";
 import { hasPassPricing, PassList } from "./PassList";
 import {
   formatSneakDayHeader,
@@ -269,7 +270,8 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
 }
 
 function PricingSection({ studio }: { studio: StudioPublic }) {
-  if (!hasPassPricing(studio.passes, studio.drop_in_price)) return null;
+  if (!hasPassPricing(studio.passes, studio.drop_in_price) && !studio.other_offers?.length)
+    return null;
 
   return (
     <section id="pricing-section" className="mx-auto max-w-5xl px-4 py-5">
@@ -279,6 +281,7 @@ function PricingSection({ studio }: { studio: StudioPublic }) {
         dropInPrice={studio.drop_in_price}
         currency={studio.currency}
       />
+      <OtherStudioOffers offers={studio.other_offers ?? []} currency={studio.currency} />
     </section>
   );
 }
@@ -414,7 +417,10 @@ export function StudioPageContent({
       <LinksSection studio={studio} />
       <LocationSection studio={studio} />
       {bottomPrimaryAction && (
-        <section className="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">
+        <section
+          data-toast-anchor=""
+          className="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur"
+        >
           <div className="mx-auto max-w-5xl">
             <Button asChild className="h-12 w-full rounded-full text-base">
               <Link href={bottomPrimaryAction.href}>{bottomPrimaryAction.label}</Link>

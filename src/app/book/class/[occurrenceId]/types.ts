@@ -9,6 +9,7 @@ export interface ExistingPassOption {
 
 export interface SportCardOption {
   studio_sport_card_id: string;
+  slug?: string | null;
   name?: string | null;
   photo?: string | null;
   fee?: number | null;
@@ -37,7 +38,25 @@ export type OnlinePaymentMethod = "blik" | "card" | "wallet" | "transfer";
 /** What the customer picks, and all the API is sent: pay here, or pay at the studio. */
 export type PaymentMethod = "cash" | "online";
 
+export interface EntryTerms {
+  kind?: "drop_in" | "trial";
+  amount: number | null;
+  currency: string;
+  name: string;
+  conditions: string | null;
+  trial_enabled: boolean;
+}
+
 export interface BookingOptionsResponse {
+  entry_name?: string;
+  entry_conditions?: string | null;
+  trial_enabled?: boolean;
+  trial_available?: boolean;
+  existing_booking_id?: string | null;
+  entry_quote?: string;
+  studio_drop_in_price?: number | null;
+  studio_currency?: string | null;
+  drop_in_online_payment_methods?: OnlinePaymentMethod[];
   seat_available: boolean;
   drop_in_price?: number | null;
   currency?: string | null;
@@ -51,9 +70,10 @@ export interface BookingOptionsResponse {
   accepts_cash: boolean;
 }
 
-export type FundingType = "drop_in" | "use_pass" | "sport_card" | "buy_and_use";
+export type FundingType = "drop_in" | "trial" | "use_pass" | "sport_card" | "buy_and_use";
 
 export interface BookingCreateRequest {
+  entry_quote?: string;
   funding_type: FundingType;
   user_pass_id?: string;
   studio_sport_card_id?: string;
@@ -67,6 +87,9 @@ export interface StartPaymentResponse {
 }
 
 export interface BookingOut {
+  cancellation_policy_text?: string | null;
+  entry_terms?: EntryTerms | null;
+  payment?: { currency?: string | null };
   id: string;
   occurrence_id?: string | null;
   user_id: string;
@@ -94,6 +117,7 @@ export type BookingDrawer = "buy-pass" | "sport-card" | null;
  * BookingCreateRequest 1:1.
  */
 export type FundingSelection =
+  | { kind: "trial" }
   | {
       kind: "use_pass";
       userPassId: string;
@@ -118,20 +142,33 @@ export type FundingSelection =
 export function toBookingCreateRequest(
   selection: FundingSelection,
   paymentMethod?: PaymentMethod,
+  entryQuote?: string,
 ): BookingCreateRequest {
   // Selections that skip the Method screen (a pass already in the wallet, a sport card with no
   // surcharge) cost nothing, so sending a method for them would be meaningless.
   const method = skipsMethodScreen(selection) ? undefined : paymentMethod;
   switch (selection.kind) {
+    case "trial":
+      return { funding_type: "trial", entry_quote: entryQuote };
     case "use_pass":
-      return { funding_type: "use_pass", user_pass_id: selection.userPassId };
+      return {
+        funding_type: "use_pass",
+        user_pass_id: selection.userPassId,
+        entry_quote: entryQuote,
+      };
     case "drop_in":
-      return { funding_type: "drop_in", payment_method: method };
+      return { funding_type: "drop_in", payment_method: method, entry_quote: entryQuote };
     case "buy_and_use":
-      return { funding_type: "buy_and_use", pass_id: selection.passId, payment_method: method };
+      return {
+        funding_type: "buy_and_use",
+        pass_id: selection.passId,
+        payment_method: method,
+        entry_quote: entryQuote,
+      };
     case "sport_card":
       return {
         funding_type: "sport_card",
+        entry_quote: entryQuote,
         studio_sport_card_id: selection.studioSportCardId,
         payment_method: method,
       };
@@ -140,7 +177,7 @@ export function toBookingCreateRequest(
 
 /** Sport-card selections with no surcharge skip Method entirely, same as pass-in-wallet (§1). */
 export function skipsMethodScreen(selection: FundingSelection): boolean {
-  if (selection.kind === "use_pass") return true;
+  if (selection.kind === "use_pass" || selection.kind === "trial") return true;
   if (selection.kind === "sport_card") return !selection.fee || selection.fee <= 0;
   return false;
 }
@@ -154,7 +191,7 @@ export type MethodFundingSelection = Extract<
 export function isMethodFundingSelection(
   selection: FundingSelection | null,
 ): selection is MethodFundingSelection {
-  return !!selection && selection.kind !== "use_pass";
+  return !!selection && selection.kind !== "use_pass" && selection.kind !== "trial";
 }
 
 // `perEntry`/`discountPercent` in pricingHelpers.tsx are typed against the studio-Cennik
@@ -172,3 +209,13 @@ export function buyAndUseAsStudioPass(option: BuyAndUsePassOption): StudioPass {
     duration_days: option.duration_days,
   };
 }
+
+export function entryQuoteChanged(error: unknown): boolean {
+  const detail = (error as { response?: { data?: { detail?: { code?: string } } } })?.response?.data
+    ?.detail;
+  return detail?.code === "entry_quote_changed";
+}
+
+export const TRIAL_LABEL = "Pierwsze zajęcia próbne — bezpłatnie";
+export const TRIAL_CONDITIONS =
+  "Pierwsza rezerwacja tych zajęć jest bezpłatna. Nie wykorzystasz wejścia z karnetu.";

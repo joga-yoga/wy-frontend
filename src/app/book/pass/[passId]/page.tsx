@@ -81,6 +81,11 @@ function CheckoutScreen({
         acceptsCash={detail.studio.accepts_cash}
       />
 
+      {(detail.duration_unknown || detail.session_count_unknown) && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Karnet będzie dostępny do zakupu po uzupełnieniu warunków oferty.
+        </p>
+      )}
       {submitError && <p className="mt-4 text-sm text-destructive">{submitError}</p>}
 
       <div className="mt-6">
@@ -96,7 +101,9 @@ function CheckoutScreen({
           className="w-full"
           variant="green"
           size="cta"
-          disabled={isSubmitting}
+          disabled={
+            isSubmitting || Boolean(detail.duration_unknown || detail.session_count_unknown)
+          }
           onClick={onSubmit}
         >
           {isSubmitting ? "Kupuję..." : `Kup karnet · ${price}`}

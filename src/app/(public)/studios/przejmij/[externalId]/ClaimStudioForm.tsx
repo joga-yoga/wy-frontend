@@ -1,100 +1,37 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { useBusinessModeConfirmation } from "@/components/partner/useBusinessModeConfirmation";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
 import { axiosInstance } from "@/lib/axiosInstance";
 import type { DirectoryStudioDetail } from "@/types/studio";
-
-/**
- * The claim step, reusing the existing chain: sign in, create a partner profile, claim,
- * then the editor.
- *
- * The only thing this adds over the draft-token flow is the absence of a draft token — the
- * listing itself is the subject, and the backend mints the studio from it. Everything
- * downstream (partner onboarding, phone verification, the editor URL) is unchanged, which
- * is deliberate: a second claim path would be a second place for "who owns this studio" to
- * be answered differently.
- */
 export function ClaimStudioForm({ listing }: { listing: DirectoryStudioDetail }) {
   const router = useRouter();
-  const { user } = useAuth();
-  const { confirmMode, dialog } = useBusinessModeConfirmation();
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  const claimPath = `/studia/przejmij/${listing.external_id}`;
-
-  async function claim() {
-    if (pending) return;
-    if (!user) {
-      router.push(`/account/login?next=${encodeURIComponent(claimPath)}`);
-      return;
-    }
-    if (!user.partner) {
-      router.push(`/account/partner/become-partner?next=${encodeURIComponent(claimPath)}`);
-      return;
-    }
-    setPending(true);
-    setError(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function open() {
+    setBusy(true);
     try {
-      if (!(await confirmMode("studio", "Potwierdź i przejmij"))) return;
-      const { data } = await axiosInstance.post(`/directory/listings/${listing.external_id}/claim`);
-      router.push(data.edit_url);
-    } catch (caught) {
-      const response = (caught as { response?: { status?: number; data?: { detail?: unknown } } })
-        .response;
-      const detail = response?.data?.detail;
-      const code =
-        typeof detail === "object" && detail !== null
-          ? (detail as { code?: string }).code
-          : undefined;
-
-      if (response?.status === 401) {
-        // Back here after signing in, so the claim is one tap rather than a re-navigation.
-        // ⚠ The param is `next` — `login.tsx` reads `searchParams.get("next")` and ignores
-        // anything else, so a `returnTo` would have silently dropped the reader on /account.
-        router.push(`/account/login?next=${encodeURIComponent(claimPath)}`);
-        return;
-      }
-      if (code === "partner_required") {
-        router.push(`/account/partner/become-partner?next=${encodeURIComponent(claimPath)}`);
-        return;
-      }
-      setError(
-        typeof detail === "object" && detail !== null && "message" in detail
-          ? String((detail as { message: unknown }).message)
-          : "Nie udało się przejąć profilu. Spróbuj ponownie.",
-      );
+      const { data } = await axiosInstance.post<{ public_token: string }>("/studio-setup/drafts", {
+        kind: "directory",
+        id: listing.external_id,
+      });
+      router.push(`/account/partner/studio/create?draft=${encodeURIComponent(data.public_token)}`);
+    } catch {
+      setError("Nie udało się przygotować szkicu. Spróbuj ponownie.");
     } finally {
-      setPending(false);
+      setBusy(false);
     }
   }
-
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-5 p-4 pb-10">
-      {dialog}
-      <header className="flex flex-col gap-2">
-        <h1 className="text-h-middle text-gray-900">Przejmij profil studia</h1>
-        <p className="text-m-descript text-gray-700">{listing.name}</p>
-        {listing.address && (
-          <p className="text-m-sunscript-font text-gray-500">{listing.address}</p>
-        )}
-      </header>
-
-      <p className="text-m-descript text-gray-700">
-        Po przejęciu profilu zarządzasz opisem, grafikiem i cennikiem samodzielnie. Strona studia
-        działa dalej bez przerwy — nic z niej nie znika.
-      </p>
-
-      {error && <p className="text-m-descript text-red-600">{error}</p>}
-
-      <Button onClick={claim} disabled={pending} className="w-full">
-        {pending ? "Przejmuję…" : "To moje studio"}
+    <section className="mx-auto max-w-2xl space-y-4 p-6">
+      <h1 className="text-2xl">{listing.name}</h1>
+      <p>{listing.address}</p>
+      <p>Sprawdź i popraw dane studia przed zapisaniem.</p>
+      {error && <p role="alert">{error}</p>}
+      <Button disabled={busy} onClick={() => void open()}>
+        To moje studio
       </Button>
-    </div>
+    </section>
   );
 }

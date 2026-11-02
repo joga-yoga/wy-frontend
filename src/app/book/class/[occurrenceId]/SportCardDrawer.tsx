@@ -7,6 +7,7 @@ import { OptionRadio } from "@/components/booking/OptionRow";
 import { SportCardLogo } from "@/components/booking/SportCardLogo";
 import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
 import { Button } from "@/components/ui/button";
+import { sportCardImage } from "@/lib/sportCardImages";
 import { cn } from "@/lib/utils";
 
 import type { FundingSelection, SportCardOption } from "./types";
@@ -34,7 +35,12 @@ function CardRow({
         selected && "border-2 border-brand-green-700 bg-brand-green-700/5 px-[13px] py-[11px]",
       )}
     >
-      <SportCardLogo photo={option.photo} alt={name} width={52} height={34} />
+      <SportCardLogo
+        photo={sportCardImage(option.slug, option.photo)}
+        alt={name}
+        width={52}
+        height={34}
+      />
       <p className="min-w-0 flex-1 text-[15px] font-bold text-gray-900">{name}</p>
       <span
         className={cn(

@@ -275,6 +275,7 @@ export function PricingPage() {
 
       <footer
         data-pricing-cta
+        data-toast-anchor=""
         className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-gray-50/95 px-5 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))] backdrop-blur-sm"
       >
         <div className="mx-auto max-w-[536px]">

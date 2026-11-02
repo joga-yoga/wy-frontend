@@ -76,6 +76,7 @@ export function BottomTabBar() {
     <>
       {/* Mobile: fixed bottom bar */}
       <nav
+        data-toast-anchor=""
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pt-2"
         style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
       >

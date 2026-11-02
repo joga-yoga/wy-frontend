@@ -77,7 +77,9 @@ export function RosterRow({
               ) : (
                 <StatusChip tone="amber">
                   Do zapłaty
-                  {entry.amount_owed != null ? ` · ${formatMoney(entry.amount_owed)}` : ""}
+                  {entry.amount_owed != null
+                    ? ` · ${formatMoney(entry.amount_owed, entry.currency)}`
+                    : ""}
                 </StatusChip>
               )
             ) : needsCardCheck ? (
@@ -95,7 +97,7 @@ export function RosterRow({
           {isPending ? (
             <Button size="sm" variant="green" disabled={isBusy} onClick={onConfirm}>
               {entry.amount_owed != null
-                ? `Potwierdź · ${formatMoney(entry.amount_owed)}`
+                ? `Potwierdź · ${formatMoney(entry.amount_owed, entry.currency)}`
                 : "Potwierdź"}
             </Button>
           ) : (
@@ -124,11 +126,13 @@ export function RosterRow({
 export function RosterRowUndoStrip({
   label,
   amount,
+  currency,
   isBusy,
   onUndo,
 }: {
   label: string;
   amount: number | null;
+  currency?: string | null;
   isBusy: boolean;
   onUndo: () => void;
 }) {
@@ -137,7 +141,7 @@ export function RosterRowUndoStrip({
       <p className="min-w-0 truncate text-sm text-gray-600">
         <span className="font-semibold text-gray-900">{label}</span>
         {" · "}
-        {amount != null ? `zapłacono ${formatMoney(amount)}` : "obecność"}
+        {amount != null ? `zapłacono ${formatMoney(amount, currency)}` : "obecność"}
       </p>
       <Button size="sm" variant="outline" disabled={isBusy} onClick={onUndo}>
         Cofnij

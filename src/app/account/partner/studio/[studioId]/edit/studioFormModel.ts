@@ -76,6 +76,8 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
       photo: cleanString(p.photo) ?? null,
       duration_days: cleanNumber(p.duration_days),
       session_count: cleanNumber(p.session_count),
+      duration_unknown: p.duration_unknown,
+      session_count_unknown: p.session_count_unknown,
     }));
 
   // `id` here is the studio's acceptance row, not the global sport card (`sport_card_id`).
@@ -104,7 +106,7 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
     address: cleanString(values.address),
     location_id: values.location_id ?? null,
     drop_in_price: cleanNumber(values.drop_in_price),
-    currency: values.currency || "PLN",
+    currency: cleanString(values.currency),
     accepts_sport_cards: values.accepts_sport_cards,
     is_listed: values.is_listed,
     accepts_cash: values.accepts_cash,
@@ -122,7 +124,11 @@ export function buildStudioPayload(values: StudioFormValues): StudioPayload {
   };
 }
 
-export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValues {
+export function formValuesFromStudio(
+  studio: Omit<StudioApiResponse, "passes"> & {
+    passes: Array<Omit<StudioApiResponse["passes"][number], "id" | "studio_id"> & { id?: string }>;
+  },
+): StudioFormValues {
   return {
     name: studio.name ?? "",
     slug: studio.slug ?? "",
@@ -146,6 +152,8 @@ export function formValuesFromStudio(studio: StudioApiResponse): StudioFormValue
       photo: p.photo ?? null,
       duration_days: p.duration_days ?? null,
       session_count: p.session_count ?? null,
+      duration_unknown: p.duration_unknown,
+      session_count_unknown: p.session_count_unknown,
     })),
     accepts_sport_cards: studio.accepts_sport_cards ?? null,
     sport_card_acceptances: (studio.sport_card_acceptances ?? []).map((sc) => ({

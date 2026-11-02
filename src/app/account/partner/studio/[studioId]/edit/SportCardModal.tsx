@@ -4,9 +4,9 @@ import { ArrowLeft, Check, CreditCard, Plus, Search } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 
+import { SportCardImage } from "@/components/booking/SportCardImage";
 import { SegmentedToggle } from "@/components/common/SegmentedToggle";
 import { SingleImageUpload } from "@/components/common/SingleImageUpload";
-import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
+import { sportCardImage } from "@/lib/sportCardImages";
 
 import type { SportCard, StudioSportCard } from "./types";
 
@@ -240,9 +241,9 @@ export function SportCardModal({
                     onClick={() => handlePickCard(card)}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-muted transition-colors"
                   >
-                    {card.photo ? (
-                      <WyImage
-                        src={card.photo}
+                    {sportCardImage(card.slug, card.photo) ? (
+                      <SportCardImage
+                        src={sportCardImage(card.slug, card.photo)!}
                         alt={card.name}
                         width={64}
                         height={40}
@@ -277,9 +278,9 @@ export function SportCardModal({
           {step === "predefined" && selectedCard && (
             <div className="space-y-4">
               <div className="overflow-hidden rounded-lg border bg-white">
-                {selectedCard.photo ? (
-                  <WyImage
-                    src={selectedCard.photo}
+                {sportCardImage(selectedCard.slug, selectedCard.photo) ? (
+                  <SportCardImage
+                    src={sportCardImage(selectedCard.slug, selectedCard.photo)!}
                     alt={selectedCard.name}
                     width={400}
                     height={252}

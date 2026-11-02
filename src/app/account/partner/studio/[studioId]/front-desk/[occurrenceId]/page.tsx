@@ -9,6 +9,11 @@ import type {
   BuyAndUsePassOption,
   SportCardOption,
 } from "@/app/book/class/[occurrenceId]/types";
+import {
+  entryQuoteChanged,
+  TRIAL_CONDITIONS,
+  TRIAL_LABEL,
+} from "@/app/book/class/[occurrenceId]/types";
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +25,7 @@ import {
   FormDrawerHeader,
 } from "@/components/ui/form-drawer";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useSetPageHeaderAction,
   useSetPageSubtitle,
@@ -153,6 +159,7 @@ export default function FrontDeskRosterPage() {
     bookingId: string;
     label: string;
     amount: number | null;
+    currency?: string | null;
   } | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -160,12 +167,17 @@ export default function FrontDeskRosterPage() {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<WalkInSearchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [searchAttempt, setSearchAttempt] = useState(0);
+  const candidateRequestRef = useRef(0);
   const [selectedCandidate, setSelectedCandidate] = useState<WalkInCandidate | null>(null);
   // Third state of the add-participant drawer, alongside "search" and "candidate picked":
   // creating a person who isn't in the system yet. Its own field rather than the search
   // box, so "look someone up" and "create someone" stay two separate intents.
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserNote, setNewUserNote] = useState("");
   const [isSubmittingNewUser, setIsSubmittingNewUser] = useState(false);
 
   const [options, setOptions] = useState<BookingOptionsResponse | null>(null);
@@ -234,22 +246,40 @@ export default function FrontDeskRosterPage() {
   }, [roster, oczekujeCount]);
 
   useEffect(() => {
-    if (!isAddOpen || query.trim().length < 2) {
-      setSearchResults(null);
+    setSearchResults(null);
+    setSearchError(false);
+    if (!isAddOpen || selectedCandidate || isCreatingUser) {
+      setIsSearching(false);
       return;
     }
+    let active = true;
+    const controller = new AbortController();
     setIsSearching(true);
-    const handle = setTimeout(() => {
-      axiosInstance
-        .get<WalkInSearchResponse>(`/studios/${studioId}/front-desk/search-users`, {
-          params: { q: query },
-        })
-        .then((r) => setSearchResults(r.data))
-        .catch(() => setSearchResults(null))
-        .finally(() => setIsSearching(false));
-    }, 300);
-    return () => clearTimeout(handle);
-  }, [isAddOpen, query, studioId]);
+    const handle = setTimeout(
+      () => {
+        axiosInstance
+          .get<WalkInSearchResponse>(`/studios/${studioId}/front-desk/search-users`, {
+            params: { q: query.trim() },
+            signal: controller.signal,
+          })
+          .then((r) => {
+            if (active) setSearchResults(r.data);
+          })
+          .catch(() => {
+            if (active) setSearchError(true);
+          })
+          .finally(() => {
+            if (active) setIsSearching(false);
+          });
+      },
+      query.trim() ? 300 : 0,
+    );
+    return () => {
+      active = false;
+      clearTimeout(handle);
+      controller.abort();
+    };
+  }, [isAddOpen, query, studioId, selectedCandidate, isCreatingUser, searchAttempt]);
 
   // Undo (spec §6) persists until the next resolving action or 10s, whichever comes first —
   // so every other resolving action below clears it before doing its own thing.
@@ -276,6 +306,7 @@ export default function FrontDeskRosterPage() {
         bookingId: entry.booking_id,
         label: personLabel(entry.user_name, entry.user_email).primary,
         amount: entry.amount_owed ?? null,
+        currency: entry.currency,
       });
       undoTimerRef.current = setTimeout(() => setUndoState(null), 10_000);
     } catch (err: unknown) {
@@ -303,15 +334,30 @@ export default function FrontDeskRosterPage() {
     }
   }
 
+  const clearCandidate = useCallback(() => {
+    candidateRequestRef.current += 1;
+    setSelectedCandidate(null);
+    setOptions(null);
+    setFundingType(undefined);
+    setSelectedUserPassId(null);
+    setSelectedSportCardId(null);
+    setSelectedPassId(null);
+  }, []);
+
   async function selectCandidate(candidate: WalkInCandidate) {
+    clearCandidate();
+    const request = candidateRequestRef.current;
     setSelectedCandidate(candidate);
     try {
       const { data: opts } = await axiosInstance.get<BookingOptionsResponse>(
         `/studios/${studioId}/occurrences/${occurrenceId}/walk-in-options`,
         { params: { user_id: candidate.user_id } },
       );
+      if (request !== candidateRequestRef.current) return;
       setOptions(opts);
-      if (opts.existing_passes.length > 0) {
+      if (opts.trial_available) {
+        setFundingType("trial");
+      } else if (opts.existing_passes.length > 0) {
         setFundingType("use_pass");
         setSelectedUserPassId(opts.existing_passes[0].user_pass_id);
       } else if (opts.drop_in_price != null) {
@@ -324,32 +370,48 @@ export default function FrontDeskRosterPage() {
         setSelectedPassId(opts.buy_and_use_options[0].pass_id);
       }
     } catch {
-      toast({ description: "Nie udało się wczytać opcji.", variant: "destructive" });
+      if (request === candidateRequestRef.current)
+        toast({ description: "Nie udało się wczytać opcji.", variant: "destructive" });
     }
   }
 
   /** Enter the create step, carrying over an email the desk has already typed into search. */
   function openCreateUser() {
     setNewUserEmail(isValidEmail(query) ? query.trim() : "");
+    setNewUserName("");
+    setNewUserNote("");
     setIsCreatingUser(true);
   }
 
   function cancelCreateUser() {
+    candidateRequestRef.current += 1;
+    setIsSubmittingNewUser(false);
     setIsCreatingUser(false);
     setNewUserEmail("");
+    setNewUserName("");
+    setNewUserNote("");
   }
 
   async function createNewUser() {
     if (!isValidEmail(newUserEmail) || isSubmittingNewUser) return;
     setIsSubmittingNewUser(true);
+    const request = ++candidateRequestRef.current;
     try {
       const { data } = await axiosInstance.post<{
         user_id: string;
         email: string;
         name: string | null;
-      }>(`/studios/${studioId}/front-desk/new-user`, { email: newUserEmail.trim() });
+      }>(`/studios/${studioId}/front-desk/new-user`, {
+        email: newUserEmail.trim(),
+        name: newUserName.trim() || undefined,
+        note: newUserNote.trim() || undefined,
+      });
+      if (request !== candidateRequestRef.current) return;
       setIsCreatingUser(false);
       setNewUserEmail("");
+      setNewUserName("");
+      setNewUserNote("");
+      setIsSubmittingNewUser(false);
       await selectCandidate({
         user_id: data.user_id,
         email: data.email,
@@ -357,33 +419,45 @@ export default function FrontDeskRosterPage() {
         pass_context: null,
       });
     } catch (err: unknown) {
+      if (request !== candidateRequestRef.current) return;
       toast({
         description: extractErrorMessage(err, "Nie udało się utworzyć konta."),
         variant: "destructive",
       });
     } finally {
-      setIsSubmittingNewUser(false);
+      if (request === candidateRequestRef.current) setIsSubmittingNewUser(false);
     }
   }
 
-  function resetAddFlow() {
+  const resetAddFlow = useCallback(() => {
     setIsAddOpen(false);
     setQuery("");
     setSearchResults(null);
-    setSelectedCandidate(null);
+    setSearchError(false);
+    setIsSearching(false);
+    clearCandidate();
     setIsCreatingUser(false);
     setNewUserEmail("");
-    setOptions(null);
-    setFundingType(undefined);
-  }
+    setNewUserName("");
+    setNewUserNote("");
+    setIsSubmittingNewUser(false);
+  }, [clearCandidate]);
+
+  useEffect(() => {
+    resetAddFlow();
+    return () => {
+      candidateRequestRef.current += 1;
+    };
+  }, [studioId, occurrenceId, resetAddFlow]);
 
   async function handleWalkInSubmit() {
-    if (!selectedCandidate || !fundingType) return;
+    if (!selectedCandidate || !fundingType || options?.existing_booking_id) return;
     setIsSubmittingWalkIn(true);
     try {
       await axiosInstance.post(`/studios/${studioId}/occurrences/${occurrenceId}/walk-in`, {
         user_id: selectedCandidate.user_id,
         funding_type: fundingType,
+        entry_quote: options?.entry_quote,
         user_pass_id: fundingType === "use_pass" ? selectedUserPassId : undefined,
         studio_sport_card_id: fundingType === "sport_card" ? selectedSportCardId : undefined,
         pass_id: fundingType === "buy_and_use" ? selectedPassId : undefined,
@@ -391,6 +465,24 @@ export default function FrontDeskRosterPage() {
       fetchRoster();
       resetAddFlow();
     } catch (err: unknown) {
+      if (entryQuoteChanged(err)) {
+        setFundingType(undefined);
+        try {
+          const refreshed = await axiosInstance.get<BookingOptionsResponse>(
+            `/studios/${studioId}/occurrences/${occurrenceId}/walk-in-options`,
+            { params: { user_id: selectedCandidate.user_id } },
+          );
+          setOptions(refreshed.data);
+          if (refreshed.data.trial_available) setFundingType("trial");
+        } catch {
+          setOptions(null);
+        }
+        toast({
+          description: "Warunki wejścia zmieniły się. Sprawdź je i potwierdź ponownie.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         description: extractErrorMessage(err, "Nie udało się dodać uczestnika."),
         variant: "destructive",
@@ -420,9 +512,9 @@ export default function FrontDeskRosterPage() {
   };
 
   const paymentChoices: PaymentChoice[] = [];
-  if (options) {
+  if (options && !options.existing_booking_id) {
     const sym = getCurrencySymbol(currency);
-    for (const pass of options.existing_passes) {
+    for (const pass of options.trial_available ? [] : options.existing_passes) {
       const left =
         pass.entries_remaining != null
           ? `po rezerwacji ${plural(pass.entries_remaining - 1, "zostanie", "zostaną", "zostanie")} ${pass.entries_remaining - 1}`
@@ -436,19 +528,33 @@ export default function FrontDeskRosterPage() {
         userPassId: pass.user_pass_id,
       });
     }
-    if (options.drop_in_price != null) {
+    if (!options.trial_available && options.drop_in_price != null) {
       paymentChoices.push({
         key: "drop_in",
         fundingType: "drop_in",
-        label: `Pojedyncze wejście · ${options.drop_in_price.toLocaleString("pl-PL")} ${sym}`,
-        detail: session?.organizer_kind === "solo" ? "Płatność na miejscu" : "Gotówka na miejscu",
+        label: `${options.entry_name || "Wejście jednorazowe"} · ${options.drop_in_price.toLocaleString("pl-PL")} ${sym}`,
+        detail:
+          options.entry_conditions ||
+          (session?.organizer_kind === "solo" ? "Płatność na miejscu" : "Gotówka na miejscu"),
       });
     }
+    if (options.trial_available)
+      paymentChoices.push({
+        key: "trial",
+        fundingType: "trial",
+        label: TRIAL_LABEL,
+        detail: TRIAL_CONDITIONS,
+      });
     // A studio can offer a dozen passes. T4-v2 collapses them behind one "Kup karnet" row
     // summarising the cheapest per-entry price and the count, so buying a pass does not crowd
     // out the two choices the desk makes most often (existing pass, cash at the door).
-    if (options.buy_and_use_options.length > 0) {
+    if (!options.trial_available && options.buy_and_use_options.length > 0) {
       const perEntry = options.buy_and_use_options
+        .filter(
+          (pass) =>
+            (pass.currency || options.studio_currency || "PLN") ===
+            (options.studio_currency || "PLN"),
+        )
         .map((pass) => (pass.session_count ? pass.price / pass.session_count : null))
         .filter((v): v is number => v != null);
       const cheapest = perEntry.length > 0 ? Math.min(...perEntry) : null;
@@ -458,7 +564,7 @@ export default function FrontDeskRosterPage() {
         label: "Kup karnet",
         detail: [
           cheapest != null
-            ? `Od ${cheapest.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${sym}/wejście`
+            ? `Od ${cheapest.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${getCurrencySymbol(options.studio_currency)}/wejście`
             : null,
           `${options.buy_and_use_options.length} ${plural(options.buy_and_use_options.length, "karnet", "karnety", "karnetów")}`,
         ]
@@ -469,7 +575,11 @@ export default function FrontDeskRosterPage() {
     }
     // Collapsed for the same reason as the passes (T4-v2): a studio accepting five card brands
     // should not push the everyday choices off the screen.
-    if (options.accepts_sport_cards && options.sport_card_options.length > 0) {
+    if (
+      !options.trial_available &&
+      options.accepts_sport_cards &&
+      options.sport_card_options.length > 0
+    ) {
       const names = options.sport_card_options.map((c) => c.name).filter(Boolean) as string[];
       paymentChoices.push({
         key: "card",
@@ -484,6 +594,7 @@ export default function FrontDeskRosterPage() {
 
   const selectedChoiceKey = (() => {
     if (fundingType === "use_pass" && selectedUserPassId) return `pass:${selectedUserPassId}`;
+    if (fundingType === "trial") return "trial";
     if (fundingType === "drop_in") return "drop_in";
     if (fundingType === "buy_and_use") return "buy";
     if (fundingType === "sport_card") return "card";
@@ -501,13 +612,15 @@ export default function FrontDeskRosterPage() {
 
   /** The CTA names the chosen instrument, as drawn ("Dodaj rezerwację z karnetu"). */
   const submitLabel =
-    fundingType === "use_pass"
-      ? "Dodaj rezerwację z karnetu"
-      : fundingType === "buy_and_use"
-        ? "Kup karnet i dodaj rezerwację"
-        : fundingType === "sport_card"
-          ? "Dodaj rezerwację z karty"
-          : "Dodaj rezerwację";
+    fundingType === "trial"
+      ? "Zarezerwuj bezpłatnie"
+      : fundingType === "use_pass"
+        ? "Dodaj rezerwację z karnetu"
+        : fundingType === "buy_and_use"
+          ? "Kup karnet i dodaj rezerwację"
+          : fundingType === "sport_card"
+            ? "Dodaj rezerwację z karty"
+            : "Dodaj rezerwację";
 
   const byPolishName = (a: RosterEntry, b: RosterEntry) =>
     personSortKey(a.user_name, a.user_email).localeCompare(
@@ -538,6 +651,7 @@ export default function FrontDeskRosterPage() {
           key={entry.booking_id}
           label={undoState.label}
           amount={undoState.amount}
+          currency={undoState.currency}
           isBusy={busyBookingId === entry.booking_id}
           onUndo={undoConfirm}
         />
@@ -710,7 +824,10 @@ export default function FrontDeskRosterPage() {
        * still reachable from the Klienci screen's "Sprzedaj karnet" entry point, but it's
        * redundant here: the add-participant flow already offers "Kup karnet i dodaj
        * rezerwację" as one of its payment choices. */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8">
+      <div
+        data-toast-anchor=""
+        className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-8"
+      >
         <div className="mx-auto max-w-lg px-4">
           <Button size="action" className="w-full" onClick={() => setIsAddOpen(true)}>
             Dodaj uczestnika
@@ -773,6 +890,35 @@ export default function FrontDeskRosterPage() {
                   )}
                 </div>
 
+                <div>
+                  <label htmlFor="new-user-name" className="mb-1 block text-sm font-semibold">
+                    Imię <span className="font-normal text-gray-500">(opcjonalnie)</span>
+                  </label>
+                  <Input
+                    id="new-user-name"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                    maxLength={200}
+                    placeholder="Np. Anna / grupa poranna"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="new-user-note" className="mb-1 block text-sm font-semibold">
+                    Notatka <span className="font-normal text-gray-500">(opcjonalnie)</span>
+                  </label>
+                  <Textarea
+                    id="new-user-note"
+                    value={newUserNote}
+                    onChange={(e) => setNewUserNote(e.target.value)}
+                    maxLength={2000}
+                    rows={3}
+                    aria-describedby="new-user-note-hint"
+                  />
+                  <p id="new-user-note-hint" className="mt-1 text-xs text-gray-500">
+                    Wewnętrzna notatka dla recepcji · do 2000 znaków.
+                  </p>
+                </div>
+
                 <Button
                   size="action"
                   className="w-full"
@@ -792,24 +938,43 @@ export default function FrontDeskRosterPage() {
                   <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    aria-label="Imię, nazwisko lub email"
                     placeholder="Imię, nazwisko lub email"
                     className="pl-9"
                   />
                 </div>
 
-                {isSearching && <p className="text-xs text-gray-400">Szukam...</p>}
+                {isSearching && (
+                  <p className="text-sm text-gray-500" role="status">
+                    Ładowanie klientów...
+                  </p>
+                )}
+                {searchError && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-destructive" role="alert">
+                      Nie udało się załadować klientów.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSearchAttempt((attempt) => attempt + 1)}
+                    >
+                      Spróbuj ponownie
+                    </Button>
+                  </div>
+                )}
 
                 {searchResults && searchResults.studio_clients.length > 0 && (
                   <div className="space-y-1.5">
                     <p className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                      Klienci studia
+                      {session?.organizer_kind === "solo" ? "Twoi klienci" : "Klienci studia"}
                     </p>
+                    <p className="px-1 text-xs text-gray-500">Rezerwacje na zakończone zajęcia</p>
                     <div className="rounded-b2b border bg-white overflow-hidden divide-y">
                       {searchResults.studio_clients.map((c) => (
                         <button
                           key={c.user_id}
                           onClick={() => selectCandidate(c)}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                         >
                           <HashedAvatar
                             seed={c.user_id}
@@ -825,29 +990,35 @@ export default function FrontDeskRosterPage() {
                             <span className="block truncate text-xs text-gray-500">
                               {c.pass_context ?? personLabel(c.name, c.email).secondary ?? ""}
                             </span>
+                            <span className="mt-1 block text-xs leading-5 text-gray-500">
+                              Ostatnia:{" "}
+                              {c.last_past_booking_at
+                                ? new Date(c.last_past_booking_at).toLocaleDateString("pl-PL")
+                                : "—"}
+                            </span>
+                            {c.note?.trim() && (
+                              <span className="mt-1 block whitespace-pre-wrap [overflow-wrap:anywhere] text-xs leading-5 text-gray-500">
+                                {c.note}
+                              </span>
+                            )}
                           </span>
-                          <StatusChip tone="green">Klient</StatusChip>
+                          <StatusChip tone="gray" className="self-start tabular-nums text-xs">
+                            <span className="sr-only">Rezerwacje na zakończone zajęcia: </span>
+                            {c.past_booking_count ?? 0}
+                          </StatusChip>
                         </button>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* "Not on the list" is only worth saying once a search has actually come
-                    back empty; the CTA below stands on its own before that. */}
                 {searchResults && searchResults.studio_clients.length === 0 && !isSearching && (
-                  <div className="flex items-center gap-3">
-                    <span className="h-px flex-1 bg-gray-200" />
-                    <span className="text-xs text-gray-400">nie ma na liście</span>
-                    <span className="h-px flex-1 bg-gray-200" />
-                  </div>
+                  <p className="text-sm text-gray-500" role="status">
+                    {query.trim() ? "Nie znaleziono klientów." : "Brak klientów."}
+                  </p>
                 )}
 
-                {/* Shown in exactly two situations: the default state (nothing searched
-                    yet) and a search that came back empty. Once there are matches on
-                    screen the manager is scanning them, and a competing primary action
-                    there is just noise. */}
-                {(searchResults?.studio_clients.length ?? 0) === 0 && (
+                {(!query.trim() || searchResults?.studio_clients.length === 0) && (
                   <Button size="action" className="w-full" onClick={openCreateUser}>
                     <Plus size={18} className="mr-1.5" />
                     Utwórz użytkownika
@@ -867,7 +1038,9 @@ export default function FrontDeskRosterPage() {
                 ) : (
                   options && (
                     <>
-                      {paymentChoices.length === 0 ? (
+                      {options.existing_booking_id ? (
+                        <p className="text-sm">Ta osoba ma już rezerwację na te zajęcia.</p>
+                      ) : paymentChoices.length === 0 ? (
                         <p className="text-sm text-gray-500">
                           Brak dostępnych opcji płatności dla tych zajęć.
                         </p>
@@ -891,7 +1064,7 @@ export default function FrontDeskRosterPage() {
                                         <PaymentOptionRow
                                           key={pass.pass_id}
                                           label={pass.name}
-                                          detail={`${pass.price.toLocaleString("pl-PL")} ${getCurrencySymbol(pass.currency || currency)}`}
+                                          detail={`${pass.price.toLocaleString("pl-PL")} ${getCurrencySymbol(pass.currency || options?.studio_currency || "PLN")}`}
                                           isSelected={selectedPassId === pass.pass_id}
                                           onClick={() => setSelectedPassId(pass.pass_id)}
                                         />
@@ -909,7 +1082,7 @@ export default function FrontDeskRosterPage() {
                                         label={card.name || "Karta sportowa"}
                                         detail={
                                           card.fee
-                                            ? `Dopłata ${card.fee.toLocaleString("pl-PL")} ${getCurrencySymbol(currency)}`
+                                            ? `Dopłata ${card.fee.toLocaleString("pl-PL")} ${getCurrencySymbol(options?.studio_currency || "PLN")}`
                                             : "Bez dopłaty"
                                         }
                                         isSelected={
@@ -944,11 +1117,7 @@ export default function FrontDeskRosterPage() {
                 variant="outline"
                 aria-label="Wybierz inną osobę"
                 className="h-12 w-12 shrink-0 rounded-full p-0"
-                onClick={() => {
-                  setSelectedCandidate(null);
-                  setOptions(null);
-                  setFundingType(undefined);
-                }}
+                onClick={clearCandidate}
               >
                 <ArrowLeft size={18} />
               </Button>

@@ -1,22 +1,34 @@
 "use client";
 
-import { AlertTriangle, Lightbulb } from "lucide-react";
-import type { KeyboardEvent } from "react";
-import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
+import Image from "next/image";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { IoInfinite as InfiniteIcon } from "react-icons/io5";
 
-import { SegmentedToggle } from "@/components/common/SegmentedToggle";
-import { Button } from "@/components/ui/button";
-import { DrawerFooter } from "@/components/ui/drawer";
 import {
-  FormDrawer,
-  FormDrawerBody,
-  FormDrawerContent,
-  FormDrawerHeader,
-} from "@/components/ui/form-drawer";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  DrawerClose,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { FormDrawer, FormDrawerBody, FormDrawerContent } from "@/components/ui/form-drawer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
+import { wejscia } from "@/lib/polishPlural";
 import { cn } from "@/lib/utils";
 
 import type { StudioPass } from "./types";
@@ -26,37 +38,249 @@ interface PassModalProps {
   onClose: () => void;
   onSaved: (pass: StudioPass) => void;
   studioId: string | null;
+  studioName?: string;
   dropInPrice: number | null;
   currency: string;
   editPass?: StudioPass | null;
 }
 
-/** Month presets map to fixed day counts — `StudioPass.duration_days` is an int of days
- *  and expiry flows through `timedelta(days=...)`, so there is no calendar-month arithmetic
- *  to hook into. `null` is the "Własna" escape hatch, which reveals the raw days input. */
-const DURATION_PRESETS: { label: string; days: number | null }[] = [
-  { label: "1 miesiąc", days: 30 },
-  { label: "2 miesiące", days: 60 },
-  { label: "3 miesiące", days: 90 },
-  { label: "6 miesięcy", days: 180 },
-  { label: "12 miesięcy", days: 365 },
-  { label: "Własna", days: null },
-];
+type Limit = { value: string; unlimited: boolean; custom: boolean };
+type FormValues = { name: string; price: string; description: string; visits: Limit; days: Limit };
+type Field = "name" | "price" | "visits" | "days";
+const VISITS = [4, 8, 12];
+const DAYS = [30, 60, 90];
 
-const PRESET_DAY_COUNTS = DURATION_PRESETS.map((preset) => preset.days).filter(
-  (days): days is number => days != null,
-);
-
-function blockInvalidNumberChars(event: KeyboardEvent<HTMLInputElement>) {
-  if (["e", "E", "+", "-"].includes(event.key)) {
-    event.preventDefault();
-  }
+function initialValues(pass?: StudioPass | null): FormValues {
+  const limit = (
+    value: StudioPass["session_count"],
+    presets: number[],
+    fallback: number,
+  ): Limit => ({
+    value: value == null || value === "" ? String(fallback) : String(value),
+    unlimited: value == null || value === "",
+    custom: value != null && value !== "" && !presets.includes(Number(value)),
+  });
+  const form: FormValues = {
+    name: pass?.name ?? "",
+    price: pass ? decimal(Number(pass.price)) : "",
+    description: pass?.description ?? "",
+    visits: pass
+      ? limit(pass.session_count, VISITS, 8)
+      : { value: "8", unlimited: false, custom: false },
+    days: pass
+      ? limit(pass.duration_days, DAYS, 30)
+      : { value: "30", unlimited: false, custom: false },
+  };
+  if (pass?.duration_unknown) form.days = { value: "", unlimited: false, custom: true };
+  if (pass?.session_count_unknown) form.visits = { value: "", unlimited: false, custom: true };
+  if (!pass) form.name = generatedName(form);
+  return form;
 }
 
-function fieldClass(hasError?: boolean) {
-  return cn(
-    "h-12 rounded-md bg-white px-3 text-base shadow-none focus-visible:ring-brand-green",
-    hasError && "border-destructive focus-visible:ring-destructive",
+function generatedName({ visits, days }: Pick<FormValues, "visits" | "days">): string {
+  if (!visits.unlimited) {
+    const count = positiveInteger(visits.value);
+    return count === null ? "" : `Karnet na ${wejscia(count)}`;
+  }
+  if (days.unlimited) return "Karnet OPEN — bez terminu";
+  const count = positiveInteger(days.value);
+  if (count === null) return "Karnet OPEN";
+  const validity =
+    count % 30 === 0 ? `${count / 30} mies.` : `${count} ${count === 1 ? "dzień" : "dni"}`;
+  return `Karnet OPEN — ${validity}`;
+}
+
+function positiveInteger(value: string): number | null {
+  const number = Number(value);
+  return /^\d+$/.test(value.trim()) && Number.isSafeInteger(number) && number > 0 ? number : null;
+}
+function positivePrice(value: string): number | null {
+  const normalized = value.trim().replace(",", ".");
+  const number = Number(normalized);
+  return /^\d+(\.\d{1,2})?$/.test(normalized) && Number.isFinite(number) && number > 0
+    ? number
+    : null;
+}
+function decimal(value: number): string {
+  return value.toFixed(2).replace(".", ",");
+}
+// Compare saved meaning, so formatting on blur or opening a custom field isn't a change.
+function signature(form: FormValues): string {
+  return JSON.stringify({
+    name: form.name,
+    description: form.description,
+    price: positivePrice(form.price) ?? form.price,
+    visits: form.visits.unlimited ? null : form.visits.value,
+    days: form.days.unlimited ? null : form.days.value,
+  });
+}
+function DesignIcon({
+  name,
+  width = 18,
+  height = width,
+}: {
+  name: string;
+  width?: number;
+  height?: number;
+}) {
+  return (
+    <Image
+      src={`/images/pass-form/${name}.svg`}
+      width={width}
+      height={height}
+      alt=""
+      className="shrink-0"
+    />
+  );
+}
+const inputClass =
+  "h-12 rounded-xl border-zinc-200 px-4 text-base shadow-none focus-visible:ring-brand-green-700 aria-invalid:border-destructive aria-invalid:bg-red-50";
+const choiceClass = "h-11 min-w-0 rounded-xl border px-2 text-base font-semibold shadow-none";
+
+function LimitField({
+  id,
+  label,
+  value,
+  presets,
+  customLabel,
+  unit,
+  unlimitedLabel,
+  unlimitedText,
+  icon,
+  error,
+  onChange,
+  onBlur,
+}: {
+  id: string;
+  label: string;
+  value: Limit;
+  presets: number[];
+  customLabel: string;
+  unit: string;
+  unlimitedLabel: string;
+  unlimitedText: string;
+  icon: ReactNode;
+  error?: string;
+  onChange: (next: Limit) => void;
+  onBlur: () => void;
+}) {
+  return (
+    <div className="space-y-2" role="group" aria-labelledby={`${id}-label`}>
+      <div className="flex items-center justify-between gap-2">
+        <span id={`${id}-label`} className="text-sm font-semibold">
+          {label}
+        </span>
+        <label
+          className="flex cursor-pointer items-center gap-2 text-xs text-zinc-600"
+          htmlFor={`${id}-unlimited`}
+        >
+          {unlimitedLabel}
+          <Button
+            id={`${id}-unlimited`}
+            type="button"
+            role="switch"
+            aria-checked={value.unlimited}
+            aria-label={unlimitedLabel}
+            variant="ghost"
+            className="h-[22px] w-9 rounded-full p-0"
+            onClick={() => onChange({ ...value, unlimited: !value.unlimited })}
+          >
+            <DesignIcon
+              name={value.unlimited ? "toggle-on" : "toggle-off"}
+              width={36}
+              height={22}
+            />
+          </Button>
+        </label>
+      </div>
+      {value.unlimited ? (
+        <p className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--pass-tint)] px-3 text-[var(--pass-green)]">
+          {icon}
+          {unlimitedText}
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-4 gap-2">
+            {presets.map((preset) => (
+              <Button
+                key={preset}
+                type="button"
+                variant="outline"
+                aria-pressed={!value.custom && value.value === String(preset)}
+                className={cn(
+                  choiceClass,
+                  !value.custom &&
+                    value.value === String(preset) &&
+                    "border-[var(--pass-green)] bg-[var(--pass-tint)] text-[var(--pass-green)]",
+                )}
+                onClick={() => onChange({ value: String(preset), unlimited: false, custom: false })}
+              >
+                {preset}
+                {unit === "dni" ? " dni" : ""}
+              </Button>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              aria-pressed={value.custom}
+              className={cn(
+                choiceClass,
+                value.custom &&
+                  "border-[var(--pass-green)] bg-[var(--pass-tint)] text-[var(--pass-green)]",
+              )}
+              onClick={() => onChange({ ...value, custom: true })}
+            >
+              {customLabel}
+            </Button>
+          </div>
+          {value.custom && (
+            <>
+              <div className="relative">
+                <Input
+                  id={id}
+                  aria-label={label}
+                  inputMode="numeric"
+                  value={value.value}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? `${id}-error` : undefined}
+                  className={cn(inputClass, "pr-16")}
+                  onBlur={onBlur}
+                  onChange={(e) => onChange({ ...value, value: e.target.value })}
+                />
+                <span className="pointer-events-none absolute right-4 top-3.5 text-sm text-zinc-600">
+                  {unit}
+                </span>
+              </div>
+              {unit === "dni" && (
+                <div className="grid grid-cols-2 gap-2">
+                  {[180, 365].map((days) => (
+                    <Button
+                      type="button"
+                      key={days}
+                      variant="outline"
+                      className={cn(
+                        choiceClass,
+                        value.value === String(days) &&
+                          "border-[var(--pass-green)] bg-[var(--pass-tint)] text-[var(--pass-green)]",
+                      )}
+                      aria-pressed={value.value === String(days)}
+                      onClick={() => onChange({ ...value, value: String(days) })}
+                    >
+                      {days} dni
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {error && (
+            <p id={`${id}-error`} className="text-xs text-destructive">
+              {error}
+            </p>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
@@ -65,298 +289,392 @@ export function PassModal({
   onClose,
   onSaved,
   studioId,
+  studioName,
   dropInPrice,
   currency,
   editPass,
 }: PassModalProps) {
-  const [name, setName] = useState("");
-  const [durationUnlimited, setDurationUnlimited] = useState(true);
-  const [durationDays, setDurationDays] = useState<string>("");
-  /** True when "Własna" is chosen — either explicitly, or because an existing pass's
-   *  duration_days doesn't match any preset. */
-  const [isCustomDuration, setIsCustomDuration] = useState(false);
-  const [sessionUnlimited, setSessionUnlimited] = useState(true);
-  const [sessionCount, setSessionCount] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
-  const [description, setDescription] = useState("");
+  const id = useId();
+  const [form, setForm] = useState(() => initialValues(editPass));
+  const baseline = useRef(signature(form));
+  const nameEdited = useRef(Boolean(editPass));
+  const saving = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
+  const [descriptionOpen, setDescriptionOpen] = useState(Boolean(editPass?.description));
+  const [discardOpen, setDiscardOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!isOpen) return;
-    if (editPass) {
-      setName(editPass.name);
-      setDurationUnlimited(editPass.duration_days == null || editPass.duration_days === "");
-      setDurationDays(editPass.duration_days != null ? String(editPass.duration_days) : "");
-      setIsCustomDuration(
-        editPass.duration_days != null &&
-          editPass.duration_days !== "" &&
-          !PRESET_DAY_COUNTS.includes(Number(editPass.duration_days)),
-      );
-      setSessionUnlimited(editPass.session_count == null || editPass.session_count === "");
-      setSessionCount(editPass.session_count != null ? String(editPass.session_count) : "");
-      setPrice(editPass.price != null ? String(editPass.price) : "");
-      setDescription(editPass.description ?? "");
-    } else {
-      setName("");
-      setDurationUnlimited(false);
-      setDurationDays("");
-      setIsCustomDuration(false);
-      setSessionUnlimited(false);
-      setSessionCount("");
-      setPrice("");
-      setDescription("");
-    }
+    const next = initialValues(editPass);
+    setForm(next);
+    baseline.current = signature(next);
+    nameEdited.current = Boolean(editPass);
+    setTouched({});
     setError(null);
+    setDescriptionOpen(Boolean(editPass?.description));
+    setDiscardOpen(false);
   }, [isOpen, editPass]);
-
-  const sessionCountNum = sessionCount ? Number(sessionCount) : null;
-  const priceNum = price ? Number(price) : null;
-  const perEntry =
-    sessionCountNum && sessionCountNum > 0 && priceNum != null
-      ? (priceNum / sessionCountNum).toFixed(2)
-      : null;
-
+  const field = <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
+    if (key === "name") nameEdited.current = true;
+    const shouldGenerate = !nameEdited.current && (key === "visits" || key === "days");
+    setForm((current) => {
+      const next = { ...current, [key]: value };
+      if (shouldGenerate) next.name = generatedName(next);
+      return next;
+    });
+  };
+  const touch = (key: Field) => setTouched((current) => ({ ...current, [key]: true }));
+  const visits = positiveInteger(form.visits.value);
+  const days = positiveInteger(form.days.value);
+  const price = positivePrice(form.price);
+  const passCurrency = editPass?.currency || currency || "PLN";
+  const symbol = getCurrencySymbol(passCurrency);
+  const errors = {
+    name: form.name.trim() ? undefined : "Wpisz nazwę karnetu.",
+    price:
+      price === null ? `Wpisz cenę większą niż 0 ${symbol} (do 2 miejsc po przecinku).` : undefined,
+    visits:
+      !form.visits.unlimited && visits === null
+        ? "Wpisz dodatnią, całkowitą liczbę wejść."
+        : undefined,
+    days:
+      !form.days.unlimited && days === null ? "Wpisz dodatnią, całkowitą liczbę dni." : undefined,
+  };
+  const valid = !Object.values(errors).some(Boolean);
+  const perVisit = !form.visits.unlimited && visits && price ? price / visits : null;
   const suggestedPrice =
-    sessionCountNum && sessionCountNum > 0 && dropInPrice
-      ? Math.round(sessionCountNum * dropInPrice * 0.9 * 100) / 100
+    !editPass && !form.visits.unlimited && visits && dropInPrice && dropInPrice > 0
+      ? Math.round(visits * dropInPrice * 0.9 * 100) / 100
       : null;
-
-  const bothUnlimited = durationUnlimited && sessionUnlimited;
-
+  const visitSummary = form.visits.unlimited ? "Bez limitu" : visits ? wejscia(visits) : "— wejść";
+  const daySummary = form.days.unlimited ? "bez terminu" : days ? `${days} dni` : "— dni";
+  const total = price === null ? "—" : `${decimal(price)} ${symbol}`;
+  function requestClose() {
+    if (saving.current) return;
+    if (signature(form) !== baseline.current) setDiscardOpen(true);
+    else onClose();
+  }
   async function handleSave() {
-    if (!name.trim()) {
-      setError("Nazwa karnetu jest wymagana.");
-      return;
-    }
-    if (!price || Number(price) <= 0) {
-      setError("Cena jest wymagana.");
-      return;
-    }
-    setError(null);
+    if (saving.current) return;
+    setTouched({ name: true, price: true, visits: true, days: true });
+    if (!valid || price === null) return;
+    saving.current = true;
     setIsSaving(true);
-
+    setError(null);
     const passData = {
-      name: name.trim(),
-      price: Number(price),
-      currency: currency || "PLN",
-      description: description.trim() || undefined,
-      duration_days: durationUnlimited ? null : Number(durationDays) || null,
-      session_count: sessionUnlimited ? null : Number(sessionCount) || null,
+      name: form.name.trim(),
+      price,
+      currency: passCurrency,
+      description: form.description.trim(),
+      session_count: form.visits.unlimited ? null : visits,
+      duration_days: form.days.unlimited ? null : days,
+      duration_unknown: false,
+      session_count_unknown: false,
     };
-
     try {
+      let saved: StudioPass;
       if (studioId && editPass?.id) {
-        const { data } = await axiosInstance.put(
+        const { data } = await axiosInstance.put<StudioPass>(
           `/studios/${studioId}/passes/${editPass.id}`,
           passData,
         );
-        onSaved(data);
+        saved = data;
       } else if (studioId) {
-        const { data } = await axiosInstance.post(`/studios/${studioId}/passes`, passData);
-        onSaved(data);
-      } else {
-        onSaved({ ...passData, price: passData.price } as StudioPass);
-      }
+        const { data } = await axiosInstance.post<StudioPass>(
+          `/studios/${studioId}/passes`,
+          passData,
+        );
+        saved = data;
+      } else saved = { ...editPass, ...passData };
+      onSaved(saved);
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Nie udało się zapisać karnetu.");
+    } catch (error: unknown) {
+      const detail: unknown = isAxiosError(error) ? error.response?.data?.detail : null;
+      setError(
+        typeof detail === "string" ? detail : "Nie udało się zapisać karnetu. Spróbuj ponownie.",
+      );
     } finally {
+      saving.current = false;
       setIsSaving(false);
     }
   }
-
   return (
-    <FormDrawer open={isOpen} onClose={onClose}>
-      <FormDrawerContent>
-        <FormDrawerHeader title={editPass ? "Edytuj karnet" : "Nowy karnet"} />
-        <FormDrawerBody className="space-y-4">
-          {/* Nazwa */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Nazwa</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={fieldClass(!name.trim() && !!error)}
-              placeholder="np. Karnet miesięczny"
-            />
-          </div>
-
-          {/* Liczba wejść — before Ważność: a partner decides "how many entries" first,
-              and the duration then qualifies that. */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Liczba wejść</label>
-            <SegmentedToggle
-              value={sessionUnlimited}
-              onChange={(next) => {
-                setSessionUnlimited(next);
-                if (next) setSessionCount("");
-              }}
-              options={[
-                { label: "Liczba", value: false },
-                { label: "∞ Bez limitu", value: true },
-              ]}
-            />
-            {!sessionUnlimited && (
-              <Input
-                type="number"
-                min="1"
-                value={sessionCount}
-                onChange={(e) => setSessionCount(e.target.value)}
-                onKeyDown={blockInvalidNumberChars}
-                placeholder="Liczba wejść"
-                className={fieldClass()}
-              />
-            )}
-          </div>
-
-          {/* Ważność */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Ważność</label>
-            <SegmentedToggle
-              value={durationUnlimited}
-              onChange={(next) => {
-                setDurationUnlimited(next);
-                if (next) {
-                  setDurationDays("");
-                  setIsCustomDuration(false);
-                }
-              }}
-              options={[
-                { label: "Liczba dni", value: false },
-                { label: "∞ Bez limitu", value: true },
-              ]}
-            />
-            {durationUnlimited && (
-              <p className="text-sm text-muted-foreground mb-2">
-                ∞ Karnet nie wygasa — ważny do wykorzystania wejść.
-              </p>
-            )}
-            {/* An unlimited pass has no duration at all, so the presets live inside the
-                non-unlimited branch rather than alongside the toggle. */}
-            {!durationUnlimited && (
-              <div className="mt-2 space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  {DURATION_PRESETS.map((preset) => {
-                    const isSelected =
-                      preset.days == null
-                        ? isCustomDuration
-                        : !isCustomDuration && durationDays === String(preset.days);
-                    return (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          if (preset.days == null) {
-                            setIsCustomDuration(true);
-                            return;
-                          }
-                          setIsCustomDuration(false);
-                          setDurationDays(String(preset.days));
-                        }}
-                        className={cn(
-                          "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                          isSelected
-                            ? "border-brand-green-700 bg-brand-green-700 text-white"
-                            : "border-gray-200 text-gray-600 hover:bg-gray-50",
-                        )}
-                      >
-                        {preset.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {isCustomDuration && (
-                  <Input
-                    type="number"
-                    min="1"
-                    value={durationDays}
-                    onChange={(e) => setDurationDays(e.target.value)}
-                    onKeyDown={blockInvalidNumberChars}
-                    placeholder="Liczba dni"
-                    className={fieldClass()}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Both unlimited warning — kept directly after the two toggles it is about,
-              which is still where it lands now that Ważność sits second. */}
-          {bothUnlimited && (
-            <div className="flex items-center gap-2 rounded-md bg-b2b-amber-bg border border-b2b-amber-border px-3 py-2 text-sm text-b2b-amber-text">
-              <AlertTriangle className="size-4 shrink-0" />
-              Karnet bez limitu dni i wejść — upewnij się, że tego chcesz.
-            </div>
-          )}
-
-          {/* Cena */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Cena</label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                onKeyDown={blockInvalidNumberChars}
-                className={fieldClass()}
-                placeholder={`Cena w ${currency}`}
-              />
-              <span className="text-sm font-medium text-muted-foreground shrink-0">
-                {getCurrencySymbol(currency)}
-              </span>
-            </div>
-            {perEntry && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                ={" "}
-                <strong>
-                  {perEntry} {getCurrencySymbol(currency)}/wejście
-                </strong>
-              </p>
-            )}
-            {suggestedPrice && !editPass && (
-              <button
-                type="button"
-                className="mt-2 flex items-center gap-2 rounded-md bg-muted/50 border px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors w-full text-left"
-                onClick={() => setPrice(String(suggestedPrice))}
+    <>
+      <FormDrawer open={isOpen} onClose={requestClose}>
+        <FormDrawerContent className="mx-auto w-[calc(100%-1rem)] max-w-[960px] text-zinc-800 [--pass-green:#245642] [--pass-tint:#eaf2ec] md:my-auto md:!h-[min(721px,calc(100dvh-4rem))] md:inset-y-0">
+          <DrawerHeader className="shrink-0 border-b border-zinc-200 p-6 text-left md:p-8">
+            <div className="flex items-center justify-between gap-3">
+              <DrawerTitle className="text-[26px] font-semibold leading-9 md:text-[30px]">
+                {editPass ? "Edytuj karnet" : "Nowy karnet"}
+              </DrawerTitle>
+              <DrawerClose
+                aria-label="Zamknij"
+                disabled={isSaving}
+                className="rounded-md p-2 focus-visible:ring-2 focus-visible:ring-brand-green-700"
               >
-                <Lightbulb className="size-4 shrink-0" />
-                <span>
-                  Sugerowana:{" "}
-                  <strong>
-                    {suggestedPrice} {getCurrencySymbol(currency)}
-                  </strong>{" "}
-                  (−10% vs cena za wejście). Stuknij, aby użyć.
+                <span className="md:hidden">
+                  <DesignIcon name="close-mobile" width={20} />
                 </span>
-              </button>
+                <span className="hidden md:block">
+                  <DesignIcon name="icon-close" width={24} />
+                </span>
+              </DrawerClose>
+            </div>
+            <DrawerDescription className="text-left text-sm text-zinc-600">
+              <span className="md:hidden">Ustaw zasady i cenę karnetu.</span>
+              <span className="hidden md:inline">
+                Ustaw zasady i cenę. Podgląd pokaże efekt od razu.
+              </span>
+            </DrawerDescription>
+          </DrawerHeader>
+          <FormDrawerBody className="p-6 md:p-8">
+            <div className="grid gap-10 md:grid-cols-[minmax(0,492px)_324px]">
+              <form
+                id={`${id}-form`}
+                className="min-w-0"
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void handleSave();
+                }}
+              >
+                <fieldset disabled={isSaving} className="min-w-0 space-y-5">
+                  <LimitField
+                    id={`${id}-visits`}
+                    label="Liczba wejść"
+                    value={form.visits}
+                    presets={VISITS}
+                    customLabel="Inna"
+                    unit="wejść"
+                    unlimitedLabel="Bez limitu"
+                    unlimitedText="Dowolna liczba zajęć"
+                    icon={<InfiniteIcon aria-hidden="true" className="size-[18px] shrink-0" />}
+                    onChange={(next) => field("visits", next)}
+                    onBlur={() => touch("visits")}
+                    error={touched.visits ? errors.visits : undefined}
+                  />
+                  <LimitField
+                    id={`${id}-days`}
+                    label="Ważność"
+                    value={form.days}
+                    presets={DAYS}
+                    customLabel="Inny"
+                    unit="dni"
+                    unlimitedLabel="Bez terminu"
+                    unlimitedText="Bez terminu ważności"
+                    icon={<DesignIcon name="icon-clock" />}
+                    onChange={(next) => field("days", next)}
+                    onBlur={() => touch("days")}
+                    error={touched.days ? errors.days : undefined}
+                  />
+                  <div className="space-y-2">
+                    <label htmlFor={`${id}-price`} className="block text-sm font-semibold">
+                      Cena karnetu
+                    </label>
+                    <div className="relative">
+                      <Input
+                        id={`${id}-price`}
+                        inputMode="decimal"
+                        value={form.price}
+                        onChange={(e) => field("price", e.target.value)}
+                        onBlur={() => {
+                          touch("price");
+                          if (price !== null || /^0+([,.]0{1,2})?$/.test(form.price.trim()))
+                            field("price", decimal(price ?? 0));
+                        }}
+                        className={cn(inputClass, "pr-16")}
+                        placeholder="np. 240,00"
+                        aria-invalid={Boolean(touched.price && errors.price)}
+                        aria-describedby={`${id}-price-help`}
+                      />
+                      <span className="pointer-events-none absolute right-4 top-3.5 text-sm text-zinc-600">
+                        {passCurrency}
+                      </span>
+                    </div>
+                    <p
+                      id={`${id}-price-help`}
+                      className={cn(
+                        "text-xs text-zinc-600",
+                        touched.price && errors.price && "text-destructive",
+                      )}
+                    >
+                      {touched.price && errors.price
+                        ? errors.price
+                        : perVisit
+                          ? `${decimal(perVisit)} ${symbol} za jedno wejście`
+                          : form.visits.unlimited
+                            ? "Stała cena za cały karnet."
+                            : "Kwota, którą zapłaci klient."}
+                    </p>
+                    {suggestedPrice !== null && (
+                      <button
+                        type="button"
+                        className="text-left text-xs text-zinc-500 underline underline-offset-4"
+                        onClick={() => field("price", decimal(suggestedPrice))}
+                      >
+                        Użyj sugerowanej ceny {decimal(suggestedPrice)} {symbol} (−10% od wejść
+                        pojedynczych)
+                      </button>
+                    )}
+                  </div>
+                  {descriptionOpen ? (
+                    <div className="space-y-2">
+                      <label htmlFor={`${id}-description`} className="block text-sm font-semibold">
+                        Opis · opcjonalnie
+                      </label>
+                      <Textarea
+                        id={`${id}-description`}
+                        value={form.description}
+                        onChange={(e) => field("description", e.target.value)}
+                        rows={2}
+                        className="rounded-xl border-zinc-200 p-4 text-sm shadow-none"
+                        placeholder="Dodatkowe informacje dla klientów"
+                      />
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-auto justify-start p-0 text-[var(--pass-green)]"
+                      onClick={() => setDescriptionOpen(true)}
+                    >
+                      <DesignIcon name="icon-plus" />
+                      Dodaj opis <span className="font-normal text-zinc-600">· opcjonalnie</span>
+                    </Button>
+                  )}
+                  <div className="space-y-2">
+                    <label htmlFor={`${id}-name`} className="block text-sm font-semibold">
+                      Nazwa karnetu
+                    </label>
+                    <Input
+                      id={`${id}-name`}
+                      value={form.name}
+                      onChange={(e) => field("name", e.target.value)}
+                      onBlur={() => touch("name")}
+                      className={inputClass}
+                      placeholder="np. Karnet 8 wejść"
+                      aria-invalid={Boolean(touched.name && errors.name)}
+                      aria-describedby={
+                        touched.name && errors.name ? `${id}-name-error` : undefined
+                      }
+                    />
+                    {touched.name && errors.name && (
+                      <p id={`${id}-name-error`} className="text-xs text-destructive">
+                        {errors.name}
+                      </p>
+                    )}
+                  </div>
+                </fieldset>
+              </form>
+              <aside aria-label="Podgląd karnetu" className="hidden min-w-0 space-y-5 md:block">
+                <p className="text-[11px] font-semibold text-zinc-600">TAK ZOBACZY GO KLIENT</p>
+                <div className="space-y-5 rounded-[20px] bg-[var(--pass-tint)] p-6 text-[var(--pass-green)]">
+                  <p className="flex items-center gap-2 text-[13px]">
+                    <DesignIcon name="icon-leaf" width={24} />
+                    <span className="break-words">{studioName || "Twoje studio"}</span>
+                  </p>
+                  <h3 className="break-words text-[26px] font-semibold leading-9">
+                    {form.name.trim() || "Nazwa karnetu"}
+                  </h3>
+                  <div className="space-y-3 text-[15px]">
+                    <p className="flex items-center gap-2.5">
+                      {form.visits.unlimited ? (
+                        <InfiniteIcon aria-hidden="true" className="size-[18px] shrink-0" />
+                      ) : (
+                        <DesignIcon name="icon-ticket" />
+                      )}
+                      {form.visits.unlimited
+                        ? "Dowolna liczba zajęć"
+                        : `${visitSummary} na zajęcia`}
+                    </p>
+                    <p className="flex items-center gap-2.5">
+                      <DesignIcon name="icon-clock" />
+                      {form.days.unlimited
+                        ? "Bez terminu ważności"
+                        : days
+                          ? `Ważny przez ${days} dni`
+                          : "Ważność —"}
+                    </p>
+                  </div>
+                  {form.description.trim() && (
+                    <p className="whitespace-pre-wrap break-words text-sm">{form.description}</p>
+                  )}
+                  <div className="border-t border-zinc-200 pt-5">
+                    <span className="break-words text-[40px] font-semibold leading-[56px]">
+                      {price === null ? "—" : decimal(price)}
+                    </span>
+                    {price !== null && <span className="ml-1.5 text-lg">{symbol}</span>}
+                  </div>
+                  {perVisit !== null && (
+                    <p className="text-[13px]">
+                      {decimal(perVisit)} {symbol} / wejście
+                    </p>
+                  )}
+                </div>
+                <p className="text-[13px] text-zinc-600">
+                  Podgląd aktualizuje się podczas
+                  <br />
+                  wypełniania formularza.
+                </p>
+              </aside>
+            </div>
+          </FormDrawerBody>
+          <DrawerFooter className="shrink-0 gap-3 border-t border-zinc-200 p-6">
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
             )}
-          </div>
-
-          {/* Opis */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Opis (opcjonalnie)</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              className="text-sm"
-              placeholder="Dodatkowe informacje..."
-            />
-          </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </FormDrawerBody>
-        {/* The footer's own X is gone — the header owns closing now, so the footer is
-            purely the save action. */}
-        <DrawerFooter>
-          <Button size="action" onClick={handleSave} disabled={isSaving} className="w-full">
-            {isSaving ? "Zapisuję..." : "Zapisz karnet"}
-          </Button>
-        </DrawerFooter>
-      </FormDrawerContent>
-    </FormDrawer>
+            <div
+              aria-label="Podsumowanie karnetu"
+              className="flex items-center justify-between gap-2 text-[13px] md:hidden"
+            >
+              <span className="text-zinc-600">
+                {visitSummary} · {daySummary}
+              </span>
+              <strong className="shrink-0 text-[15px]">{total}</strong>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="hidden h-12 rounded-xl px-6 text-base shadow-none md:inline-flex"
+                disabled={isSaving}
+                onClick={requestClose}
+              >
+                Anuluj
+              </Button>
+              <Button
+                type="submit"
+                form={`${id}-form`}
+                className="h-12 w-full rounded-xl bg-[var(--pass-green)] px-8 text-base font-semibold text-white hover:bg-[var(--pass-green)]/90 disabled:bg-zinc-200 disabled:text-zinc-500 disabled:opacity-100 md:w-auto"
+                disabled={!valid || isSaving}
+              >
+                {isSaving ? "Zapisywanie…" : editPass ? "Zapisz zmiany" : "Utwórz karnet"}
+              </Button>
+            </div>
+          </DrawerFooter>
+        </FormDrawerContent>
+      </FormDrawer>
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Odrzucić zmiany?</AlertDialogTitle>
+            <AlertDialogDescription>Zmiany w karnecie nie zostały zapisane.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Wróć do edycji</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDiscardOpen(false);
+                onClose();
+              }}
+            >
+              Odrzuć zmiany
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
