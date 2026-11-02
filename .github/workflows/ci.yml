@@ -16,6 +16,7 @@ env:
   # Static generation reads the existing public directory API, as Vercel builds do.
   # The public endpoint belongs in repository variables, not provider secrets.
   NEXT_PUBLIC_API_ENDPOINT: ${{ vars.NEXT_PUBLIC_API_ENDPOINT }}
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ vars.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
 
 jobs:
   verify:
