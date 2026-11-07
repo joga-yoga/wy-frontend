@@ -2,7 +2,7 @@
 
 import { AxiosError } from "axios";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,20 +30,27 @@ function ClaimDraftContent() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { toast } = useToast();
-  const hasStarted = useRef(false);
+  const pathname = usePathname();
+  const lastAttempt = useRef<string | null>(null);
+  const inFlight = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (loading || hasStarted.current) return;
+    if (loading || inFlight.current) return;
 
     const claimPath = `/instruktor/dodaj/claim/${params.token}`;
+
+    if (pathname !== claimPath) return;
 
     if (!user) {
       router.replace(`/account/login?next=${encodeURIComponent(claimPath)}`);
       return;
     }
 
-    hasStarted.current = true;
+    const attempt = `${user.id}:${params.token}:${Boolean(user.partner?.phone_verified)}`;
+    if (lastAttempt.current === attempt) return;
+    lastAttempt.current = attempt;
+    inFlight.current = true;
 
     axiosInstance
       .post<ClaimResponse>(`/instructor-profile-drafts/${params.token}/claim`)
@@ -65,8 +72,11 @@ function ClaimDraftContent() {
             : "Nie udało się przygotować profilu do edycji. Spróbuj ponownie za chwilę.";
         setErrorMessage(message);
         toast({ description: message, variant: "destructive" });
+      })
+      .finally(() => {
+        inFlight.current = false;
       });
-  }, [loading, params.token, router, toast, user]);
+  }, [loading, params.token, pathname, router, toast, user]);
 
   if (errorMessage) {
     return (

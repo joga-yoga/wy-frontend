@@ -15,7 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { resolveAuthDestination } from "@/lib/auth/destination";
+import { hasCurrentInvitation } from "@/lib/auth/invitations";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { getRecordedMode } from "@/lib/partnerMode";
 
 const resetPasswordSchema = z.object({
   newPassword: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków."),
@@ -75,15 +78,18 @@ function ResetPasswordForm() {
       });
 
       const accessToken = response.data?.access_token;
-      if (accessToken) {
-        storeToken(accessToken);
-      }
+      const user = accessToken ? await storeToken(accessToken) : null;
 
       if (response.status >= 200 && response.status < 300) {
         toast({
           description: "Hasło zostało zmienione pomyślnie. Logowanie...",
         });
-        router.push("/account/partner");
+        router.push(
+          await resolveAuthDestination(
+            { next: searchParams.get("next"), user, mode: getRecordedMode(), recovery: true },
+            hasCurrentInvitation,
+          ),
+        );
       }
     } catch (error: any) {
       toast({

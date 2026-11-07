@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, ChevronRight, Plus, UserRound } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -103,18 +103,6 @@ export default function MenuPage() {
           <SavedImports />
         </div>
       )}
-
-      <section className="space-y-2">
-        <SectionLabel>Konto</SectionLabel>
-        <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-          <MenuRow
-            href="/account/partner/profile"
-            title="Profil"
-            subtitle="Imię, e-mail, zdjęcie"
-            Icon={UserRound}
-          />
-        </div>
-      </section>
 
       {/* B2B→B2C switch — the calm counterpart to the pinned B2C button (T13);
           calm here because the tab bar already exists (spec-b2b §2). */}

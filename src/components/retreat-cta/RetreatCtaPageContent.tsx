@@ -37,10 +37,10 @@ import {
   SparklesProcessIcon,
 } from "./RetreatCtaIcons";
 
-const CREATE_RETREAT_PATH = "/profile/retreats/create";
+const CREATE_RETREAT_PATH = "/account/partner/retreats/create";
 const CREATE_RETREAT_FROM_URL_PATH = `${CREATE_RETREAT_PATH}?source=url`;
-const AUTH_CREATE_RETREAT_HREF = `/profile/login?next=${encodeURIComponent(CREATE_RETREAT_PATH)}`;
-const AUTH_IMPORT_RETREAT_HREF = `/profile/login?next=${encodeURIComponent(CREATE_RETREAT_FROM_URL_PATH)}`;
+const AUTH_CREATE_RETREAT_HREF = `/account/login?next=${encodeURIComponent(CREATE_RETREAT_PATH)}`;
+const AUTH_IMPORT_RETREAT_HREF = `/account/login?next=${encodeURIComponent(CREATE_RETREAT_FROM_URL_PATH)}`;
 
 const processSteps: CtaProcessStep[] = [
   {

@@ -1,14 +1,17 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 
 import { BottomTabBar, TAB_PATHS } from "@/components/layout/BottomTabBar";
 import { DashboardTopBar } from "@/components/layout/DashboardTopBar";
+import { Button } from "@/components/ui/button";
 import { type Partner, useAuth } from "@/context/AuthContext";
 import { OfferCreateMenuProvider } from "@/context/OfferCreateMenuContext";
 import { PageHeaderProvider } from "@/context/PageHeaderContext";
 import { PartnerCapabilitiesProvider } from "@/context/PartnerCapabilitiesContext";
+import { clearAuthStorage } from "@/lib/auth/logoutChain";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { setLastMode } from "@/lib/partnerMode";
 
@@ -29,7 +32,13 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
 
   // null = partner status not yet resolved for the current session
-  const [hasPartner, setHasPartner] = useState<boolean | null>(null);
+  const [resolution, setResolution] = useState<{
+    userId: string;
+    status: "ready" | "error";
+  } | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const hasPartner =
+    Boolean(user?.partner) || (resolution?.userId === user?.id && resolution?.status === "ready");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -51,47 +60,76 @@ function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    if (user.partner || (resolution?.userId === user.id && resolution.status === "ready")) return;
     let cancelled = false;
-    setHasPartner(null);
-
     const acceptPartner = (partner: Partner) => {
       if (cancelled) return;
-      // The account CTA may have just created the Partner without refreshing /me.
-      // Keep auth in sync with the confirmed API response before capabilities load.
-      if (!user.partner) setUser({ ...user, partner });
-      setHasPartner(true);
+      setUser({ ...user, partner });
+      setResolution({ userId: user.id, status: "ready" });
     };
-
-    axiosInstance
-      .get<Partner>("/partner/me")
-      .then(({ data }) => acceptPartner(data))
-      .catch((err) => {
-        if (cancelled) return;
-        if (err.response?.status === 404) {
-          axiosInstance
-            .post<Partner>("/partner/instant")
-            .then(({ data }) => acceptPartner(data))
-            .catch(() => {
-              // A concurrent tab may have already created it — re-check once rather
-              // than stranding the user on a spinner.
-              if (!cancelled) setHasPartner(true);
-            });
-        } else {
-          // Don't lock the user out of the dashboard on transient/unexpected errors.
-          setHasPartner(true);
+    const resolve = async () => {
+      try {
+        try {
+          const { data } = await axiosInstance.get<Partner>("/partner/me");
+          acceptPartner(data);
+          return;
+        } catch (error) {
+          if (cancelled) return;
+          if (!isAxiosError(error) || error.response?.status !== 404) throw error;
         }
-      });
-
+        try {
+          const { data } = await axiosInstance.post<Partner>("/partner/instant");
+          acceptPartner(data);
+        } catch (error) {
+          if (cancelled) return;
+          if (isAxiosError(error) && error.response?.status === 401) throw error;
+          const { data } = await axiosInstance.get<Partner>("/partner/me");
+          acceptPartner(data);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        if (isAxiosError(error) && error.response?.status === 401) {
+          clearAuthStorage();
+          setUser(null);
+          return;
+        }
+        setResolution({ userId: user.id, status: "error" });
+      }
+    };
+    void resolve();
     return () => {
       cancelled = true;
     };
-  }, [loading, user, setUser]);
+    // Resolution is the result, not a trigger. Same-account refresh keeps mounted content.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, setUser, attempt]);
 
   const isMainTab = (TAB_PATHS as readonly string[]).includes(pathname);
 
   // Wait for auth and the partner check before rendering dashboard content —
   // otherwise it flashes before the instant-create round trip settles.
-  if (loading || !user || hasPartner !== true) {
+  if (
+    !loading &&
+    user &&
+    !hasPartner &&
+    resolution?.userId === user.id &&
+    resolution.status === "error"
+  ) {
+    return (
+      <main className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        <p role="alert">Nie udało się otworzyć konta partnera. Spróbuj ponownie.</p>
+        <Button
+          onClick={() => {
+            setResolution(null);
+            setAttempt((value) => value + 1);
+          }}
+        >
+          Spróbuj ponownie
+        </Button>
+      </main>
+    );
+  }
+  if (loading || !user || !hasPartner) {
     return (
       <div className="flex flex-col bg-background">
         <main className="flex-1 flex justify-center items-center min-h-[100dvh] w-full">

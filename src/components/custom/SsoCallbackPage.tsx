@@ -5,6 +5,9 @@ import { Suspense, useEffect, useRef } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { resolveAuthDestination } from "@/lib/auth/destination";
+import { hasCurrentInvitation } from "@/lib/auth/invitations";
+import { getRecordedMode } from "@/lib/partnerMode";
 
 function CallbackContent() {
   const router = useRouter();
@@ -24,9 +27,13 @@ function CallbackContent() {
       return;
     }
 
-    const next = searchParams.get("next") || "/account/partner";
-    storeToken(token);
-    window.location.href = next;
+    void (async () => {
+      const user = await storeToken(token);
+      window.location.href = await resolveAuthDestination(
+        { next: searchParams.get("next"), user, mode: getRecordedMode() },
+        hasCurrentInvitation,
+      );
+    })();
   }, [router, storeToken, token, toast, searchParams]);
 
   return null;

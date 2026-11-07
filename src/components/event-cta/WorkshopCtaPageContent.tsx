@@ -31,8 +31,8 @@ import {
 } from "@/components/retreat-cta/RetreatCtaIcons";
 import { savePendingEventImport } from "@/lib/pendingEventImport";
 
-const CREATE_WORKSHOP_FROM_URL_PATH = "/profile/workshops/create?source=url";
-const AUTH_IMPORT_WORKSHOP_HREF = `/profile/login?next=${encodeURIComponent(CREATE_WORKSHOP_FROM_URL_PATH)}`;
+const CREATE_WORKSHOP_FROM_URL_PATH = "/account/partner/workshops/create?source=url";
+const AUTH_IMPORT_WORKSHOP_HREF = `/account/login?next=${encodeURIComponent(CREATE_WORKSHOP_FROM_URL_PATH)}`;
 
 const processSteps: CtaProcessStep[] = [
   {

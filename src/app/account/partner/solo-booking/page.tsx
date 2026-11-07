@@ -122,7 +122,7 @@ export default function SoloBookingSetupPage() {
       <PhoneVerificationDialog
         open={verifyPhone}
         onOpenChange={setVerifyPhone}
-        onVerified={() => {}}
+        onVerified={() => void save()}
         description="Zanim włączysz zapisy, potwierdź numer telefonu kodem SMS."
       />
     </div>

@@ -30,9 +30,9 @@ export type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
   loading: boolean;
-  refreshUser: () => Promise<void>;
-  updateUserFromToken: () => void;
-  storeToken: (token: string) => void;
+  refreshUser: () => Promise<User | null>;
+  updateUserFromToken: () => Promise<User | null>;
+  storeToken: (token: string) => Promise<User | null>;
   signOut: () => void;
 };
 
@@ -88,11 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("access_token");
     if (!token) {
       setUser(null);
-      return;
+      return null;
     }
 
     try {
-      const response = await axiosInstance.get("/me");
+      const response = await axiosInstance.get<User>("/me");
+      if (localStorage.getItem("access_token") !== token) return null;
       // The server's name wins, falling back to whatever the token carried. This used
       // to be `name: prevUser?.name` unconditionally, which *discarded* the name /me
       // returns — written before `User.name` existed on the backend, so the JWT was the
@@ -106,15 +107,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (me?.id) {
         identifyMixpanelUser(me.id, buildMixpanelProfile(me));
       }
+      return me;
     } catch (error) {
+      if (localStorage.getItem("access_token") !== token) return null;
       if (isUnauthorizedError(error)) {
         clearToken();
-        return;
+        return null;
       }
 
       if (!isIgnorableAuthRefreshError(error)) {
         console.error("Failed to refresh current user", error);
       }
+      return null;
     }
   }, [clearToken]);
 
@@ -126,15 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (token) {
         try {
-          const decoded: any = jwtDecode(token);
-          if (isMounted) {
-            setUser({
-              id: decoded.sub,
-              email: decoded.email,
-              name: decoded.name,
-              partner: null,
-            });
-          }
+          jwtDecode(token);
           await refreshUser();
         } catch (error) {
           clearToken();
@@ -155,31 +151,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [clearToken, refreshUser]);
 
-  function updateUserFromToken() {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        setUser({
-          id: decoded.sub,
-          email: decoded.email,
-          name: decoded.name,
-          partner: null,
-        });
-        identifyMixpanelUser(decoded.sub, { email: decoded.email, name: decoded.name });
-        refreshUser();
-      } catch (error) {
-        setUser(null);
-      }
-    } else {
-      setUser(null);
+  async function updateUserFromToken(): Promise<User | null> {
+    setLoading(true);
+    setUser(null);
+    try {
+      return await refreshUser();
+    } finally {
+      setLoading(false);
     }
   }
 
-  function storeToken(token: string) {
+  async function storeToken(token: string): Promise<User | null> {
     localStorage.setItem("access_token", token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    updateUserFromToken();
+    return updateUserFromToken();
   }
 
   function signOut() {

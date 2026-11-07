@@ -159,7 +159,8 @@ function StudioHeader() {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const accountHref = mounted && user ? "/account/partner" : "/account/login";
+  const accountHref =
+    mounted && user ? (user.partner ? "/account/partner" : "/account") : "/account/login";
   // Auth state only exists on the client, and this segment hydrates after AuthProvider
   // has already populated `user` — so the avatar has to wait for `mounted` too, or the
   // hydration render picks the <img> branch against server HTML that has the fallback.

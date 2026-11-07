@@ -5,8 +5,10 @@ import { Suspense, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { resolveAuthDestination } from "@/lib/auth/destination";
+import { hasCurrentInvitation } from "@/lib/auth/invitations";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { getLastMode } from "@/lib/partnerMode";
+import { getRecordedMode } from "@/lib/partnerMode";
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -33,19 +35,17 @@ function VerifyEmailContent() {
       try {
         const response = await axiosInstance.post("/verify-email", { token });
         const accessToken = response.data?.access_token;
-        if (accessToken) {
-          storeToken(accessToken);
-        }
+        const user = accessToken ? await storeToken(accessToken) : null;
         setStatus("success");
         toast({
           description: "Email zweryfikowany pomyślnie! Logowanie...",
           duration: 3000,
         });
 
-        const redirectTo =
-          next ||
-          localStorage.getItem("wy_auth_next") ||
-          (getLastMode() === "b2c" ? "/account" : "/account/partner");
+        const redirectTo = await resolveAuthDestination(
+          { next, user, mode: getRecordedMode() },
+          hasCurrentInvitation,
+        );
         localStorage.removeItem("wy_auth_next");
 
         // Redirect after a short delay

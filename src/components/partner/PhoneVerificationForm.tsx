@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { Partner } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -51,7 +52,7 @@ function normalizePhoneNumber(value: string) {
  * needs a contactable owner (currently: creating a studio — see `create_studio` in
  * `wy-backend/src/app/api/studio.py`). Drop this inline or inside a Dialog.
  */
-export function PhoneVerificationForm({ onVerified }: { onVerified: () => void }) {
+export function PhoneVerificationForm({ onVerified }: { onVerified: (partner: Partner) => void }) {
   const { toast } = useToast();
   const [step, setStep] = useState<Step>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -99,12 +100,12 @@ export function PhoneVerificationForm({ onVerified }: { onVerified: () => void }
     setCodeError(null);
     setIsVerifying(true);
     try {
-      await axiosInstance.put("/partner", {
+      const { data } = await axiosInstance.put<Partner>("/partner", {
         phone_number: verifiedPhoneNumber,
         verification_code: trimmed,
       });
       toast({ description: "Numer telefonu zweryfikowany." });
-      onVerified();
+      onVerified(data);
     } catch (err: any) {
       setCodeError(err.response?.data?.detail || "Nieprawidłowy lub wygasły kod.");
     } finally {

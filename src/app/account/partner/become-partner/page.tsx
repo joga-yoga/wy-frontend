@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import { PhoneVerificationForm } from "@/components/partner/PhoneVerificationForm";
+import { useAuth } from "@/context/AuthContext";
 
 /**
  * Formerly a two-step "become a partner" form gating B2B entry behind name +
@@ -15,8 +17,15 @@ import { PhoneVerificationForm } from "@/components/partner/PhoneVerificationFor
  */
 export default function BecomePartnerPage() {
   const router = useRouter();
+  const { user, setUser } = useAuth();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/account/partner";
+
+  useEffect(() => {
+    if (user?.partner?.phone_verified) router.replace(next);
+  }, [user?.partner?.phone_verified, router, next]);
+
+  if (user?.partner?.phone_verified) return null;
 
   return (
     <div className="mx-auto max-w-xl px-4 py-12 sm:px-6 lg:px-8">
@@ -27,7 +36,12 @@ export default function BecomePartnerPage() {
             Potwierdź numer telefonu kodem z SMS-a, aby kontynuować.
           </p>
         </div>
-        <PhoneVerificationForm onVerified={() => router.replace(next)} />
+        <PhoneVerificationForm
+          onVerified={(partner) => {
+            if (user && partner.user_id === user.id) setUser({ ...user, partner });
+            router.replace(next);
+          }}
+        />
       </div>
     </div>
   );

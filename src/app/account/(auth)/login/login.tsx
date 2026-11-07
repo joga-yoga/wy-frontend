@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { authContinuation, resolveAuthDestination } from "@/lib/auth/destination";
+import { hasCurrentInvitation } from "@/lib/auth/invitations";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getRecordedMode } from "@/lib/partnerMode";
 
@@ -44,36 +46,21 @@ export function LoginPage() {
   const [isSignupPasswordVisible, setIsSignupPasswordVisible] = useState(false);
   const hasAutoRedirected = useRef(false);
   const hasAutoSubmittedEmail = useRef(false);
-  const nextParam = searchParams.get("next");
-  // Renders "/account/partner" on the server (no localStorage there) and only picks up
-  // the remembered mode after mount, to avoid a hydration mismatch — see partnerMode.ts.
-  const [defaultNext, setDefaultNext] = useState("/account/partner");
-  useEffect(() => {
-    // A device with no recorded mode has only ever browsed public pages, so it is a B2C
-    // visitor — most likely one who just tapped the public header's account icon, which
-    // deliberately sends no `next`. Only an explicitly remembered "b2b" keeps the panel.
-    setDefaultNext(getRecordedMode() === "b2b" ? "/account/partner" : "/account");
-  }, []);
-  const next = nextParam || defaultNext;
+  const next = authContinuation(searchParams);
   const emailParam = searchParams.get("email") || "";
-
-  const googleAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login?next=${encodeURIComponent(next)}`;
-  const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login?next=${encodeURIComponent(next)}`;
-
-  useEffect(() => {
-    if (next && next !== "/account/partner") {
-      localStorage.setItem("wy_auth_next", next);
-    }
-  }, [next]);
+  const authQuery = next ? `?next=${encodeURIComponent(next)}` : "";
+  const googleAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login${authQuery}`;
+  const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login${authQuery}`;
 
   useEffect(() => {
-    if (loading || !user || hasAutoRedirected.current) {
-      return;
-    }
-
+    if (loading || !user || hasAutoRedirected.current) return;
     hasAutoRedirected.current = true;
     setIsAutoRedirecting(true);
-    window.location.href = next;
+    void resolveAuthDestination({ next, user, mode: getRecordedMode() }, hasCurrentInvitation).then(
+      (destination) => {
+        window.location.href = destination;
+      },
+    );
   }, [loading, next, user]);
 
   // Auto-submit when ?email= is in the URL — skip step 1 and go straight to login/signup
@@ -136,13 +123,10 @@ export function LoginPage() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       const accessToken = response.data?.access_token;
-      const redirectTo = response.data?.redirect_to || next;
 
       if (accessToken) {
-        storeToken(accessToken);
+        await storeToken(accessToken);
       }
-
-      // window.location.href = redirectTo;
     } catch (error: any) {
       if (
         error.response &&
@@ -179,7 +163,7 @@ export function LoginPage() {
   async function onSubmitForgot(data: { email: string }) {
     try {
       setEmailValue(data.email);
-      await axiosInstance.post("/forgot-password", { email: data.email });
+      await axiosInstance.post("/forgot-password", { email: data.email, next });
       // toast({
       //   description: "If this email is registered and verified, a reset link has been sent.",
       // });
