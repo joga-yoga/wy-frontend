@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Clock, Flower2 } from "lucide-react";
+import { BarChart3, Clock, Rainbow } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -42,7 +42,7 @@ function QuickFactsChips({ classTemplate }: { classTemplate: ClassTemplateDetail
     chips.push({ icon: <BarChart3 className="h-3.5 w-3.5" />, label: level });
   }
   if (classTemplate.style) {
-    chips.push({ icon: <Flower2 className="h-3.5 w-3.5" />, label: classTemplate.style });
+    chips.push({ icon: <Rainbow className="h-3.5 w-3.5" />, label: classTemplate.style });
   }
   if (chips.length === 0) return null;
 
@@ -91,7 +91,7 @@ function Header({
       ) : (
         <div className="flex items-center justify-center bg-[#f4efe8] px-4 pb-8 pt-14">
           <BackButton href={backHref} className="fixed left-4 top-4 z-50" />
-          <Flower2 className="h-14 w-14 text-[#c9b596]" />
+          <Rainbow className="h-14 w-14 text-[#c9b596]" />
         </div>
       )}
       <div className="border-b bg-white px-4 py-4">

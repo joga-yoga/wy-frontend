@@ -49,12 +49,22 @@ export function StudioWorkspaceRows({
       .catch(() => setRoster(null));
   }, [studioId, solo]);
 
+  const templatesRow = (
+    <MenuRow
+      href="/account/partner/class-templates"
+      title="Szablony zajęć"
+      subtitle="Zarządzaj grafikiem zajęć"
+      Icon={Layers}
+    />
+  );
+
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
         {solo ? "Własne zajęcia" : `${studioName} · Twoje studio`}
       </h2>
       <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+        {solo && templatesRow}
         {/* R1 leads this row with the studio's own logo rather than a generic icon —
             it is the only row that is *about* a specific studio. */}
         {!solo && (
@@ -87,12 +97,7 @@ export function StudioWorkspaceRows({
           subtitle="Karnety i wizyty"
           Icon={Users}
         />
-        <MenuRow
-          href="/account/partner/class-templates"
-          title="Szablony zajęć"
-          subtitle="Zarządzaj grafikiem zajęć"
-          Icon={Layers}
-        />
+        {!solo && templatesRow}
         <MenuRow
           href={`/account/partner/studio/${studioId}/payments`}
           title="Płatności i odwołania"

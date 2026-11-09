@@ -7,7 +7,7 @@ import {
   Clock,
   ClockAlert,
   DoorOpen,
-  Flower2,
+  Rainbow,
   Share2,
   Users,
   Wallet,
@@ -351,7 +351,7 @@ function AboutClassSection({ detail }: { detail: OccurrenceDetail }) {
   const level = levelLabel(detail.level);
   const chips: { icon: React.ReactNode; label: string }[] = [];
   if (level) chips.push({ icon: <BarChart3 className="h-3.5 w-3.5" />, label: level });
-  if (detail.style) chips.push({ icon: <Flower2 className="h-3.5 w-3.5" />, label: detail.style });
+  if (detail.style) chips.push({ icon: <Rainbow className="h-3.5 w-3.5" />, label: detail.style });
   if (detail.duration_minutes) {
     chips.push({
       icon: <Clock className="h-3.5 w-3.5" />,

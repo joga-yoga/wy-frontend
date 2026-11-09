@@ -47,7 +47,11 @@ async function setup(page: Page, existing: StudioPass[] = [], local = false) {
         if (control.fail) {
           status = 503;
           json = { detail: "Nie udało się zapisać karnetu. Spróbuj ponownie." };
-        } else json = { ...body, id: existing[0]?.id ?? `saved-${requests.length}` };
+        } else
+          json = {
+            ...body,
+            id: req.method() === "PUT" ? path.split("/").at(-1) : `saved-${requests.length}`,
+          };
       } else if (path.startsWith("/notifications")) json = { items: [], unread_count: 0 };
       await route.fulfill({ status, json });
     },
@@ -208,7 +212,7 @@ test("custom edit preserves currency, retries failed save once and prevents dupl
       description: "Opis zapisany",
     },
   ]);
-  await page.getByRole("button", { name: "Edytuj", exact: true }).click();
+  await page.getByRole("button", { name: "Edytuj karnet Karnet własny", exact: true }).click();
   const dialog = form(page);
   await expect(dialog.getByRole("textbox", { name: "Liczba wejść", exact: true })).toHaveValue("7");
   await expect(dialog.getByRole("textbox", { name: "Ważność", exact: true })).toHaveValue("45");
@@ -298,7 +302,7 @@ test("unsaved studio receives a local pass without a pass API request", async ({
   await expect(form(page)).toHaveCount(0);
   expect(requests).toHaveLength(0);
   await expect(page.getByText("Karnet lokalny", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: /Karnet lokalny/ }).click();
+  await page.getByRole("button", { name: "Edytuj karnet Karnet lokalny", exact: true }).click();
   await expect(form(page).getByRole("switch", { name: "Bez limitu", exact: true })).toBeChecked();
   await expect(form(page).getByRole("switch", { name: "Bez terminu", exact: true })).toBeChecked();
   await form(page).getByRole("switch", { name: "Bez limitu", exact: true }).click();
@@ -381,7 +385,9 @@ for (const local of [false, true])
     await expect(page.getByText("Karnet OPEN — 2 mies.", { exact: true })).toBeVisible();
     if (local) {
       expect(requests).toHaveLength(0);
-      await page.getByRole("button", { name: /Karnet OPEN — 2 mies\./ }).click();
+      await page
+        .getByRole("button", { name: "Edytuj karnet Karnet OPEN — 2 mies.", exact: true })
+        .click();
       await expect(form(page).getByLabel("Nazwa karnetu", { exact: true })).toHaveValue(
         "Karnet OPEN — 2 mies.",
       );
@@ -450,7 +456,7 @@ test("source pass with unknown validity requires an explicit owner term", async 
       duration_unknown: true,
     },
   ]);
-  await page.getByRole("button", { name: "Edytuj", exact: true }).click();
+  await page.getByRole("button", { name: "Edytuj karnet Source four visits", exact: true }).click();
   const dialog = form(page);
   await expect(dialog.getByRole("switch", { name: "Bez terminu" })).toHaveAttribute(
     "aria-checked",
@@ -466,4 +472,40 @@ test("source pass with unknown validity requires an explicit owner term", async 
     duration_unknown: false,
     session_count: 4,
   });
+});
+
+test("solo offer row updates its own pass and keeps the row after failed deletion", async ({
+  page,
+}) => {
+  const { requests } = await setup(page, [
+    { id: "first", name: "Pierwszy karnet", price: 160, session_count: 4, currency: "PLN" },
+    { id: "second", name: "Drugi karnet OPEN", price: 300, session_count: null, currency: "PLN" },
+  ]);
+  await page.getByRole("button", { name: "Edytuj karnet Drugi karnet OPEN", exact: true }).click();
+  await expect(form(page).getByLabel("Nazwa karnetu", { exact: true })).toHaveValue(
+    "Drugi karnet OPEN",
+  );
+  await form(page).getByLabel("Nazwa karnetu", { exact: true }).fill("Zmieniony OPEN");
+  await form(page).getByRole("button", { name: "Zapisz zmiany", exact: true }).click();
+  await expect(form(page)).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Edytuj karnet Pierwszy karnet", exact: true }),
+  ).toBeVisible();
+  const edited = page.getByRole("button", { name: "Edytuj karnet Zmieniony OPEN", exact: true });
+  await expect(edited).toBeVisible();
+  expect(requests[0]).toMatchObject({
+    method: "PUT",
+    body: { name: "Zmieniony OPEN", session_count: null },
+  });
+  let deletes = 0;
+  await page.route("**/studios/pass-studio/passes/second", async (route) => {
+    expect(route.request().method()).toBe("DELETE");
+    deletes++;
+    await route.fulfill({ status: 503, json: { detail: "Temporary test failure" } });
+  });
+  await page.getByRole("button", { name: "Usuń karnet Zmieniony OPEN", exact: true }).click();
+  await expect(page.getByText("Nie udało się usunąć karnetu.", { exact: true })).toBeVisible();
+  await expect(edited).toBeVisible();
+  await expect(form(page)).toHaveCount(0);
+  expect(deletes).toBe(1);
 });
