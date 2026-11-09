@@ -144,8 +144,7 @@ export function ProfileForm() {
                 onRemove={handleRemoveImageClick}
                 disabled={isSubmitting}
                 isRemoved={removeCurrentImage}
-                placeholderClassName="rounded-full"
-                previewClassName="rounded-full"
+                variant="avatar"
               />
               <FormMessage />
             </FormItem>

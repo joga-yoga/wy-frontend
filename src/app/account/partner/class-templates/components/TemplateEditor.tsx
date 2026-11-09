@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Check, Plus, X } from "lucide-react";
+import { Ban, Check, Plus } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { StudioRosterAddForm } from "@/app/account/partner/instructors/components/StudioRosterAddForm";
@@ -95,7 +95,7 @@ export function TemplateEditor({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [durationMinutes, setDurationMinutes] = useState(String(initial?.duration_minutes ?? 60));
-  const [level, setLevel] = useState(initial ? (initial.level ?? "") : "all_levels");
+  const [level, setLevel] = useState(initial?.level || "all_levels");
   const [styleId, setStyleId] = useState<string | null>(initial?.style_id ?? null);
   const [language, setLanguage] = useState(initial?.language ?? "polski");
   const [color, setColor] = useState<ClassColor | null>(initial?.color ?? null);
@@ -324,30 +324,18 @@ export function TemplateEditor({
             </div>
             <div>
               <Label htmlFor="level">Poziom</Label>
-              <div className="flex gap-1.5">
-                <Select value={level || undefined} onValueChange={setLevel}>
-                  <SelectTrigger id="level" className="min-w-0 flex-1">
-                    <SelectValue placeholder="Wybierz" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEVEL_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {level && (
-                  <button
-                    type="button"
-                    onClick={() => setLevel("")}
-                    aria-label="Wyczyść poziom"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
+              <Select value={level} onValueChange={setLevel}>
+                <SelectTrigger id="level">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVEL_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>

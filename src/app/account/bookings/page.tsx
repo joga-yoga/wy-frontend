@@ -87,9 +87,15 @@ export default function MyBookingsPage() {
     );
   }
 
-  const upcomingClasses = data.bookings.filter(
-    (b) => b.event_type === "class" && !b.is_past && b.status !== "cancelled",
-  );
+  const upcomingClasses = data.bookings
+    .filter((b) => b.event_type === "class" && !b.is_past && b.status !== "cancelled")
+    .sort((a, b) => {
+      const aTime = Date.parse(a.start_time ?? "");
+      const bTime = Date.parse(b.start_time ?? "");
+      if (!Number.isFinite(aTime)) return Number.isFinite(bTime) ? 1 : 0;
+      if (!Number.isFinite(bTime)) return -1;
+      return aTime - bTime;
+    });
   const upcomingTripEvents = data.bookings.filter(
     (b) => b.event_type !== "class" && !b.is_past && b.status !== "cancelled",
   );

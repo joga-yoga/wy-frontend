@@ -12,8 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAssignableInstructorSource } from "@/hooks/useAssignableInstructors";
 import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { COLOR_BORDER_MAP, COLOR_SWATCH_MAP, DEFAULT_BAR, DEFAULT_BORDER } from "@/lib/classColors";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
 import { isValidTime } from "@/lib/timeInput";
+import { cn } from "@/lib/utils";
 
 import { TemplateEditor } from "../../class-templates/components/TemplateEditor";
 import { TemplateRowContent } from "../../class-templates/components/TemplateRowContent";
@@ -543,6 +545,7 @@ export default function CreateScheduleWizard() {
             </p>
           )}
           <ScheduleRecurrenceForm
+            templateColor={selectedTemplate.color}
             solo={Boolean(capabilities?.soloStudioId)}
             templateTitle={selectedTemplate.title}
             templateSubtitle={`${selectedTemplate.duration_minutes} min${
@@ -627,8 +630,21 @@ export default function CreateScheduleWizard() {
             {previewOccs.slice(0, 4).map((occ, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-b2b border bg-white"
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2.5 rounded-b2b border bg-white",
+                  selectedTemplate?.color
+                    ? COLOR_BORDER_MAP[selectedTemplate.color]
+                    : DEFAULT_BORDER,
+                )}
               >
+                <div
+                  className={cn(
+                    "w-1 shrink-0 self-stretch rounded-full",
+                    selectedTemplate?.color
+                      ? COLOR_SWATCH_MAP[selectedTemplate.color]
+                      : DEFAULT_BAR,
+                  )}
+                />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">
                     {formatDatePL(occ.calendar_date)}

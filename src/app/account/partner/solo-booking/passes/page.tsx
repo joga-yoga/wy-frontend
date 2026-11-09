@@ -7,6 +7,7 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
+import { OfferPassRow } from "../../studio/[studioId]/edit/OfferPassRow";
 import { PassModal } from "../../studio/[studioId]/edit/PassModal";
 import type { StudioPass } from "../../studio/[studioId]/edit/types";
 
@@ -43,28 +44,20 @@ export default function OwnPassesPage() {
     <div className="mx-auto max-w-lg space-y-4 p-4">
       <h1 className="text-xl font-semibold">Karnety</h1>
       <p className="text-sm text-muted-foreground">Opcjonalne karnety na moje zajęcia.</p>
-      <div className="divide-y rounded-b2b border">
+      <div className="space-y-2">
+        {passes.length === 0 && (
+          <p className="py-4 text-sm text-muted-foreground">Nie masz jeszcze karnetów w ofercie.</p>
+        )}
         {passes.map((pass) => (
-          <div key={pass.id} className="space-y-2 p-4">
-            <p className="font-semibold">{pass.name}</p>
-            <p>
-              {pass.price} {pass.currency} · {pass.session_count ?? "Bez limitu"} wejść
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditing(pass);
-                  setOpen(true);
-                }}
-              >
-                Edytuj
-              </Button>
-              <Button variant="outline" onClick={() => void remove(pass)}>
-                Usuń z oferty
-              </Button>
-            </div>
-          </div>
+          <OfferPassRow
+            key={pass.id}
+            pass={pass}
+            onEdit={() => {
+              setEditing(pass);
+              setOpen(true);
+            }}
+            onRemove={() => void remove(pass)}
+          />
         ))}
       </div>
       <Button
