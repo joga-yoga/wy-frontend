@@ -344,7 +344,7 @@ test("EUR entry replaces default and stale quote requires another selection", as
   await page.getByRole("button", { name: /Poranna grupa/ }).click();
   await expect(page.getByRole("button", { name: /^Zarezerwuj ·/ })).toContainText("19,25");
   await page.getByRole("button", { name: /^Zarezerwuj ·/ }).click();
-  expect(state.requests.at(-1)?.data.entry_quote).toBe("second");
+  await expect.poll(() => state.requests.at(-1)?.data.entry_quote).toBe("second");
 });
 
 test("reception selects trial automatically and checks in without collecting money", async ({
