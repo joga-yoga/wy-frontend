@@ -223,7 +223,7 @@ export function OnlinePaymentsSection({
             płatności. Pieniądze trafiają <strong>bezpośrednio do Ciebie</strong>, a joga.yoga nie
             pobiera żadnej prowizji.
           </p>
-          <p className="text-[13px] leading-snug text-gray-500">
+          <p className="text-sm leading-snug text-gray-500">
             {solo
               ? "Płatność na miejscu działa niezależnie — włączenie płatności online niczego w niej nie"
               : "Płatność gotówką działa niezależnie — włączenie płatności online niczego w niej nie"}
@@ -410,7 +410,7 @@ export function OnlinePaymentsSection({
             )}
           </div>
 
-          <p className="px-1 text-xs leading-snug text-gray-500">
+          <p className="px-1 text-sm leading-snug text-gray-500">
             {solo
               ? "Płatność na miejscu działa niezależnie i pozostaje włączona. Dane wyłączonych operatorów"
               : "Płatność gotówką działa niezależnie i pozostaje włączona. Dane wyłączonych operatorów"}
@@ -512,7 +512,7 @@ export function OnlinePaymentsSection({
                     </span>
                   )}
                 </div>
-                {field.hint && <p className="mb-2 text-xs text-muted-foreground">{field.hint}</p>}
+                {field.hint && <p className="mb-2 text-sm text-muted-foreground">{field.hint}</p>}
                 <Input
                   id={inputId}
                   name={inputId}
@@ -560,7 +560,7 @@ export function OnlinePaymentsSection({
               Anuluj
             </Button>
           </div>
-          <p className="text-xs leading-snug text-gray-500">
+          <p className="text-sm leading-snug text-gray-500">
             Sprawdzamy dane u operatora przed włączeniem płatności. Dopóki się nie powiedzie,
             klientki i klienci nie zobaczą płatności online.
           </p>
@@ -640,7 +640,7 @@ function CallbackUrlNotice({
             value={callbackUrl}
             aria-label="Adres powiadomień"
             onFocus={(e) => e.currentTarget.select()}
-            className="min-w-0 flex-1 rounded-lg border border-amber-200 bg-white px-3 py-2 font-mono text-xs text-gray-700"
+            className="min-w-0 flex-1 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs text-gray-700"
           />
           <button
             type="button"

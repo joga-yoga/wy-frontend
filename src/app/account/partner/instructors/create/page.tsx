@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { InstructorFullProfileForm } from "@/app/account/partner/instructors/[instructorId]/edit/InstructorFullProfileForm";
+import styles from "@/app/account/partner/instructors/[instructorId]/edit/solo-profile-form.module.css";
 import { WyImage } from "@/components/custom/WyImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,7 @@ function SoloOwnProfileFlow() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 pb-28">
-      <div className="space-y-2">
+      <div className={styles.intro}>
         <h1 className="text-2xl font-bold">Uzupełnij swój profil instruktora</h1>
         <p className="text-sm text-muted-foreground">
           Następnie ustawisz zasady zapisów na swoje zajęcia.
@@ -222,13 +223,15 @@ function LegacyAddInstructorFlow() {
               disabled={isItsMe}
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-primary" />
-              <span className="text-sm font-medium">To ja — prowadzę te zajęcia osobiście</span>
+              <span className="text-base font-medium">To ja — prowadzę te zajęcia osobiście</span>
             </button>
           )}
 
           <form onSubmit={form.handleSubmit(onEmailSubmit)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="email">E-mail instruktora</Label>
+              <Label htmlFor="email" size="field">
+                E-mail instruktora
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -238,7 +241,7 @@ function LegacyAddInstructorFlow() {
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Jeśli instruktor jest już w systemie, połączymy profile. Jeśli nie — wyślemy mu
                 zaproszenie.
               </p>

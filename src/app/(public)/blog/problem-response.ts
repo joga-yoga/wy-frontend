@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { HIND_SILIGURI_FONT_FAMILY, HIND_SILIGURI_STYLESHEET_URL } from "@/lib/typography";
+
 import { blogProblemCopy } from "./problem-copy";
 
 // A rewrite into an App Router page can start streaming under HTTP 200. Return
@@ -18,8 +20,9 @@ export function blogProblemResponse(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, follow">
   <title>${title} | joga.yoga</title>
+  <link rel="stylesheet" href="${HIND_SILIGURI_STYLESHEET_URL.replaceAll("&", "&amp;")}">
   <style>
-    body { margin: 0; color: #1f2937; background: #fff; font-family: system-ui, sans-serif; }
+    body { margin: 0; color: #1f2937; background: #fff; font-family: ${HIND_SILIGURI_FONT_FAMILY}; }
     main { max-width: 48rem; margin: 0 auto; padding: 4rem 1.5rem; }
     h1 { font-size: 1.875rem; line-height: 1.2; font-weight: 600; }
     p { font-size: 1.125rem; line-height: 1.6; color: #4b5563; }

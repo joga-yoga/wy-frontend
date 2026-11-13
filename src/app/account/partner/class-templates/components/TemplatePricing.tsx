@@ -108,7 +108,7 @@ export function TemplatePricing({
   }
   return (
     <section className="space-y-3">
-      <Label>Cena zajęć</Label>
+      <Label className="font-light text-gray-400">Cena zajęć</Label>
       {(capabilities?.managedStudios.length ?? 0) > 1 && (
         <Select
           value={studioId ?? ""}
@@ -116,7 +116,10 @@ export function TemplatePricing({
             if (value) setChosenStudio(value);
           }}
         >
-          <SelectTrigger aria-label="Studio dla ceny zajęć">
+          <SelectTrigger
+            aria-label="Studio dla ceny zajęć"
+            className="data-[placeholder]:text-sm data-[placeholder]:font-light"
+          >
             <SelectValue placeholder="Wybierz studio" />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +158,9 @@ export function TemplatePricing({
           {draft && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="template-entry-price">Cena jednego wejścia</Label>
+                <Label className="font-light text-gray-400" htmlFor="template-entry-price">
+                  Cena jednego wejścia
+                </Label>
                 <div className="mt-2 grid grid-cols-[1fr_88px] gap-3">
                   <Input
                     id="template-entry-price"
@@ -188,22 +193,27 @@ export function TemplatePricing({
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Bezpłatne pierwsze zajęcia włącz przełącznikiem poniżej, zamiast wpisywać 0.
                 </p>
               </div>
               <div>
-                <Label htmlFor="template-entry-name">Nazwa</Label>
+                <Label className="font-light text-gray-400" htmlFor="template-entry-name">
+                  Nazwa
+                </Label>
                 <Input
                   id="template-entry-name"
                   maxLength={120}
                   placeholder="Wejście jednorazowe"
+                  className="placeholder:text-sm placeholder:font-light"
                   value={draft.name ?? ""}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value || null })}
                 />
               </div>
               <div>
-                <Label htmlFor="template-entry-conditions">Opis / warunki</Label>
+                <Label className="font-light text-gray-400" htmlFor="template-entry-conditions">
+                  Opis / warunki
+                </Label>
                 <Textarea
                   id="template-entry-conditions"
                   maxLength={500}
@@ -213,7 +223,9 @@ export function TemplatePricing({
               </div>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <Label htmlFor="template-trial">Pierwsze zajęcia próbne gratis</Label>
+                  <Label className="font-light text-gray-400" htmlFor="template-trial">
+                    Pierwsze zajęcia próbne gratis
+                  </Label>
                   <p className="text-sm text-muted-foreground">
                     Dla osób, które po raz pierwszy uczestniczą w tych zajęciach.
                   </p>
@@ -252,7 +264,7 @@ export function TemplatePricing({
                   Zastosuj
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Organizujesz wydarzenie z osobnym cennikiem?{" "}
                 <a
                   className="underline"

@@ -86,22 +86,27 @@ interface StudioFormProps {
 
 type SubmitIntent = "draft" | "publish";
 
+const fieldHeadingClass =
+  "mb-1 flex text-xl font-medium leading-7 tracking-normal text-gray-800 md:text-3xl md:leading-9";
+
+const fieldDescriptionClass =
+  "mb-2 flex text-sm font-normal leading-snug text-gray-500 md:pt-2 md:text-xl";
+
+const fieldTextClass = "text-base font-normal leading-snug md:text-xl";
+
 function Section({
   title,
   children,
-  first = false,
   id,
+  className,
 }: {
   title: string;
   children: ReactNode;
-  first?: boolean;
   id?: string;
+  className?: string;
 }) {
   return (
-    <section id={id} className={cn("py-5", !first && "border-t border-border")}>
-      <div className="mb-4 flex items-center text-base font-bold uppercase tracking-0 text-muted-foreground">
-        <h2>{title}</h2>
-      </div>
+    <section id={id} aria-label={title} className={cn("py-4 md:py-5", className)}>
       {children}
     </section>
   );
@@ -114,14 +119,16 @@ function FieldError({ message }: { message?: string }) {
 
 function fieldClass(hasError?: boolean) {
   return cn(
-    "h-12 rounded-md bg-white px-3 text-base shadow-none focus-visible:ring-brand-green",
+    "h-auto min-h-12 rounded-md bg-white px-4 py-3 shadow-none focus-visible:ring-brand-green md:min-h-14",
+    fieldTextClass,
     hasError && "border-destructive focus-visible:ring-destructive",
   );
 }
 
 function textAreaClass(hasError?: boolean) {
   return cn(
-    "min-h-24 rounded-md bg-white px-3 py-2 text-base shadow-none focus-visible:ring-brand-green",
+    "min-h-24 rounded-md bg-white px-4 py-3 shadow-none focus-visible:ring-brand-green",
+    fieldTextClass,
     hasError && "border-destructive focus-visible:ring-destructive",
   );
 }
@@ -783,7 +790,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
     return (
       <main className="min-h-screen bg-muted px-4 py-8">
         <div className="mx-auto max-w-[600px] rounded-lg border bg-background p-6">
-          <p className="text-base font-semibold">{loadError}</p>
+          <p className="text-base font-medium">{loadError}</p>
           <Button size="action" className="mt-4" onClick={() => router.refresh()}>
             Spróbuj ponownie
           </Button>
@@ -905,26 +912,28 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                 )}
               </div>
               {/* ── Section 1: Podstawy ── */}
-              <Section id="studio-basics-section" title="Podstawy" first>
-                <div className="space-y-4">
+              <Section id="studio-basics-section" title="Podstawy">
+                <div className="space-y-8 md:space-y-10">
                   {/* Logo — V1's compact tile + "Zmień logo", not a full dropzone. */}
-                  <StudioLogoField
-                    studioName={values.name}
-                    imageId={values.image_id}
-                    previewUrl={logoPreviewUrl}
-                    isUploading={isUploadingLogo}
-                    onFileSelect={handleLogoFileSelect}
-                    onRemove={() => {
-                      setLogoPreviewUrl(null);
-                      setDirtyValue("image_id", null);
-                    }}
-                  />
+                  <div className="[&>div>label]:flex [&>div>label]:text-xl [&>div>label]:leading-7 [&>div>label]:tracking-normal [&>div>label]:text-gray-800 md:[&>div>label]:text-3xl md:[&>div>label]:leading-9 [&>div>p]:flex [&>div>p]:text-sm [&>div>p]:font-normal [&>div>p]:leading-snug [&>div>p]:text-gray-500 md:[&>div>p]:pt-2 md:[&>div>p]:text-xl">
+                    <StudioLogoField
+                      studioName={values.name}
+                      imageId={values.image_id}
+                      previewUrl={logoPreviewUrl}
+                      isUploading={isUploadingLogo}
+                      onFileSelect={handleLogoFileSelect}
+                      onRemove={() => {
+                        setLogoPreviewUrl(null);
+                        setDirtyValue("image_id", null);
+                      }}
+                    />
+                  </div>
 
                   <div data-error-field="name">
-                    <label className="mb-1 block text-base font-semibold" htmlFor="name">
+                    <label className={fieldHeadingClass} htmlFor="name">
                       Nazwa studia
                     </label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <p className={fieldDescriptionClass}>
                       Oficjalna nazwa studia widoczna na stronie publicznej i w wyszukiwaniu
                     </p>
                     <Input
@@ -946,10 +955,10 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
 
                   {/* Slug */}
                   <div>
-                    <label className="mb-1 block text-base font-semibold" htmlFor="slug">
+                    <label className={fieldHeadingClass} htmlFor="slug">
                       Adres URL studia
                     </label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <p className={fieldDescriptionClass}>
                       Unikalny identyfikator studia, który jest częścią linku do Twojej strony
                       publicznej.
                     </p>
@@ -966,7 +975,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                       placeholder="np. moje-studio-jogi"
                     />
                     <div className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2">
-                      <p className="min-w-0 break-all font-mono text-sm text-muted-foreground">
+                      <p className="min-w-0 break-all text-sm text-muted-foreground">
                         https://joga.yoga/studio/
                         {values.slug ? (
                           <span className="text-brand-green">{values.slug}</span>
@@ -988,10 +997,10 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                   </div>
 
                   <div data-error-field="description">
-                    <label className="mb-1 block text-base font-semibold" htmlFor="description">
+                    <label className={fieldHeadingClass} htmlFor="description">
                       Opis
                     </label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <p className={fieldDescriptionClass}>
                       Opisz swoje studio — czym się wyróżniacie, jaka jest Wasza filozofia i co
                       uczestnicy mogą u Was znaleźć
                     </p>
@@ -1009,10 +1018,10 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                   {!pendingPublicClaim && (
                     <div className="flex items-center justify-between rounded-lg border px-4 py-3">
                       <div>
-                        <p className="text-sm font-semibold">
+                        <p className="text-sm font-medium">
                           {values.is_listed ? "Strona publiczna" : "Strona ukryta"}
                         </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="mt-0.5 text-sm text-muted-foreground">
                           {values.is_listed
                             ? "Studio jest widoczne w wynikach wyszukiwania Google"
                             : "Studio nie jest indeksowane przez wyszukiwarki"}
@@ -1038,21 +1047,25 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
               </Section>
 
               {/* ── Section 2: Lokalizacja ── */}
-              <Section id="studio-location-section" title="Lokalizacja">
-                <div className="space-y-4">
+              <Section
+                id="studio-location-section"
+                title="Lokalizacja"
+                className="border-t border-border"
+              >
+                <div className="space-y-8 md:space-y-10">
                   <div
                     data-setup-field="address"
                     data-error-field="location_id"
                     className="relative"
                   >
-                    <label className="mb-1 block text-base font-semibold">Adres</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <label className={fieldHeadingClass}>Adres</label>
+                    <p className={fieldDescriptionClass}>
                       Adres studia wyświetlany na profilu z mapą — pomaga uczestnikom Was znaleźć
                     </p>
                     {values.location?.id && !isEditingLocation ? (
-                      <div className="flex items-center gap-2 rounded-md border px-3 py-3">
+                      <div className="flex min-h-12 items-center gap-3 rounded-md border px-4 py-3 md:min-h-14">
                         <MapPin className="size-4 shrink-0 text-muted-foreground" />
-                        <span className="min-w-0 flex-1 text-sm">
+                        <span className={cn("min-w-0 flex-1", fieldTextClass)}>
                           {values.location.address_line1}
                         </span>
                         <button
@@ -1071,7 +1084,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                     ) : (
                       <>
                         <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                          <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             name="address"
                             value={isEditingLocation ? locationQuery : values.address || ""}
@@ -1087,7 +1100,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                                 300,
                               );
                             }}
-                            className={cn(fieldClass(Boolean(errors.address)), "pl-9")}
+                            className={cn(fieldClass(Boolean(errors.address)), "pl-11")}
                             placeholder="Wpisz adres, aby wyszukać..."
                             autoComplete="off"
                           />
@@ -1137,8 +1150,8 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
 
                   {/* Sale (rooms) tag input */}
                   <div>
-                    <label className="mb-1 block text-base font-semibold">Sale</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <label className={fieldHeadingClass}>Sale</label>
+                    <p className={fieldDescriptionClass}>
                       Opcjonalne — wypełnij tylko jeśli studio ma więcej niż jedną salę. Nazwy sal
                       będą widoczne w grafiku, żeby uczestnicy wiedzieli, gdzie odbywają się
                       zajęcia.
@@ -1178,65 +1191,22 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                         size="action"
                         variant="outline"
                         onClick={addRoom}
-                        className="shrink-0"
+                        className="h-auto min-h-12 shrink-0 md:min-h-14"
                       >
                         Dodaj
                       </Button>
-                    </div>
-                  </div>
-
-                  {/* Social links */}
-                  <div>
-                    <label className="mb-1 block text-base font-semibold">
-                      Media społecznościowe
-                    </label>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Wklej linki do Instagrama, Facebooka i innych profili studia — pojawią się
-                      jako ikony na publicznym profilu
-                    </p>
-                    <div data-setup-field="social_links">
-                      <SocialLinksField
-                        value={values.social_links ?? []}
-                        onChange={(next) => setDirtyValue("social_links", next)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Udogodnienia (amenities) toggle chips */}
-                  <div>
-                    <label className="mb-1 block text-base font-semibold">Udogodnienia</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Zaznacz co oferuje Twoje studio — te informacje pomagają uczestnikom przy
-                      wyborze
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {allAmenities.map((amenity) => {
-                        const Icon = amenityIcon(amenity.icon_id);
-                        return (
-                          <SelectionChip
-                            key={amenity.id}
-                            selected={(values.amenity_ids ?? []).includes(amenity.id)}
-                            icon={<Icon />}
-                            onClick={() => toggleAmenity(amenity.id)}
-                          >
-                            {amenity.name}
-                          </SelectionChip>
-                        );
-                      })}
                     </div>
                   </div>
                 </div>
               </Section>
 
               {/* ── Section 3: Oferta ── */}
-              <Section id="studio-oferta-section" title="Oferta">
-                <div className="space-y-6">
+              <Section id="studio-oferta-section" title="Oferta" className="border-y border-border">
+                <div className="space-y-8 md:space-y-10">
                   {/* Drop-in price */}
                   <div data-error-field="drop_in_price">
-                    <label className="mb-1 block text-base font-semibold">
-                      Cena za jedno wejście
-                    </label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <label className={fieldHeadingClass}>Cena za jedno wejście</label>
+                    <p className={fieldDescriptionClass}>
                       Cena jednorazowego wejścia dla osób bez karnetu i karty sportowej
                     </p>
                     <div className="grid grid-cols-[1fr_88px] gap-3">
@@ -1258,13 +1228,10 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                           if (value) setDirtyValue("currency", value, true);
                         }}
                       >
-                        <SelectTrigger
-                          data-setup-field="currency"
-                          className="h-12 rounded-md text-base"
-                        >
+                        <SelectTrigger data-setup-field="currency" className={fieldClass()}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="[&_[role=option]]:text-base [&_[role=option]]:leading-snug md:[&_[role=option]]:text-xl">
                           <SelectItem value="PLN">zł</SelectItem>
                           <SelectItem value="EUR">EUR</SelectItem>
                           <SelectItem value="USD">USD</SelectItem>
@@ -1276,8 +1243,8 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
 
                   {/* Karnety list */}
                   <div>
-                    <label className="mb-1 block text-base font-semibold">Karnety</label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <label className={fieldHeadingClass}>Karnety</label>
+                    <p className={fieldDescriptionClass}>
                       Dodaj dostępne karnety z cenami — uczestnicy zobaczą je na profilu studia
                     </p>
                     <div className="space-y-2">
@@ -1338,10 +1305,8 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
 
                   {/* Karty sportowe tri-state */}
                   <div>
-                    <label className="mb-1 block text-base font-semibold">
-                      Akceptujecie karty sportowe?
-                    </label>
-                    <p className="mb-2 text-sm text-muted-foreground">
+                    <label className={fieldHeadingClass}>Akceptujecie karty sportowe?</label>
+                    <p className={fieldDescriptionClass}>
                       Informacja widoczna na profilu studia — uczestnicy często szukają studiów
                       akceptujących ich kartę
                     </p>
@@ -1391,7 +1356,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                                 </div>
                               )}
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold">
+                                <p className="text-sm font-medium">
                                   {sc.sport_card?.name ?? sc.name ?? "Karta sportowa"}
                                 </p>
                                 {sc.fee != null && sc.fee !== "" && Number(sc.fee) > 0 && (
@@ -1464,8 +1429,58 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                 </div>
               </Section>
 
+              <Section id="studio-details-section" title="Udogodnienia i media społecznościowe">
+                <div className="space-y-8 md:space-y-10">
+                  {/* Udogodnienia (amenities) toggle chips */}
+                  <div>
+                    <label className={fieldHeadingClass}>Udogodnienia</label>
+                    <p className={fieldDescriptionClass}>
+                      Zaznacz co oferuje Twoje studio — te informacje pomagają uczestnikom przy
+                      wyborze
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allAmenities.map((amenity) => {
+                        const Icon = amenityIcon(amenity.icon_id);
+                        return (
+                          <SelectionChip
+                            key={amenity.id}
+                            selected={(values.amenity_ids ?? []).includes(amenity.id)}
+                            icon={<Icon />}
+                            onClick={() => toggleAmenity(amenity.id)}
+                          >
+                            {amenity.name}
+                          </SelectionChip>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Social links */}
+                  <div>
+                    <label className={fieldHeadingClass}>Media społecznościowe</label>
+                    <p className={fieldDescriptionClass}>
+                      Wklej linki do Instagrama, Facebooka i innych profili studia — pojawią się
+                      jako ikony na publicznym profilu
+                    </p>
+                    <div
+                      data-setup-field="social_links"
+                      className="[&_input]:h-auto [&_input]:min-h-12 [&_input]:px-4 [&_input]:py-3 [&_input]:text-base [&_input]:font-normal [&_input]:leading-snug md:[&_input]:min-h-14 md:[&_input]:text-xl [&>div>div:first-child>button]:h-auto"
+                    >
+                      <SocialLinksField
+                        value={values.social_links ?? []}
+                        onChange={(next) => setDirtyValue("social_links", next)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Section>
+
               {/* ── Section 5: Zdjęcia ── */}
-              <Section id="studio-photos-section" title="Zdjęcia">
+              <Section
+                id="studio-photos-section"
+                title="Zdjęcia"
+                className="border-t border-border [&>#event-photos-section]:pt-0"
+              >
                 <EventHelpBarProvider>
                   <EventPhotosSection
                     errors={errors as any}

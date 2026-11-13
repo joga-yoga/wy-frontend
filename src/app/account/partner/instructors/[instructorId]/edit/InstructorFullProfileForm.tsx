@@ -35,6 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentStudio } from "@/hooks/useCurrentStudio";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -52,6 +53,7 @@ import { InstructorPhotoGallery } from "./components/InstructorPhotoGallery";
 import { LanguageMultiSelect } from "./components/LanguageMultiSelect";
 import { StudioLinkSection } from "./components/StudioLinkSection";
 import { YogaStyleSelector } from "./components/YogaStyleSelector";
+import styles from "./solo-profile-form.module.css";
 
 async function refreshSavedProfile(instructorId: string, previousSlug: string | null) {
   try {
@@ -135,6 +137,10 @@ export function InstructorFullProfileForm({
   const router = useRouter();
   const { toast } = useToast();
   const { studio } = useCurrentStudio();
+  const { capabilities } = usePartnerCapabilities();
+  const isSoloProfile =
+    createSelfName !== undefined ||
+    (capabilities?.businessMode === "solo" && capabilities.selfInstructorId === instructorId);
   const [isLoading, setIsLoading] = useState(Boolean(instructorId));
   const [slug, setSlug] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(true);
@@ -450,15 +456,18 @@ export function InstructorFullProfileForm({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={isSoloProfile ? styles.form : "space-y-6"}
+        >
           {statusBanner}
           {!isOwnClaimedInstructor && (
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>E-mail instruktora *</FormLabel>
+                <FormItem data-profile-field="">
+                  <FormLabel size="field">E-mail instruktora *</FormLabel>
                   <FormDescription>
                     Ten profil jest już widoczny publicznie, ale możesz uzupełnić tylko podstawowe
                     dane. Zaproś instruktora e-mailem, aby mógł przejąć profil i uzupełnić go w
@@ -476,7 +485,7 @@ export function InstructorFullProfileForm({
           {existingEmail && (claimStatus === "invitable" || claimStatus === "invited") && (
             <div className="flex items-center gap-3 rounded-md border p-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">
+                <p className="text-base font-medium">
                   {claimStatus === "invited"
                     ? "Zaproszenie wysłane — oczekuje na odpowiedź"
                     : "Instruktor jeszcze nie przejął profilu"}
@@ -507,8 +516,8 @@ export function InstructorFullProfileForm({
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Imię i nazwisko *</FormLabel>
+              <FormItem data-profile-field="">
+                <FormLabel size="field">Imię i nazwisko *</FormLabel>
                 <FormDescription>
                   Wyświetlane publicznie na listach instruktorów i stronach wydarzeń
                 </FormDescription>
@@ -524,8 +533,8 @@ export function InstructorFullProfileForm({
             control={form.control}
             name="image_id"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Zdjęcie profilowe</FormLabel>
+              <FormItem data-profile-field="">
+                <FormLabel size="field">Zdjęcie profilowe</FormLabel>
                 <FormDescription>
                   Główne zdjęcie widoczne na listach zajęć i publicznym profilu instruktora
                 </FormDescription>
@@ -549,8 +558,8 @@ export function InstructorFullProfileForm({
             control={form.control}
             name="short_bio"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
+              <FormItem data-profile-field="">
+                <FormLabel size="field">
                   Twoje zdanie o sobie{" "}
                   <span className="text-muted-foreground text-xs font-normal">
                     (maks. 200 znaków)
@@ -579,8 +588,8 @@ export function InstructorFullProfileForm({
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pełny opis</FormLabel>
+              <FormItem data-profile-field="">
+                <FormLabel size="field">Pełny opis</FormLabel>
                 <FormDescription>
                   Biogram na publicznym profilu — opisz swoją drogę, filozofię i podejście do jogi
                 </FormDescription>
@@ -609,8 +618,8 @@ export function InstructorFullProfileForm({
                 control={form.control}
                 name="photo_ids"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Galeria zdjęć</FormLabel>
+                  <FormItem data-profile-field="">
+                    <FormLabel size="field">Galeria zdjęć</FormLabel>
                     <FormDescription>
                       Pomagają uczestnikom poznać instruktora — zdjęcia z zajęć, treningów lub
                       wydarzeń
@@ -630,8 +639,8 @@ export function InstructorFullProfileForm({
                 control={form.control}
                 name="languages"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Języki prowadzenia zajęć</FormLabel>
+                  <FormItem data-profile-field="">
+                    <FormLabel size="field">Języki prowadzenia zajęć</FormLabel>
                     <FormDescription>
                       Uczestnicy filtrują wydarzenia po języku — zaznacz wszystkie, w których
                       prowadzisz zajęcia
@@ -651,8 +660,8 @@ export function InstructorFullProfileForm({
                 control={form.control}
                 name="cities"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lokalizacje</FormLabel>
+                  <FormItem data-profile-field="">
+                    <FormLabel size="field">Lokalizacje</FormLabel>
                     <FormDescription>
                       Pomagają uczestnikom znaleźć Cię w wyszukiwaniu — dodaj miasta, w których
                       regularnie uczysz
@@ -668,14 +677,14 @@ export function InstructorFullProfileForm({
                 )}
               />
 
-              <Separator />
+              {!isSoloProfile && <Separator />}
 
               <FormField
                 control={form.control}
                 name="yoga_styles"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Style jogi</FormLabel>
+                  <FormItem data-profile-field="">
+                    <FormLabel size="field">Style jogi</FormLabel>
                     <FormDescription>
                       Widoczne na profilu i w filtrach wyszukiwania — zaznacz style, w których się
                       specjalizujesz
@@ -691,14 +700,14 @@ export function InstructorFullProfileForm({
                 )}
               />
 
-              <Separator />
+              {!isSoloProfile && <Separator />}
 
               <FormField
                 control={form.control}
                 name="certificates"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Certyfikaty i ukończone szkolenia</FormLabel>
+                  <FormItem data-profile-field="">
+                    <FormLabel size="field">Certyfikaty i ukończone szkolenia</FormLabel>
                     <FormDescription>
                       Budują wiarygodność i zaufanie uczestników — dodaj ukończone kursy, szkolenia
                       nauczycielskie i certyfikaty
@@ -720,8 +729,8 @@ export function InstructorFullProfileForm({
                 control={form.control}
                 name="social_links"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Media społecznościowe</FormLabel>
+                  <FormItem data-profile-field="">
+                    <FormLabel size="field">Media społecznościowe</FormLabel>
                     <FormDescription>
                       Wklej linki do Instagrama, Facebooka i innych profili — pojawią się jako ikony
                       na publicznym profilu
@@ -764,10 +773,10 @@ export function InstructorFullProfileForm({
               return (
                 <FormItem className="flex items-center justify-between rounded-lg border px-4 py-3 space-y-0">
                   <div>
-                    <p className="text-sm font-semibold">
+                    <p className="text-base font-semibold">
                       {listed ? "Profil publiczny" : "Profil ukryty"}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 text-sm text-muted-foreground">
                       {listed
                         ? "Profil jest widoczny w katalogu instruktorów i w wynikach wyszukiwania Google"
                         : "Profil nie pojawia się w katalogu ani w wyszukiwarkach — link, który wyślesz, nadal działa"}
@@ -797,13 +806,13 @@ export function InstructorFullProfileForm({
           />
 
           {/* Strefa niebezpieczna */}
-          <Separator />
+          {(!isSoloProfile || instructorId) && <Separator />}
           <div
             hidden={!instructorId}
             className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-3"
           >
             <div>
-              <p className="text-sm font-medium text-destructive">Usuń instruktora</p>
+              <p className="text-base font-medium text-destructive">Usuń instruktora</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Ta operacja jest nieodwracalna. Instruktor zostanie trwale usunięty z systemu.
               </p>

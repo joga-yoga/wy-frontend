@@ -85,7 +85,7 @@ export default function InstructorsRosterPage() {
   if (!studio) {
     return (
       <div className="max-w-lg mx-auto space-y-3 px-4 py-5 text-center">
-        <p className="text-sm font-semibold text-gray-900">Nie masz jeszcze studia</p>
+        <p className="text-base font-semibold text-gray-900">Nie masz jeszcze studia</p>
         <p className="text-sm text-gray-500">
           Instruktorzy są przypisani do studia. Utwórz studio w Menu, aby zarządzać zespołem.
         </p>
@@ -126,7 +126,7 @@ export default function InstructorsRosterPage() {
             <>
               <HashedAvatar seed={item.id} name={item.name} imageId={item.image_id} size={44} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
+                <p className="truncate text-base font-semibold text-gray-900">{item.name}</p>
                 <p
                   className={`truncate text-xs ${
                     subtitle.amber ? "font-medium text-b2b-amber-text" : "text-gray-500"

@@ -561,7 +561,7 @@ export function InstructorModal({
                       {inputForm.formState.errors.email.message}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {usage === "template"
                       ? "Sprawdzimy e-mail i odświeżymy listę dostępnych instruktorów."
                       : "Sprawdzimy e-mail i dodamy instruktora — pojawi się na wydarzeniu od razu."}
@@ -656,7 +656,7 @@ export function InstructorModal({
                 <div className="space-y-1">
                   <Label htmlFor="details-bio">
                     Zdanie o sobie{" "}
-                    <span className="text-xs text-muted-foreground font-normal">
+                    <span className="text-sm text-muted-foreground font-normal">
                       (maks. 120 znaków, opcjonalnie)
                     </span>
                   </Label>
@@ -737,7 +737,7 @@ export function InstructorModal({
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Potrzebny do wysłania zaproszenia — nie jest wyświetlany publicznie.
                   </p>
                 </div>

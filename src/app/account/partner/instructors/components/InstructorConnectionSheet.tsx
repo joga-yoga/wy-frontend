@@ -132,7 +132,7 @@ export function InstructorConnectionSheet({
                 <UserRound size={18} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-gray-900">
                   Zobacz profil publiczny
                 </span>
                 <span className="block truncate text-xs text-gray-500">

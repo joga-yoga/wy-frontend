@@ -421,7 +421,7 @@ export default function CreateScheduleWizard() {
           {filteredTemplates.length === 0 && !search ? (
             <div className="rounded-b2b border border-dashed bg-gray-50 py-8 px-4 text-center space-y-3">
               <p className="text-sm font-semibold text-gray-900">Najpierw utwórz szablon zajęć</p>
-              <p className="text-xs text-gray-500">
+              <p className="text-sm text-gray-500">
                 {`Szablon to definicja zajęć (np. „Vinyasa Flow", 60 min).`}
               </p>
               <Button variant="outline" size="sm" onClick={() => setShowInlineCreate(true)}>
@@ -621,7 +621,7 @@ export default function CreateScheduleWizard() {
             <h2 className="text-lg font-semibold">
               Powstanie {previewTotal} {previewTotal === 1 ? "sesja" : "sesji"}
             </h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               {selectedTemplate?.title} · {selectedTemplate?.duration_minutes} min
             </p>
           </div>

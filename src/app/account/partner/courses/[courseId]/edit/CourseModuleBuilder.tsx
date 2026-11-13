@@ -131,7 +131,7 @@ export function CourseModuleBuilder({ modules, errors, onChange }: CourseModuleB
 
   return (
     <div className="space-y-3" data-error-field="modules">
-      <p className="text-base leading-6 text-muted-foreground">
+      <p className="text-sm leading-5 text-muted-foreground">
         Podziel kurs na moduły. Godziny są opcjonalne - jeśli je podasz, policzymy sumę za Ciebie.
       </p>
 

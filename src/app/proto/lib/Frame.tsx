@@ -11,14 +11,12 @@ import { DEFAULT_FRAME_WIDTH, type Mode } from "./meta";
  *
  *   system   frame + tokens + product components (fixture providers applied by the caller)
  *   reframe  frame + tokens, no product components
- *   blank    frame only — no token stylesheet, no product styling
+ *   blank    frame + Hind Siliguri — no other product styling
  *
  * How `blank` isolation actually works, and its honest limit: both stylesheets are global to the
  * page (globals.css from the root layout, proto.css from the proto layout), so they cannot be
- * unloaded per variant. What CAN be cut is the vector that actually leaks — INHERITANCE. `all:
- * revert` on the content wrapper drops the product's inherited typography, colour and box
- * defaults back to the browser's, so a blank prototype that writes plain markup renders in the
- * user-agent default rather than in Hind Siliguri.
+ * unloaded per variant. proto.css resets the wrapper and its descendants to browser defaults,
+ * then restores Hind Siliguri, the one font used throughout the project.
  *
  * The shell cannot ENFORCE that a blank prototype avoids product classes — that is a
  * design-diverge protocol, not something a renderer can police (see spec-design-skills.md §5).

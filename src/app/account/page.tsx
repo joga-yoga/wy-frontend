@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { SetLastMode } from "@/components/layout/SetLastMode";
+import { MenuIconTile } from "@/components/menu/MenuRow";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -143,15 +144,15 @@ export default function AccountHubPage() {
 
         <Link
           href="/account/bookings"
-          className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
+          className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-4 transition-colors hover:bg-gray-50"
         >
           {/* Rounded square, not a circle: F2 reserves circles for people. */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-            <CalendarDays size={18} />
-          </div>
+          <MenuIconTile>
+            <CalendarDays size={18} className="text-gray-500" />
+          </MenuIconTile>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-gray-900">Twoje rezerwacje</p>
-            <p className="text-xs text-gray-500">{bookingsSubtitle}</p>
+            <p className="text-base font-semibold text-gray-900">Twoje rezerwacje</p>
+            <p className="text-sm text-gray-500">{bookingsSubtitle}</p>
           </div>
           <ChevronRight size={16} className="shrink-0 text-gray-400" />
         </Link>
@@ -178,14 +179,14 @@ export default function AccountHubPage() {
               {wallets.length > 1 && (
                 <Link
                   href="/account/passes"
-                  className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-3.5 transition-colors hover:bg-gray-50"
+                  className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-4 transition-colors hover:bg-gray-50"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-                    <Wallet size={18} />
-                  </div>
+                  <MenuIconTile>
+                    <Wallet size={18} className="text-gray-500" />
+                  </MenuIconTile>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900">Zarządzaj karnetami</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-base font-semibold text-gray-900">Zarządzaj karnetami</p>
+                    <p className="text-sm text-gray-500">
                       {wallets.length} {plural(wallets.length, "karnet", "karnety", "karnetów")}
                       {activeCount > 0 && `, ${activeCount} aktywne`}
                     </p>
@@ -207,14 +208,14 @@ export default function AccountHubPage() {
                 only until a later plan builds their destinations. */}
             <Link
               href="/account/profile"
-              className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 px-4 py-4 hover:bg-gray-50 transition-colors"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-                <UserIcon size={18} />
-              </div>
+              <MenuIconTile>
+                <UserIcon size={18} className="text-gray-500" />
+              </MenuIconTile>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900">Dane konta</p>
-                <p className="text-xs text-gray-500">Imię, e-mail, zdjęcie</p>
+                <p className="text-base font-semibold text-gray-900">Dane konta</p>
+                <p className="text-sm text-gray-500">Imię, e-mail, zdjęcie</p>
               </div>
               <ChevronRight size={16} className="shrink-0 text-gray-400" />
             </Link>
@@ -288,13 +289,13 @@ function StaticRow({
   Icon: React.ElementType;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+    <div className="flex items-center gap-3 px-4 py-4">
+      <MenuIconTile>
         <Icon size={18} className="text-gray-600" />
-      </div>
+      </MenuIconTile>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-gray-900">{title}</p>
-        <p className="truncate text-xs text-gray-500">{subtitle}</p>
+        <p className="text-base font-semibold text-gray-900">{title}</p>
+        <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
       <StatusChip tone="gray">Wkrótce</StatusChip>
     </div>

@@ -33,6 +33,7 @@ export function StudioLogoField({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasLogo = Boolean(imageId || previewUrl);
+  const openFilePicker = () => inputRef.current?.click();
 
   return (
     <div>
@@ -48,11 +49,23 @@ export function StudioLogoField({
             <img
               src={previewUrl}
               alt=""
-              className="h-14 w-14 rounded-b2b border bg-white object-contain"
+              className="h-14 w-14 rounded-b2b border bg-white object-cover"
             />
           ) : (
-            <StudioLogoTile name={studioName || "Studio"} imageId={imageId} size={56} />
+            <StudioLogoTile
+              name={studioName || "Studio"}
+              imageId={imageId}
+              size={56}
+              className="object-cover"
+            />
           )}
+          <button
+            type="button"
+            aria-label="Wybierz plik logo"
+            onClick={openFilePicker}
+            disabled={isUploading}
+            className="absolute inset-0 rounded-b2b focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-default"
+          />
           {isUploading && (
             <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
               <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
@@ -63,7 +76,7 @@ export function StudioLogoField({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={openFilePicker}
             disabled={isUploading}
             className="text-sm font-semibold text-b2b-green-text hover:underline disabled:opacity-50"
           >

@@ -75,7 +75,7 @@ export function CertificatesField({ value, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
+      <p data-profile-description="" className="text-sm text-muted-foreground">
         Nazwy takie jak RYT 200, RYS 200 lub Joga Iyengara automatycznie otrzymują logo. Możesz też
         dodać własne zdjęcie.
       </p>

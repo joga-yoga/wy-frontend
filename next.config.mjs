@@ -4,6 +4,7 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 
 const nextConfig = {
   cacheComponents: true,
+  devIndicators: false,
   reactStrictMode: false,
   allowedDevOrigins: ["172.20.10.4", "192.168.8.188"],
   images: {

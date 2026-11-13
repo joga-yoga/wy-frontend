@@ -57,7 +57,7 @@ export function YogaStyleSelector({ value, onChange }: Props) {
         return (
           <div key={i} className="rounded-md border p-3 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">
+              <span className="text-base font-medium">
                 {item.yoga_style_id
                   ? (catalog.find((s) => s.id === item.yoga_style_id)?.name ?? "Styl")
                   : item.custom_name}

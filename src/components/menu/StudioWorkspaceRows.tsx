@@ -60,7 +60,7 @@ export function StudioWorkspaceRows({
 
   return (
     <section className="space-y-2">
-      <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+      <h2 className="px-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
         {solo ? "Własne zajęcia" : `${studioName} · Twoje studio`}
       </h2>
       <div className="rounded-b2b border bg-white overflow-hidden divide-y">
@@ -72,7 +72,14 @@ export function StudioWorkspaceRows({
             href={`/account/partner/studio/${studioId}/edit`}
             title="Profil studia"
             subtitle="Podstawy, lokalizacja, cennik, zdjęcia"
-            leading={<StudioLogoTile name={studioName} imageId={studioImageId} />}
+            leading={
+              <StudioLogoTile
+                name={studioName}
+                imageId={studioImageId}
+                size={56}
+                className="border bg-white"
+              />
+            }
           />
         )}
         {!solo && (

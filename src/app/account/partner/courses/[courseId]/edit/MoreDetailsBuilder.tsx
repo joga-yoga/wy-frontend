@@ -295,7 +295,7 @@ export function MoreDetailsBuilder({ values, setField }: MoreDetailsBuilderProps
       {emptyKeys.length > 0 ? (
         <div className="space-y-1">
           {filledKeys.length === 0 ? (
-            <p className="pb-4 text-base leading-6 text-muted-foreground">
+            <p className="pb-4 text-sm leading-5 text-muted-foreground">
               Wszystko poniżej jest opcjonalne - dodaj tylko to, co potrzebne.
             </p>
           ) : (
