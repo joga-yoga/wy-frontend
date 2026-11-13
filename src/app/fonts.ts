@@ -1,18 +1,12 @@
-// app/fonts.ts
-import { Hind_Siliguri, Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+import { Hind_Siliguri } from "next/font/google";
 
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-hind-siliguri",
   weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const fonts = {
-  inter,
   hindSiliguri,
 };

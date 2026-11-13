@@ -109,7 +109,7 @@ function getBackHref(
   if (pathname.startsWith("/account/partner/schedule/cancel/")) return "/account/partner/schedule";
   if (pathname === "/account/partner/class-schedules/create") return "/account/partner/schedule";
   if (pathname === "/account/partner/profile") return "/account/partner/menu";
-  if (pathname === "/account/partner/class-templates") return "/account/partner/offer";
+  if (pathname === "/account/partner/class-templates") return "/account/partner/menu";
   if (pathname === "/account/partner/class-templates/create")
     return "/account/partner/class-templates";
   if (pathname.startsWith("/account/partner/class-templates/") && pathname.endsWith("/edit"))

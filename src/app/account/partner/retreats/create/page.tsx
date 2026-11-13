@@ -230,7 +230,7 @@ export default function CreateEventPage() {
             Powrót
           </Button>
           <h1 className="text-3xl font-bold mb-2">Generuj z linku</h1>
-          <p className="text-muted-foreground mb-8">
+          <p className="mb-8 text-sm text-muted-foreground">
             Wklej adres URL strony z Twoim wyjazdem, a my zajmiemy się resztą.
           </p>
           <div className="space-y-4">
@@ -268,7 +268,7 @@ export default function CreateEventPage() {
             Powrót
           </Button>
           <h1 className="text-3xl font-bold mb-2">Generuj z opisu</h1>
-          <p className="text-muted-foreground mb-8">
+          <p className="mb-8 text-sm text-muted-foreground">
             Podaj kluczowe szczegóły wyjazdu – na ich podstawie stworzymy resztę opisu i
             automatycznie wypełnimy formularz
           </p>

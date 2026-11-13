@@ -261,10 +261,12 @@ export function StudioRosterAddForm({
             placeholderClassName="rounded-full md:w-24 md:h-24"
           />
         </div>
-        <p className="-mt-3 text-center text-xs text-gray-400">Dodaj zdjęcie (opcjonalnie)</p>
+        <p className="-mt-3 text-center text-sm text-gray-400">Dodaj zdjęcie (opcjonalnie)</p>
 
         <div className="space-y-2">
-          <Label htmlFor="stub-name">Imię i nazwisko</Label>
+          <Label htmlFor="stub-name" size="field">
+            Imię i nazwisko
+          </Label>
           <Input
             id="stub-name"
             value={stubName}
@@ -274,7 +276,9 @@ export function StudioRosterAddForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="stub-email">Email</Label>
+          <Label htmlFor="stub-email" size="field">
+            Email
+          </Label>
           <Input
             id="stub-email"
             type="email"
@@ -285,9 +289,9 @@ export function StudioRosterAddForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="stub-short-bio">
+          <Label htmlFor="stub-short-bio" size="field">
             Krótki opis{" "}
-            <span className="text-muted-foreground text-xs font-normal">
+            <span className="text-muted-foreground text-sm font-normal">
               (maks. 200 znaków, opcjonalnie)
             </span>
           </Label>
@@ -302,7 +306,9 @@ export function StudioRosterAddForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="stub-description">Pełny opis (opcjonalnie)</Label>
+          <Label htmlFor="stub-description" size="field">
+            Pełny opis (opcjonalnie)
+          </Label>
           <Textarea
             id="stub-description"
             rows={4}
@@ -327,7 +333,7 @@ export function StudioRosterAddForm({
         </Button>
 
         {stubEmail.trim() && (
-          <p className="text-center text-xs text-gray-400 leading-relaxed">
+          <p className="text-center text-sm text-gray-400 leading-relaxed">
             Do czasu przejęcia profilu przez {stubName.trim().split(" ")[0] || "instruktora"} możesz
             uzupełnić tylko podstawowe dane. Pełny profil uzupełni instruktor po przejęciu.
           </p>
@@ -339,7 +345,9 @@ export function StudioRosterAddForm({
   return (
     <div className="w-full min-w-0 max-w-md mx-auto px-4 py-5 space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="lookup-query">Imię i nazwisko lub email</Label>
+        <Label htmlFor="lookup-query" size="field">
+          Imię i nazwisko lub email
+        </Label>
         <Input
           id="lookup-query"
           type="text"
@@ -348,7 +356,7 @@ export function StudioRosterAddForm({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="np. Marta Wiśniewska lub marta@example.com"
         />
-        <p className="px-1 text-xs text-gray-400">
+        <p className="px-1 text-sm text-gray-400">
           Email znajdzie dokładnie tę osobę. Po nazwisku pokażemy listę do wyboru.
         </p>
       </div>
@@ -364,10 +372,10 @@ export function StudioRosterAddForm({
             <UserRound size={18} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-gray-900">
+            <span className="block text-base font-semibold text-gray-900">
               To ja — prowadzę zajęcia osobiście
             </span>
-            <span className="block text-xs text-gray-500">
+            <span className="block text-sm text-gray-500">
               Utworzymy Twój profil i dodamy go do studia
             </span>
           </span>
@@ -407,7 +415,7 @@ export function StudioRosterAddForm({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900">{hit.name}</p>
+                  <p className="truncate text-base font-semibold text-gray-900">{hit.name}</p>
                   <p className="truncate text-xs text-gray-500">
                     {[...hit.styles, hit.short_bio].filter(Boolean).join(" · ") || "Instruktor"}
                   </p>
@@ -466,7 +474,7 @@ export function StudioRosterAddForm({
             <div className="min-w-0 flex-1">
               {lookup.found === "instructor" ? (
                 <>
-                  <p className="truncate text-sm font-semibold text-gray-900">{lookup.name}</p>
+                  <p className="truncate text-base font-semibold text-gray-900">{lookup.name}</p>
                   <p className="truncate text-xs text-gray-500">
                     {[...lookup.styles, lookup.slug ? `joga.yoga/i/${lookup.slug}` : null]
                       .filter(Boolean)
@@ -475,7 +483,7 @@ export function StudioRosterAddForm({
                 </>
               ) : (
                 <>
-                  <p className="truncate text-sm font-semibold text-gray-900">{query.trim()}</p>
+                  <p className="truncate text-base font-semibold text-gray-900">{query.trim()}</p>
                   <p className="truncate text-xs text-gray-500">Bez profilu instruktora</p>
                 </>
               )}
@@ -496,7 +504,7 @@ export function StudioRosterAddForm({
                 : "Wyślij zaproszenie do studia"}
           </Button>
 
-          <p className="text-center text-xs text-gray-400 leading-relaxed">
+          <p className="text-center text-sm text-gray-400 leading-relaxed">
             {lookup.found === "instructor"
               ? // R3 writes "jej … ją" because it happens to draw a woman. The lookup
                 // payload has no gender, so the copy avoids needing one.

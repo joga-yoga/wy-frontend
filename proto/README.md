@@ -51,7 +51,7 @@ A default-exported component rendering **screen content only**. The phone frame,
 |---|---|---|---|
 | `system` | ✅ | ✅ | free — plus fixture-fed auth/capabilities context, and the network is blocked |
 | `reframe` | ✅ | ✅ | **none** — brand identity held, component conventions free |
-| `blank` | ✅ | ❌ | **none** — only Polish copy and the mobile constraint held |
+| `blank` | ✅ | ❌ | **none** — Hind Siliguri, Polish copy and the mobile constraint held |
 
 Divergent folders are drawn differently in the index, and one left at `explored` with no `outcome`
 is flagged **unresolved**. Unresolved forks are how a design system rots; closing one costs a single

@@ -78,6 +78,8 @@ they offer, or how to reach them:
 
 ## UI and Performance
 - Prefer existing shadcn/ui patterns before creating new UI primitives.
+- Hind Siliguri is the only product font, including forms, dialogs, maps, error pages and prototypes. Do not introduce Inter or other font families.
+- Use the shared font tokens in `src/styles/tokens.css`; standalone HTML uses `src/lib/typography.ts`.
 - Keep Tailwind styling declarative and avoid deep specificity.
 - Avoid unnecessary re-renders; use memoization only where it clearly helps.
 - Use dynamic imports/code splitting for heavy client-only components when appropriate.

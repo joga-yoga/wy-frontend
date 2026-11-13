@@ -114,7 +114,8 @@ async function setup(page: Page, mode: "multi" | "single" | "solo" = "multi", em
           ...state.roster.filter((i) => i.id !== "added"),
           { id: "added", name: "Anna", image_id: null, row_state: "awaiting" },
         ];
-    } else if (path === "/instructors") json = state.partnerList;
+    } else if (path === "/instructors")
+      json = state.partnerList.map((instructor) => ({ ...instructor, yoga_styles: [] }));
     else if (path === "/instructors/lookup")
       json = url.searchParams.has("q")
         ? {
@@ -186,6 +187,27 @@ async function dismissCookies(page: Page) {
 async function select(page: Page, id: string, option: string) {
   await page.locator(`#${id}`).click();
   await page.getByRole("option", { name: option, exact: true }).click();
+}
+
+for (const mode of ["single", "solo"] as const) {
+  test(`template catalogue returns to Menu after leaving the create form (${mode})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await setup(page, mode);
+    await page.goto("/account/partner/menu");
+    await dismissCookies(page);
+
+    await page.getByRole("link", { name: /^Szablony zajęć/ }).click();
+    await page.getByRole("link", { name: "Nowy szablon", exact: true }).click();
+    await expect(page).toHaveURL(/\/class-templates\/create$/);
+
+    const back = page.getByRole("button", { name: "Wróć", exact: true });
+    await back.click();
+    await expect(page).toHaveURL(/\/class-templates$/);
+    await back.click();
+    await expect(page).toHaveURL(/\/account\/partner\/menu$/);
+  });
 }
 
 test("studio template keeps all fields through cancel and retry; selects returned pending ID then clears explicitly", async ({

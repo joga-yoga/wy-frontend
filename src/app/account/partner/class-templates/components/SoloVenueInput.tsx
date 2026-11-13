@@ -128,7 +128,9 @@ export function SoloVenueInput({
   const hasSource = Boolean(value.studioId || value.directoryId);
   return (
     <div className="space-y-3">
-      <Label htmlFor={`${listId}-input`}>Miejsce zajęć</Label>
+      <Label className="font-light text-gray-400" htmlFor={`${listId}-input`}>
+        Miejsce zajęć
+      </Label>
       <Input
         id={`${listId}-input`}
         role="combobox"
@@ -139,6 +141,7 @@ export function SoloVenueInput({
         value={query}
         disabled={locked || resolving}
         placeholder="Wpisz nazwę studia lub adres"
+        className="placeholder:text-sm placeholder:font-light"
         onChange={(event) => {
           setQuery(event.target.value);
           setSearching(true);
@@ -207,7 +210,7 @@ export function SoloVenueInput({
       {hasSource && (
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">Jak pokazać miejsce zajęć?</legend>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Wybierz, czy przy adresie zajęć pokazać także nazwę studia.
           </p>
           {[false, true].map((show) => (

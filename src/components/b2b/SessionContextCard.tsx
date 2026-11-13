@@ -124,7 +124,7 @@ export function SessionContextCard({
         {subtitle && (
           <p
             className={cn(
-              "mt-0.5 text-[13px]",
+              "mt-0.5 text-sm",
               tone === "danger" ? "text-b2b-red-text/80" : "text-gray-500",
             )}
           >

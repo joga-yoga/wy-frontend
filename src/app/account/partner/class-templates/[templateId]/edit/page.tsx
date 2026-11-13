@@ -102,11 +102,16 @@ export default function EditTemplatePage() {
           scheduled, and until now the only route into the wizard was Grafik's "+", which
           then asked you to pick the template you were already looking at. */}
       <div className="mt-6 border-t pt-4">
-        <Button size="action" variant="outline" className="w-full" asChild>
+        <Button
+          size="action"
+          variant="outline"
+          className="w-full rounded-full bg-gray-800 text-white font-medium"
+          asChild
+        >
           <Link
             href={`/account/partner/class-schedules/create?${new URLSearchParams({ templateId: params.templateId, ...(studioId ? { studio_id: studioId } : {}) })}`}
           >
-            <CalendarPlus size={15} className="mr-1.5" />
+            <CalendarPlus size={15} className="mr-1.5 text-white" />
             Dodaj do grafiku
           </Link>
         </Button>

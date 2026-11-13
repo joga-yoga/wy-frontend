@@ -172,10 +172,12 @@ export default function RosterInstructorDetailPage() {
             href={`/instruktor/${rosterItem.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-b2b border bg-white px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-between gap-3 rounded-b2b border bg-white px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
           >
-            <span className="text-sm font-semibold text-gray-900">Zobacz profil publiczny</span>
-            <span className="text-xs text-gray-400">joga.yoga/i/{rosterItem.slug}</span>
+            <span className="text-base font-semibold text-gray-900">Zobacz profil publiczny</span>
+            <span className="min-w-0 break-all text-xs text-gray-400">
+              joga.yoga/i/{rosterItem.slug}
+            </span>
           </a>
         )}
 

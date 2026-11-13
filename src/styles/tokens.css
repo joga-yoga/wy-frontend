@@ -124,7 +124,10 @@
     --color-class-apricot-500: var(--class-apricot-500);
     --color-class-apricot-700: var(--class-apricot-700);
 
-    --font-family-hind: "Hind Siliguri", sans-serif;
+    /* One family throughout the product, including legacy font utilities. */
+    --font-sans: var(--font-hind-siliguri);
+    --font-serif: var(--font-hind-siliguri);
+    --font-mono: var(--font-hind-siliguri);
 
     /* h_big: Font(family: "Hind Siliguri", style: SemiBold, size: 46, weight: 600, lineHeight: 50) */
     --text-h-big: 46px;

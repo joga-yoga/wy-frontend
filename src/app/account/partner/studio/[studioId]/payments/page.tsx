@@ -46,7 +46,7 @@ function PaymentMethodRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500">{subtitle}</p>
+        <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
       {/* V2 draws the enabled method's switch in brand green. The primitive's default
           `bg-primary` is near-black here, and `disabled:opacity-50` then greys it out

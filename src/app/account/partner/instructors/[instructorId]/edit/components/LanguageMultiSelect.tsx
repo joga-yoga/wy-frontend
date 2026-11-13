@@ -52,8 +52,14 @@ export function LanguageMultiSelect({ value, onChange }: Props) {
     <div className="space-y-2">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button size="action" variant="outline" type="button" className="w-full justify-start">
-            Dodaj języki
+          <Button
+            size="action"
+            variant="outline"
+            type="button"
+            data-profile-select=""
+            className="w-full justify-start"
+          >
+            <span className="text-base font-medium text-placeholder">Dodaj języki</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-0" align="start">
@@ -64,7 +70,7 @@ export function LanguageMultiSelect({ value, onChange }: Props) {
               <CommandGroup>
                 {LANGUAGES.map((lang) => (
                   <CommandItem key={lang.code} value={lang.code} onSelect={() => toggle(lang.code)}>
-                    <span className={value.includes(lang.code) ? "font-semibold" : ""}>
+                    <span className={value.includes(lang.code) ? "font-medium" : ""}>
                       {lang.label}
                     </span>
                   </CommandItem>

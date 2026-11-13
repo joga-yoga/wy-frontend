@@ -23,7 +23,7 @@
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground font-sans;
         position: relative;
     }
 
@@ -54,6 +54,13 @@
         margin-left: 0px !important; /* For RTL layout */
         overflow: visible !important;
     }
+}
+
+/* Leaflet ships unlayered font declarations, so these overrides stay unlayered too. */
+html .leaflet-container,
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-tooltip {
+    font-family: var(--font-hind-siliguri);
 }
 
 @layer utilities {

@@ -261,7 +261,7 @@ export function TemplateEditor({
           />
         ))}
       <div>
-        <Label>Zdjęcie</Label>
+        <Label className="font-light text-gray-400">Zdjęcie</Label>
         <div className="mt-1.5">
           <SingleImageUpload
             existingImageId={imageId || null}
@@ -275,32 +275,29 @@ export function TemplateEditor({
       </div>
 
       <section className="space-y-4">
-        <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Czym są te zajęcia
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">Stałe cechy — takie same za każdym razem.</p>
-        </div>
-
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <Label htmlFor="title">Nazwa</Label>
+            <Label className="font-light text-gray-400" htmlFor="title">
+              Nazwa
+            </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="np. Vinyasa Flow"
+              className="placeholder:text-sm placeholder:font-light"
             />
           </div>
           <div>
-            <Label htmlFor="description">
+            <Label className="font-light text-gray-400" htmlFor="description">
               Opis <span className="text-gray-400">· opcjonalnie</span>
             </Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Opisz te zajęcia — pojawi się na publicznej stronie klasy."
+              placeholder="Opisz te zajęcia — pojawi się na publicznej stronie klasy"
+              className="placeholder:text-sm placeholder:font-light"
               rows={4}
             />
           </div>
@@ -308,7 +305,9 @@ export function TemplateEditor({
               together when defining what the class *is*. */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="duration">Czas trwania</Label>
+              <Label className="font-light text-gray-400" htmlFor="duration">
+                Czas trwania
+              </Label>
               <Select value={durationMinutes} onValueChange={setDurationMinutes}>
                 <SelectTrigger id="duration">
                   <SelectValue />
@@ -323,7 +322,9 @@ export function TemplateEditor({
               </Select>
             </div>
             <div>
-              <Label htmlFor="level">Poziom</Label>
+              <Label className="font-light text-gray-400" htmlFor="level">
+                Poziom
+              </Label>
               <Select value={level} onValueChange={setLevel}>
                 <SelectTrigger id="level">
                   <SelectValue />
@@ -338,136 +339,9 @@ export function TemplateEditor({
               </Select>
             </div>
           </div>
-          <div>
-            <Label htmlFor="style">
-              Styl <span className="text-gray-400">· opcjonalnie</span>
-            </Label>
-            {/* Single-select over the catalog. The old free-text fallback is gone: `style_id`
-                is a FK, so an arbitrary string has nowhere to be stored — YogaStyleChips
-                renders nothing at all when the catalog is empty rather than silently
-                accepting input that could not be saved. */}
-            <YogaStyleChips
-              mode="single"
-              className="mt-1.5"
-              value={styleId}
-              onChange={setStyleId}
-            />
-          </div>
-          <div>
-            <Label htmlFor="language">Język prowadzenia</Label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger id="language">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGE_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Kolor zajęć</Label>
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              {CLASS_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-label={COLOR_LABELS[c]}
-                  aria-pressed={color === c}
-                  onClick={() => setColor(color === c ? null : c)}
-                  className={cn(
-                    "relative h-8 w-8 rounded-full",
-                    COLOR_SWATCH_MAP[c],
-                    color === c && "ring-2 ring-gray-900 ring-offset-2",
-                  )}
-                >
-                  {color === c && (
-                    <Check size={14} className="absolute inset-0 m-auto text-white" />
-                  )}
-                </button>
-              ))}
-              <button
-                type="button"
-                aria-label="Brak koloru"
-                aria-pressed={color === null}
-                onClick={() => setColor(null)}
-                className={cn(
-                  "relative h-8 w-8 rounded-full border border-dashed border-gray-300 bg-white",
-                  color === null && "ring-2 ring-gray-900 ring-offset-2",
-                )}
-              >
-                <Ban size={14} className="absolute inset-0 m-auto text-gray-400" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {!isSolo && (
-        <TemplatePricing
-          initial={initial?.studio_pricing ?? []}
-          changes={pricingChanges}
-          onChange={(setting) =>
-            setPricingChanges((rows) => [
-              ...rows.filter((row) => row.studio_id !== setting.studio_id),
-              setting,
-            ])
-          }
-        />
-      )}
-      {isSolo && (
-        <section className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="solo-price">Cena jednego wejścia</Label>
-              <Input
-                id="solo-price"
-                type="number"
-                step="0.01"
-                value={price}
-                onChange={(event) => setPrice(event.target.value)}
-                disabled={initial?.terms_locked}
-              />
-            </div>
-            <div>
-              <Label htmlFor="solo-currency">Waluta</Label>
-              <Select value={currency} onValueChange={setCurrency} disabled={initial?.terms_locked}>
-                <SelectTrigger id="solo-currency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PLN">zł</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <SoloVenueInput value={venue} onChange={setVenue} locked={initial?.terms_locked} />
-          {initial?.terms_locked && (
-            <p className="text-sm text-muted-foreground">
-              Dla innej ceny lub miejsca utwórz nowy szablon i grafik.
-            </p>
-          )}
-        </section>
-      )}
-
-      <section className="space-y-4">
-        <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Domyślne ustawienia
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Podpowiadane przy dodawaniu do grafiku — można zmienić.
-          </p>
-        </div>
-
-        <div className="space-y-3">
           {!isSolo && (
             <div>
-              <Label>Domyślny prowadzący</Label>
+              <Label className="font-light text-gray-400">Domyślny prowadzący</Label>
               {/* The same picker the session-creation flow uses (WY-67). Not a `<Select>`: the
                 choice needs to show who each person is and whether they are connected yet,
                 which a dropdown of bare names cannot — `InstructorPicker`'s own docstring
@@ -508,22 +382,23 @@ export function TemplateEditor({
                   emptyHint=""
                   otherLabel=""
                 />
-                <p className="mt-2 px-1 text-sm text-gray-500">
-                  Prowadzącego wybierzesz przy dodawaniu zajęć do grafiku
-                </p>
-                <Button
+                <button
                   ref={addInstructorRef}
                   type="button"
-                  variant="outline"
-                  className="mt-3 w-full"
+                  className="mt-3 flex w-full items-center gap-3 rounded-b2b border border-gray-200 bg-white px-2 py-3 text-left text-sm font-semibold text-gray-800 shadow-xs transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   onClick={() => {
                     setInstructorStep("identify");
                     setIsInstructorOpen(true);
                   }}
                 >
-                  <Plus className="mr-1.5 size-4" />
+                  <span
+                    className="flex size-8 shrink-0 items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    <Plus className="size-5" />
+                  </span>
                   Dodaj instruktora
-                </Button>
+                </button>
                 {instructorNotice && (
                   <div className="mt-2 space-y-2">
                     <p className="text-sm text-gray-500" role="status">
@@ -544,7 +419,133 @@ export function TemplateEditor({
             </div>
           )}
           <div>
-            <Label htmlFor="capacity">Domyślny limit</Label>
+            <Label className="font-light text-gray-400" htmlFor="language">
+              Język prowadzenia
+            </Label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger id="language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="font-light text-gray-400" htmlFor="style">
+              Styl <span className="text-gray-400">· opcjonalnie</span>
+            </Label>
+            {/* Single-select over the catalog. The old free-text fallback is gone: `style_id`
+                is a FK, so an arbitrary string has nowhere to be stored — YogaStyleChips
+                renders nothing at all when the catalog is empty rather than silently
+                accepting input that could not be saved. */}
+            <YogaStyleChips
+              mode="single"
+              className="mt-1.5"
+              value={styleId}
+              onChange={setStyleId}
+            />
+          </div>
+          <div>
+            <Label className="font-light text-gray-400">Kolor wyświetlania</Label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {CLASS_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-label={COLOR_LABELS[c]}
+                  aria-pressed={color === c}
+                  onClick={() => setColor(color === c ? null : c)}
+                  className={cn(
+                    "relative h-8 w-8 rounded-full",
+                    COLOR_SWATCH_MAP[c],
+                    color === c && "ring-2 ring-gray-800 ring-offset-2",
+                  )}
+                >
+                  {color === c && (
+                    <Check size={14} className="absolute inset-0 m-auto text-white" />
+                  )}
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-label="Brak koloru"
+                aria-pressed={color === null}
+                onClick={() => setColor(null)}
+                className={cn(
+                  "relative h-8 w-8 rounded-full border border-dashed border-gray-300 bg-white",
+                  color === null && "ring-2 ring-gray-800 ring-offset-2",
+                )}
+              >
+                <Ban size={14} className="absolute inset-0 m-auto text-gray-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {!isSolo && (
+        <TemplatePricing
+          initial={initial?.studio_pricing ?? []}
+          changes={pricingChanges}
+          onChange={(setting) =>
+            setPricingChanges((rows) => [
+              ...rows.filter((row) => row.studio_id !== setting.studio_id),
+              setting,
+            ])
+          }
+        />
+      )}
+      {isSolo && (
+        <section className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="font-light text-gray-400" htmlFor="solo-price">
+                Cena jednego wejścia
+              </Label>
+              <Input
+                id="solo-price"
+                type="number"
+                step="0.01"
+                value={price}
+                onChange={(event) => setPrice(event.target.value)}
+                disabled={initial?.terms_locked}
+              />
+            </div>
+            <div>
+              <Label className="font-light text-gray-400" htmlFor="solo-currency">
+                Waluta
+              </Label>
+              <Select value={currency} onValueChange={setCurrency} disabled={initial?.terms_locked}>
+                <SelectTrigger id="solo-currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PLN">zł</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <SoloVenueInput value={venue} onChange={setVenue} locked={initial?.terms_locked} />
+          {initial?.terms_locked && (
+            <p className="text-sm text-muted-foreground">
+              Dla innej ceny lub miejsca utwórz nowy szablon i grafik.
+            </p>
+          )}
+        </section>
+      )}
+
+      <section className="space-y-4">
+        <div className="space-y-4">
+          <div>
+            <Label className="font-light text-gray-400" htmlFor="capacity">
+              Domyślny limit uczestników
+            </Label>
             <Input
               id="capacity"
               type="number"
@@ -552,6 +553,7 @@ export function TemplateEditor({
               value={defaultCapacity}
               onChange={(e) => setDefaultCapacity(e.target.value)}
               placeholder="Bez limitu"
+              className="placeholder:text-sm placeholder:font-light"
             />
           </div>
         </div>

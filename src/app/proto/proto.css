@@ -28,10 +28,9 @@
  * the proto layout — so neither can be unloaded for one variant. Two things leak, and both
  * have to be cut:
  *
- *   1. INHERITANCE. <html> carries the Hind Siliguri font class, so everything inherits the
- *      product's typography and colour. `all: initial` on the content wrapper breaks the chain
- *      at the frame boundary — `initial` does not inherit, so descendants start from browser
- *      defaults instead of the product's.
+ *   1. INHERITANCE. `all: initial` on the content wrapper breaks the chain at the frame
+ *      boundary. Hind Siliguri is then restored explicitly: the project's one font also
+ *      applies to blank prototypes, while their other styles start from browser defaults.
  *   2. TAILWIND PREFLIGHT. Its `@layer base` rules flatten h1/p/ul margins and sizes app-wide.
  *      `all: revert` on every descendant drops author-origin declarations back to the UA
  *      stylesheet, so a blank prototype's <h1> is a browser <h1> again.
@@ -52,8 +51,10 @@
 :where([data-proto-mode="blank"]) :where([data-proto-content]) {
   all: initial;
   display: block;
+  font-family: var(--font-hind-siliguri);
 }
 
 :where([data-proto-mode="blank"]) :where([data-proto-content]) :where(*) {
   all: revert;
+  font-family: inherit;
 }

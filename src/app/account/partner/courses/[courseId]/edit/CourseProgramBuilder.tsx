@@ -64,7 +64,7 @@ export function CourseProgramBuilder({ program, errors, onChange }: CourseProgra
 
   return (
     <div className="space-y-4" data-error-field="program">
-      <p className="text-base leading-6 text-muted-foreground">
+      <p className="text-sm leading-5 text-muted-foreground">
         Podziel kurs na bloki (np. kolejne zjazdy). Dla każdego bloku podaj datę i krótko opisz, co
         się wydarzy. Datę zakończenia zostaw pustą, jeśli blok trwa jeden dzień. Zdjęcie dobieramy
         automatycznie - możesz je zmienić na własne.

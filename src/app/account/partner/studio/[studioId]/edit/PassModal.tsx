@@ -495,7 +495,7 @@ export function PassModal({
                     <p
                       id={`${id}-price-help`}
                       className={cn(
-                        "text-xs text-zinc-600",
+                        "text-sm text-zinc-600",
                         touched.price && errors.price && "text-destructive",
                       )}
                     >
@@ -510,7 +510,7 @@ export function PassModal({
                     {suggestedPrice !== null && (
                       <button
                         type="button"
-                        className="text-left text-xs text-zinc-500 underline underline-offset-4"
+                        className="text-left text-sm text-zinc-500 underline underline-offset-4"
                         onClick={() => field("price", decimal(suggestedPrice))}
                       >
                         Użyj sugerowanej ceny {decimal(suggestedPrice)} {symbol} (−10% od wejść

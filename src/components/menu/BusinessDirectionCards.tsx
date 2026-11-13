@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+import { MenuIconTile } from "@/components/menu/MenuRow";
 import {
   type BusinessMode,
   useBusinessModeConfirmation,
@@ -48,15 +49,15 @@ export function BusinessDirectionCards() {
             }}
             className="flex min-h-[148px] min-w-0 flex-col items-start rounded-2xl border border-zinc-200 bg-white p-4 text-left shadow-[0_1px_2px_rgba(28,25,23,0.06),0_1px_1px_rgba(28,25,23,0.04)] transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-b2b-green-strong"
           >
-            <span className="relative block h-[30px] w-9 shrink-0" aria-hidden="true">
+            <MenuIconTile>
               <Image
                 src={direction.image}
                 alt=""
                 width={36}
                 height={36}
-                className="absolute -top-[3px] h-9 w-9 object-contain"
+                className="h-9 w-9 object-contain"
               />
-            </span>
+            </MenuIconTile>
             <span className="mt-3 text-base leading-6 font-semibold text-zinc-800">
               {direction.title}
             </span>

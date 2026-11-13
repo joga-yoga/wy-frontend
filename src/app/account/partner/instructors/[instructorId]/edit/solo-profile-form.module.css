@@ -1,0 +1,65 @@
+@reference "../../../../../../styles/globals.css";
+
+.form,
+.intro {
+  @apply mx-auto w-full max-w-[568px] md:max-w-[536px];
+}
+
+.form {
+  @apply flex flex-col;
+}
+
+.form > [data-profile-field] > :where(*) {
+  margin-block: 0;
+}
+
+.form > [data-profile-field] + [data-profile-field] {
+  @apply mt-8 md:mt-10;
+}
+
+.form > [data-slot="separator-root"] {
+  @apply my-4 md:my-5;
+}
+
+.form > [data-slot="separator-root"] + [data-slot="separator-root"] {
+  display: none;
+}
+
+.intro > h1,
+.form > [data-profile-field] > label {
+  @apply mb-1 flex flex-wrap items-baseline gap-x-2 text-xl font-semibold leading-7 tracking-normal text-gray-800 md:text-3xl md:leading-9;
+}
+
+.form > [data-profile-field] > label:global(.text-destructive) {
+  @apply text-destructive;
+}
+
+.intro > p,
+.form > [data-profile-field] > p:not([id$="-form-item-message"]),
+.form [data-profile-description] {
+  @apply mb-2 text-sm font-normal leading-snug text-gray-500 md:pt-2 md:text-xl;
+}
+
+.form > [data-profile-field] > p[id$="-form-item-message"] {
+  @apply pt-1 text-sm font-normal;
+}
+
+.form :is(input:not([type="file"], [type="hidden"]), textarea, [data-profile-select]) {
+  @apply min-w-0 rounded-md bg-white px-4 py-3 text-base font-normal leading-snug shadow-none focus-visible:ring-brand-green md:text-xl;
+}
+
+.form :is(input:not([type="file"], [type="hidden"]), [data-profile-select]) {
+  @apply h-auto min-h-12 md:min-h-14;
+}
+
+.form textarea {
+  @apply min-h-24;
+}
+
+.form input[data-profile-search] {
+  @apply pl-11;
+}
+
+.form :is(input, textarea)[aria-invalid="true"] {
+  @apply border-destructive focus-visible:ring-destructive;
+}

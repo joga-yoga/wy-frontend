@@ -326,19 +326,17 @@ export const PartnersPageContent = async () => {
               <LogoPartners variant="black" className="w-full" />
               <div className="space-y-6 w-full">
                 <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl text-gray-700">
-                    एकम
-                  </span>
+                  <span className="mr-5 min-w-12 w-12 text-center text-2xl text-gray-700">एकम</span>
                   <span>Działaj z serca - reszta przyjdzie naturalnie</span>
                 </div>
                 <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl text-gray-700">
+                  <span className="mr-5 min-w-12 w-12 text-center text-2xl text-gray-700">
                     द्वे
                   </span>
                   <span>Najważniejsze dzieje się w trakcie</span>
                 </div>
                 <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center font-serif text-2xl text-gray-700">
+                  <span className="mr-5 min-w-12 w-12 text-center text-2xl text-gray-700">
                     त्रीणि
                   </span>
                   <span>Możesz nie być doskonały, ale bądź prawdziwy</span>
@@ -365,7 +363,7 @@ export const PartnersPageContent = async () => {
 
               <div className="flex flex-col gap-6">
                 <div className="flex justify-between text-lg lg:max-w-[370px] w-full h-full">
-                  <span className="mr-2 min-w-12 w-12 font-serif text-2xl text-gray-700 hidden lg:block">
+                  <span className="mr-2 min-w-12 w-12 text-2xl text-gray-700 hidden lg:block">
                     चत्वारि
                   </span>
                   <span className="text-left lg:text-center text-subheader text-gray-500 lg:pr-5">

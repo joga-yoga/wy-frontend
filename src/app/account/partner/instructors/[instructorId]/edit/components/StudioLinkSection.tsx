@@ -199,8 +199,8 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
   if (isLoading) return null;
 
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium">Gdzie prowadzisz zajęcia?</label>
+    <div data-profile-field="" className="space-y-3">
+      <label className="block text-base font-medium text-gray-800">Gdzie prowadzisz zajęcia?</label>
       <p className="text-sm text-muted-foreground">
         Połącz profil instruktora ze studiami, w których prowadzisz zajęcia
       </p>
@@ -225,7 +225,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold truncate">{studio.name}</p>
+            <p className="text-base font-semibold truncate">{studio.name}</p>
             {studio.address && (
               <p className="truncate text-xs text-muted-foreground">{studio.address}</p>
             )}
@@ -262,6 +262,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              data-profile-search=""
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Wyszukaj studio po nazwie..."
@@ -297,7 +298,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-sm">{studio.name}</span>
+                    <span className="text-base">{studio.name}</span>
                     {studio.address && (
                       <p className="truncate text-xs text-muted-foreground">{studio.address}</p>
                     )}
@@ -339,7 +340,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
       {/* Role question */}
       {(mode === "not-found" || mode === "role") && (
         <div className="space-y-3 rounded-lg border p-4">
-          <p className="text-sm font-semibold">Powiedz, kim jesteś:</p>
+          <p className="text-base font-semibold">Powiedz, kim jesteś:</p>
           <button
             type="button"
             className="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left hover:bg-muted transition-colors"
@@ -350,7 +351,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
             }}
           >
             <div>
-              <p className="text-sm font-medium">Jestem właścicielem / managerem</p>
+              <p className="text-base font-medium">Jestem właścicielem / managerem</p>
               <p className="text-xs text-muted-foreground">Chcę zarządzać profilem studia</p>
             </div>
           </button>
@@ -364,7 +365,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
             }}
           >
             <div>
-              <p className="text-sm font-medium">Tylko tu prowadzę zajęcia</p>
+              <p className="text-base font-medium">Tylko tu prowadzę zajęcia</p>
               <p className="text-xs text-muted-foreground">Wyślemy zaproszenie do właściciela</p>
             </div>
           </button>
@@ -381,7 +382,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
       {/* Owner/manager create */}
       {mode === "create-owner" && (
         <div className="space-y-3 rounded-lg border p-4">
-          <p className="text-sm font-semibold">Nowe studio (jako właściciel)</p>
+          <p className="text-base font-semibold">Nowe studio (jako właściciel)</p>
           <div>
             <label className="mb-1 block text-xs font-medium">Nazwa studia *</label>
             <Input
@@ -414,7 +415,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
       {/* External (only teaches there) create */}
       {mode === "create-external" && (
         <div className="space-y-3 rounded-lg border p-4">
-          <p className="text-sm font-semibold">Nowe studio (wyślij zaproszenie)</p>
+          <p className="text-base font-semibold">Nowe studio (wyślij zaproszenie)</p>
           <div>
             <label className="mb-1 block text-xs font-medium">Nazwa studia *</label>
             <Input
@@ -459,7 +460,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
         <div className="space-y-3 rounded-lg border border-b2b-green-border bg-b2b-green-bg p-4">
           <div className="flex items-center gap-2">
             <Check className="size-5 text-b2b-green-text" />
-            <p className="text-sm font-semibold text-b2b-green-text">Studio utworzone!</p>
+            <p className="text-base font-semibold text-b2b-green-text">Studio utworzone!</p>
           </div>
           <p className="text-sm text-b2b-green-text">Szczegóły uzupełnisz w Oferta → Studio.</p>
           <div className="flex gap-2">

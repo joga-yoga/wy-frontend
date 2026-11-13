@@ -46,7 +46,7 @@ export function CancellationPolicyFields({
               <label htmlFor={`${id}-morning`} className="mb-1 block text-sm font-semibold">
                 Zajęcia poranne (start przed 12:00)
               </label>
-              <p className="mb-2 text-xs text-muted-foreground">
+              <p className="mb-2 text-sm text-muted-foreground">
                 Bezpłatne odwołanie możliwe do tej godziny dnia poprzedniego.
               </p>
               <TimePicker
@@ -59,7 +59,7 @@ export function CancellationPolicyFields({
               <label htmlFor={`${id}-afternoon`} className="mb-1 block text-sm font-semibold">
                 Zajęcia popołudniowe (start od 12:00)
               </label>
-              <p className="mb-2 text-xs text-muted-foreground">
+              <p className="mb-2 text-sm text-muted-foreground">
                 Bezpłatne odwołanie możliwe do tylu godzin przed startem zajęć.
               </p>
               <Input

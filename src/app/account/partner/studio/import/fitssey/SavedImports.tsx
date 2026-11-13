@@ -3,6 +3,8 @@ import { ChevronRight, Download } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { MenuIconTile } from "@/components/menu/MenuRow";
+
 import { importsApi } from "./api";
 import type { ImportJob } from "./types";
 export function SavedImports() {
@@ -41,10 +43,14 @@ export function SavedImports() {
             href={`/account/partner/studio/import/fitssey/${job.id}`}
             className="flex items-center gap-3 p-4"
           >
-            <Download size={18} />
-            <span className="flex-1">
-              <span className="block text-sm font-medium">Fitssey · {job.source_uuid}</span>
-              <span className="text-xs text-gray-500">
+            <MenuIconTile>
+              <Download size={18} />
+            </MenuIconTile>
+            <span className="min-w-0 flex-1">
+              <span className="block break-words text-base font-medium">
+                Fitssey · {job.source_uuid}
+              </span>
+              <span className="text-sm text-gray-500">
                 {job.state === "completed"
                   ? "Sprawdź studia i publikację"
                   : job.state === "review"
@@ -54,7 +60,7 @@ export function SavedImports() {
                       : "Kontynuuj import"}
               </span>
             </span>
-            <ChevronRight size={16} />
+            <ChevronRight size={16} className="shrink-0" />
           </Link>
         ))}
       </div>

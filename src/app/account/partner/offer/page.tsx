@@ -12,11 +12,11 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
+import { MenuRow } from "@/components/menu/MenuRow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -317,31 +317,7 @@ export default function OfferPage() {
             </DrawerClose>
           </div>
           <div className="space-y-3 p-4 pt-2">
-            <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-              {OFFER_TYPE_ROWS.map(({ href, title, description, image, badgeClassName }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setIsCreateMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                      badgeClassName,
-                    )}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={image} alt="" className="h-7 w-7 object-contain" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{title}</p>
-                    <p className="text-xs text-gray-500 truncate">{description}</p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-400 shrink-0" />
-                </Link>
-              ))}
-            </div>
+            <OfferTypeRows onSelect={() => setIsCreateMenuOpen(false)} />
           </div>
         </DrawerContent>
       </Drawer>
@@ -379,23 +355,42 @@ const OFFER_TYPE_ROWS = [
     title: "Wyjazd",
     description: "Kilkudniowy retreat z zakwaterowaniem",
     image: "/images/logo/logo-retreats.png",
-    badgeClassName: "bg-gray-50",
   },
   {
     href: "/account/partner/workshops/create",
     title: "Wydarzenie",
     description: "Spotkanie, jednorazowa praktyka",
     image: "/images/logo/logo-workshops.png",
-    badgeClassName: "bg-gray-50",
   },
   {
     href: "/account/partner/courses/create",
     title: "Kurs",
     description: "Cykl spotkań z zapisami na całość",
     image: "/images/logo/logo-courses.png",
-    badgeClassName: "bg-gray-50",
   },
 ] as const;
+
+function OfferTypeRows({ onSelect }: { onSelect?: () => void }) {
+  return (
+    <div className="rounded-b2b border bg-white overflow-hidden divide-y">
+      {OFFER_TYPE_ROWS.map(({ href, title, description, image }) => (
+        <MenuRow
+          key={href}
+          href={href}
+          title={title}
+          subtitle={description}
+          onClick={onSelect}
+          leading={
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image} alt="" className="h-9 w-9 object-contain" />
+            </div>
+          }
+        />
+      ))}
+    </div>
+  );
+}
 
 /** spec-b2b §5: one primary CTA + a type education card. Type is chosen by picking
  * a row here, never inferred — the empty state itself stays type-agnostic. */
@@ -424,30 +419,7 @@ function OfferEmptyState() {
         <h2 className="px-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Typy wydarzeń
         </h2>
-        <div className="rounded-b2b border bg-white overflow-hidden divide-y">
-          {OFFER_TYPE_ROWS.map(({ href, title, description, image, badgeClassName }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
-            >
-              <div
-                className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                  badgeClassName,
-                )}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image} alt="" className="h-7 w-7 object-contain" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900">{title}</p>
-                <p className="text-xs text-gray-500 truncate">{description}</p>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 shrink-0" />
-            </Link>
-          ))}
-        </div>
+        <OfferTypeRows />
       </div>
     </div>
   );
@@ -514,7 +486,7 @@ function OfferList({
         <button
           type="button"
           onClick={() => setIsCreateMenuOpen(true)}
-          className="flex w-full items-center justify-center gap-1.5 px-4 py-3.5 text-sm font-semibold text-b2b-green-strong transition-colors hover:bg-gray-50"
+          className="flex w-full items-center justify-center gap-1.5 px-4 py-4 text-base font-semibold text-b2b-green-strong transition-colors hover:bg-gray-50"
         >
           <Plus size={16} />
           Dodaj wydarzenie
