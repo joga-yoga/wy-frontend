@@ -39,12 +39,14 @@ export default function AddInstructorPage() {
 /** Solo setup already identifies the teacher: reuse the account's canonical self profile. */
 function SoloOwnProfileFlow() {
   const router = useRouter();
+  const fromOffer = useSearchParams().get("from") === "offer";
+  const setupHref = `/account/partner/solo-booking${fromOffer ? "?from=offer" : ""}`;
   const { user } = useAuth();
   const { capabilities, isLoading, refetch } = usePartnerCapabilities();
 
   useEffect(() => {
-    if (capabilities?.businessMode) router.replace("/account/partner/solo-booking");
-  }, [capabilities?.businessMode, router]);
+    if (capabilities?.businessMode) router.replace(setupHref);
+  }, [capabilities?.businessMode, router, setupHref]);
 
   if (isLoading) return <p className="p-4">Ładowanie profilu…</p>;
   if (!capabilities) return <p className="p-4">Nie udało się załadować ustawień konta.</p>;
@@ -63,11 +65,14 @@ function SoloOwnProfileFlow() {
         createSelfName={user?.name?.trim() ?? ""}
         onSaved={() => {
           refetch();
-          router.replace("/account/partner/solo-booking");
+          router.replace(setupHref);
         }}
       />
-      <Button variant="outline" onClick={() => router.push("/account/partner/menu")}>
-        Wróć do menu
+      <Button
+        variant="outline"
+        onClick={() => router.push(fromOffer ? "/account/partner/offer" : "/account/partner/menu")}
+      >
+        {fromOffer ? "Wróć do oferty" : "Wróć do menu"}
       </Button>
     </div>
   );

@@ -190,7 +190,7 @@ for (const entry of [
     const state = await fixture(context, { invites: true });
     await session(page);
     await page.goto(entry);
-    await expect(page).toHaveURL(/account\/partner\/bookings/);
+    await expect(page).toHaveURL(/account\/partner\/offer/);
     expect(state.creates).toBe(1);
     expect(state.inviteReads).toBe(entry.includes("next=") ? 0 : 1);
   });
@@ -225,7 +225,7 @@ test("legacy signup carries email-only context through verification and OAuth", 
   await page.goto(
     `/account/auth/callback?token=${token}&next=${encodeURIComponent(state.registeredNext!)}`,
   );
-  await expect(page).toHaveURL(/account\/partner\/bookings/);
+  await expect(page).toHaveURL(/account\/partner\/offer/);
   expect(state.creates).toBe(1);
 });
 
@@ -257,7 +257,7 @@ for (const path of [
 
 for (const [partner, next, expected] of [
   [false, "", "/account"],
-  [true, "", "/account/partner/bookings"],
+  [true, "", "/account/partner/offer"],
   [false, "/account", "/account"],
   [
     false,
@@ -330,7 +330,7 @@ for (const partner of [false, true]) {
     await page.locator("#login-password").fill("fixture-password");
     await page.getByRole("button", { name: "Zaloguj się", exact: true }).click();
     await expect(page).toHaveURL(
-      `http://localhost:3000${partner ? "/account/partner/bookings" : "/account"}`,
+      `http://localhost:3000${partner ? "/account/partner/offer" : "/account"}`,
     );
     expect(state.creates).toBe(0);
     expect(state.partner).toBe(partner);
@@ -375,7 +375,7 @@ test("marketing CTA retains automatic Partner", async ({ page, context }) => {
   await session(page);
   await page.goto("/partners");
   await page.locator('a[href="/account/partner"]:visible').first().click();
-  await expect(page).toHaveURL(/account\/partner\/bookings/);
+  await expect(page).toHaveURL(/account\/partner\/offer/);
   expect(state.creates).toBe(1);
 });
 
@@ -476,7 +476,7 @@ test("existing create Partner action still uses instant once", async ({ page, co
   await session(page);
   await page.goto("/account");
   await page.getByRole("button", { name: "Załóż konto partnera", exact: true }).click();
-  await expect(page).toHaveURL(/account\/partner\/bookings/);
+  await expect(page).toHaveURL(/account\/partner\/offer/);
   expect(state.creates).toBe(1);
 });
 
@@ -618,8 +618,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator('a[href="/account/partner/profile"]')).toHaveCount(0);
     for (const name of ["Utwórz studio", "Solo Instruktor"]) {
       const card = page.getByRole("button", { name: new RegExp(name) });
-      await expect(card).toBeVisible();
-      await expect(card.locator("img")).toBeVisible();
+      await expect(card).toHaveCount(0);
     }
     await expect(page.getByText("Przenieś studio z Fitssey", { exact: true })).toBeVisible();
     await page.getByRole("link", { name: /Przełącz na konto osobiste/ }).click();
@@ -665,6 +664,8 @@ for (const scenario of ["sms", "verified", "save-failure", "dismiss"] as const) 
     await session(page);
     let activated = false;
     let failSave = scenario === "save-failure";
+    const fromOffer = scenario === "save-failure";
+    const setupPath = `/account/partner/solo-booking${fromOffer ? "?from=offer" : ""}`;
     const events: string[] = [];
     const payloads: unknown[] = [];
     const instructor = {
@@ -738,7 +739,7 @@ for (const scenario of ["sms", "verified", "save-failure", "dismiss"] as const) 
         },
       });
     });
-    await page.goto("/account/partner/solo-booking");
+    await page.goto(setupPath);
     await page.getByRole("button", { name: "Wg pory zajęć", exact: true }).click();
     const morning = page.getByLabel("Zajęcia poranne (start przed 12:00)");
     const afternoon = page.getByLabel("Zajęcia popołudniowe (start od 12:00)");
@@ -771,7 +772,7 @@ for (const scenario of ["sms", "verified", "save-failure", "dismiss"] as const) 
         await expect(
           page.getByText("Nie udało się zapisać ustawień. Spróbuj ponownie.", { exact: true }),
         ).toBeVisible();
-        await expect(page).toHaveURL("http://localhost:3000/account/partner/solo-booking");
+        await expect(page).toHaveURL(`http://localhost:3000${setupPath}`);
         await expect(dialog).toHaveCount(0);
         await expect(morning).toHaveValue("19:30");
         await expect(afternoon).toHaveValue("4");
@@ -781,6 +782,11 @@ for (const scenario of ["sms", "verified", "save-failure", "dismiss"] as const) 
         failSave = false;
         await save.click();
       }
+    }
+    if (fromOffer) {
+      await expect(page).toHaveURL("http://localhost:3000/account/partner/offer");
+      await expect(page.getByRole("link", { name: "Edytuj swój profil: Anna Solo" })).toBeVisible();
+      await page.goto("/account/partner/menu");
     }
     await expect(page).toHaveURL("http://localhost:3000/account/partner/menu");
     await expect(page.getByRole("heading", { name: "Własne zajęcia", exact: true })).toBeVisible();
@@ -812,3 +818,17 @@ for (const scenario of ["sms", "verified", "save-failure", "dismiss"] as const) 
     expect(state.creates).toBe(0);
   });
 }
+
+test("explicit login destination retains Rezerwacje and query parameters", async ({
+  page,
+  context,
+}) => {
+  await fixture(context, { partner: true, exists: true });
+  const next = "/account/partner/bookings?filter=upcoming";
+  await page.goto(`/account/login?next=${encodeURIComponent(next)}`);
+  await page.getByLabel("Adres e-mail", { exact: true }).fill(email);
+  await page.getByRole("button", { name: "Dalej", exact: true }).click();
+  await page.locator("#login-password").fill("fixture-password");
+  await page.getByRole("button", { name: "Zaloguj się", exact: true }).click();
+  await expect(page).toHaveURL(`http://localhost:3000${next}`);
+});

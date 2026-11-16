@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus, ChevronRight, Inbox, UserPlus } from "lucide-react";
+import { ChevronRight, Inbox, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -175,15 +175,6 @@ export default function BookingsPage() {
               </div>
             )}
           </div>
-          {filter === "all" && (
-            <div className="flex items-start gap-2 rounded-xl bg-gray-50 px-4 py-3">
-              <CalendarPlus size={16} className="mt-0.5 shrink-0 text-gray-400" />
-              <p className="text-xs text-gray-500">
-                Prowadzisz studio lub własne zajęcia? Wybierz sposób zarządzania w Menu, aby
-                otworzyć Grafik.
-              </p>
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-5">

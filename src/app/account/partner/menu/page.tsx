@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { StudioLogoTile } from "@/components/b2b/StudioLogoTile";
-import { BusinessDirectionCards } from "@/components/menu/BusinessDirectionCards";
 import { MenuIconTile, MenuRow } from "@/components/menu/MenuRow";
 import { StudioWorkspaceRows } from "@/components/menu/StudioWorkspaceRows";
 import { Button } from "@/components/ui/button";
@@ -94,16 +93,6 @@ export default function MenuPage() {
           solo
         />
       )}
-      {!isLoading && capabilities && !capabilities.businessMode && managedStudios.length === 0 && (
-        <section className="space-y-2">
-          <SectionLabel>Zarządzanie</SectionLabel>
-          <p className="px-1 text-sm text-gray-500">
-            Jedno konto, jeden sposób zarządzania. Do drugiego trybu możesz założyć osobne konto
-          </p>
-          <BusinessDirectionCards />
-        </section>
-      )}
-
       {!isLoading && capabilities && capabilities.businessMode !== "solo" && user && (
         <div key={user.id} className="space-y-6">
           <ImportEntry />

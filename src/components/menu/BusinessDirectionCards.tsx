@@ -32,7 +32,7 @@ const directions = [
   href: string;
 }[];
 
-export function BusinessDirectionCards() {
+export function BusinessDirectionCards({ fromOffer = false }: { fromOffer?: boolean }) {
   const router = useRouter();
   const { confirmMode, dialog } = useBusinessModeConfirmation();
 
@@ -45,7 +45,7 @@ export function BusinessDirectionCards() {
             type="button"
             onClick={async (event) => {
               if (await confirmMode(direction.mode, event.currentTarget))
-                router.push(direction.href);
+                router.push(`${direction.href}${fromOffer ? "?from=offer" : ""}`);
             }}
             className="flex min-h-[148px] min-w-0 flex-col items-start rounded-2xl border border-zinc-200 bg-white p-4 text-left shadow-[0_1px_2px_rgba(28,25,23,0.06),0_1px_1px_rgba(28,25,23,0.04)] transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-b2b-green-strong"
           >

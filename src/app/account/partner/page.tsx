@@ -10,7 +10,7 @@ import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
  * There is no "Aktywność"/"Dziś" tab in the target shell (spec-b2b §3) — the bare
  * `/account/partner` root is only a landing redirector now. A partner with any
  * schedule source lands on Grafik; a fresh or events-only partner lands on
- * Rezerwacje, which doubles as the onboarding surface (spec-b2b §5).
+ * Oferta, which also hosts setup and owned profiles (H-423).
  */
 export default function PartnerRootPage() {
   const router = useRouter();
@@ -19,9 +19,7 @@ export default function PartnerRootPage() {
   useEffect(() => {
     if (isLoading || !capabilities) return;
     router.replace(
-      capabilities.landingTab === "grafik"
-        ? "/account/partner/schedule"
-        : "/account/partner/bookings",
+      capabilities.landingTab === "grafik" ? "/account/partner/schedule" : "/account/partner/offer",
     );
   }, [isLoading, capabilities, router]);
 

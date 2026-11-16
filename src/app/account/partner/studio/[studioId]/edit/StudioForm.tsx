@@ -578,8 +578,13 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
         setIdentity(undefined);
         operationKey.current = "";
         setStudioId(response.data.id);
+        const editorQuery = new URLSearchParams({
+          ...(importJob ? { importJob } : {}),
+          ...(importJob && importBranch ? { importBranch } : {}),
+          ...(params.get("from") === "offer" ? { from: "offer" } : {}),
+        });
         router.replace(
-          `/account/partner/studio/${response.data.id}/edit${importJob ? `?${new URLSearchParams({ importJob, ...(importBranch ? { importBranch } : {}) })}` : ""}`,
+          `/account/partner/studio/${response.data.id}/edit${editorQuery.size ? `?${editorQuery}` : ""}`,
         );
       }
       removeSetup(setupKey, ownerId);
@@ -885,7 +890,7 @@ export function StudioForm({ routeId, initialName = "" }: StudioFormProps) {
                             onClick={() => {
                               if (item.action === "edit") {
                                 router.push(
-                                  `/account/partner/studio/${item.id}/edit?reviewSetup=${encodeURIComponent(setupKey)}`,
+                                  `/account/partner/studio/${item.id}/edit?reviewSetup=${encodeURIComponent(setupKey)}${params.get("from") === "offer" ? "&from=offer" : ""}`,
                                 );
                                 return;
                               }

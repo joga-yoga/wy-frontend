@@ -166,6 +166,7 @@ function EditorLink({
   draft: string | null;
   ownerId: string;
 }) {
+  const fromOffer = useSearchParams().get("from") === "offer";
   const singleBranch = job.branches.length === 1;
   const explicitTarget =
     branch.destination?.identity ||
@@ -179,6 +180,7 @@ function EditorLink({
     setup: key,
     importJob: job.id,
     importBranch: branch.id,
+    ...(fromOffer ? { from: "offer" } : {}),
   });
   const token = branch.destination?.draft_token || (!explicitTarget && draft);
   if (typeof token === "string") query.set("draft", token);

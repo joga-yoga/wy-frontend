@@ -65,7 +65,7 @@ test("solo entry edits self directly, reuses it and confirms direction before se
     if (request.url() === `${apiUrl}/instructors/self`) selfRequests++;
     if (request.url() === `${apiUrl}/partner/solo-booking`) businessRequests++;
   });
-  await page.goto("/account/partner/menu");
+  await page.goto("/account/partner/offer");
   const cookies = page.getByRole("button", { name: "Tylko niezbędne" });
   if (await cookies.isVisible()) await cookies.click();
   await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
@@ -85,7 +85,7 @@ test("solo entry edits self directly, reuses it and confirms direction before se
   await name.fill("");
   await page.getByRole("button", { name: "Zapisz profil", exact: true }).click();
   await expect(page.getByText("Imię i nazwisko jest wymagane", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Wróć do menu" }).click();
+  await page.getByRole("button", { name: "Wróć do oferty" }).click();
   expect((await capabilities(context, identity)).self_instructor_id).toBeNull();
   await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
@@ -95,7 +95,7 @@ test("solo entry edits self directly, reuses it and confirms direction before se
     .getByRole("textbox", { name: /Twoje zdanie o sobie/ })
     .fill("Prowadzę własne zajęcia testowe.");
   await page.getByRole("button", { name: "Zapisz profil", exact: true }).click();
-  await expect(page).toHaveURL(/\/account\/partner\/solo-booking$/);
+  await expect(page).toHaveURL(/\/account\/partner\/solo-booking\?from=offer/);
   await expect(page.getByRole("button", { name: "Zapisz ustawienia" })).toBeVisible();
   const profile = await capabilities(context, identity);
   expect(profile.business_mode).toBeNull();
@@ -118,7 +118,7 @@ test("solo entry edits self directly, reuses it and confirms direction before se
   expect((await capabilities(context, identity)).business_mode).toBeNull();
 
   // Re-entering with an existing self profile goes straight to business settings.
-  await page.goto("/account/partner/menu");
+  await page.goto("/account/partner/offer");
   await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
   await expect(page.getByRole("button", { name: "Zapisz ustawienia" })).toBeVisible();

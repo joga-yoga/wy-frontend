@@ -105,6 +105,19 @@ function getBackHref(
   searchParams: URLSearchParams,
   hasManagedStudios: boolean,
 ): string | undefined {
+  if (searchParams.get("from") === "offer") {
+    if (pathname === "/account/partner/studio/create")
+      return searchParams.get("step") === "manual"
+        ? "/account/partner/studio/create?from=offer"
+        : "/account/partner/offer";
+    if (
+      pathname === "/account/partner/solo-booking" ||
+      (pathname === "/account/partner/instructors/create" &&
+        searchParams.get("returnTo") === "solo") ||
+      /^\/account\/partner\/(studio|instructors)\/[^/]+\/edit$/.test(pathname)
+    )
+      return "/account/partner/offer";
+  }
   if (pathname.startsWith("/account/partner/schedule/edit/")) return "/account/partner/schedule";
   if (pathname.startsWith("/account/partner/schedule/cancel/")) return "/account/partner/schedule";
   if (pathname === "/account/partner/class-schedules/create") return "/account/partner/schedule";
