@@ -106,7 +106,9 @@ async function setup(page: Page, eligible = ["b"]) {
     } else if (path === "/class-templates/flow") {
       if (method === "PATCH") state.template = { ...state.template, ...data };
       json = state.template;
-    } else if (path === "/class-templates")
+    } else if (path === "/class-templates" && method === "POST")
+      json = { ...state.template, ...data, id: "created" };
+    else if (path === "/class-templates")
       json = [
         state.template,
         {
@@ -206,6 +208,60 @@ async function room(page: Page, studio: string) {
 }
 const wizard = "/account/partner/class-schedules/create?templateId=flow";
 
+test("inline save keeps its default through a same-studio read failure and retry", async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page.goto("/account/partner/class-schedules/create?studio_id=b");
+  await cookies(page);
+  await expect.poll(() => state.returned.includes("b")).toBe(true);
+  await page.getByRole("button", { name: "Nowy szablon zajęć", exact: true }).click();
+  await page.getByLabel("Nazwa", { exact: true }).fill("Nowy szablon");
+  await page.getByRole("button", { name: /Zaproszona Oczekuje na zaproszenie/ }).click();
+
+  // The studio result, not the independently refreshed union, settles eligibility.
+  const union = gate();
+  state.delays.union = union.promise;
+  state.failScope = true;
+  await page.getByRole("button", { name: "Zapisz i wybierz", exact: true }).click();
+  await expect(page.getByText("Krok 2 z 3")).toBeVisible();
+  await expect(page.getByText("Nie udało się wczytać instruktorów.")).toBeVisible();
+  await expect(page.getByText(/Ten instruktor nie jest dostępny/)).toHaveCount(0);
+  await expect(page.getByText("Nowy szablon", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Pn", exact: true }).click();
+  await room(page, "B");
+  await expect(page.getByRole("button", { name: "Podgląd →" })).toBeDisabled();
+
+  state.failScope = false;
+  const retry = gate();
+  state.delays.b = retry.promise;
+  await page.getByRole("button", { name: "Spróbuj ponownie", exact: true }).click();
+  await expect(page.getByText("Ładowanie instruktorów…")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Podgląd →" })).toBeDisabled();
+  retry.release();
+  const selected = page.getByRole("button", { name: /Zaproszona Oczekuje na zaproszenie/ });
+  await expect(selected).toHaveCount(1);
+  await expect(selected).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Studio", { exact: true })).toHaveValue("b");
+  await page.getByRole("button", { name: "Podgląd →" }).click();
+  await page.getByRole("button", { name: "Utwórz grafik", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Grafik utworzony" })).toBeVisible();
+  union.release();
+  expect(
+    state.requests.filter((r) => r.method === "POST" && r.path === "/class-templates"),
+  ).toHaveLength(1);
+  const writes = state.requests.filter(
+    (r) => r.method === "POST" && r.path.startsWith("/class-schedules"),
+  );
+  expect(writes.map((r) => r.path)).toEqual(["/class-schedules/preview", "/class-schedules"]);
+  for (const request of writes)
+    expect(request.data).toMatchObject({
+      template_id: "created",
+      studio_id: "b",
+      instructor_ids: ["pending"],
+    });
+});
+
 for (const width of [390, 1440]) {
   test(`accepted independent default survives save/reopen and infers its unique studio (${width}px)`, async ({
     page,
@@ -290,7 +346,7 @@ test("studio changes clear rooms and invalid instructor; template changes clear 
   await expect(page.getByRole("combobox", { name: /Sala/ })).toContainText("Wybierz salę");
   await page.getByRole("button", { name: /Anna/ }).click();
   await room(page, "A");
-  await page.getByRole("button", { name: "Zmień", exact: true }).click();
+  await page.getByRole("button", { name: "Zmień szablon: Flow", exact: true }).click();
   await page.getByRole("button", { name: /Bez domyślnych/ }).click();
   await expect(page.getByLabel("Studio", { exact: true })).toHaveValue("a");
   await expect(

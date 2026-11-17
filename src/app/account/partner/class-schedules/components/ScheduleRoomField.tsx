@@ -17,6 +17,7 @@ import type { RoomOption } from "../types";
 
 export interface ScheduleRoomFieldProps {
   solo?: boolean;
+  labelClassName?: string;
   rooms: RoomOption[];
   roomId: string;
   onRoomChange: (id: string) => void;
@@ -26,6 +27,7 @@ export interface ScheduleRoomFieldProps {
 }
 export function ScheduleRoomField({
   solo,
+  labelClassName,
   rooms,
   roomId,
   onRoomChange,
@@ -56,7 +58,7 @@ export function ScheduleRoomField({
   const selected = rooms.some((room) => room.id === roomId) ? roomId : "";
   return (
     <div>
-      <Label htmlFor={id}>
+      <Label htmlFor={id} className={labelClassName}>
         Sala <span className="text-xs text-gray-500">· wymagana</span>
       </Label>
       <div className="flex gap-1.5">

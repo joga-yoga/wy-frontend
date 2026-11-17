@@ -80,7 +80,7 @@ export default async function StudioClassesPage({ params }: Props) {
               name={studio.name}
               imageId={studio.image_id}
               size={32}
-              imageFit="contain"
+              imageFit="cover"
               className="rounded-none bg-white"
             />
           </div>

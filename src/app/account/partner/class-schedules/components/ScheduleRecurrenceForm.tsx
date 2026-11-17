@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { addCalendarMonthClamped } from "@/lib/formatDateRange";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ const DAYS = [
 
 interface ScheduleRecurrenceFormProps extends ScheduleRoomFieldProps {
   solo?: boolean;
+  quickTimeSelection?: boolean;
   // Template info (pinned card)
   templateTitle: string;
   templateSubtitle: string;
@@ -43,7 +45,7 @@ interface ScheduleRecurrenceFormProps extends ScheduleRoomFieldProps {
   templateDurationMinutes?: number | null;
   templateColor?: string | null;
   templateInstructor?: { id?: string | null; name: string; imageId?: string | null } | null;
-  onChangeTemplate?: () => void; // if undefined → hide the "Zmień" button
+  onChangeTemplate?: () => void; // When omitted, the context card is static.
 
   // Instructors
   instructors: PickableInstructor[];
@@ -86,6 +88,7 @@ interface ScheduleRecurrenceFormProps extends ScheduleRoomFieldProps {
 
 export function ScheduleRecurrenceForm({
   solo = false,
+  quickTimeSelection = false,
   templateTitle,
   templateSubtitle,
   templateDate,
@@ -122,11 +125,19 @@ export function ScheduleRecurrenceForm({
   onStartTimeChange,
   showRecurrence = true,
 }: ScheduleRecurrenceFormProps) {
-  return (
+  const labelClassName = quickTimeSelection
+    ? "mb-1.5 block text-sm font-light text-gray-400"
+    : undefined;
+  const content = (
     <>
       {/* Which session/series this form is acting on (S3/S4) */}
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
+      {onChangeTemplate ? (
+        <button
+          type="button"
+          onClick={onChangeTemplate}
+          aria-label={`Zmień szablon: ${templateTitle}`}
+          className="block w-full text-left rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
           <SessionContextCard
             title={templateTitle}
             date={templateDate}
@@ -136,25 +147,29 @@ export function ScheduleRecurrenceForm({
             subtitle={templateSubtitle}
             instructor={templateInstructor}
           />
-        </div>
-        {onChangeTemplate && (
-          <button
-            onClick={onChangeTemplate}
-            className="shrink-0 pt-3 text-xs font-medium text-b2b-green-text"
-          >
-            Zmień
-          </button>
-        )}
-      </div>
+        </button>
+      ) : (
+        <SessionContextCard
+          title={templateTitle}
+          date={templateDate}
+          time={templateTime}
+          durationMinutes={templateDurationMinutes}
+          color={templateColor}
+          subtitle={templateSubtitle}
+          instructor={templateInstructor}
+        />
+      )}
+
+      {quickTimeSelection && <Separator className="my-2" />}
 
       {/* Recurrence. Hidden for a single-session edit — frequency/days/date-range do not
        * apply to one occurrence, and offering them invites the costly mistake of rewriting a
        * series while believing you changed one session. */}
       {showRecurrence && (
         <div>
-          <Label>Częstotliwość</Label>
+          <Label className={labelClassName}>Częstotliwość</Label>
           <SegmentedToggle
-            className="mt-1 mb-0"
+            className={cn("mt-1 mb-0", quickTimeSelection && "mt-0 gap-x-3")}
             value={frequency}
             onChange={onFrequencyChange}
             options={[
@@ -170,9 +185,9 @@ export function ScheduleRecurrenceForm({
        * That also rules out the old side-by-side `grid-cols-2` for the date pair — they
        * are no longer neighbours — so everything below is a single stacked column. */}
       {showRecurrence && (
-        <div className="space-y-3">
+        <div className={quickTimeSelection ? "space-y-4" : "space-y-3"}>
           <div>
-            <Label>{frequency === "once" ? "Data" : "Od dnia"}</Label>
+            <Label className={labelClassName}>{frequency === "once" ? "Data" : "Od dnia"}</Label>
             {disableFromDate ? (
               <Button
                 size="action"
@@ -201,11 +216,10 @@ export function ScheduleRecurrenceForm({
           </div>
           {frequency === "weekly" && (
             <div>
-              <Label>Dni</Label>
               {/* Green *fill* here, not just a border — S4 draws it that way, and the circles are
                * too small for a border alone to register. Grid, not flex, so the row fills the
                * full width edge-to-edge rather than clumping left with dead space on the right. */}
-              <div className="mt-1 grid grid-cols-7 gap-1.5">
+              <div className={cn("grid grid-cols-7 gap-1.5", !quickTimeSelection && "mt-1")}>
                 {DAYS.map((d) => (
                   <button
                     key={d.key}
@@ -227,9 +241,13 @@ export function ScheduleRecurrenceForm({
           )}
           {frequency === "weekly" && onEndDateModeChange && (
             <div>
-              <Label>Do dnia</Label>
+              <Label className={labelClassName}>Do dnia</Label>
               <SegmentedToggle
-                className="mt-1"
+                className={cn(
+                  "mt-1",
+                  quickTimeSelection &&
+                    "mt-0 mb-0 gap-x-3 [&_button]:min-w-0 [&_button]:break-words",
+                )}
                 columns={3}
                 value={endDateMode}
                 onChange={onEndDateModeChange}
@@ -245,7 +263,10 @@ export function ScheduleRecurrenceForm({
                     <Button
                       size="action"
                       variant="outline"
-                      className="w-full justify-start font-normal"
+                      className={cn(
+                        "w-full justify-start font-normal",
+                        quickTimeSelection && "mt-2",
+                      )}
                     >
                       {toDate ? toDate.toLocaleDateString("pl-PL") : "Wybierz datę"}
                     </Button>
@@ -256,7 +277,7 @@ export function ScheduleRecurrenceForm({
                 </Popover>
               )}
               {endDateMode === "1month" && fromDate && (
-                <p className="text-xs text-gray-500">
+                <p className={cn("text-xs text-gray-500", quickTimeSelection && "mt-2")}>
                   do {addCalendarMonthClamped(fromDate).toLocaleDateString("pl-PL")}
                 </p>
               )}
@@ -264,7 +285,7 @@ export function ScheduleRecurrenceForm({
           )}
           {frequency === "weekly" && !onEndDateModeChange && (
             <div>
-              <Label>Do dnia</Label>
+              <Label className={labelClassName}>Do dnia</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -284,13 +305,41 @@ export function ScheduleRecurrenceForm({
         </div>
       )}
 
-      {/* Godzina + Sala side by side (S4) */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Creation offers quick times; edits keep their saved-time field layout. */}
+      <div className={cn(quickTimeSelection ? "space-y-4" : "grid grid-cols-2 gap-3")}>
         <div>
-          <Label htmlFor="schedule-start-time">Godzina</Label>
-          <TimePicker id="schedule-start-time" value={startTime} onChange={onStartTimeChange} />
+          <Label htmlFor="schedule-start-time" className={labelClassName}>
+            Godzina
+          </Label>
+          <div className={cn(quickTimeSelection && "flex flex-wrap items-start gap-2")}>
+            {quickTimeSelection &&
+              ["18:00", "18:15", "19:00", "19:15"].map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  aria-pressed={startTime === time}
+                  onClick={() => onStartTimeChange(time)}
+                  className={cn(
+                    "h-10 shrink-0 rounded-full border px-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    startTime === time
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
+                  )}
+                >
+                  {time}
+                </button>
+              ))}
+            <div
+              className={cn(
+                quickTimeSelection && "min-w-28 flex-1 [&_input]:h-10 [&_input]:rounded-full",
+              )}
+            >
+              <TimePicker id="schedule-start-time" value={startTime} onChange={onStartTimeChange} />
+            </div>
+          </div>
         </div>
         <ScheduleRoomField
+          labelClassName={labelClassName}
           solo={solo}
           rooms={rooms}
           roomId={roomId}
@@ -301,15 +350,17 @@ export function ScheduleRecurrenceForm({
         />
       </div>
 
+      {quickTimeSelection && <Separator className="my-2" />}
+
       {!solo && (
         <div>
-          <Label>
+          <Label className={labelClassName}>
             Prowadzący
             {defaultInstructorId && instructorId === defaultInstructorId && (
               <span className="ml-1 text-xs text-gray-400">· z szablonu</span>
             )}
           </Label>
-          <div className="mt-1">
+          <div className={quickTimeSelection ? undefined : "mt-1"}>
             <InstructorPicker
               instructors={instructors}
               selectedId={instructorId}
@@ -322,8 +373,10 @@ export function ScheduleRecurrenceForm({
         </div>
       )}
 
+      {quickTimeSelection && !solo && <Separator className="my-2" />}
+
       <div>
-        <Label>
+        <Label className={labelClassName}>
           Limit miejsc
           {defaultCapacity != null && capacity === String(defaultCapacity) && (
             <span className="ml-1 text-xs text-gray-400">· z szablonu</span>
@@ -339,4 +392,7 @@ export function ScheduleRecurrenceForm({
       </div>
     </>
   );
+
+  // The create flow owns its field rhythm; callers of the edit form retain their layout.
+  return quickTimeSelection ? <div className="flex flex-col gap-4">{content}</div> : content;
 }

@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
  * A studio's logo as a rounded tile, with initials as the fallback (mockups R1, D2, V1).
  *
  * `Studio.image_id` *is* the logo — the profile editor has always uploaded it under a
- * "Logo" label; it simply never reached the Menu. It is rendered `object-contain` rather
- * than `object-cover`: a logo cropped to fill is a logo you can no longer read.
+ * "Logo" label; it simply never reached the Menu. It covers the tile while preserving its proportions,
+ * matching the saved-profile preview.
  */
 export function StudioLogoTile({
   name,
@@ -29,7 +29,7 @@ export function StudioLogoTile({
         alt={name}
         width={size}
         height={size}
-        className={cn("shrink-0 border bg-white object-contain", rounding, className)}
+        className={cn("shrink-0 border bg-white object-cover", rounding, className)}
         style={{ width: size, height: size }}
       />
     );

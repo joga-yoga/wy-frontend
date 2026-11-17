@@ -218,7 +218,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
                 alt={studio.name}
                 width={36}
                 height={36}
-                className="size-9 rounded-lg object-contain"
+                className="size-9 rounded-lg object-cover"
               />
             ) : (
               <Building2 className="size-5 text-muted-foreground" />
@@ -291,7 +291,7 @@ export function StudioLinkSection({ instructorId }: StudioLinkSectionProps) {
                         alt={studio.name}
                         width={32}
                         height={32}
-                        className="size-8 rounded-lg object-contain"
+                        className="size-8 rounded-lg object-cover"
                       />
                     ) : (
                       <Building2 className="size-4 text-muted-foreground" />

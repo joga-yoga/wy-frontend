@@ -84,7 +84,7 @@ function ScheduleHeaderIdentity({ studio }: { studio: StudioPublic }) {
     <Link href={`/studio/${studio.slug}`} className="flex items-start gap-3 px-4 pt-4">
       <div className="relative h-15 w-15 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
         {studio.image_id ? (
-          <WyImage src={studio.image_id} alt={studio.name} fill className="object-contain" />
+          <WyImage src={studio.image_id} alt={studio.name} fill className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-bold text-gray-500">
             {initials(studio.name)}

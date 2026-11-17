@@ -247,7 +247,7 @@ function HeroSection({ studio }: { studio: StudioPublic }) {
             name={studio.name}
             imageId={studio.image_id}
             size={100}
-            imageFit="contain"
+            imageFit="cover"
             className="rounded-none bg-white"
           />
         </div>
