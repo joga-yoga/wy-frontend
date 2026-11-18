@@ -20,6 +20,18 @@ import { ScheduleRoomField, type ScheduleRoomFieldProps } from "./ScheduleRoomFi
 
 export type EndDateMode = "endless" | "1month" | "custom";
 
+const QUICK_TIMES = [
+  "09:00",
+  "09:30",
+  "17:00",
+  "18:00",
+  "18:15",
+  "19:00",
+  "19:15",
+  "19:30",
+  "20:00",
+];
+
 const DAYS = [
   { key: "MO", label: "Pn" },
   { key: "TU", label: "Wt" },
@@ -128,6 +140,18 @@ export function ScheduleRecurrenceForm({
   const labelClassName = quickTimeSelection
     ? "mb-1.5 block text-sm font-light text-gray-400"
     : undefined;
+  const roomField = (
+    <ScheduleRoomField
+      labelClassName={labelClassName}
+      solo={solo}
+      rooms={rooms}
+      roomId={roomId}
+      onRoomChange={onRoomChange}
+      roomsLoading={roomsLoading}
+      roomsError={roomsError}
+      retryRooms={retryRooms}
+    />
+  );
   const content = (
     <>
       {/* Which session/series this form is acting on (S3/S4) */}
@@ -172,10 +196,17 @@ export function ScheduleRecurrenceForm({
             className={cn("mt-1 mb-0", quickTimeSelection && "mt-0 gap-x-3")}
             value={frequency}
             onChange={onFrequencyChange}
-            options={[
-              { label: "Raz", value: "once" },
-              { label: "Co tydzień", value: "weekly" },
-            ]}
+            options={
+              quickTimeSelection
+                ? [
+                    { label: "Co tydzień", value: "weekly" },
+                    { label: "Raz", value: "once" },
+                  ]
+                : [
+                    { label: "Raz", value: "once" },
+                    { label: "Co tydzień", value: "weekly" },
+                  ]
+            }
           />
         </div>
       )}
@@ -246,7 +277,7 @@ export function ScheduleRecurrenceForm({
                 className={cn(
                   "mt-1",
                   quickTimeSelection &&
-                    "mt-0 mb-0 gap-x-3 [&_button]:min-w-0 [&_button]:break-words",
+                    "mt-0 mb-0 flex flex-wrap gap-x-3 [&_button]:flex-1 [&_button]:whitespace-nowrap",
                 )}
                 columns={3}
                 value={endDateMode}
@@ -306,14 +337,14 @@ export function ScheduleRecurrenceForm({
       )}
 
       {/* Creation offers quick times; edits keep their saved-time field layout. */}
-      <div className={cn(quickTimeSelection ? "space-y-4" : "grid grid-cols-2 gap-3")}>
+      <div className={quickTimeSelection ? undefined : "grid grid-cols-2 gap-3"}>
         <div>
           <Label htmlFor="schedule-start-time" className={labelClassName}>
             Godzina
           </Label>
           <div className={cn(quickTimeSelection && "flex flex-wrap items-start gap-2")}>
             {quickTimeSelection &&
-              ["18:00", "18:15", "19:00", "19:15"].map((time) => (
+              QUICK_TIMES.map((time) => (
                 <button
                   key={time}
                   type="button"
@@ -331,23 +362,15 @@ export function ScheduleRecurrenceForm({
               ))}
             <div
               className={cn(
-                quickTimeSelection && "min-w-28 flex-1 [&_input]:h-10 [&_input]:rounded-full",
+                quickTimeSelection &&
+                  "min-w-28 flex-1 [&_input]:h-10 [&_input]:rounded-full [&_input]:border-brand-green-700 [&_input[aria-invalid=true]]:border-destructive",
               )}
             >
               <TimePicker id="schedule-start-time" value={startTime} onChange={onStartTimeChange} />
             </div>
           </div>
         </div>
-        <ScheduleRoomField
-          labelClassName={labelClassName}
-          solo={solo}
-          rooms={rooms}
-          roomId={roomId}
-          onRoomChange={onRoomChange}
-          roomsLoading={roomsLoading}
-          roomsError={roomsError}
-          retryRooms={retryRooms}
-        />
+        {!quickTimeSelection && roomField}
       </div>
 
       {quickTimeSelection && <Separator className="my-2" />}
@@ -374,6 +397,8 @@ export function ScheduleRecurrenceForm({
       )}
 
       {quickTimeSelection && !solo && <Separator className="my-2" />}
+
+      {quickTimeSelection && roomField}
 
       <div>
         <Label className={labelClassName}>
