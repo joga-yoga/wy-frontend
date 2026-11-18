@@ -193,14 +193,14 @@ export function ScheduleRecurrenceForm({
         <div>
           <Label className={labelClassName}>Częstotliwość</Label>
           <SegmentedToggle
-            className={cn("mt-1 mb-0", quickTimeSelection && "mt-0 gap-x-3")}
+            className={cn("mt-1 mb-0", quickTimeSelection && "mt-0 gap-x-3 [&_button]:font-medium")}
             value={frequency}
             onChange={onFrequencyChange}
             options={
               quickTimeSelection
                 ? [
-                    { label: "Co tydzień", value: "weekly" },
-                    { label: "Raz", value: "once" },
+                    { label: "CO TYDZIEŃ", value: "weekly" },
+                    { label: "RAZ", value: "once" },
                   ]
                 : [
                     { label: "Raz", value: "once" },
@@ -277,15 +277,15 @@ export function ScheduleRecurrenceForm({
                 className={cn(
                   "mt-1",
                   quickTimeSelection &&
-                    "mt-0 mb-0 flex flex-wrap gap-x-3 [&_button]:flex-1 [&_button]:whitespace-nowrap",
+                    "mt-0 mb-0 flex flex-wrap gap-x-3 [&_button]:flex-1 [&_button]:whitespace-nowrap [&_button]:font-medium",
                 )}
                 columns={3}
                 value={endDateMode}
                 onChange={onEndDateModeChange}
                 options={[
-                  { label: "Bezterminowo", value: "endless" },
-                  { label: "1 miesiąc", value: "1month" },
-                  { label: "Wybierz datę", value: "custom" },
+                  { label: "BEZTERMINOWO", value: "endless" },
+                  { label: "1 MIES.", value: "1month" },
+                  { label: "WYBIERZ DATĘ", value: "custom" },
                 ]}
               />
               {endDateMode === "custom" && (
