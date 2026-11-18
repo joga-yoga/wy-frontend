@@ -15,6 +15,7 @@ async function setup(page: Page, mode: "multi" | "single" | "solo" = "multi", em
     fail: false,
     omitAdded: false,
     failRefresh: false,
+    scopedReads: [] as string[][],
     requests: [] as { path: string; method: string; data: Record<string, unknown> | null }[],
     template: {
       id: "template",
@@ -164,7 +165,22 @@ async function setup(page: Page, mode: "multi" | "single" | "solo" = "multi", em
     } else if (path === "/class-templates/template") {
       if (method === "PATCH") state.template = { ...state.template, ...data };
       json = state.template;
-    } else if (path === "/class-templates")
+    } else if (path === "/class-grafik/week") json = { days: [] };
+    else if (path === "/partner/reconciliation")
+      json = { sessions: [], total: 0, show_studio_labels: false };
+    else if (path === "/class-schedules/preview")
+      json = {
+        total: 1,
+        occurrences: [
+          {
+            calendar_date: "2026-12-01",
+            start_time: "2026-12-01T09:00:00Z",
+            end_time: "2026-12-01T10:00:00Z",
+          },
+        ],
+      };
+    else if (path === "/class-schedules") json = { total_created: 1, occurrences: [] };
+    else if (path === "/class-templates")
       json = method === "POST" ? { id: "created", ...data } : [state.template];
     else if (path === "/events/image-upload") json = { image_id: "template-image" };
     else if (path === "/yoga-styles")
@@ -174,6 +190,8 @@ async function setup(page: Page, mode: "multi" | "single" | "solo" = "multi", em
       ];
     else if (path.startsWith("/notifications")) json = { items: [], unread_count: 0 };
     await route.fulfill({ status, json });
+    if (path === "/instructors/assignable" && url.searchParams.has("studio_id") && status === 200)
+      state.scopedReads.push(state.roster.map((row) => row.id));
   });
   return state;
 }
@@ -277,48 +295,80 @@ test("studio template keeps all fields through cancel and retry; selects returne
   await expect.poll(() => state.template.default_instructor_id).toBe(null);
 });
 
-test("mobile inline creation uses single studio, retains parent on child retry and preserves pending invitation", async ({
-  page,
-}, info) => {
-  await page.setViewportSize({ width: 375, height: 900 });
-  const state = await setup(page, "single", true);
-  await page.goto("/account/partner/class-schedules/create");
-  await dismissCookies(page);
-  await page.getByRole("button", { name: "Nowy szablon zajęć", exact: true }).click();
-  await page.getByLabel("Nazwa", { exact: true }).fill("Nowy szablon");
-  await page.getByRole("button", { name: "Dodaj instruktora", exact: true }).click();
-  const d = page.getByRole("dialog");
-  await d.getByRole("button", { name: "Dodaj bez zaproszenia (bez emaila)" }).click();
-  await d.getByLabel("Imię i nazwisko", { exact: true }).fill("Nowa osoba");
-  await d.getByLabel("Email", { exact: true }).fill("new@example.com");
-  state.fail = true;
-  await d.getByRole("button", { name: "Dodaj i wyślij zaproszenie" }).click();
-  await expect(page.getByText("Spróbuj ponownie — dodanie nie powiodło się.")).toBeVisible();
-  await expect(d.getByLabel("Imię i nazwisko", { exact: true })).toHaveValue("Nowa osoba");
-  await page.screenshot({ path: info.outputPath("addition-mobile.png"), animations: "disabled" });
-  state.fail = false;
-  await d.getByRole("button", { name: "Dodaj i wyślij zaproszenie" }).click();
-  await expect(d).toBeHidden();
-  await expect(page.getByLabel("Nazwa", { exact: true })).toHaveValue("Nowy szablon");
-  await expect(
-    page.getByRole("button", { name: "Nowa osoba Oczekuje na zaproszenie" }),
-  ).toHaveAttribute("aria-pressed", "true");
-  expect(
-    state.requests.filter((r) => r.method === "POST" && r.path === "/class-templates"),
-  ).toHaveLength(0);
-  const resolve = state.requests.filter((r) => r.path === "/instructors/resolve").at(-1)!;
-  expect(resolve.data).toMatchObject({
-    studio_id: "studio-b",
-    name: "Nowa osoba",
-    email: "new@example.com",
+for (const width of [375, 1440]) {
+  test(`inline creation from Grafik selects the new instructor through preview and creation (${width}px)`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await setup(page, "single", true);
+    await page.goto("/account/partner/schedule?studio_id=studio-b");
+    await dismissCookies(page);
+    await page.getByRole("link", { name: "Dodaj zajęcia", exact: true }).last().click();
+    await expect(page).toHaveURL(/class-schedules\/create\?studio_id=studio-b/);
+    // Finish the wizard's initial roster read before the inline editor creates anyone.
+    await expect.poll(() => state.scopedReads.length).toBeGreaterThan(0);
+    expect(state.scopedReads[0]).toEqual([]);
+    await page.getByRole("button", { name: "Nowy szablon zajęć", exact: true }).click();
+    await page.getByLabel("Nazwa", { exact: true }).fill("Nowy szablon");
+    await page.getByRole("button", { name: "Dodaj instruktora", exact: true }).click();
+    const d = page.getByRole("dialog");
+    await d.getByRole("button", { name: "Dodaj bez zaproszenia (bez emaila)" }).click();
+    await d.getByLabel("Imię i nazwisko", { exact: true }).fill("Nowa osoba");
+    await d.getByLabel("Email", { exact: true }).fill("new@example.com");
+    state.fail = true;
+    await d.getByRole("button", { name: "Dodaj i wyślij zaproszenie" }).click();
+    await expect(page.getByText("Spróbuj ponownie — dodanie nie powiodło się.")).toBeVisible();
+    await expect(d.getByLabel("Imię i nazwisko", { exact: true })).toHaveValue("Nowa osoba");
+    await page.screenshot({ path: info.outputPath("addition-mobile.png"), animations: "disabled" });
+    state.fail = false;
+    await d.getByRole("button", { name: "Dodaj i wyślij zaproszenie" }).click();
+    await expect(d).toBeHidden();
+    await expect(page.getByLabel("Nazwa", { exact: true })).toHaveValue("Nowy szablon");
+    await expect(
+      page.getByRole("button", { name: "Nowa osoba Oczekuje na zaproszenie" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      state.requests.filter((r) => r.method === "POST" && r.path === "/class-templates"),
+    ).toHaveLength(0);
+    const resolve = state.requests.filter((r) => r.path === "/instructors/resolve").at(-1)!;
+    expect(resolve.data).toMatchObject({
+      studio_id: "studio-b",
+      name: "Nowa osoba",
+      email: "new@example.com",
+    });
+    await page.screenshot({ path: info.outputPath("selected-mobile.png"), animations: "disabled" });
+    await page.getByRole("button", { name: "Zapisz i wybierz", exact: true }).click();
+    await expect(page.getByText("Krok 2 z 3")).toBeVisible();
+    expect(
+      state.requests.find((r) => r.method === "POST" && r.path === "/class-templates")?.data,
+    ).toMatchObject({ title: "Nowy szablon", default_instructor_id: "new" });
+    const selected = page.getByRole("button", { name: "Nowa osoba Oczekuje na zaproszenie" });
+    await expect(selected).toHaveCount(1);
+    await expect(selected).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText(/Ten instruktor nie jest dostępny/)).toHaveCount(0);
+    await page.getByRole("button", { name: "Pn", exact: true }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({ path: info.outputPath("recurrence.png"), fullPage: true });
+    await page.getByRole("button", { name: "Podgląd →" }).click();
+    await page.getByRole("button", { name: "Utwórz grafik", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Grafik utworzony" })).toBeVisible();
+    const writes = state.requests.filter(
+      (r) => r.method === "POST" && r.path.startsWith("/class-schedules"),
+    );
+    expect(writes.map((r) => r.path)).toEqual(["/class-schedules/preview", "/class-schedules"]);
+    for (const request of writes)
+      expect(request.data).toMatchObject({
+        template_id: "created",
+        studio_id: "studio-b",
+        instructor_ids: ["new"],
+      });
+    expect(
+      state.requests.filter((r) => r.method === "POST" && r.path === "/class-templates"),
+    ).toHaveLength(1);
   });
-  await page.screenshot({ path: info.outputPath("selected-mobile.png"), animations: "disabled" });
-  await page.getByRole("button", { name: "Zapisz i wybierz", exact: true }).click();
-  await expect(page.getByText("Krok 2 z 3")).toBeVisible();
-  expect(
-    state.requests.find((r) => r.method === "POST" && r.path === "/class-templates")?.data,
-  ).toMatchObject({ title: "Nowy szablon", default_instructor_id: "new" });
-});
+}
 
 test("unresolved multi-studio context uses partner operations and keeps previous default without a selectable result", async ({
   page,

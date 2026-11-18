@@ -570,13 +570,7 @@ export function TemplateEditor({
         >
           <div className="mx-auto flex max-w-lg gap-3 px-4">
             {onCancel && (
-              <Button
-                size="action"
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={onCancel}
-              >
+              <Button size="action" type="button" variant="outline" onClick={onCancel}>
                 Anuluj
               </Button>
             )}

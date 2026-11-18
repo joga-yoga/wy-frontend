@@ -69,7 +69,7 @@ function StudioTile({ studio, muted = false }: { studio: StudioDirectoryItem; mu
         seed={studio.external_id}
         name={studio.name}
         imageId={studio.image_id}
-        imageFit="contain"
+        imageFit="cover"
         size={48}
         className={cn(
           "rounded-xl",

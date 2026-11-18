@@ -254,6 +254,18 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
   const time = page.getByRole("textbox", { name: "Godzina", exact: true });
   const preview = page.getByRole("button", { name: "Podgląd →" });
   await expect(time).toHaveAttribute("type", "text");
+  await expect(time).toHaveValue("20:00");
+  await expect(page.getByRole("button", { name: "18:15", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await page.getByRole("button", { name: "19:15", exact: true }).click();
+  await expect(time).toHaveValue("19:15");
+  await expect(page.getByRole("button", { name: "19:15", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
   for (const value of ["", "1", "12:", "24:00", "12:60"]) {
     await time.fill(value);
     await time.press("Tab");
@@ -265,6 +277,11 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
     await time.fill(value);
     await expect(preview).toBeEnabled();
   }
+  for (const preset of ["18:00", "18:15", "19:00", "19:15"])
+    await expect(page.getByRole("button", { name: preset, exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   const trigger = page.getByRole("button", { name: "Wybierz godzinę", exact: true });
   await trigger.focus();
   await trigger.press("Enter");
@@ -291,6 +308,43 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
   expect(state.previews[0].start_time).toBe("12:07:00");
   expect(state.writes[0].start_time).toBe("12:07:00");
 });
+
+for (const frequency of ["Raz", "Co tydzień"] as const) {
+  test(`mobile time presets reach preview and allow a custom time (${frequency})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    const state = await mock(page, 0);
+    await openCreate(page);
+    await page.getByRole("button", { name: frequency, exact: true }).click();
+    if (frequency === "Co tydzień")
+      await page.getByRole("button", { name: "Pn", exact: true }).click();
+    const time = page.getByRole("textbox", { name: "Godzina", exact: true });
+    await expect(time).toHaveValue("20:00");
+    const preset = page.getByRole("button", { name: "19:15", exact: true });
+    await preset.click();
+    await expect(time).toHaveValue("19:15");
+    await expect(preset).toHaveAttribute("aria-pressed", "true");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.getByRole("button", { name: "Podgląd →" }).click();
+    await expect(page.getByRole("button", { name: "Utwórz grafik", exact: true })).toBeVisible();
+    expect(state.previews.at(-1)?.start_time).toBe("19:15:00");
+    await page.getByRole("button", { name: "Wstecz", exact: true }).click();
+    await time.fill("20:17");
+    for (const value of ["18:00", "18:15", "19:00", "19:15"])
+      await expect(page.getByRole("button", { name: value, exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+    await page.getByRole("button", { name: "Podgląd →" }).click();
+    await page.getByRole("button", { name: "Utwórz grafik", exact: true }).click();
+    await expect.poll(() => state.writes.length).toBe(1);
+    expect(state.previews.at(-1)?.start_time).toBe("20:17:00");
+    expect(state.writes[0].start_time).toBe("20:17:00");
+  });
+}
 
 test.describe("touch time picker", () => {
   test.use({ hasTouch: true });

@@ -12,7 +12,7 @@ export interface StudioCardData {
   address?: string | null;
 }
 
-/** Shared studio row/card: 48px logo (photo, contain-fit on white, or id-hashed color
+/** Shared studio row/card: 48px logo (photo, cover-fit on white, or id-hashed color
  * fallback), name, optional address, trailing chevron. Whole row is the tap target,
  * navigating to `/studio/[slug]` when a slug is present. */
 export function StudioCard({ studio }: { studio: StudioCardData }) {
@@ -26,12 +26,8 @@ export function StudioCard({ studio }: { studio: StudioCardData }) {
           name={studio.name}
           imageId={studio.image_id}
           size={48}
-          imageFit="contain"
-          // ⚠ `bg-white` only when there is a logo to letterbox. It exists so a
-          // `contain`-fitted logo sits on white — but `cn` is tailwind-merge, so passing it
-          // unconditionally beat `HashedAvatar`'s own `bg-class-{hue}-700` fallback and
-          // rendered **white initials on white**. Every imageless studio, on every surface
-          // this card appears on, showed an empty 48px square.
+          imageFit="cover"
+          // Keep the image background separate from the colored initials fallback.
           className={cn("rounded-none", studio.image_id && "bg-white")}
         />
       </div>

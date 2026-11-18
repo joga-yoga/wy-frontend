@@ -53,6 +53,14 @@ async function directionSession(page: Page, hasInstructorProfile = true) {
     else if (path === "/studio-setup/duplicates")
       json = { matches: [], fingerprint: "empty", requires_choice: false };
     else if (path === `/studios/${studio.id}`) json = studio;
+    else if (path === "/instructors/direction-instructor")
+      json = {
+        id: "direction-instructor",
+        name: "Osoba prowadząca",
+        slug: "osoba",
+        image_id: null,
+      };
+    else if (path === "/instructor/osoba") json = { instructor: { name: "Osoba prowadząca" } };
     else if (path.includes("unread-count")) json = { unread_count: 0 };
     else if (path.includes("invitations")) json = { items: [], unread_count: 0 };
     else if (path === "/studio-migrations/transfer-offer")
@@ -77,7 +85,7 @@ test("cards match the responsive layout, cancel restores focus and only confirma
   page,
 }, info) => {
   const state = await directionSession(page, false);
-  await page.goto("/account/partner/menu");
+  await page.goto("/account/partner/offer");
   const cookies = page.getByRole("button", { name: "Tylko niezbędne", exact: true });
   if (await cookies.isVisible()) await cookies.click();
   const studio = page.getByRole("button", { name: /^Utwórz studio/ });
@@ -137,7 +145,7 @@ test("cards match the responsive layout, cancel restores focus and only confirma
   await expect(page.getByRole("heading", { name: "Znajdź swoje studio" })).toBeVisible();
   expect(state.writes).toEqual([]);
   expect(state.mode).toBeNull();
-  await page.goto("/account/partner/menu");
+  await page.goto("/account/partner/offer");
   await solo.click();
   await expect(dialog).toContainText("Własny grafik zajęć");
   await dialog.getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
@@ -186,4 +194,48 @@ test("direct studio setup saves and retries without a direction warning", async 
   expect(state.studioSaves).toBe(2);
   expect(state.mode).toBe("studio");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("Oferta solo setup retains its return target across failure and successful save", async ({
+  page,
+}) => {
+  const state = await directionSession(page);
+  await page.goto("/account/partner/offer");
+  await page.getByRole("button", { name: /^Solo Instruktor/ }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
+  await expect(page).toHaveURL(/solo-booking\?from=offer$/);
+  const save = page.getByRole("button", { name: "Zapisz ustawienia", exact: true });
+  await save.click();
+  await expect.poll(() => state.soloSaves).toBe(1);
+  await expect(save).toBeEnabled();
+  expect(state.mode).toBeNull();
+  await save.click();
+  await expect(page).toHaveURL(/\/account\/partner\/offer$/);
+  await expect(
+    page.getByRole("link", { name: "Edytuj swój profil: Osoba prowadząca" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Solo Instruktor/ })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: /Zobacz stronę publiczną: Osoba prowadząca/ }),
+  ).toHaveAttribute("href", "/instruktor/osoba");
+});
+
+test("Oferta manual studio setup keeps its return target after save", async ({ page }) => {
+  const state = await directionSession(page);
+  await page.goto("/account/partner/offer");
+  await page.getByRole("button", { name: /^Utwórz studio/ }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Potwierdź i kontynuuj" }).click();
+  await page.getByRole("link", { name: "Dodaj studio ręcznie" }).click();
+  await page.getByRole("textbox", { name: "Nazwa studia", exact: true }).fill("Studio testowe");
+  const save = page.getByRole("button", { name: "Zapisz", exact: true });
+  await save.click();
+  await expect.poll(() => state.studioSaves).toBe(1);
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect(page).toHaveURL(/studio\/direction-studio\/edit\?from=offer$/);
+  await page.getByRole("button", { name: "Wróć", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/account\/partner\/offer$/);
+  await expect(
+    page.getByRole("link", { name: "Edytuj stronę studia: Studio testowe" }),
+  ).toBeVisible();
 });

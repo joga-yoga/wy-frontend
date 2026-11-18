@@ -11,7 +11,7 @@ export default function CreateStudioPage() {
     return <StudioForm routeId="create" initialName={params.get("name") ?? ""} />;
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <StudioDiscovery />
+      <StudioDiscovery fromOffer={params.get("from") === "offer"} />
     </div>
   );
 }

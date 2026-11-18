@@ -41,6 +41,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { useOfferCreateMenu } from "@/context/OfferCreateMenuContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -50,6 +51,7 @@ import { cn } from "@/lib/utils";
 import { isPastEvent, sortForOffer } from "./eventKind";
 import { BaseEvent, DashboardItem } from "./offerConfig";
 import { OfferEventRow } from "./OfferEventRow";
+import { OfferProfiles } from "./OfferProfiles";
 
 /** Rows shown per type before "Pokaż wszystkie" expands the rest in place. */
 const VISIBLE_PER_SECTION = 2;
@@ -322,23 +324,27 @@ export default function OfferPage() {
         </DrawerContent>
       </Drawer>
 
-      {isLoading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      ) : (
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-6">
-          {hasAnyEvents ? (
-            <OfferList
-              items={allItems}
-              cardProps={cardProps}
-              getOrganizerLabel={getOrganizerLabel}
-            />
-          ) : (
-            <OfferEmptyState />
-          )}
-        </div>
-      )}
+      <div className="max-w-2xl mx-auto px-4 py-4 space-y-6">
+        <OfferProfiles />
+        <Separator />
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div>
+            {hasAnyEvents ? (
+              <OfferList
+                items={allItems}
+                cardProps={cardProps}
+                getOrganizerLabel={getOrganizerLabel}
+              />
+            ) : (
+              <OfferEmptyState />
+            )}
+          </div>
+        )}
+      </div>
     </>
   );
 }

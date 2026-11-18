@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { CancellationPolicyFields } from "@/components/partner/CancellationPolicyFields";
@@ -14,6 +14,8 @@ import { isValidTime } from "@/lib/timeInput";
 
 export default function SoloBookingSetupPage() {
   const router = useRouter();
+  const fromOffer = useSearchParams().get("from") === "offer";
+  const returnHref = fromOffer ? "/account/partner/offer" : "/account/partner/menu";
   const { capabilities, isLoading, refetch } = usePartnerCapabilities();
   const { toast } = useToast();
   const [cancellationMode, setCancellationMode] = useState<"always_free" | "by_time_of_day">(
@@ -32,8 +34,10 @@ export default function SoloBookingSetupPage() {
       !capabilities.businessMode &&
       !capabilities.hasInstructorProfile
     )
-      router.replace("/account/partner/instructors/create?returnTo=solo");
-  }, [capabilities, isLoading, router]);
+      router.replace(
+        `/account/partner/instructors/create?returnTo=solo${fromOffer ? "&from=offer" : ""}`,
+      );
+  }, [capabilities, isLoading, router, fromOffer]);
 
   async function save() {
     if (savingRef.current) return;
@@ -59,7 +63,7 @@ export default function SoloBookingSetupPage() {
           cancellationMode === "by_time_of_day" ? Number(afternoonHoursBefore) : null,
       });
       refetch();
-      router.replace("/account/partner/menu");
+      router.replace(returnHref);
     } catch (error: unknown) {
       const detail = (
         error as { response?: { data?: { detail?: string | { error_code?: string } } } }
@@ -85,7 +89,7 @@ export default function SoloBookingSetupPage() {
   if (capabilities.businessMode)
     return (
       <div className="p-4">
-        <Link href="/account/partner/menu">Przejdź do zarządzania</Link>
+        <Link href={returnHref}>Przejdź do zarządzania</Link>
       </div>
     );
   if (!capabilities.hasInstructorProfile)
@@ -112,7 +116,10 @@ export default function SoloBookingSetupPage() {
         setAfternoonHoursBefore={setAfternoonHoursBefore}
       />
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => router.back()}>
+        <Button
+          variant="outline"
+          onClick={() => (fromOffer ? router.push(returnHref) : router.back())}
+        >
           Wróć
         </Button>
         <Button variant="green" disabled={isSaving} onClick={save}>

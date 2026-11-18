@@ -52,12 +52,7 @@ export function StudioLogoField({
               className="h-14 w-14 rounded-b2b border bg-white object-cover"
             />
           ) : (
-            <StudioLogoTile
-              name={studioName || "Studio"}
-              imageId={imageId}
-              size={56}
-              className="object-cover"
-            />
+            <StudioLogoTile name={studioName || "Studio"} imageId={imageId} size={56} />
           )}
           <button
             type="button"

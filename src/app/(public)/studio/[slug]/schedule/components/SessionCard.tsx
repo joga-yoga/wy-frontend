@@ -136,7 +136,7 @@ export function SessionCard({
               name={occ.studio_name}
               imageId={occ.studio_image_id}
               size={20}
-              imageFit="contain"
+              imageFit="cover"
               className="bg-white"
             />
             <span className="truncate text-sm text-gray-500">{occ.studio_name}</span>

@@ -68,7 +68,7 @@ export function BottomTabBar() {
       .catch(() => setHasOverdue(false));
   }, [hasGrafik]);
 
-  const tabs: Tab[] = hasGrafik ? [GRAFIK, REZERWACJE, OFERTA, MENU] : [REZERWACJE, OFERTA, MENU];
+  const tabs: Tab[] = hasGrafik ? [GRAFIK, OFERTA, REZERWACJE, MENU] : [OFERTA, REZERWACJE, MENU];
 
   if (!(TAB_PATHS as readonly string[]).includes(pathname)) return null;
 

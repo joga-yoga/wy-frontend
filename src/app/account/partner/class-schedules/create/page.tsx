@@ -110,7 +110,7 @@ export default function CreateScheduleWizard() {
   const [fromDate, setFromDate] = useState<Date | undefined>(() => new Date());
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [endDateMode, setEndDateMode] = useState<EndDateMode>("endless");
-  const [startTime, setStartTime] = useState("09:00");
+  const [startTime, setStartTime] = useState("20:00");
 
   // Step 3
   const [previewOccs, setPreviewOccs] = useState<PreviewOccurrence[]>([]);
@@ -234,8 +234,10 @@ export default function CreateScheduleWizard() {
       const r = await axiosInstance.post<ClassTemplate>("/class-templates", data);
       const created = r.data;
       setTemplates((prev) => [created, ...prev]);
-      // Contextual addition may have changed eligibility since the wizard first loaded.
-      await unionSource.refresh();
+      // Invalidate the wizard's own roster before reconciling the saved default, even
+      // when the studio is unchanged. A failed read keeps that default pending for retry.
+      if (studioId) void instructorSource.refresh();
+      void unionSource.refresh();
       selectTemplate(created);
       setShowInlineCreate(false);
       setStep("recurrence");
@@ -430,7 +432,7 @@ export default function CreateScheduleWizard() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Same single-container catalogue as U1, so the picker and the catalogue
                   read as the same list rather than two views of it. */}
               <div className="divide-y overflow-hidden rounded-b2b border bg-white">
@@ -489,7 +491,7 @@ export default function CreateScheduleWizard() {
             <ArrowLeft size={14} />
             Wróć do listy
           </button>
-          <h2 className="text-lg font-semibold">Nowy szablon zajęć</h2>
+          <h2 className="text-sm font-light text-gray-400">Nowy szablon zajęć</h2>
           <TemplateEditor
             onSubmit={handleCreateTemplate}
             submitLabel="Zapisz i wybierz"
@@ -500,10 +502,13 @@ export default function CreateScheduleWizard() {
 
       {/* Step 2: Recurrence */}
       {step === "recurrence" && selectedTemplate && (
-        <div className="space-y-5">
+        <div className="flex flex-col gap-6">
           {!capabilities?.soloStudioId && (capabilities?.managedStudios.length ?? 0) > 1 && (
-            <div className="space-y-2">
-              <label htmlFor="schedule-studio" className="text-sm font-semibold">
+            <div>
+              <label
+                htmlFor="schedule-studio"
+                className="mb-1.5 block text-sm font-light text-gray-400"
+              >
                 Studio
               </label>
               <select
@@ -532,7 +537,7 @@ export default function CreateScheduleWizard() {
             </p>
           )}
           {instructorSource.error && (
-            <div role="alert">
+            <div role="alert" className="space-y-2">
               <p>Nie udało się wczytać instruktorów.</p>
               <Button variant="outline" onClick={() => void instructorSource.refresh()}>
                 Spróbuj ponownie
@@ -544,60 +549,63 @@ export default function CreateScheduleWizard() {
               {instructorNotice}
             </p>
           )}
-          <ScheduleRecurrenceForm
-            templateColor={selectedTemplate.color}
-            solo={Boolean(capabilities?.soloStudioId)}
-            templateTitle={selectedTemplate.title}
-            templateSubtitle={`${selectedTemplate.duration_minutes} min${
-              selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""
-            }`}
-            onChangeTemplate={() => setStep("select")}
-            {...roomState}
-            roomId={roomId}
-            onRoomChange={setRoomId}
-            instructors={instructors}
-            instructorId={instructorId}
-            onInstructorChange={(id) => {
-              setPendingDefault(null);
-              setInstructorId(id);
-              setInstructorNotice("");
-            }}
-            defaultInstructorId={selectedTemplate.default_instructor_id}
-            capacity={capacity}
-            onCapacityChange={setCapacity}
-            defaultCapacity={selectedTemplate.default_capacity}
-            frequency={frequency}
-            onFrequencyChange={setFrequency}
-            selectedDays={selectedDays}
-            onToggleDay={toggleDay}
-            fromDate={fromDate}
-            onFromDateChange={handleFromDateChange}
-            toDate={toDate}
-            onToDateChange={setToDate}
-            endDateMode={endDateMode}
-            onEndDateModeChange={setEndDateMode}
-            startTime={startTime}
-            onStartTimeChange={setStartTime}
-          />
-          {!canAdvanceStep2 && (
-            <p className="text-sm text-gray-500" role="status">
-              {!studioId
-                ? "Wybierz studio."
-                : !roomState.roomValid
-                  ? "Wybierz salę lub poczekaj na wczytanie sal."
-                  : !isValidTime(startTime)
-                    ? "Podaj godzinę w formacie HH:mm."
-                    : !fromDate
-                      ? "Wybierz datę rozpoczęcia."
-                      : frequency === "weekly" && !selectedDays.length
-                        ? "Wybierz co najmniej jeden dzień tygodnia."
-                        : frequency === "weekly" && endDateMode === "custom" && !toDate
-                          ? "Wybierz datę zakończenia."
-                          : "Poczekaj na wczytanie instruktorów lub ponów próbę."}
-            </p>
-          )}
+          <div className="space-y-2">
+            <ScheduleRecurrenceForm
+              quickTimeSelection
+              templateColor={selectedTemplate.color}
+              solo={Boolean(capabilities?.soloStudioId)}
+              templateTitle={selectedTemplate.title}
+              templateSubtitle={`${selectedTemplate.duration_minutes} min${
+                selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""
+              }`}
+              onChangeTemplate={() => setStep("select")}
+              {...roomState}
+              roomId={roomId}
+              onRoomChange={setRoomId}
+              instructors={instructors}
+              instructorId={instructorId}
+              onInstructorChange={(id) => {
+                setPendingDefault(null);
+                setInstructorId(id);
+                setInstructorNotice("");
+              }}
+              defaultInstructorId={selectedTemplate.default_instructor_id}
+              capacity={capacity}
+              onCapacityChange={setCapacity}
+              defaultCapacity={selectedTemplate.default_capacity}
+              frequency={frequency}
+              onFrequencyChange={setFrequency}
+              selectedDays={selectedDays}
+              onToggleDay={toggleDay}
+              fromDate={fromDate}
+              onFromDateChange={handleFromDateChange}
+              toDate={toDate}
+              onToDateChange={setToDate}
+              endDateMode={endDateMode}
+              onEndDateModeChange={setEndDateMode}
+              startTime={startTime}
+              onStartTimeChange={setStartTime}
+            />
+            {!canAdvanceStep2 && (
+              <p className="text-sm text-gray-500" role="status">
+                {!studioId
+                  ? "Wybierz studio."
+                  : !roomState.roomValid
+                    ? "Wybierz salę lub poczekaj na wczytanie sal."
+                    : !isValidTime(startTime)
+                      ? "Podaj godzinę w formacie HH:mm."
+                      : !fromDate
+                        ? "Wybierz datę rozpoczęcia."
+                        : frequency === "weekly" && !selectedDays.length
+                          ? "Wybierz co najmniej jeden dzień tygodnia."
+                          : frequency === "weekly" && endDateMode === "custom" && !toDate
+                            ? "Wybierz datę zakończenia."
+                            : "Poczekaj na wczytanie instruktorów lub ponów próbę."}
+              </p>
+            )}
+          </div>
           {/* Footer */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3">
             <Button size="action" variant="outline" onClick={() => setStep("select")}>
               <ArrowLeft size={14} className="mr-1" />
               Wstecz
@@ -605,6 +613,7 @@ export default function CreateScheduleWizard() {
             <Button
               size="action"
               className="flex-1"
+              variant="green"
               onClick={goToPreview}
               disabled={!canAdvanceStep2 || isLoadingPreview}
             >
@@ -616,12 +625,12 @@ export default function CreateScheduleWizard() {
 
       {/* Step 3: Preview */}
       {step === "preview" && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-sm font-light text-gray-400">
               Powstanie {previewTotal} {previewTotal === 1 ? "sesja" : "sesji"}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1.5">
               {selectedTemplate?.title} · {selectedTemplate?.duration_minutes} min
             </p>
           </div>
@@ -646,10 +655,10 @@ export default function CreateScheduleWizard() {
                   )}
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-base font-medium text-gray-900">
                     {formatDatePL(occ.calendar_date)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm text-gray-500">
                     {occ.start_time.match(/T(\d{2}:\d{2})/)?.[1] ?? occ.start_time}
                     {" – "}
                     {occ.end_time.match(/T(\d{2}:\d{2})/)?.[1] ?? occ.end_time}
@@ -658,13 +667,13 @@ export default function CreateScheduleWizard() {
               </div>
             ))}
             {previewTotal > 4 && (
-              <p className="text-xs text-gray-500 text-center py-2">
+              <p className="text-sm text-gray-500 text-center py-2">
                 + {previewTotal - 4} kolejnych sesji
               </p>
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3">
             <Button size="action" variant="outline" onClick={() => setStep("recurrence")}>
               <ArrowLeft size={14} className="mr-1" />
               Wstecz
@@ -672,6 +681,7 @@ export default function CreateScheduleWizard() {
             <Button
               size="action"
               className="flex-1"
+              variant="default"
               onClick={commit}
               disabled={isCommitting || !roomState.roomValid}
             >
@@ -683,7 +693,7 @@ export default function CreateScheduleWizard() {
 
       {/* Success */}
       {step === "success" && (
-        <div className="text-center py-12 space-y-4">
+        <div className="text-center py-12 space-y-6">
           <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
             <Check size={28} className="text-green-600" />
           </div>
@@ -692,7 +702,7 @@ export default function CreateScheduleWizard() {
             Dodano {totalCreated} {totalCreated === 1 ? "sesję" : "sesji"}. Pojawiły się w grafiku
             tygodnia.
           </p>
-          <div className="space-y-2 pt-4">
+          <div className="space-y-3">
             <Button
               size="action"
               className="w-full"

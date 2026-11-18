@@ -16,7 +16,7 @@ export type StudioCandidate = StudioIdentity & {
   action: "claim" | "edit" | "managed";
 };
 
-export function StudioDiscovery() {
+export function StudioDiscovery({ fromOffer = false }: { fromOffer?: boolean }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<StudioCandidate[]>([]);
@@ -56,7 +56,7 @@ export function StudioDiscovery() {
   }, [query]);
   async function select(item: StudioCandidate) {
     if (item.action === "edit") {
-      router.push(`/account/partner/studio/${item.id}/edit`);
+      router.push(`/account/partner/studio/${item.id}/edit${fromOffer ? "?from=offer" : ""}`);
       return;
     }
     setBusy(true);
@@ -65,7 +65,9 @@ export function StudioDiscovery() {
         kind: item.kind,
         id: item.id,
       });
-      router.push(`/account/partner/studio/create?draft=${encodeURIComponent(data.public_token)}`);
+      router.push(
+        `/account/partner/studio/create?draft=${encodeURIComponent(data.public_token)}${fromOffer ? "&from=offer" : ""}`,
+      );
     } catch {
       setError("Nie udało się przygotować szkicu. Spróbuj ponownie.");
     } finally {
@@ -112,12 +114,12 @@ export function StudioDiscovery() {
       </ul>
       <div className="mt-4 flex flex-wrap gap-3 text-sm underline">
         <Link
-          href={`/account/partner/studio/create?step=manual&name=${encodeURIComponent(query.trim())}`}
+          href={`/account/partner/studio/create?step=manual&name=${encodeURIComponent(query.trim())}${fromOffer ? "&from=offer" : ""}`}
         >
           Dodaj studio ręcznie
         </Link>
         <Link
-          href={`/account/partner/studio/import/fitssey?name=${encodeURIComponent(query.trim())}`}
+          href={`/account/partner/studio/import/fitssey?name=${encodeURIComponent(query.trim())}${fromOffer ? "&from=offer" : ""}`}
         >
           Przenieś dane z Fitssey
         </Link>

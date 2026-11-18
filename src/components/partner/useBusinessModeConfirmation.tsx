@@ -25,7 +25,7 @@ const copy = {
   },
 };
 
-/** Menu navigation only. The original business operation still commits the mode. */
+/** Setup navigation only. The original business operation still commits the mode. */
 export function useBusinessModeConfirmation() {
   const [pending, setPending] = useState<BusinessMode | null>(null);
   const resolveRef = useRef<((confirmed: boolean) => void) | null>(null);
