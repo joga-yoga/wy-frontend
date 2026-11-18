@@ -3,8 +3,9 @@
 import { isAxiosError } from "axios";
 import { ArrowLeft, Check, Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
@@ -113,9 +114,16 @@ export default function CreateScheduleWizard() {
   const [startTime, setStartTime] = useState("18:00");
 
   // Step 3
+  const previewRef = useRef<HTMLDivElement>(null);
   const [previewOccs, setPreviewOccs] = useState<PreviewOccurrence[]>([]);
   const [previewTotal, setPreviewTotal] = useState(0);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+  useLayoutEffect(() => {
+    if (step !== "preview") return;
+    previewRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [step]);
 
   // Success
   const [totalCreated, setTotalCreated] = useState(0);
@@ -376,6 +384,22 @@ export default function CreateScheduleWizard() {
     fromDate &&
     (frequency === "once" || (selectedDays.length > 0 && (endDateMode !== "custom" || toDate)));
 
+  const isSolo = Boolean(capabilities?.soloStudioId);
+  const summaryInstructorId = isSolo ? capabilities?.selfInstructorId : instructorId;
+  const summaryInstructor =
+    instructors.find((person) => person.id === summaryInstructorId) ??
+    (isSolo
+      ? unionSource.instructors.find((person) => person.id === summaryInstructorId)
+      : undefined);
+  const summaryVenue = isSolo
+    ? ""
+    : [
+        capabilities?.managedStudios.find((studio) => studio.id === studioId)?.name,
+        roomState.rooms.find((room) => room.id === roomId)?.name,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
       {/* Step 1: Select template or create inline */}
@@ -600,16 +624,45 @@ export default function CreateScheduleWizard() {
       )}
 
       {/* Step 3: Preview */}
-      {step === "preview" && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-sm font-light text-gray-400">
-              Powstanie {previewTotal} {previewTotal === 1 ? "sesja" : "sesji"}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1.5">
-              {selectedTemplate?.title} · {selectedTemplate?.duration_minutes} min
-            </p>
+      {step === "preview" && selectedTemplate && (
+        <div
+          ref={previewRef}
+          role="region"
+          aria-label="Podgląd zajęć"
+          tabIndex={-1}
+          className="space-y-6 outline-none"
+        >
+          <div className="space-y-2">
+            <SessionContextCard
+              title={selectedTemplate.title}
+              subtitle={`${selectedTemplate.duration_minutes} min${
+                selectedTemplate.level ? ` · ${levelLabel(selectedTemplate.level)}` : ""
+              }`}
+              color={selectedTemplate.color}
+              wrapText
+              instructor={
+                summaryInstructor?.name.trim()
+                  ? {
+                      id: summaryInstructor.id,
+                      name: summaryInstructor.name,
+                      imageId: summaryInstructor.image_id,
+                    }
+                  : null
+              }
+              instructorFallback={
+                isSolo
+                  ? "Prowadzący · Ty"
+                  : instructorId
+                    ? "Prowadzący · Wybrany instruktor"
+                    : "Prowadzący · Brak prowadzącego"
+              }
+            />
+            {summaryVenue && <p className="text-sm text-gray-500 break-words">{summaryVenue}</p>}
           </div>
+
+          <h2 className="text-sm font-light text-gray-400">
+            Powstanie {previewTotal} {previewTotal === 1 ? "sesja" : "sesji"}
+          </h2>
 
           <div className="space-y-2">
             {previewOccs.slice(0, 4).map((occ, i) => (

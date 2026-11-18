@@ -408,7 +408,7 @@ test("unresolved multi-studio context uses partner operations and keeps previous
   ).toHaveAttribute("aria-pressed", "true");
 });
 
-test("solo template remains self-led without later or another-instructor actions", async ({
+test("solo template and preview remain self-led without later or another-instructor actions", async ({
   page,
 }) => {
   const state = await setup(page, "solo");
@@ -420,6 +420,35 @@ test("solo template remains self-led without later or another-instructor actions
   await page.getByRole("button", { name: "Zapisz zmiany", exact: true }).click();
   await expect.poll(() => state.requests.filter((r) => r.method === "PATCH").length).toBe(1);
   expect(state.template.default_instructor_id).toBe("self");
+
+  for (const selfName of [null, "Maria Nowak — joga i medytacja"]) {
+    if (selfName)
+      state.partnerList.push({
+        id: "self",
+        name: selfName,
+        image_id: null,
+        claim_status: "claimed",
+        claimed_at: "2026-01-01",
+      });
+    await page.goto("/account/partner/class-schedules/create?templateId=template");
+    await page.getByRole("button", { name: /^raz$/i }).click();
+    await page.getByRole("button", { name: "Podgląd →" }).click();
+    await expect(page.getByText("Hatha", { exact: true })).toBeVisible();
+    await expect(page.getByText(selfName ?? "Prowadzący · Ty", { exact: true })).toBeVisible();
+    await expect(page.getByText("Anna", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Prowadzący · Brak prowadzącego", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("combobox", { name: /Sala/ })).toHaveCount(0);
+    await page.getByRole("button", { name: "Utwórz grafik", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Grafik utworzony" })).toBeVisible();
+  }
+  const writes = state.requests.filter(
+    (request) => request.path.startsWith("/class-schedules") && request.method === "POST",
+  );
+  expect(writes).toHaveLength(4);
+  for (const request of writes) {
+    expect(request.data).toMatchObject({ studio_id: "solo", template_id: "template" });
+    expect(request.data).not.toHaveProperty("instructor_ids");
+  }
 });
 
 test("empty roster refresh failure is retryable; repeating an add keeps one option per ID", async ({

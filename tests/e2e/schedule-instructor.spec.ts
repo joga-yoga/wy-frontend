@@ -8,7 +8,7 @@ function gate() {
   return { promise, release };
 }
 
-async function setup(page: Page, eligible = ["b"]) {
+async function setup(page: Page, eligible = ["b"], instructorName = "Olga Testowa") {
   const state = {
     requests: [] as { path: string; method: string; data: Record<string, unknown> }[],
     delays: {} as Record<string, Promise<void> | undefined>,
@@ -33,7 +33,7 @@ async function setup(page: Page, eligible = ["b"]) {
   };
   const olga = {
     id: "olga",
-    name: "Olga Testowa",
+    name: instructorName,
     row_state: "linked",
     eligible_studio_ids: eligible,
   };
@@ -267,7 +267,9 @@ for (const width of [390, 1440]) {
     page,
   }, info) => {
     await page.setViewportSize({ width, height: 1000 });
-    const state = await setup(page);
+    const instructorName = "Olga Testowa Kowalska Nowak — nauczycielka jogi i medytacji";
+    const state = await setup(page, ["b"], instructorName);
+    state.template.title = "Spokojna praktyka jogi i medytacji na zakończenie długiego dnia";
     await page.goto("/account/partner/class-templates/flow/edit");
     await cookies(page);
     const olga = page.getByRole("button", { name: /Olga Testowa/ });
@@ -291,17 +293,48 @@ for (const width of [390, 1440]) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: info.outputPath("inferred.png"), fullPage: true });
     await page.getByRole("button", { name: "Podgląd →" }).click();
+    const preview = page.getByRole("region", { name: "Podgląd zajęć", exact: true });
+    await expect(preview).toBeFocused();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.getByText(state.template.title, { exact: true })).toBeVisible();
+    await expect(page.getByText("60 min · wszystkie poziomy", { exact: true })).toBeVisible();
+    const summaryInstructor = page.getByText(instructorName, { exact: true });
+    await expect(summaryInstructor).toBeVisible();
+    await expect(page.getByText("Studio B · Sala B", { exact: true })).toBeVisible();
+    expect(
+      await summaryInstructor.evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({ path: info.outputPath("preview-summary.png"), fullPage: true });
+    await page.getByRole("button", { name: "Wstecz", exact: true }).click();
+    await page.getByRole("button", { name: /Zaproszona Oczekuje na zaproszenie/ }).click();
+    await page.getByRole("button", { name: "Podgląd →" }).click();
+    await expect(preview).toBeFocused();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.getByText("Zaproszona", { exact: true })).toBeVisible();
+    await expect(summaryInstructor).toHaveCount(0);
+    await page.getByRole("button", { name: "Wstecz", exact: true }).click();
+    await page.getByRole("button", { name: "Brak prowadzącego", exact: true }).click();
+    await page.getByRole("button", { name: "Podgląd →" }).click();
+    await expect(page.getByText("Prowadzący · Brak prowadzącego", { exact: true })).toBeVisible();
+    await expect(page.getByText("Zaproszona", { exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Utwórz grafik", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Grafik utworzony" })).toBeVisible();
     const writes = state.requests.filter(
       (r) => r.path.startsWith("/class-schedules") && r.method === "POST",
     );
-    expect(writes).toHaveLength(2);
+    expect(writes.map((request) => request.data.instructor_ids)).toEqual([
+      ["olga"],
+      ["pending"],
+      [],
+      [],
+    ]);
     for (const request of writes)
       expect(request.data).toMatchObject({
         studio_id: "b",
         room_id: "room-b",
-        instructor_ids: ["olga"],
         capacity: 14,
       });
   });
@@ -355,6 +388,9 @@ test("studio changes clear rooms and invalid instructor; template changes clear 
   await expect(page.locator('input[type="number"]')).toHaveValue("");
   await page.getByRole("button", { name: "Pn", exact: true }).click();
   await page.getByRole("button", { name: "Podgląd →" }).click();
+  await expect(page.getByText("Bez domyślnych", { exact: true })).toBeVisible();
+  await expect(page.getByText("Prowadzący · Brak prowadzącego", { exact: true })).toBeVisible();
+  await expect(page.getByText("Studio A · Sala A", { exact: true })).toBeVisible();
   expect(state.requests.find((r) => r.path === "/class-schedules/preview")?.data).toMatchObject({
     template_id: "empty",
     studio_id: "a",
