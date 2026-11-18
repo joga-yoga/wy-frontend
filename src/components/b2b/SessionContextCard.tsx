@@ -32,6 +32,8 @@ export function SessionContextCard({
   color,
   subtitle,
   instructor,
+  instructorFallback,
+  wrapText = false,
   badges,
   tone = "default",
 }: {
@@ -53,6 +55,10 @@ export function SessionContextCard({
     name: string;
     imageId?: string | null;
   } | null;
+  /** Plain text when no displayable instructor identity is available. */
+  instructorFallback?: string;
+  /** Let confirmation summaries show full titles and names on narrow screens. */
+  wrapText?: boolean;
   badges?: string[];
   /** "danger" for the cancellation flow, where the same card frames a destructive action. */
   tone?: "default" | "danger";
@@ -115,7 +121,8 @@ export function SessionContextCard({
         )}
         <p
           className={cn(
-            "truncate text-md font-semibold",
+            "text-md font-semibold",
+            wrapText ? "break-words" : "truncate",
             tone === "danger" ? "text-b2b-red-text" : "text-gray-900",
           )}
         >
@@ -131,7 +138,7 @@ export function SessionContextCard({
             {subtitle}
           </p>
         )}
-        {instructor && (
+        {instructor ? (
           <div className="mt-1 flex items-center gap-1.5">
             <HashedAvatar
               seed={instructor.id ?? instructor.name}
@@ -139,9 +146,15 @@ export function SessionContextCard({
               imageId={instructor.imageId}
               size={20}
             />
-            <span className="truncate text-sm text-gray-500">{instructor.name}</span>
+            <span
+              className={cn("text-sm text-gray-500", wrapText ? "min-w-0 break-words" : "truncate")}
+            >
+              {instructor.name}
+            </span>
           </div>
-        )}
+        ) : instructorFallback ? (
+          <p className="mt-1 text-sm text-gray-500">{instructorFallback}</p>
+        ) : null}
         {badges && badges.length > 0 && (
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {badges.map((label) => (

@@ -163,7 +163,7 @@ async function openCreate(page: Page) {
   await page.goto("/account/partner/class-schedules/create?studio_id=studio-a&templateId=template");
   const cookies = page.getByRole("button", { name: "Tylko niezbędne" });
   if (await cookies.isVisible()) await cookies.click();
-  await page.getByRole("button", { name: "Raz", exact: true }).click();
+  await page.getByRole("button", { name: /^raz$/i }).click();
 }
 
 async function selectCreationRoom(page: Page) {
@@ -181,6 +181,8 @@ test("roomless studio can create without a room", async ({ page }) => {
   await openCreate(page);
   await expect(page.getByRole("combobox", { name: /Sala/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Podgląd →" }).click();
+  await expect(page.getByText("Studio A", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Studio A ·/)).toHaveCount(0);
   await page.getByRole("button", { name: "Utwórz grafik" }).click();
   await expect(page.getByRole("heading", { name: "Grafik utworzony" })).toBeVisible();
   expect(state.writes[0]).not.toHaveProperty("room_id");
@@ -213,6 +215,7 @@ test("mobile requires explicit room, retries lookup, resets studio and handles d
   await selector.click();
   await page.getByRole("option", { name: "Sala B" }).click();
   await page.getByRole("button", { name: "Podgląd →" }).click();
+  await expect(page.getByText("Studio B · Sala B", { exact: true })).toBeVisible();
   state.failCommit = true;
   await page.getByRole("button", { name: "Utwórz grafik" }).click();
   await expect(
@@ -226,6 +229,7 @@ test("mobile requires explicit room, retries lookup, resets studio and handles d
   await selector.click();
   await page.getByRole("option", { name: "Sala C" }).click();
   await page.getByRole("button", { name: "Podgląd →" }).click();
+  await expect(page.getByText("Studio B · Sala C", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Utwórz grafik" }).click();
   await expect(page.getByRole("heading", { name: "Grafik utworzony" })).toBeVisible();
   expect(state.writes.at(-1)).toMatchObject({
@@ -345,7 +349,7 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
   expect(state.writes[0].room_id).toBe("room-a");
 });
 
-for (const frequency of ["Raz", "Co tydzień"] as const) {
+for (const frequency of ["RAZ", "CO TYDZIEŃ"] as const) {
   test(`mobile time presets reach preview and allow a custom time (${frequency})`, async ({
     page,
   }) => {
@@ -353,7 +357,7 @@ for (const frequency of ["Raz", "Co tydzień"] as const) {
     const state = await mock(page, 1);
     await openCreate(page);
     await page.getByRole("button", { name: frequency, exact: true }).click();
-    if (frequency === "Co tydzień")
+    if (frequency === "CO TYDZIEŃ")
       await page.getByRole("button", { name: "Pn", exact: true }).click();
     await selectCreationRoom(page);
     const time = page.getByRole("textbox", { name: "Godzina", exact: true });
@@ -380,7 +384,7 @@ for (const frequency of ["Raz", "Co tydzień"] as const) {
     await expect(preset).toHaveAttribute("aria-pressed", "true");
     await time.fill("20:17");
     await page
-      .getByRole("button", { name: frequency === "Raz" ? "Co tydzień" : "Raz", exact: true })
+      .getByRole("button", { name: frequency === "RAZ" ? "CO TYDZIEŃ" : "RAZ", exact: true })
       .click();
     await page.getByRole("button", { name: frequency, exact: true }).click();
     await expect(time).toHaveValue("20:17");
