@@ -2,6 +2,18 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { isValidTime } from "../../src/lib/timeInput";
 
+const TIME_PRESETS = [
+  "09:00",
+  "09:30",
+  "17:00",
+  "18:00",
+  "18:15",
+  "19:00",
+  "19:15",
+  "19:30",
+  "20:00",
+];
+
 async function mock(page: Page, count: number, editRoom: string | null = "room-a") {
   const state = {
     failRooms: false,
@@ -154,6 +166,16 @@ async function openCreate(page: Page) {
   await page.getByRole("button", { name: "Raz", exact: true }).click();
 }
 
+async function selectCreationRoom(page: Page) {
+  await expect(
+    page.locator("label").filter({ hasText: /^(Godzina|Prowadzący|Sala|Limit miejsc)/ }),
+  ).toHaveText(["Godzina", "Prowadzący", /Sala/, /Limit miejsc/]);
+  const room = page.getByRole("combobox", { name: /Sala/ });
+  await expect(room).toHaveCount(1);
+  await room.click();
+  await page.getByRole("option", { name: "Sala A", exact: true }).click();
+}
+
 test("roomless studio can create without a room", async ({ page }) => {
   const state = await mock(page, 0);
   await openCreate(page);
@@ -249,16 +271,20 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
   page,
 }, info) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const state = await mock(page, 0);
+  const state = await mock(page, 1);
   await openCreate(page);
+  await selectCreationRoom(page);
   const time = page.getByRole("textbox", { name: "Godzina", exact: true });
   const preview = page.getByRole("button", { name: "Podgląd →" });
   await expect(time).toHaveAttribute("type", "text");
-  await expect(time).toHaveValue("20:00");
-  await expect(page.getByRole("button", { name: "18:15", exact: true })).toHaveAttribute(
+  await expect(time).toHaveValue("18:00");
+  await expect(page.getByRole("button", { name: "18:00", exact: true })).toHaveAttribute(
     "aria-pressed",
-    "false",
+    "true",
   );
+  await expect(page.getByRole("button", { name: /^\d{2}:\d{2}$/ })).toHaveText(TIME_PRESETS);
+  await page.getByRole("button", { name: "09:30", exact: true }).click();
+  await expect(time).toHaveValue("09:30");
   await page.getByRole("button", { name: "19:15", exact: true }).click();
   await expect(time).toHaveValue("19:15");
   await expect(page.getByRole("button", { name: "19:15", exact: true })).toHaveAttribute(
@@ -277,7 +303,7 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
     await time.fill(value);
     await expect(preview).toBeEnabled();
   }
-  for (const preset of ["18:00", "18:15", "19:00", "19:15"])
+  for (const preset of TIME_PRESETS)
     await expect(page.getByRole("button", { name: preset, exact: true })).toHaveAttribute(
       "aria-pressed",
       "false",
@@ -288,6 +314,14 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
   const chooser = page.getByRole("dialog", { name: "Wybierz godzinę i minutę" });
   await expect(chooser.getByRole("radio", { name: "Godziny: 12", exact: true })).toBeChecked();
   await expect(chooser.getByRole("radio", { name: "Minuty: 13", exact: true })).toBeChecked();
+  await chooser.getByRole("radio", { name: "Godziny: 09", exact: true }).click();
+  await chooser.getByRole("radio", { name: "Minuty: 00", exact: true }).click();
+  await expect(time).toHaveValue("09:00");
+  await expect(page.getByRole("button", { name: "09:00", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await chooser.getByRole("radio", { name: "Godziny: 12", exact: true }).click();
   await chooser.getByRole("radio", { name: "Minuty: 07", exact: true }).click();
   await expect(time).toHaveValue("12:07");
   expect(state.previews).toHaveLength(0);
@@ -307,6 +341,8 @@ test("desktop schedule time keeps typing and chooser aligned before creating", a
   await expect.poll(() => state.writes.length).toBe(1);
   expect(state.previews[0].start_time).toBe("12:07:00");
   expect(state.writes[0].start_time).toBe("12:07:00");
+  expect(state.previews[0].room_id).toBe("room-a");
+  expect(state.writes[0].room_id).toBe("room-a");
 });
 
 for (const frequency of ["Raz", "Co tydzień"] as const) {
@@ -314,13 +350,21 @@ for (const frequency of ["Raz", "Co tydzień"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 900 });
-    const state = await mock(page, 0);
+    const state = await mock(page, 1);
     await openCreate(page);
     await page.getByRole("button", { name: frequency, exact: true }).click();
     if (frequency === "Co tydzień")
       await page.getByRole("button", { name: "Pn", exact: true }).click();
+    await selectCreationRoom(page);
     const time = page.getByRole("textbox", { name: "Godzina", exact: true });
-    await expect(time).toHaveValue("20:00");
+    await expect(time).toHaveValue("18:00");
+    await expect(page.getByRole("button", { name: "18:00", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(page.getByRole("button", { name: /^\d{2}:\d{2}$/ })).toHaveText(TIME_PRESETS);
+    await page.getByRole("button", { name: "09:00", exact: true }).click();
+    await expect(time).toHaveValue("09:00");
     const preset = page.getByRole("button", { name: "19:15", exact: true });
     await preset.click();
     await expect(time).toHaveValue("19:15");
@@ -332,8 +376,18 @@ for (const frequency of ["Raz", "Co tydzień"] as const) {
     await expect(page.getByRole("button", { name: "Utwórz grafik", exact: true })).toBeVisible();
     expect(state.previews.at(-1)?.start_time).toBe("19:15:00");
     await page.getByRole("button", { name: "Wstecz", exact: true }).click();
+    await expect(time).toHaveValue("19:15");
+    await expect(preset).toHaveAttribute("aria-pressed", "true");
     await time.fill("20:17");
-    for (const value of ["18:00", "18:15", "19:00", "19:15"])
+    await page
+      .getByRole("button", { name: frequency === "Raz" ? "Co tydzień" : "Raz", exact: true })
+      .click();
+    await page.getByRole("button", { name: frequency, exact: true }).click();
+    await expect(time).toHaveValue("20:17");
+    await page.getByRole("button", { name: "Zmień szablon: Hatha", exact: true }).click();
+    await page.getByRole("button", { name: /Hatha/ }).click();
+    await expect(time).toHaveValue("20:17");
+    for (const value of TIME_PRESETS)
       await expect(page.getByRole("button", { name: value, exact: true })).toHaveAttribute(
         "aria-pressed",
         "false",
@@ -343,6 +397,8 @@ for (const frequency of ["Raz", "Co tydzień"] as const) {
     await expect.poll(() => state.writes.length).toBe(1);
     expect(state.previews.at(-1)?.start_time).toBe("20:17:00");
     expect(state.writes[0].start_time).toBe("20:17:00");
+    expect(state.previews.at(-1)?.room_id).toBe("room-a");
+    expect(state.writes[0].room_id).toBe("room-a");
   });
 }
 

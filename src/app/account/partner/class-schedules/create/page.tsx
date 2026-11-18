@@ -110,7 +110,7 @@ export default function CreateScheduleWizard() {
   const [fromDate, setFromDate] = useState<Date | undefined>(() => new Date());
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [endDateMode, setEndDateMode] = useState<EndDateMode>("endless");
-  const [startTime, setStartTime] = useState("20:00");
+  const [startTime, setStartTime] = useState("18:00");
 
   // Step 3
   const [previewOccs, setPreviewOccs] = useState<PreviewOccurrence[]>([]);
@@ -367,8 +367,6 @@ export default function CreateScheduleWizard() {
     }
   };
 
-  const stepNumber = step === "select" ? 1 : step === "recurrence" ? 2 : step === "preview" ? 3 : 3;
-
   const canAdvanceStep2 =
     roomState.roomValid &&
     (capabilities?.soloStudioId ||
@@ -380,28 +378,6 @@ export default function CreateScheduleWizard() {
 
   return (
     <div className="p-4 mx-auto max-w-lg min-h-screen">
-      {/* Progress bar */}
-      {step !== "success" && (
-        <p className="text-xs text-gray-500 mb-2">
-          Krok {stepNumber} z 3 ·{" "}
-          {step === "select"
-            ? "Wybierz zajęcia"
-            : step === "recurrence"
-              ? "Ustaw powtarzanie"
-              : "Podgląd"}
-        </p>
-      )}
-      {step !== "success" && (
-        <div className="flex gap-1 mb-6">
-          {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              className={`h-1 flex-1 rounded-full ${n <= stepNumber ? "bg-gray-900" : "bg-gray-200"}`}
-            />
-          ))}
-        </div>
-      )}
-
       {/* Step 1: Select template or create inline */}
       {step === "select" && !showInlineCreate && (
         <div className="space-y-4">

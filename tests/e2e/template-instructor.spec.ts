@@ -338,7 +338,12 @@ for (const width of [375, 1440]) {
     });
     await page.screenshot({ path: info.outputPath("selected-mobile.png"), animations: "disabled" });
     await page.getByRole("button", { name: "Zapisz i wybierz", exact: true }).click();
-    await expect(page.getByText("Krok 2 z 3")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Godzina", exact: true })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Godzina", exact: true })).toHaveValue("18:00");
+    await expect(page.getByRole("button", { name: "18:00", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(
       state.requests.find((r) => r.method === "POST" && r.path === "/class-templates")?.data,
     ).toMatchObject({ title: "Nowy szablon", default_instructor_id: "new" });

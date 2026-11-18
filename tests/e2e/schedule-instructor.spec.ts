@@ -224,7 +224,7 @@ test("inline save keeps its default through a same-studio read failure and retry
   state.delays.union = union.promise;
   state.failScope = true;
   await page.getByRole("button", { name: "Zapisz i wybierz", exact: true }).click();
-  await expect(page.getByText("Krok 2 z 3")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Godzina", exact: true })).toBeVisible();
   await expect(page.getByText("Nie udało się wczytać instruktorów.")).toBeVisible();
   await expect(page.getByText(/Ten instruktor nie jest dostępny/)).toHaveCount(0);
   await expect(page.getByText("Nowy szablon", { exact: true })).toBeVisible();
