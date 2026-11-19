@@ -7,9 +7,9 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     project: "workshops",
-    title: "Zostań partnerem | joga.yoga",
+    title: "Pokaż swoją jogę | joga.yoga",
     description:
-      "Dodaj ogłoszenie jogowe, profil instruktora, wydarzenie, kurs lub wyjazd i zwiększ swoją widoczność na joga.yoga.",
+      "Stwórz stronę nauczyciela lub studia jogi, pokaż wydarzenia, kursy i wyjazdy. Prowadź grafik zajęć i przyjmuj zapisy na joga.yoga.",
     path: "/partners",
   }),
 };

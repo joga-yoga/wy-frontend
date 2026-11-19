@@ -1,390 +1,417 @@
-import { cacheLife, cacheTag } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 
+import { WyImage } from "@/components/custom/WyImage";
 import CustomPartnersComunityIcon from "@/components/icons/CustomPartnersComunityIcon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { LogoPartners } from "./components/LogoPartners";
+import { getPartnersData, type PartnerExample, type PartnerStat } from "./partners-data";
 
-type PublicStats = {
-  total_public_retreats: number;
-  total_public_workshops: number;
-  total_countries_with_public_retreats: number;
-  total_public_retreats_in_poland: number;
-  total_partners: number;
-};
-
-function polishPlural(count: number, forms: [string, string, string]) {
-  const n = Math.abs(count);
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return forms[0];
-  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return forms[1];
-  return forms[2];
-}
-
-function polishCountriesLocativePhrase(count: number) {
-  const n = Math.abs(count);
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  const isSingular = mod10 === 1 && mod100 !== 11;
-  const noun = isSingular ? "kraju" : "krajach";
-  const pronoun = isSingular ? "w którym" : "w których";
-  return `${noun}, ${pronoun} działamy`;
-}
-
-const addableItems = [
+const focusClass =
+  "outline-none focus-visible:ring-2 focus-visible:ring-gray-600 focus-visible:ring-offset-4";
+const offers = [
   {
-    emoji: "🙋",
-    desktopTitle: "Dodaj się jako instruktor jogi",
-    desktopDescription:
-      "Dokładnie sprawdź wszystkie dane i upewnij się, że wszystko jest gotowe przed publikacją",
-    mobileTitle: "Instruktora jogi",
-    mobileDescription: "Twój profil będzie widoczny na platformie jogi dla całej Polski",
+    title: "Osobista strona nauczyciela jogi",
+    description:
+      "Doświadczenie, style praktyki, miejsca zajęć, warsztaty i wyjazdy w jednym profilu",
+    icon: "logo-solo-instructor.png",
+    href: "/instruktor/dodaj",
   },
   {
-    emoji: "🧘‍♀️",
-    desktopTitle: "Wydarzenie jogowe",
-    desktopDescription: "Dodaj zdjęcia, które zainspirują uczestników i oddadzą klimat wydarzenia",
-    mobileTitle: "Wydarzenie jogowe",
-    mobileDescription:
+    title: "Strona studia jogi",
+    description: "Utwórz stronę swojego studia jogi i zacznij przyjmować zapisy nowych uczniów",
+    icon: "logo-studio.png",
+    href: "/studio/dodaj",
+  },
+  {
+    title: "Wydarzenie jogowe",
+    description:
       "Pokaż warsztaty, spotkanie lub wydarzenie jogowe osobom szukającym jogi w Twoim mieście",
+    icon: "logo-workshops.png",
+    href: "/wydarzenia/dodaj",
   },
   {
-    emoji: "🎓",
-    desktopTitle: "Kurs",
-    desktopDescription: "Udostępnij swoją podróż i rozpocznij zapisy na praktykę",
-    mobileTitle: "Kurs",
-    mobileDescription:
-      "Pokaż kurs jogi osobom, które szukają nauki, praktyki lub kursu dla początkujących",
+    title: "Kursy jogi i kursy nauczycielskie",
+    description:
+      "Na joga.yoga można dodać kurs jogi, dłuższy cykl zajęć albo kurs dla przyszłych nauczycieli",
+    icon: "logo-courses.png",
+    href: "/wydarzenia/dodaj",
   },
   {
-    emoji: "🏕️",
-    desktopTitle: "Wyjazd z jogą",
-    desktopDescription:
-      "Opisz swoje wydarzenie - AI pomoże automatycznie uzupełnić informacje o ofercie",
-    mobileTitle: "Wyjazd z jogą",
-    mobileDescription:
-      "Dodaj wyjazd z jogą, wakacje jogowe lub weekendową praktykę dla osób z całej Polski",
+    title: "Wyjazdy jogowe",
+    description:
+      "Weekend z jogą, wakacje jogowe albo dłuższy retreat mogą mieć program, miejsce i ważne szczegóły",
+    icon: "logo-retreats.png",
+    href: "/wyjazdy/dodaj",
+  },
+  {
+    title: "System do zarządzania biznesem",
+    description: "Twórz grafik zajęć, przyjmuj zapisy i zarządzaj studiem",
+    icon: "logo-crm.png",
+    href: "/system-dla-studiow-jogi",
   },
 ];
 
-async function fetchCachedPublicStats(): Promise<PublicStats> {
-  "use cache";
-
-  cacheLife({ stale: 1800, revalidate: 1800, expire: 7200 });
-  cacheTag("public-stats");
-
-  const base = process.env.NEXT_PUBLIC_API_ENDPOINT;
-  if (!base) {
-    throw new Error("NEXT_PUBLIC_API_ENDPOINT is not configured");
-  }
-
-  // We intentionally use fetch here (and not axiosInstance):
-  // - This is a server component; axiosInstance adds a browser-only localStorage interceptor,
-  //   which breaks on the server.
-  // - Cache Components keeps these public stats reusable without request-time refetching.
-  const res = await fetch(`${base}/public/stats`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch public stats: ${res.status} ${res.statusText}`);
-  }
-
-  return (await res.json()) as PublicStats;
-}
-
-async function fetchPublicStats(): Promise<PublicStats | null> {
-  try {
-    return await fetchCachedPublicStats();
-  } catch (error) {
-    console.error("Failed to fetch public stats:", error);
-    return null;
-  }
-}
-
-export const PartnersPageContent = async () => {
-  const statsData = await fetchPublicStats();
-  const stats = statsData
-    ? [
-        {
-          title: String(statsData.total_public_retreats),
-          description: `${polishPlural(statsData.total_public_retreats, ["wyjazd", "wyjazdy", "wyjazdów"])} z jogą w kalendarzu`,
-        },
-        {
-          title: String(statsData.total_public_workshops),
-          description: `${polishPlural(statsData.total_public_workshops, ["wydarzenie", "wydarzenia", "wydarzeń"])} z jogą w kalendarzu`,
-        },
-        {
-          title: String(statsData.total_countries_with_public_retreats),
-          description: polishCountriesLocativePhrase(
-            statsData.total_countries_with_public_retreats,
-          ),
-        },
-        {
-          title: String(statsData.total_partners),
-          description: `${polishPlural(statsData.total_partners, ["organizator", "organizatorzy", "organizatorów"])}`,
-        },
-      ]
-    : [];
+function Divider({ first = false }: { first?: boolean }) {
   return (
-    <div className="bg-white text-gray-800">
-      {/* Hero Section */}
-      <section
-        className="relative h-[80svh] lg:h-[720px] 2xl:h-[1000px] bg-cover bg-center rounded-b-2xl flex flex-col lg:flex-row lg:justify-between lg:items-center"
-        style={{
-          backgroundImage: "url('/images/partners/hero.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-[#000]/30 lg:bg-[#000]/0 rounded-b-2xl" />
-        <div className="container-wy flex flex-row lg:justify-between lg:items-center w-full z-10 mx-auto h-full py-8 lg:py-[80px]">
-          <div className="flex flex-col items-center lg:items-start justify-between lg:justify-between h-full px-4 lg:px-8 text-left text-white lg:text-black w-full">
-            <Link href="/" className="mb-4 text-2xl font-bold">
-              <LogoPartners variant="white-with-black-text" className="hidden lg:flex" />
-              <LogoPartners variant="white" className="lg:hidden" />
-            </Link>
-            <div className="flex flex-col gap-4">
-              <h1 className="text-center lg:text-left font-semibold text-4xl lg:text-[80px] lg:leading-[70px] tracking-tight text-white lg:text-gray-700">
-                Dodaj <br />
-                ogłoszenie
-                <span className="hidden lg:inline">
-                  <br />
-                  jogowe
-                </span>
-              </h1>
-              <p className="mx-auto max-w-[260px] text-center text-lg font-medium leading-[22px] text-gray-100 lg:mx-0 lg:max-w-xl lg:text-left lg:text-2xl lg:leading-6 lg:text-gray-700">
-                To zajmie tylko kilka minut, ale zwiększy Twoją widoczność
-              </p>
-              <Link href={"/account/partner"} className="lg:hidden">
-                <Button
-                  size="lg"
-                  className="mt-2 h-12 w-full bg-white !text-[22px] !font-medium !leading-[30px] text-black duration-200 hover:bg-white/90 lg:w-auto"
-                >
-                  Zacznij
-                </Button>
-              </Link>
-            </div>
-            {/* <div className="hidden lg:block lg:h-[128px] lg:w-full" /> */}
-            <div className="h-[20px] lg:h-[128px] w-full" />
-          </div>
-
-          <div className="hidden lg:flex flex-col gap-6 p-12 bg-white/80 rounded-xl shadow-lg ">
-            {stats.map((stat, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col items-center lg:items-start flex-1 min-w-[300px]"
-              >
-                <div className="text-h-middle font-semibold text-gray-900">{stat.title}</div>
-                <div className="text-sub_description text-gray-600 mt-1 text-center lg:text-left">
-                  {stat.description}
-                </div>
-              </div>
-            ))}
-            <Link href={"/account/partner"}>
-              <Button
-                size="cta"
-                variant="cta"
-                className="w-full rounded-lg !text-[22px] !font-medium !leading-[30px]"
-              >
-                Zacznij
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <Separator className="container-wy mx-auto my-6 lg:my-10" />
-
-      {/* "Co możesz dodać" Section */}
-      <section className="">
-        <div className="container-wy mx-auto px-4 lg:px-8">
-          <h2 className="mb-6 lg:mb-12 text-center lg:text-left text-[22px] leading-[30px] lg:text-h-big text-gray-600">
-            Co możesz dodać
-          </h2>
-          <div className="grid gap-[22px] lg:gap-6 lg:grid-cols-4">
-            {addableItems.map((item) => (
-              <div key={item.desktopTitle} className="flex flex-col gap-[22px]">
-                <div className="text-center text-[46px] leading-[50px]" aria-hidden="true">
-                  {item.emoji}
-                </div>
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-[18px] font-medium leading-7 text-gray-800">
-                    <span className="hidden lg:inline">{item.desktopTitle}</span>
-                    <span className="lg:hidden">{item.mobileTitle}</span>
-                  </h3>
-                  <p className="text-[18px] font-medium leading-[22px] text-gray-500">
-                    <span className="hidden lg:inline">{item.desktopDescription}</span>
-                    <span className="lg:hidden">{item.mobileDescription}</span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <Separator className="container-wy mx-auto my-6 lg:my-10" />
-      {/* "Co dostaniesz we wspówpracy" Section */}
-      <section className="">
-        <div className="container-wy mx-auto px-0 lg:px-8">
-          <h2 className="px-4 lg:px-0 mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-600">
-            Dlaczego warto mieć profil na{" "}
-            <span className="text-nowrap">
-              joga
-              <span className="inline-block bg-gray-600 rounded-md leading-[100%] pl-[2px] pt-[2px] pb-[4px] pr-[6px] text-gray-50">
-                .yoga
-              </span>
-            </span>
-          </h2>
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 rounded-xl bg-gray-100 p-8 border border-gray-50 ">
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-4 w-full">
-              <div className="w-full flex flex-col justify-between gap-8 lg:gap-4 lg:py-3">
-                <div>
-                  <h3 className="text-subheader">Więcej rezerwacji</h3>
-                  <p className="text-sub-descript-18 text-gray-500">
-                    Zwiększ liczbę rezerwacji bez dodatkowego nakładu pracy
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-subheader">Dodatkowy sygnał dla Google</h3>
-                  <p className="text-sub-descript-18 text-gray-500">
-                    Profil na joga.yoga pomaga budować obecność marki w wynikach wyszukiwania
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-subheader">Wszystkie wydarzenia razem</h3>
-                  <p className="text-sub-descript-18 text-gray-500">
-                    Warsztaty, kursy i wyjazdy dostępne pod jednym profilem
-                  </p>
-                </div>
-              </div>
-              <div className="relative min-w-[280px] w-full lg:h-auto order-first lg:order-1">
-                <Image
-                  src="/images/partners/meditation1.png"
-                  alt="Meditation"
-                  className="rounded-lg object-cover w-full lg:h-full"
-                  width={280}
-                  height={200}
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-6 w-full">
-              <div className="rounded-lg pl-0 py-4 pr-4 lg:p-4 bg-white border border-gray-300">
-                <div className="flex items-center">
-                  <CustomPartnersComunityIcon className="mr-6 text-primary w-[96px] min-w-[96px] lg:w-[128px]" />
-                  <div>
-                    <h3 className="text-subheader">Siła wspólnoty</h3>
-                    <p className="text-m-sunscript-font lg:text-sub-descript-18 text-gray-500">
-                      Społeczność joga.yoga wspiera Twoje ogłoszenia jogowe
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col lg:flex-row gap-6 w-full">
-                <div className="gap-6 w-full h-full flex flex-col justify-around">
-                  <div>
-                    <h3 className="text-subheader">Aktualizacja bez programisty</h3>
-                    <p className="text-sub-descript-18 text-gray-500">
-                      Zmieniaj informacje samodzielnie, bez pomocy agencji i webmasterów
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-subheader">Link, który możesz wysłać wszędzie</h3>
-                    <p className="text-sub-descript-18 text-gray-500">
-                      Jeden adres do udostępniania w social mediach, mailach i komunikatorach
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-subheader">Wspólna misja</h3>
-                    <p className="text-sub-descript-18 text-gray-500">
-                      Razem szerzymy spokój i radość jogi
-                    </p>
-                  </div>
-                </div>
-                <div className="relative min-w-[212px] lg:h-[212px]">
-                  <Image
-                    src="/images/partners/asana-yoga.png"
-                    alt="Community"
-                    width={212}
-                    height={212}
-                    className="object-cover rounded-lg w-full"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <Separator className="container-wy mx-auto my-6 lg:my-10" />
-      {/* "Intencja" Section */}
-      <section className="pb-10">
-        <div className="container-wy mx-auto px-4 lg:px-8">
-          <h2 className="mb-6 lg:mb-12 text-center lg:text-left text-h-small lg:text-h-big text-gray-600">
-            Intencja
-          </h2>
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-4 w-full rounded-2xl bg-white p-8 border border-gray-100 shadow-[0px_8px_16px_8px_#F2F2F3]">
-              <LogoPartners variant="black" className="w-full" />
-              <div className="space-y-6 w-full">
-                <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center text-2xl text-gray-700">एकम</span>
-                  <span>Działaj z serca - reszta przyjdzie naturalnie</span>
-                </div>
-                <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center text-2xl text-gray-700">
-                    द्वे
-                  </span>
-                  <span>Najważniejsze dzieje się w trakcie</span>
-                </div>
-                <div className="flex text-gray-500 text-m-descript lg:text-listing-description">
-                  <span className="mr-5 min-w-12 w-12 text-center text-2xl text-gray-700">
-                    त्रीणि
-                  </span>
-                  <span>Możesz nie być doskonały, ale bądź prawdziwy</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-row lg:flex-col text-center lg:text-left gap-5">
-              <div className="flex justify-center lg:justify-start lg:min-w-[370px]">
-                <Image
-                  src="/images/partners/cat.png"
-                  alt="Cat on a yoga mat"
-                  width={370}
-                  height={175}
-                  className="rounded-2xl hidden lg:block"
-                />
-                <Image
-                  src="/images/partners/dog.png"
-                  alt="Dog on a yoga mat"
-                  width={205}
-                  height={140}
-                  className="rounded-2xl block lg:hidden"
-                />
-              </div>
-
-              <div className="flex flex-col gap-6">
-                <div className="flex justify-between text-lg lg:max-w-[370px] w-full h-full">
-                  <span className="mr-2 min-w-12 w-12 text-2xl text-gray-700 hidden lg:block">
-                    चत्वारि
-                  </span>
-                  <span className="text-left lg:text-center text-subheader text-gray-500 lg:pr-5">
-                    Nie musisz być wielki, by zacząć
-                  </span>
-                </div>
-                <Link href={"/account/partner"}>
-                  <Button
-                    size="lg"
-                    className="h-12 w-full bg-gray-600 !text-[22px] !font-medium !leading-[30px] text-white hover:bg-gray-600/90"
-                    variant="secondary"
-                  >
-                    Zacznij
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <Separator className="container-wy mx-auto my-6 lg:my-10" />
+    <div
+      className={`mx-auto flex h-[50px] max-w-[1298px] items-center px-8 lg:h-[93px] ${first ? "hidden lg:flex" : ""}`}
+      aria-hidden="true"
+    >
+      <Separator className="bg-gray-200" />
     </div>
   );
-};
+}
+
+function Hero({ stats }: { stats: PartnerStat[] }) {
+  return (
+    <section
+      aria-labelledby="partners-title"
+      className="relative isolate h-[580px] overflow-hidden rounded-t-[22px] rounded-b-lg lg:h-[695px]"
+    >
+      <Image
+        src="/images/partners/hero-coast.png"
+        alt=""
+        fill
+        preload
+        sizes="100vw"
+        className="-z-20 object-cover lg:object-bottom"
+      />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgba(25,47,40,0.188),rgba(26,46,40,0.05))] lg:hidden" />
+      <div className="mx-auto flex h-full max-w-[1201px] flex-col items-center px-8 lg:flex-row lg:justify-between lg:gap-12">
+        <div className="flex h-full w-full flex-col items-center pt-8 pb-[49px] lg:max-w-[478px] lg:items-start lg:pt-20 lg:pb-[142px]">
+          <Link
+            href="/"
+            aria-label="joga.yoga — strona główna"
+            className={`flex flex-col items-center gap-1.5 rounded-lg lg:gap-3 ${focusClass}`}
+          >
+            <span className="grid size-8 place-items-center rounded-full bg-white shadow-[0.5px_0.5px_8px_5px_rgba(255,252,238,0.5)] lg:size-[65px] lg:shadow-[1px_1px_16px_10px_rgba(255,252,238,0.5)]">
+              <Image
+                src="/images/partners/brand-mark.svg"
+                alt=""
+                width={35}
+                height={32}
+                className="h-4 w-[17.5px] lg:h-8 lg:w-[35px]"
+              />
+            </span>
+            <span className="flex items-center py-2 text-[22px] leading-[25px] font-semibold tracking-[-0.02em] text-white lg:py-0 lg:text-[30px] lg:leading-[30px]">
+              joga<span className="rounded bg-gray-800 py-0.5 pr-1.5">.yoga</span>
+            </span>
+          </Link>
+          <p className="mt-1 text-[15px] leading-[22px] text-white lg:hidden">
+            Dla ludzi jogi w Polsce
+          </p>
+          <div className="mt-[42px] w-full text-center text-gray-50 lg:mt-auto lg:text-left">
+            <h1
+              id="partners-title"
+              className="text-[46px] leading-[50px] font-semibold tracking-[-0.03em] lg:text-[80px] lg:leading-[70px]"
+            >
+              Pokaż
+              <br />
+              swoją jogę
+            </h1>
+            <p className="mx-auto mt-2 max-w-[478px] text-[18px] leading-7 font-medium tracking-[-0.01em] lg:mt-4 lg:text-[24px] lg:leading-[30px]">
+              Profil nauczyciela, studio, grafik lub wydarzenie w jednym miejscu
+            </p>
+          </div>
+          <Button
+            asChild
+            variant="outline"
+            className="mt-auto h-[33px] w-[min(100%,248px)] rounded-[22px] border border-gray-700 bg-white px-3 py-2 text-[15px] leading-[17px] font-normal text-gray-700 hover:bg-gray-100 lg:mt-9 lg:h-[43px] lg:w-full lg:text-[20px] lg:font-medium"
+          >
+            <Link href="/account/login">Zacznij tworzyć</Link>
+          </Button>
+        </div>
+        {stats.length > 0 && (
+          <dl className="hidden min-h-[535px] w-[35.2%] max-w-[400px] shrink-0 flex-col justify-center gap-6 rounded-[22px] bg-gray-50/76 px-[clamp(24px,3.2vw,46px)] py-10 lg:flex">
+            {stats.map((stat) => (
+              <div key={stat.description}>
+                <dt className="text-[30px] leading-[41px] font-semibold tracking-[-0.02em] text-gray-600">
+                  {stat.value}
+                </dt>
+                <dd className="mt-1 text-[18px] leading-[22px] font-medium tracking-[-0.02em] text-gray-800">
+                  {stat.description}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Offers() {
+  return (
+    <section
+      aria-labelledby="partners-offers-title"
+      className="mx-auto max-w-[1440px] px-4 pt-8 lg:px-[45px] lg:pt-[45px]"
+    >
+      <h2
+        id="partners-offers-title"
+        className="text-[20px] leading-[30px] font-medium tracking-[-0.01em] text-gray-800 lg:mx-auto lg:max-w-[1234px] lg:text-[46px] lg:leading-[50px] lg:font-semibold lg:tracking-[-0.03em]"
+      >
+        Co można stworzyć na joga.yoga
+      </h2>
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:mt-[45px] lg:grid-cols-3 lg:gap-6 lg:px-8">
+        {offers.map((offer) => (
+          <Link
+            key={offer.icon}
+            href={offer.href}
+            aria-label={offer.title}
+            className={`group relative flex min-h-[190px] min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs transition-colors hover:bg-gray-50 lg:min-h-0 lg:gap-[22px] lg:border-transparent lg:p-0 lg:shadow-none ${focusClass}`}
+          >
+            <Image
+              src={`/images/logo/${offer.icon}`}
+              alt=""
+              width={50}
+              height={50}
+              className="size-9 object-contain lg:mx-auto lg:size-[50px]"
+            />
+            <Image
+              src="/images/partners/card-arrow.svg"
+              alt=""
+              width={24}
+              height={24}
+              className="absolute top-4 right-2 lg:hidden"
+            />
+            <div>
+              <h3 className="text-[16px] leading-[18px] font-medium text-gray-800 lg:text-[18px] lg:leading-7 lg:tracking-[-0.01em]">
+                {offer.title}
+              </h3>
+              <p className="mt-2 text-[14px] leading-[18px] font-medium text-gray-500 lg:mt-0 lg:text-[18px] lg:leading-[25px] lg:tracking-[-0.02em]">
+                {offer.description}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Benefit({ title, children }: { title: string; children: string }) {
+  return (
+    <div>
+      <h3 className="text-[18px] leading-7 font-medium tracking-[-0.01em] text-gray-800">
+        {title}
+      </h3>
+      <p className="text-[18px] leading-[22px] font-medium tracking-[-0.02em] text-gray-500">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function StudioTools({ className = "" }: { className?: string }) {
+  return (
+    <Link
+      href="/system-dla-studiow-jogi"
+      aria-label="Narzędzia dla studiów"
+      className={`group flex items-start gap-4 rounded-lg transition-colors hover:bg-white/60 ${focusClass} ${className}`}
+    >
+      <Benefit title="Narzędzia dla studiów">
+        Grafik, zajęcia i zapisy pomagają prowadzić studio w prostym systemie
+      </Benefit>
+      <Image
+        src="/images/partners/card-arrow.svg"
+        alt=""
+        width={24}
+        height={24}
+        className="mt-0.5 shrink-0 lg:hidden"
+      />
+    </Link>
+  );
+}
+
+function Benefits() {
+  return (
+    <section
+      aria-labelledby="partners-benefits-title"
+      className="mx-auto max-w-[1440px] lg:px-[45px]"
+    >
+      <h2
+        id="partners-benefits-title"
+        className="px-8 text-[22px] leading-[30px] font-medium tracking-[-0.02em] text-gray-800 lg:px-0 lg:text-[46px] lg:leading-[50px] lg:font-semibold lg:tracking-[-0.03em] lg:text-gray-600"
+      >
+        joga.yoga to:
+      </h2>
+      <div className="mt-4 grid gap-6 rounded-[22px] border border-gray-50 bg-gray-100 p-8 lg:mt-9 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-9 lg:p-[clamp(32px,6.67vw,96px)]">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-[14px]">
+          <div className="flex flex-col gap-4">
+            <Benefit title="Wspólna przestrzeń branży">
+              Więcej widocznej jogi to więcej osób, które mogą zacząć praktykę
+            </Benefit>
+            <Benefit title="Joga widoczna lokalnie">
+              Łatwiej znaleźć studia, nauczycieli i wydarzenia w każdym mieście
+            </Benefit>
+            <StudioTools className="hidden lg:flex" />
+          </div>
+          <div className="relative aspect-[290/196] overflow-hidden rounded-[11px] lg:aspect-auto lg:min-h-[248px]">
+            <Image
+              src="/images/partners/meditation1.png"
+              alt="Medytacja w górach o wschodzie słońca"
+              fill
+              sizes="(min-width:1024px) 281px, (min-width:600px) 700px, 338px"
+              className="object-cover"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-6 lg:gap-3">
+          <div className="order-2 flex items-center justify-center gap-8 rounded-[11px] border border-gray-300 bg-white px-3 py-4 lg:order-none">
+            <CustomPartnersComunityIcon className="h-[54px] w-24 shrink-0" aria-hidden="true" />
+            <div className="max-w-[186px] text-[15px] leading-[18px]">
+              <h3 className="font-medium text-gray-800">Siła wspólnoty</h3>
+              <p className="font-normal text-gray-500">
+                Społeczność joga.yoga wspiera Twoją działalność
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              <Benefit title="Strony bez programisty">
+                Estetyczna obecność w internecie bez budowania strony od zera
+              </Benefit>
+              <Benefit title="Zapisy bliżej decyzji">
+                Osoba widzi ofertę i może od razu zrobić kolejny krok
+              </Benefit>
+            </div>
+            <div className="relative hidden w-[clamp(100px,11.12vw,160px)] shrink-0 self-stretch overflow-hidden rounded-[11px] lg:block">
+              <Image
+                src="/images/partners/practice.png"
+                alt="Spokojna praktyka medytacji"
+                fill
+                sizes="160px"
+                className="object-cover"
+              />
+            </div>
+          </div>
+          <StudioTools className="order-3 lg:hidden" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Registration() {
+  return (
+    <section aria-label="Dołącz do joga.yoga" className="px-8 pb-[34px] lg:bg-gray-50 lg:py-[77px]">
+      <div className="mx-auto flex max-w-[520px] flex-col items-center gap-4 lg:gap-6">
+        <p className="text-center text-[18px] leading-[25px] font-medium tracking-[-0.02em] text-gray-700 lg:text-[24px] lg:leading-[30px] lg:tracking-[-0.01em]">
+          Pokaż swoją pracę. Może właśnie dzięki Tobie ktoś zrobi pierwszy krok na matę
+        </p>
+        <Button
+          asChild
+          variant="cta"
+          className="h-auto min-h-[33px] w-full rounded-[22px] px-3 py-2 text-[15px] leading-[17px] font-normal whitespace-normal lg:min-h-[43px] lg:py-[13px] lg:text-[20px] lg:font-medium"
+        >
+          <Link href="/account/login">
+            <span className="lg:hidden">Zarejestruj się i działaj</span>
+            <span className="hidden lg:inline">Dołącz teraz i stwórz profil</span>
+          </Link>
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function ExampleCard({ example }: { example: PartnerExample }) {
+  return (
+    <Link
+      href={example.href}
+      className={`group flex min-w-0 flex-col gap-3 rounded-3xl border border-gray-200 bg-gray-50 px-6 py-2 transition-colors hover:bg-gray-100 lg:gap-5 lg:p-6 ${focusClass}`}
+    >
+      <h3 className="text-[20px] leading-7 font-medium text-gray-700 lg:leading-8">
+        {example.heading}
+      </h3>
+      <div className="relative h-40 overflow-hidden rounded-xl bg-gray-100 lg:h-60">
+        {example.imageId && process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+          <WyImage
+            src={example.imageId}
+            alt={example.name}
+            fill
+            sizes="(min-width:1440px) 362px, (min-width:1024px) 28vw, (min-width:600px) 700px, 290px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#F5F3EE] to-[#E2E7E0]">
+            <Image
+              src="/images/logo/svg/joga-yoga-mark.svg"
+              alt=""
+              width={58}
+              height={58}
+              className="opacity-45"
+            />
+          </div>
+        )}
+      </div>
+      <div className="px-6 lg:px-0">
+        <p className="text-[15px] leading-[18px] font-medium text-gray-700 lg:text-[18px] lg:leading-7">
+          {example.name}
+        </p>
+        {example.subtitle && (
+          <p className="mt-1 text-[15px] leading-[18px] font-normal text-gray-500">
+            {example.subtitle}
+          </p>
+        )}
+      </div>
+      <div className="mt-auto flex items-center justify-end lg:justify-between">
+        <span className="sr-only text-[15px] leading-[18px] text-gray-500 lg:not-sr-only">
+          {example.action}
+        </span>
+        <Image
+          src="/images/partners/card-arrow.svg"
+          alt=""
+          width={24}
+          height={24}
+          className="lg:hidden"
+        />
+        <Image
+          src="/images/partners/example-arrow.svg"
+          alt=""
+          width={16}
+          height={16}
+          className="hidden lg:block"
+        />
+      </div>
+    </Link>
+  );
+}
+
+export async function PartnersPageContent() {
+  const { stats, examples } = await getPartnersData();
+  return (
+    <main className="bg-white text-gray-800">
+      <Hero stats={stats} />
+      <Divider first />
+      <Offers />
+      <Divider />
+      <Benefits />
+      <Divider />
+      <Registration />
+      {examples.length > 0 && (
+        <>
+          <Divider />
+          <section
+            aria-labelledby="partners-examples-title"
+            className="mx-auto max-w-[1440px] px-8 py-6 lg:px-20 lg:py-0"
+          >
+            <h2
+              id="partners-examples-title"
+              className="text-[22px] leading-[30px] font-medium tracking-[-0.02em] text-gray-700"
+            >
+              Przykłady stron na joga.yoga
+            </h2>
+            <div className="mt-6 grid gap-4 lg:mt-12 lg:grid-cols-3 lg:gap-6">
+              {examples.map((example) => (
+                <ExampleCard key={example.kind} example={example} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+      <Divider />
+    </main>
+  );
+}

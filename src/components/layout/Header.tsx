@@ -101,7 +101,7 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
     pathname.startsWith("/wydarzenia/") ||
     pathname.startsWith("/kursy/");
   const isMainPage = pathname === "/" || pathname === "/wyjazdy";
-  const isPartnersPage = pathname === "/partners";
+  const isPartnersPage = pathname === "/" || pathname === "/partners";
   const isStudioMarketingPage = pathname === "/system-dla-studiow-jogi";
   // A studio page draws its own overlay header on its hero image, so the site header would
   // be a second one. True of a **managed** studio's page and its schedule and class leaves;
