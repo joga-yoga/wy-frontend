@@ -4,7 +4,6 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo";
 
 import { ArticleText, safeArticleHref } from "./article-text";
-import { blogNavigationPath } from "./mirror";
 import { articleJsonLd, blogPath } from "./seo";
 import type { ArticleDetail } from "./types";
 
@@ -21,29 +20,19 @@ function ArticleDate({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function ArticleView({
-  article,
-  mirror = false,
-}: {
-  article: ArticleDetail;
-  mirror?: boolean;
-}) {
+export function ArticleView({ article }: { article: ArticleDetail }) {
   return (
     <main className="mx-auto max-w-3xl px-5 md:px-8 py-8 md:py-14">
       <nav aria-label="Okruszki" className="mb-8 text-sm text-gray-600">
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <li>
-            <Link href={mirror ? "https://joga.yoga/" : "/"} className="hover:underline">
+            <Link href="/" className="hover:underline">
               Strona główna
             </Link>
           </li>
           <li aria-hidden="true">/</li>
           <li>
-            <Link
-              href={blogNavigationPath(undefined, mirror)}
-              prefetch={false}
-              className="hover:underline"
-            >
+            <Link href="/blog" prefetch={false} className="hover:underline">
               Blog
             </Link>
           </li>
@@ -135,11 +124,7 @@ export function ArticleView({
         </div>
       </article>
       <div className="mt-12 border-t pt-6">
-        <Link
-          href={blogNavigationPath(undefined, mirror)}
-          prefetch={false}
-          className="font-semibold underline underline-offset-4"
-        >
+        <Link href="/blog" prefetch={false} className="font-semibold underline underline-offset-4">
           ← Wróć do bloga
         </Link>
       </div>

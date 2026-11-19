@@ -129,35 +129,19 @@ test("client navigation to an unpublished article shows a real 404 document", as
   }
 });
 
-test("blog mirror serves artykuly paths with main-domain canonicals", async ({ request }) => {
-  const headers = { host: "wiedza.joga.yoga" };
-  for (const [path, canonical] of [
-    ["/", "https://joga.yoga/blog"],
-    ["/artykuly/lokalna-praktyka", "https://joga.yoga/blog/lokalna-praktyka"],
-  ]) {
-    const response = await request.get(path, { headers });
-    expect(response.status()).toBe(200);
-    const html = await response.text();
-    expect(html.match(/<link rel="canonical"[^>]*>/g)).toEqual([
-      `<link rel="canonical" href="${canonical}"/>`,
-    ]);
-    expect(html).toContain(
-      path === "/" ? 'href="/artykuly/lokalna-praktyka"' : "Spokojna praktyka",
-    );
+test("legacy blog links redirect to the canonical host", async ({ request }) => {
+  for (const host of ["wiedza.joga.yoga", "www.wiedza.joga.yoga"]) {
+    for (const [path, target] of [
+      ["/", "/blog"],
+      ["/?page=2&utm_source=mail", "/blog?page=2&utm_source=mail"],
+      ["/artykuly/lokalna-praktyka", "/blog/lokalna-praktyka"],
+      ["/artykuly/unknown.with-dot", "/blog/unknown.with-dot"],
+    ]) {
+      const response = await request.get(path, { headers: { host }, maxRedirects: 0 });
+      expect(response.status()).toBe(308);
+      expect(response.headers().location).toBe(`https://joga.yoga${target}`);
+    }
   }
-  for (const path of [
-    "/artykuly/unknown",
-    "/artykuly/unknown.with-dot",
-    "/artykuly/unknown/nested",
-    "/lokalna-praktyka",
-    "/blog/lokalna-praktyka",
-  ]) {
-    const response = await request.get(path, { headers });
-    expect(response.status()).toBe(404);
-    expect(await response.text()).toContain('href="/">Wróć do bloga');
-  }
-  expect((await request.get("/artykuly/upstream-failure", { headers })).status()).toBe(503);
-  expect((await request.get("/images/logo/logo-workshops.png", { headers })).status()).toBe(200);
 });
 
 test("sitemap uses the HTTP collection and stable backend modification dates", async ({
@@ -195,12 +179,6 @@ test("paginated HTML stays crawlable, canonical and bounded on both domains", as
     (await (await request.get("http://127.0.0.1:4020/test-control/list-reads")).json()).listReads,
   ).toBe(1);
 
-  const mirror = await request.get("/?page=2", { headers: { host: "wiedza.joga.yoga" } });
-  const mirrorHtml = await mirror.text();
-  expect(mirrorHtml).toContain('<link rel="canonical" href="https://joga.yoga/blog?page=2"/>');
-  expect(mirrorHtml).toMatch(/<a\b(?=[^>]*href="\/\?page=3")(?=[^>]*rel="next")/);
-  expect(mirrorHtml).toContain('href="/artykuly/pagination-10"');
-
   await page.goto("/blog");
   await expect(page.locator("main article")).toHaveCount(12);
   await page
@@ -225,21 +203,17 @@ test("paginated HTML stays crawlable, canonical and bounded on both domains", as
 test("pagination normalizes duplicate first-page URLs and excludes invalid pages", async ({
   request,
 }) => {
-  for (const [path, host] of [
-    ["/blog", "joga.yoga"],
-    ["/", "wiedza.joga.yoga"],
-  ]) {
-    const headers = { host };
-    const first = await request.get(`${path}?page=1`, { headers, maxRedirects: 0 });
-    expect(first.status()).toBe(308);
-    const destination = new URL(first.headers().location, first.url());
-    expect(destination.pathname).toBe(path);
-    expect(destination.search).toBe("");
-    for (const query of ["page=0", "page=-1", "page=1.5", "page=nope", "page=1&page=2"]) {
-      expect((await request.get(`${path}?${query}`, { headers })).status()).toBe(404);
-    }
-    const beyondEnd = await request.get(`${path}?page=99`, { headers });
-    // The shared layout can start streaming before notFound(); Next adds noindex.
-    expect(await beyondEnd.text()).toMatch(/<meta name="robots" content="noindex/);
+  const path = "/blog";
+  const headers = { host: "joga.yoga" };
+  const first = await request.get(`${path}?page=1`, { headers, maxRedirects: 0 });
+  expect(first.status()).toBe(308);
+  const destination = new URL(first.headers().location, first.url());
+  expect(destination.pathname).toBe(path);
+  expect(destination.search).toBe("");
+  for (const query of ["page=0", "page=-1", "page=1.5", "page=nope", "page=1&page=2"]) {
+    expect((await request.get(`${path}?${query}`, { headers })).status()).toBe(404);
   }
+  const beyondEnd = await request.get(`${path}?page=99`, { headers });
+  // The shared layout can start streaming before notFound(); Next adds noindex.
+  expect(await beyondEnd.text()).toMatch(/<meta name="robots" content="noindex/);
 });

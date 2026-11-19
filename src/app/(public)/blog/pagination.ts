@@ -1,5 +1,3 @@
-import { blogNavigationPath } from "./mirror";
-
 export const BLOG_PAGE_SIZE = 12;
 const MAX_PAGE = Math.floor(2_147_483_647 / BLOG_PAGE_SIZE) + 1;
 
@@ -10,9 +8,8 @@ export function parseBlogPage(value: string | string[] | undefined): number | nu
   return Number.isSafeInteger(page) && page >= 1 && page <= MAX_PAGE ? page : null;
 }
 
-export function blogIndexPath(page = 1, mirror = false): string {
-  const base = blogNavigationPath(undefined, mirror);
-  return page === 1 ? base : `${base}?page=${page}`;
+export function blogIndexPath(page = 1): string {
+  return page === 1 ? "/blog" : `/blog?page=${page}`;
 }
 
 export function blogPageNumbers(page: number, totalPages: number): number[] {

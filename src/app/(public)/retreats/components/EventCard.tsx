@@ -53,6 +53,11 @@ const calculatePricePerDay = (
   }
 };
 
+function handlePhotoArrowClick(event: React.MouseEvent<HTMLButtonElement>) {
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 interface EventCardProps {
   event: Event;
 }
@@ -160,11 +165,17 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             {event.image_ids && event.image_ids.length > 1 && (
               <>
                 <button
+                  type="button"
+                  aria-label="Poprzednie zdjęcie"
+                  onClick={handlePhotoArrowClick}
                   className={`${prevButtonClass} absolute top-1/2 left-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hidePrev ? "opacity-0" : "opacity-100"}`}
                 >
                   <ArrowLeft className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
                 </button>
                 <button
+                  type="button"
+                  aria-label="Następne zdjęcie"
+                  onClick={handlePhotoArrowClick}
                   className={`${nextButtonClass} absolute top-1/2 right-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hideNext ? "opacity-0" : "opacity-100"}`}
                 >
                   <ArrowRight className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />

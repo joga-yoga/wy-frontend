@@ -1,7 +1,7 @@
 import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { BLOG_MIRROR_HEADER, isBlogMirrorHost, mirrorBlogRoute } from "@/app/(public)/blog/mirror";
+import { isBlogMirrorHost, mirrorBlogRoute } from "@/app/(public)/blog/mirror";
 import { parseBlogPage } from "@/app/(public)/blog/pagination";
 import { blogProblemResponse } from "@/app/(public)/blog/problem-response";
 import { blogRouteStatus } from "@/app/(public)/blog/routing";
@@ -48,10 +48,10 @@ const lists = {
 };
 
 // Normalize pagination using the URL only. No index API probes run in the proxy.
-function blogIndexResponse(request: NextRequest, mirror: boolean): NextResponse | null {
+function blogIndexResponse(request: NextRequest): NextResponse | null {
   const values = request.nextUrl.searchParams.getAll("page");
   const page = parseBlogPage(values.length > 1 ? values : values[0]);
-  if (page === null) return blogProblemResponse(404, mirror ? "/" : "/blog");
+  if (page === null) return blogProblemResponse(404);
   if (values.length && (page === 1 || values[0] !== String(page))) {
     const url = request.nextUrl.clone();
     if (page === 1) url.searchParams.delete("page");
@@ -62,27 +62,16 @@ function blogIndexResponse(request: NextRequest, mirror: boolean): NextResponse 
 }
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
-  const requestHeaders = new Headers(request.headers);
-  // Derive this only from the incoming host; never trust a client-supplied flag.
-  requestHeaders.delete(BLOG_MIRROR_HEADER);
   if (isBlogMirrorHost(request.headers.get("host"))) {
     const pathname = mirrorBlogRoute(request.nextUrl.pathname);
     if (pathname === 404) return blogProblemResponse(404, "/");
     if (!pathname) return NextResponse.next();
-    if (pathname === "/blog") {
-      const response = blogIndexResponse(request, true);
-      if (response) return response;
-    }
-    const status = await blogRouteStatus(pathname);
-    if (status) return blogProblemResponse(status, "/");
-    const url = request.nextUrl.clone();
-    url.pathname = pathname;
-    // Next can replace Host with the rewrite target's host while routing locally.
-    requestHeaders.set(BLOG_MIRROR_HEADER, "1");
-    return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    const target = new URL(pathname, "https://joga.yoga");
+    target.search = request.nextUrl.search;
+    return NextResponse.redirect(target, 308);
   }
   if (request.nextUrl.pathname === "/blog") {
-    const response = blogIndexResponse(request, false);
+    const response = blogIndexResponse(request);
     if (response) return response;
   }
   const blogStatus = await blogRouteStatus(request.nextUrl.pathname);
@@ -104,10 +93,10 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     case "rewrite": {
       const url = request.nextUrl.clone();
       url.pathname = decision.to;
-      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+      return NextResponse.rewrite(url);
     }
     default:
-      return NextResponse.next({ request: { headers: requestHeaders } });
+      return NextResponse.next();
   }
 }
 
@@ -117,5 +106,6 @@ export const config = {
     "/blog/:path*",
     "/((?!_next|api|.*\\.).*)",
     { source: "/:path*", has: [{ type: "host", value: "wiedza.joga.yoga" }] },
+    { source: "/:path*", has: [{ type: "host", value: "www.wiedza.joga.yoga" }] },
   ],
 };

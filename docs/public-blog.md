@@ -4,9 +4,9 @@ Routes: `/blog` and `/blog/{slug}`, inside the existing public layout. The foote
 the blog in each public variant. Every published item has native HTML links from the list;
 there is no search, CMS or editorial interface.
 
-The production mirror at `wiedza.joga.yoga` serves the blog index at `/` and articles at
-`/artykuly/{slug}` through host-specific rewrites in `src/proxy.ts`. Blog navigation uses those
-paths on the mirror. Other page paths, including the former `/{slug}`, return HTTP 404.
+The legacy hosts `wiedza.joga.yoga` and `www.wiedza.joga.yoga` permanently redirect
+`/` to `https://joga.yoga/blog` and `/artykuly/{slug}` to the corresponding article.
+Both redirects preserve the query string.
 Canonical metadata, Open Graph URLs, structured data and sitemap URLs
 continue to point to `https://joga.yoga/blog` and `https://joga.yoga/blog/{slug}`.
 The detail-route guard preserves HTTP 404/503 responses on both domains; framework
@@ -56,8 +56,7 @@ publication dataset import is used by the frontend.
 The index renders 12 articles per page on the server. `/blog` is the first page; later pages
 use `/blog?page=2`, etc. Each valid page is indexable and has its own canonical, Open Graph URL
 and page-number title. Tracking parameters are omitted from canonicals. `?page=1` and leading
-zeroes permanently redirect to the normalized URL. On the mirror, navigation stays at
-`/?page=2`, with a canonical of `https://joga.yoga/blog?page=2`.
+zeroes permanently redirect to the normalized URL.
 
 Previous, next and numbered controls are HTML links with prefetch disabled. The first page
 is linked throughout the sequence. The complete unpaginated summary request is reserved for

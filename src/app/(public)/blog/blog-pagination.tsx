@@ -5,15 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 
 import { blogIndexPath, blogPageNumbers } from "./pagination";
 
-export function BlogPagination({
-  page,
-  totalPages,
-  mirror,
-}: {
-  page: number;
-  totalPages: number;
-  mirror: boolean;
-}) {
+export function BlogPagination({ page, totalPages }: { page: number; totalPages: number }) {
   if (totalPages <= 1) return null;
   const pages = blogPageNumbers(page, totalPages);
 
@@ -22,7 +14,7 @@ export function BlogPagination({
       <div className="flex items-center justify-between gap-2">
         {page > 1 ? (
           <Link
-            href={blogIndexPath(page - 1, mirror)}
+            href={blogIndexPath(page - 1)}
             prefetch={false}
             rel="prev"
             className={buttonVariants({ variant: "outline" })}
@@ -37,7 +29,7 @@ export function BlogPagination({
         </p>
         {page < totalPages ? (
           <Link
-            href={blogIndexPath(page + 1, mirror)}
+            href={blogIndexPath(page + 1)}
             prefetch={false}
             rel="next"
             className={buttonVariants({ variant: "outline" })}
@@ -58,7 +50,7 @@ export function BlogPagination({
             )}
             <li>
               <Link
-                href={blogIndexPath(number, mirror)}
+                href={blogIndexPath(number)}
                 prefetch={false}
                 aria-label={`Strona ${number}`}
                 aria-current={number === page ? "page" : undefined}
