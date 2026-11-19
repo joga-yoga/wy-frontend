@@ -61,6 +61,12 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "(?:www\\.)?(?:wyjazdy|wydarzenia)\\.yoga" }],
+        destination: "https://joga.yoga/:path*",
+        permanent: true,
+      },
       { source: "/instructor/dodaj", destination: "/instruktor/dodaj", permanent: true },
       {
         source: "/instructor/dodaj/:path*",
