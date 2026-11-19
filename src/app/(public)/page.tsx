@@ -1,5 +1,18 @@
-// /workshops serves the canonical URL for workshops (/).
-// Re-exporting here gives Next.js a real page file at "/" so RSC payloads
-// are generated for this path — without this, rewrites alone cause RSC 404s
-// during client-side navigation.
-export { default, metadata } from "./workshops/page";
+import type { Metadata } from "next";
+import { connection } from "next/server";
+
+import { PartnersPageContent } from "@/components/page-contents/(info)/partners/PartnersPageContent";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  project: "workshops",
+  title: "Pokaż swoją jogę | joga.yoga",
+  description:
+    "Stwórz stronę nauczyciela lub studia jogi, pokaż wydarzenia, kursy i wyjazdy. Prowadź grafik zajęć i przyjmuj zapisy na joga.yoga.",
+  path: "/",
+});
+
+export default async function HomePage() {
+  await connection();
+  return <PartnersPageContent />;
+}
