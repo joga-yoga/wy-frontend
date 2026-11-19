@@ -5,7 +5,8 @@ for (const [listing, detail] of [
   ["/wyjazdy", "/wyjazdy"],
 ]) {
   test(`photo buttons change only the slide on ${listing}`, async ({ page }) => {
-    await page.goto(listing);
+    await page.goto(listing, { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: "Tylko niezbędne" }).click();
     const card = page.locator(`a[href="${detail}/destination-event"]`).first();
     const slides = card.locator(".swiper-initialized .swiper-slide");
     await expect(slides.first()).toHaveClass(/swiper-slide-active/);
