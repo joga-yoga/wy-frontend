@@ -151,6 +151,12 @@ const server = createServer(async (req, res) => {
 
   if (await handleCertificateFixture(req, res)) return;
 
+  if (url.pathname === "/workshops/public" || url.pathname === "/retreats/public") {
+    const event = { ...navigationFixture.upcoming_workshops[0], image_ids: ["photo-one", "photo-two"] };
+    json(res, 200, { items: [event], total: 1 });
+    return;
+  }
+
   if (url.pathname === "/health") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ ok: true }));

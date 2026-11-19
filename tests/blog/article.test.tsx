@@ -95,7 +95,7 @@ async function main() {
     assert.equal(parseBlogPage(invalid), null);
   }
   assert.equal(blogIndexPath(1), "/blog");
-  assert.equal(blogIndexPath(2, true), "/?page=2");
+  assert.equal(blogIndexPath(2), "/blog?page=2");
   const pagedHtml = renderToStaticMarkup(<BlogIndex items={list.items} page={2} total={25} />);
   assert.match(pagedHtml, /<a\b(?=[^>]*href="\/blog")(?=[^>]*rel="prev")/);
   assert.match(pagedHtml, /<a\b(?=[^>]*href="\/blog\?page=3")(?=[^>]*rel="next")/);
@@ -137,12 +137,6 @@ async function main() {
   ]) {
     assert.equal(mirrorBlogRoute(path), null);
   }
-  const mirrorListing = renderToStaticMarkup(<BlogIndex items={list.items} mirror />);
-  assert.match(mirrorListing, /href="\/artykuly\/lokalna-praktyka"/);
-  const mirrorArticle = renderToStaticMarkup(<ArticleView article={articleFixtures[0]} mirror />);
-  assert.match(mirrorArticle, /href="\/"[^>]*>← Wróć do bloga/);
-  assert.match(mirrorArticle, /https:\/\/joga.yoga\/blog\/lokalna-praktyka/);
-
   const ordinaryHtml = renderToStaticMarkup(<ArticleView article={articleFixtures[0]} />);
   assert.equal(ordinaryHtml.match(/<h1\b/g)?.length, 1);
   assert.doesNotMatch(
@@ -220,10 +214,10 @@ async function main() {
       headers: { host: "wiedza.joga.yoga" },
     });
   const mirrorResponse = await proxy(mirrorRequest("/artykuly/lokalna-praktyka?source=mirror"));
-  assert.equal(mirrorResponse.headers.get("x-middleware-request-x-joga-blog-mirror"), "1");
+  assert.equal(mirrorResponse.status, 308);
   assert.equal(
-    mirrorResponse.headers.get("x-middleware-rewrite"),
-    "http://localhost/blog/lokalna-praktyka?source=mirror",
+    mirrorResponse.headers.get("location"),
+    "https://joga.yoga/blog/lokalna-praktyka?source=mirror",
   );
   assert.equal(
     (await proxy(mirrorRequest("/_next/static/file.js"))).headers.get("x-middleware-rewrite"),
@@ -241,8 +235,8 @@ async function main() {
     };
   };
   assert.equal(
-    (await proxy(mirrorRequest("/"))).headers.get("x-middleware-rewrite"),
-    "http://localhost/blog",
+    (await proxy(mirrorRequest("/"))).headers.get("location"),
+    "https://joga.yoga/blog",
   );
   assert.deepEqual(indexProxyRequests, []);
   assert.equal((await proxy(new NextRequest("http://localhost/blog?page=2"))).status, 200);
@@ -254,18 +248,12 @@ async function main() {
   assert.equal(normalized.headers.get("location"), "http://localhost/blog?utm_source=test");
   const normalizedMirror = await proxy(mirrorRequest("/?page=02"));
   assert.equal(normalizedMirror.status, 308);
-  assert.equal(normalizedMirror.headers.get("location"), "http://localhost/?page=2");
+  assert.equal(normalizedMirror.headers.get("location"), "https://joga.yoga/blog?page=02");
   assert.deepEqual(indexProxyRequests, []);
   assert.equal(
     (await proxy(new NextRequest("http://localhost/blog/lokalna-praktyka"))).status,
     200,
   );
-  const spoofedMirror = await proxy(
-    new NextRequest("http://localhost/blog/lokalna-praktyka", {
-      headers: { "x-joga-blog-mirror": "1" },
-    }),
-  );
-  assert.equal(spoofedMirror.headers.get("x-middleware-request-x-joga-blog-mirror"), null);
   assert.equal(await blogRouteStatus("/blog/unknown/path"), 404);
   assert.equal(await blogRouteStatus("/contact"), null);
   axiosInstance.defaults.adapter = async (config) => {
@@ -282,8 +270,8 @@ async function main() {
   assert.equal(await blogRouteStatus("/blog/%"), 404);
   assert.equal(await blogRouteStatus("/blog/unpublished"), 404);
   const missingMirror = await proxy(mirrorRequest("/artykuly/unknown.with-dot"));
-  assert.equal(missingMirror.status, 404);
-  assert.match(await missingMirror.text(), /href="\/">Wróć do bloga/);
+  assert.equal(missingMirror.status, 308);
+  assert.equal(missingMirror.headers.get("location"), "https://joga.yoga/blog/unknown.with-dot");
   const missingResponse = await proxy(new NextRequest("http://localhost/blog/unpublished"));
   assert.equal(missingResponse.status, 404);
   assert.equal(missingResponse.headers.get("x-middleware-rewrite"), null);
@@ -296,7 +284,7 @@ async function main() {
     throw new AxiosError("offline", "ECONNREFUSED");
   };
   assert.equal(await blogRouteStatus("/blog/lokalna-praktyka"), 503);
-  assert.equal((await proxy(mirrorRequest("/"))).status, 200);
+  assert.equal((await proxy(mirrorRequest("/"))).status, 308);
   const failedResponse = await proxy(new NextRequest("http://localhost/blog/lokalna-praktyka"));
   assert.equal(failedResponse.status, 503);
   assert.equal(failedResponse.headers.get("retry-after"), "60");

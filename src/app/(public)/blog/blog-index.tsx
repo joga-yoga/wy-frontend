@@ -2,18 +2,16 @@ import Link from "next/link";
 
 import { ArticleText } from "./article-text";
 import { BlogPagination } from "./blog-pagination";
-import { blogNavigationPath } from "./mirror";
 import { BLOG_PAGE_SIZE } from "./pagination";
+import { blogPath } from "./seo";
 import type { ArticleSummary } from "./types";
 
 export function BlogIndex({
   items,
-  mirror = false,
   page = 1,
   total = items.length,
 }: {
   items: ArticleSummary[];
-  mirror?: boolean;
   page?: number;
   total?: number;
 }) {
@@ -36,7 +34,7 @@ export function BlogIndex({
             >
               <h2 className="text-xl font-semibold leading-snug text-gray-900">
                 <Link
-                  href={blogNavigationPath(article.slug, mirror)}
+                  href={blogPath(article.slug)}
                   prefetch={false}
                   className="hover:underline underline-offset-4"
                 >
@@ -47,7 +45,7 @@ export function BlogIndex({
                 <ArticleText text={article.lead || article.description} />
               </div>
               <Link
-                href={blogNavigationPath(article.slug, mirror)}
+                href={blogPath(article.slug)}
                 prefetch={false}
                 className="mt-auto text-sm font-semibold underline underline-offset-4"
                 aria-label={`Czytaj artykuł: ${article.title}`}
@@ -60,7 +58,7 @@ export function BlogIndex({
       ) : (
         <p className="text-gray-600">Nie ma jeszcze opublikowanych artykułów.</p>
       )}
-      <BlogPagination page={page} totalPages={Math.ceil(total / BLOG_PAGE_SIZE)} mirror={mirror} />
+      <BlogPagination page={page} totalPages={Math.ceil(total / BLOG_PAGE_SIZE)} />
     </main>
   );
 }

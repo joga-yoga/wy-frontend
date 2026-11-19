@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { cache } from "react";
 
 import { getPublishedArticles } from "./api";
 import { BlogIndex } from "./blog-index";
-import { BLOG_MIRROR_HEADER } from "./mirror";
 import { parseBlogPage } from "./pagination";
 import { blogMetadata } from "./seo";
 
@@ -38,6 +36,5 @@ export default async function BlogPage({ searchParams }: Props) {
   await connection();
   const page = await pageNumber(searchParams);
   const { items, total } = await readPage(page);
-  const mirror = (await headers()).get(BLOG_MIRROR_HEADER) === "1";
-  return <BlogIndex items={items} total={total} page={page} mirror={mirror} />;
+  return <BlogIndex items={items} total={total} page={page} />;
 }

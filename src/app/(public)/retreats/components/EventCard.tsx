@@ -1,12 +1,10 @@
 "use client";
 
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { ArrowLeft, ArrowRight, Calendar, ImageOff } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { Navigation } from "swiper/modules";
+import React, { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperClass, SwiperSlide } from "swiper/react";
 
 import { BookmarkButton } from "@/components/custom/BookmarkButton";
@@ -89,8 +87,14 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     setHideNext(swiper.isEnd);
   };
 
-  const prevButtonClass = `event-swiper-prev-${event.id}`;
-  const nextButtonClass = `event-swiper-next-${event.id}`;
+  const swiperRef = useRef<SwiperClass | null>(null);
+  const changePhoto = (event: React.MouseEvent<HTMLButtonElement>, direction: "prev" | "next") => {
+    // Handle the control before the card link and the document-level navigation indicator.
+    event.preventDefault();
+    event.stopPropagation();
+    if (direction === "next") swiperRef.current?.slideNext();
+    else swiperRef.current?.slidePrev();
+  };
 
   return (
     <div className="box-border flex flex-col items-start p-5 md:p-[22px] gap-4 md:gap-[22px] w-full md:bg-white md:border-[4px] md:border-gray-50 md:shadow-[0px_8px_16px_8px_#FAFAFA] md:rounded-[22px]">
@@ -125,17 +129,15 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           <div className="relative w-full h-[220px] md:h-[300px] rounded-[11px] overflow-hidden">
             {event.image_ids && event.image_ids.length > 0 ? (
               <Swiper
-                modules={[Navigation]}
                 spaceBetween={0}
                 slidesPerView={1}
-                navigation={{
-                  prevEl: `.${prevButtonClass}`,
-                  nextEl: `.${nextButtonClass}`,
-                }}
                 pagination={false}
                 className="h-full w-full"
                 loop={false}
-                onSwiper={updateNavVisibility}
+                onSwiper={(swiper) => {
+                  swiperRef.current = swiper;
+                  updateNavVisibility(swiper);
+                }}
                 onSlideChange={updateNavVisibility}
               >
                 {event.image_ids.map((imageId) => (
@@ -160,12 +162,20 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             {event.image_ids && event.image_ids.length > 1 && (
               <>
                 <button
-                  className={`${prevButtonClass} absolute top-1/2 left-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hidePrev ? "opacity-0" : "opacity-100"}`}
+                  type="button"
+                  aria-label="Poprzednie zdjęcie"
+                  disabled={hidePrev}
+                  onClickCapture={(event) => changePhoto(event, "prev")}
+                  className={`absolute top-1/2 left-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hidePrev ? "opacity-0" : "opacity-100"}`}
                 >
                   <ArrowLeft className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
                 </button>
                 <button
-                  className={`${nextButtonClass} absolute top-1/2 right-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hideNext ? "opacity-0" : "opacity-100"}`}
+                  type="button"
+                  aria-label="Następne zdjęcie"
+                  disabled={hideNext}
+                  onClickCapture={(event) => changePhoto(event, "next")}
+                  className={`absolute top-1/2 right-3 -translate-y-1/2 z-10 bg-white rounded-full p-1 md:p-2 shadow-md hover:bg-gray-100 transition-opacity duration-300 ${hideNext ? "opacity-0" : "opacity-100"}`}
                 >
                   <ArrowRight className="h-6 w-6 md:h-6 md:w-6 text-gray-700" />
                 </button>
