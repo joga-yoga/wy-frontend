@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { LoginPage } from "./login";
 
 export const metadata: Metadata = {
-  title: "W.Y",
+  title: "Logowanie | joga.yoga",
 };
 
 export default function LoginRoutePage() {
