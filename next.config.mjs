@@ -86,15 +86,14 @@ const nextConfig = {
         destination: "/wyjazdy/karkonosze",
         permanent: true,
       },
-      // Canonical partners page
-      { source: "/wydarzenia/partners", destination: "/partners", permanent: true },
-      { source: "/wyjazdy/partners", destination: "/partners", permanent: true },
-      { source: "/workshops/partners", destination: "/partners", permanent: true },
-      { source: "/retreats/partners", destination: "/partners", permanent: true },
-      // /wydarzenia is redundant — / is canonical
-      { source: "/wydarzenia", destination: "/", permanent: true },
+      // The former Partners landing is now served at the homepage.
+      { source: "/partners", destination: "/", permanent: true },
+      { source: "/wydarzenia/partners", destination: "/", permanent: true },
+      { source: "/wyjazdy/partners", destination: "/", permanent: true },
+      { source: "/workshops/partners", destination: "/", permanent: true },
+      { source: "/retreats/partners", destination: "/", permanent: true },
       // Old English paths → Polish paths (bare + wildcard, explicit for RSC reliability)
-      { source: "/workshops", destination: "/", permanent: true },
+      { source: "/workshops", destination: "/wydarzenia", permanent: true },
       { source: "/workshops/:path*", destination: "/wydarzenia/:path*", permanent: true },
       { source: "/retreats", destination: "/wyjazdy", permanent: true },
       { source: "/retreats/:path*", destination: "/wyjazdy/:path*", permanent: true },

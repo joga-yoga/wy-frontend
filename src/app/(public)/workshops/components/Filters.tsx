@@ -79,7 +79,7 @@ const Filters = () => {
       params.set("sortBy", field);
       params.set("sortOrder", "asc");
     }
-    router.push(`/?${params.toString()}`);
+    router.push(`/wydarzenia?${params.toString()}`);
   };
 
   // Load filter initial data to get available cities from server
@@ -101,7 +101,7 @@ const Filters = () => {
     } else {
       params.delete("search");
     }
-    router.push(`/?${params.toString()}`);
+    router.push(`/wydarzenia?${params.toString()}`);
   }, [debouncedSearchTerm, router, searchParams]);
 
   const hasActiveFiltersFromUrl = () => {
@@ -150,7 +150,7 @@ const Filters = () => {
       params.set("is_online", "true");
     }
 
-    router.push(`/?${params.toString()}`);
+    router.push(`/wydarzenia?${params.toString()}`);
   };
 
   const handleCityClick = (cityName: string) => {
@@ -161,7 +161,7 @@ const Filters = () => {
     } else {
       params.set("cities", cityName);
     }
-    router.push(`/?${params.toString()}`);
+    router.push(`/wydarzenia?${params.toString()}`);
   };
 
   const cities = filterDataLoading ? [] : filterInitialData?.cities || [];
@@ -234,6 +234,7 @@ const Filters = () => {
       >
         <div className="flex items-center justify-between gap-2 px-5 py-2">
           <button
+            aria-label="Sortuj według daty"
             onClick={() => handleSortClick("start_date")}
             className={cn(
               "flex items-center justify-center rounded-full relative",
@@ -255,6 +256,7 @@ const Filters = () => {
           </button>
 
           <button
+            aria-label="Sortuj według ceny"
             onClick={() => handleSortClick("price")}
             className={cn(
               "flex items-center justify-center rounded-full relative",
@@ -275,6 +277,7 @@ const Filters = () => {
           </button>
           <div className="relative" ref={cityDropdownRef}>
             <button
+              aria-label="Filtruj wydarzenia"
               onClick={() => setIsFiltersModalOpen(true)}
               className={cn(
                 "flex items-center justify-center rounded-full",
@@ -287,6 +290,7 @@ const Filters = () => {
             </button>
           </div>
           <button
+            aria-label="Szukaj wydarzeń"
             onClick={() => setIsSearchActiveAndReset(!isSearchActive)}
             className={cn(
               "flex items-center justify-center rounded-full relative",
@@ -362,6 +366,7 @@ const Filters = () => {
 
           <div className="flex items-center gap-4">
             <button
+              aria-label="Filtruj wydarzenia"
               onClick={() => setIsFiltersModalOpen(true)}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
@@ -373,6 +378,7 @@ const Filters = () => {
               <CustomFilterTagsIcon className="w-[56px] h-[56px] stroke-[0.8px]" />
             </button>
             <button
+              aria-label="Sortuj według daty"
               onClick={() => handleSortClick("start_date")}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
@@ -393,6 +399,7 @@ const Filters = () => {
               </div>
             </button>
             <button
+              aria-label="Sortuj według ceny"
               onClick={() => handleSortClick("price")}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
@@ -412,6 +419,8 @@ const Filters = () => {
               </div>
             </button>
             <button
+              aria-label="Pokaż wydarzenia online"
+              aria-pressed={isOnlineActive}
               onClick={handleToggleOnlineQuick}
               className={cn(
                 "flex items-center justify-center rounded-full relative",
@@ -424,6 +433,7 @@ const Filters = () => {
             </button>
 
             <button
+              aria-label="Szukaj wydarzeń"
               onClick={() => setIsSearchActiveAndReset(true)}
               className={cn(
                 "flex items-center justify-center rounded-full",
