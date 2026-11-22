@@ -50,13 +50,7 @@ export function LoginPage() {
   const emailParam = searchParams.get("email") || "";
   const authQuery = next ? `?next=${encodeURIComponent(next)}` : "";
   const googleAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/google/login${authQuery}`;
-  const facebookOrigin =
-    process.env.NEXT_PUBLIC_FACEBOOK_API_ORIGIN ?? process.env.NEXT_PUBLIC_API_ENDPOINT;
-  const facebookAuthHref =
-    facebookOrigin && facebookOrigin !== "off"
-      ? `${facebookOrigin}/auth/facebook/login${authQuery}`
-      : null;
-
+  const facebookAuthHref = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/facebook/login${authQuery}`;
   useEffect(() => {
     if (loading || !user || hasAutoRedirected.current) return;
     hasAutoRedirected.current = true;
@@ -223,14 +217,12 @@ export function LoginPage() {
               <span>Kontynuuj, używając Google</span>
             </Button>
           </Link>
-          {facebookAuthHref && (
-            <Link href={facebookAuthHref} className="block">
-              <Button className="w-full relative h-10" variant="outline" type="button">
-                <LogoFacebook className="h-6 w-6 size-6 absolute left-4" />
-                <span>Kontynuuj, używając Facebooka</span>
-              </Button>
-            </Link>
-          )}
+          <Link href={facebookAuthHref} className="block">
+            <Button className="w-full relative h-10" variant="outline" type="button">
+              <LogoFacebook className="h-6 w-6 size-6 absolute left-4" />
+              <span>Kontynuuj, używając Facebooka</span>
+            </Button>
+          </Link>
         </form>
       )}
 
