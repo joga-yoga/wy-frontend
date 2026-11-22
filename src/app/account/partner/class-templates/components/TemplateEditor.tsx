@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
@@ -224,6 +225,66 @@ export function TemplateEditor({
     await onSubmit(data);
   };
 
+  const languageField = (
+    <div>
+      <Label className="font-light text-gray-400" htmlFor="language">
+        Język prowadzenia
+      </Label>
+      <Select value={language} onValueChange={setLanguage}>
+        <SelectTrigger id="language">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {LANGUAGE_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const soloTermsFields = (
+    <section className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="font-light text-gray-400" htmlFor="solo-price">
+            Cena jednego wejścia
+          </Label>
+          <Input
+            id="solo-price"
+            type="number"
+            step="0.01"
+            value={price}
+            onChange={(event) => setPrice(event.target.value)}
+            disabled={initial?.terms_locked}
+          />
+        </div>
+        <div>
+          <Label className="font-light text-gray-400" htmlFor="solo-currency">
+            Waluta
+          </Label>
+          <Select value={currency} onValueChange={setCurrency} disabled={initial?.terms_locked}>
+            <SelectTrigger id="solo-currency">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PLN">zł</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <SoloVenueInput value={venue} onChange={setVenue} locked={initial?.terms_locked} />
+      {initial?.terms_locked && (
+        <p className="text-sm text-muted-foreground">
+          Dla innej ceny lub miejsca utwórz nowy szablon i grafik.
+        </p>
+      )}
+    </section>
+  );
+
   return (
     <div className="space-y-6">
       {!isSolo &&
@@ -274,8 +335,10 @@ export function TemplateEditor({
         </div>
       </div>
 
+      <Separator />
+
       <section className="space-y-4">
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <div>
             <Label className="font-light text-gray-400" htmlFor="title">
               Nazwa
@@ -300,44 +363,6 @@ export function TemplateEditor({
               className="placeholder:text-sm placeholder:font-light"
               rows={4}
             />
-          </div>
-          {/* U2 pairs these on one row — both are short, and a studio picks them
-              together when defining what the class *is*. */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="font-light text-gray-400" htmlFor="duration">
-                Czas trwania
-              </Label>
-              <Select value={durationMinutes} onValueChange={setDurationMinutes}>
-                <SelectTrigger id="duration">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DURATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="font-light text-gray-400" htmlFor="level">
-                Poziom
-              </Label>
-              <Select value={level} onValueChange={setLevel}>
-                <SelectTrigger id="level">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEVEL_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           {!isSolo && (
             <div>
@@ -418,23 +443,48 @@ export function TemplateEditor({
               </div>
             </div>
           )}
-          <div>
-            <Label className="font-light text-gray-400" htmlFor="language">
-              Język prowadzenia
-            </Label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger id="language">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGE_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {isSolo && <Separator className="my-2" />}
+          {isSolo && soloTermsFields}
+          {/* U2 pairs these on one row — both are short, and a studio picks them
+              together when defining what the class *is*. */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="font-light text-gray-400" htmlFor="duration">
+                Czas trwania
+              </Label>
+              <Select value={durationMinutes} onValueChange={setDurationMinutes}>
+                <SelectTrigger id="duration">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DURATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="font-light text-gray-400" htmlFor="level">
+                Poziom
+              </Label>
+              <Select value={level} onValueChange={setLevel}>
+                <SelectTrigger id="level">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVEL_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {!isSolo && languageField}
+          <Separator className="my-2" />
           <div>
             <Label className="font-light text-gray-400" htmlFor="style">
               Styl <span className="text-gray-400">· opcjonalnie</span>
@@ -488,6 +538,7 @@ export function TemplateEditor({
         </div>
       </section>
 
+      {!isSolo && <Separator />}
       {!isSolo && (
         <TemplatePricing
           initial={initial?.studio_pricing ?? []}
@@ -500,48 +551,10 @@ export function TemplateEditor({
           }
         />
       )}
-      {isSolo && (
-        <section className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="font-light text-gray-400" htmlFor="solo-price">
-                Cena jednego wejścia
-              </Label>
-              <Input
-                id="solo-price"
-                type="number"
-                step="0.01"
-                value={price}
-                onChange={(event) => setPrice(event.target.value)}
-                disabled={initial?.terms_locked}
-              />
-            </div>
-            <div>
-              <Label className="font-light text-gray-400" htmlFor="solo-currency">
-                Waluta
-              </Label>
-              <Select value={currency} onValueChange={setCurrency} disabled={initial?.terms_locked}>
-                <SelectTrigger id="solo-currency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PLN">zł</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <SoloVenueInput value={venue} onChange={setVenue} locked={initial?.terms_locked} />
-          {initial?.terms_locked && (
-            <p className="text-sm text-muted-foreground">
-              Dla innej ceny lub miejsca utwórz nowy szablon i grafik.
-            </p>
-          )}
-        </section>
-      )}
 
       <section className="space-y-4">
         <div className="space-y-4">
+          {isSolo && languageField}
           <div>
             <Label className="font-light text-gray-400" htmlFor="capacity">
               Domyślny limit uczestników

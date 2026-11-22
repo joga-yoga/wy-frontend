@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { StudioLogoTile } from "@/components/b2b/StudioLogoTile";
-import { MenuIconTile, MenuRow } from "@/components/menu/MenuRow";
+import { MenuRow } from "@/components/menu/MenuRow";
 import { StudioWorkspaceRows } from "@/components/menu/StudioWorkspaceRows";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -110,9 +110,12 @@ export default function MenuPage() {
         href="/account"
         className="flex items-center gap-3 rounded-b2b border bg-white px-4 py-4 hover:bg-gray-50 transition-colors"
       >
-        <MenuIconTile>
-          <ArrowLeftRight size={18} className="text-b2b-green-text" />
-        </MenuIconTile>
+        <span
+          aria-hidden="true"
+          className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-brand-green-700 bg-brand-green-700 text-white"
+        >
+          <ArrowLeftRight size={18} />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-base font-medium text-gray-800">Przełącz na konto osobiste</p>
           <p className="text-sm text-gray-500">Twoje rezerwacje, karnety, odkrywanie</p>
