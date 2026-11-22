@@ -16,7 +16,7 @@ type FooterSectionDef = {
   links: { label: string; href: string; isExternal?: boolean }[];
 };
 
-/** The two directories — studios and instructors — in every footer variant.
+/** Links to the public catalogues in every footer variant.
  *
  * Both are indexable and in the sitemap, and the footer is the one place every page links
  * from, so it is what keeps them from being crawler-only. The section goes in every branch
@@ -31,6 +31,8 @@ const DIRECTORY_SECTION: FooterSectionDef = {
   links: [
     { label: "Studia jogi", href: "/studia" },
     { label: "Instruktorzy jogi", href: "/instruktorzy" },
+    { label: "Wydarzenia i warsztaty jogowe", href: "/wydarzenia" },
+    { label: "Wyjazdy jogowe i retrity", href: "/wyjazdy" },
   ],
 };
 

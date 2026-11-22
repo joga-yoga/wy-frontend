@@ -16,7 +16,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes = [
     "/",
-    "/partners",
     "/contact",
     "/blog",
     "/policy",
@@ -39,13 +38,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const staticWorkshopRoutes = [
+    "/wydarzenia",
     "/wydarzenia/dodaj",
     "/wydarzenia/faq/travelers",
     "/wydarzenia/faq/organizers",
   ].map((route) => ({
     url: `${BASE_URL}${route}`,
     changeFrequency: "monthly" as const,
-    priority: 0.7,
+    priority: route === "/wydarzenia" ? 0.9 : 0.7,
   }));
 
   const staticRetreatRoutes = [

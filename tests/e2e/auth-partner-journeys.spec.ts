@@ -370,13 +370,14 @@ for (const path of [
   });
 }
 
-test("marketing CTA retains automatic Partner", async ({ page, context }) => {
+test("homepage CTA opens authentication without provisioning a Partner", async ({ page, context }) => {
   const state = await fixture(context);
-  await session(page);
-  await page.goto("/partners");
-  await page.locator('a[href="/account/partner"]:visible').first().click();
-  await expect(page).toHaveURL(/account\/partner\/offer/);
-  expect(state.creates).toBe(1);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Tylko niezbędne" }).click();
+  await page.getByRole("link", { name: "Zacznij tworzyć" }).click();
+  await expect(page).toHaveURL(/\/account\/login$/);
+  await expect(page.getByRole("heading", { name: "Zaloguj się lub zarejestruj" })).toBeVisible();
+  expect(state.creates).toBe(0);
 });
 
 for (const alreadyVerified of [false, true]) {

@@ -94,14 +94,12 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
   const { isBookmarksActive, toggleBookmarksView } = useEventsFilter();
   const pathname = usePathname();
 
-  const isWyjazdy = pathname.startsWith("/wyjazdy") || pathname.startsWith("/wyjazdy/");
+  const isWyjazdy = pathname === "/wyjazdy" || pathname.startsWith("/wyjazdy/");
   const isWydarzenia =
-    pathname === "/" ||
-    pathname.startsWith("/wydarzenia") ||
+    pathname === "/wydarzenia" ||
     pathname.startsWith("/wydarzenia/") ||
     pathname.startsWith("/kursy/");
-  const isMainPage = pathname === "/" || pathname === "/wyjazdy";
-  const isPartnersPage = pathname === "/" || pathname === "/partners";
+  const isCataloguePage = pathname === "/wydarzenia" || pathname === "/wyjazdy";
   const isStudioMarketingPage = pathname === "/system-dla-studiow-jogi";
   // A studio page draws its own overlay header on its hero image, so the site header would
   // be a second one. True of a **managed** studio's page and its schedule and class leaves;
@@ -149,10 +147,9 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
     setNavigationOrigin(readNavigationOrigin(pathname));
   }, [pathname]);
   const storedOrigin = navigationOrigin?.target === pathname ? navigationOrigin.origin : null;
-  const logoHref = isWyjazdy ? "/wyjazdy" : "/";
   if (
     !force &&
-    (isPartnersPage || isStudioPage || isCtaPage || isInstructorScheduleOrClassesPage)
+    (pathname === "/" || isStudioPage || isCtaPage || isInstructorScheduleOrClassesPage)
   ) {
     return null;
   }
@@ -160,14 +157,17 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
       <div className="container mx-auto px-5 md:px-8 h-16 md:h-20 relative flex items-stretch">
-        {/* Desktop: always logo to section root */}
-        <Link href={logoHref} className="hidden md:flex items-center shrink-0 self-center">
+        <Link
+          href="/"
+          aria-label="Strona główna"
+          className="hidden md:flex items-center shrink-0 self-center"
+        >
           <LogoFooter />
         </Link>
 
         {/* Mobile: back button with a trusted origin, logo otherwise */}
         <Link
-          href={storedOrigin ?? logoHref}
+          href={storedOrigin ?? "/"}
           aria-label={storedOrigin ? "Wróć" : "Strona główna"}
           className="flex md:hidden items-center shrink-0 self-center"
           data-testid="public-header-mobile-navigation"
@@ -184,7 +184,11 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
         {/* Center: Airbnb-style flat tabs with sliding underline — absolutely centered on desktop */}
         <div className="hidden sm:flex absolute inset-y-0 left-1/2 -translate-x-1/2 items-center gap-[35px]">
           <LayoutGroup id="public-header-desktop-tabs">
-            <Link href="/" className="relative h-full">
+            <Link
+              href="/wydarzenia"
+              aria-current={pathname === "/wydarzenia" ? "page" : undefined}
+              className="relative h-full"
+            >
               <motion.span
                 initial="rest"
                 animate="rest"
@@ -217,7 +221,11 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
                 />
               )}
             </Link>
-            <Link href="/wyjazdy" className="relative h-full">
+            <Link
+              href="/wyjazdy"
+              aria-current={pathname === "/wyjazdy" ? "page" : undefined}
+              className="relative h-full"
+            >
               <motion.span
                 initial="rest"
                 animate="rest"
@@ -259,7 +267,11 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
             href={createHref}
             passHref
             className={cn(
-              isStudioMarketingPage ? "hidden" : isMainPage ? undefined : "hidden md:inline-block",
+              isStudioMarketingPage
+                ? "hidden"
+                : isCataloguePage
+                  ? undefined
+                  : "hidden md:inline-block",
             )}
           >
             <button className="text-md py-2.5 hover:underline">
@@ -280,13 +292,13 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
             }
             className={cn(
               "group relative h-10 w-10 items-center justify-center text-black",
-              isStudioMarketingPage ? "inline-flex" : isMainPage ? "hidden" : "md:hidden",
+              isStudioMarketingPage ? "inline-flex" : isCataloguePage ? "hidden" : "md:hidden",
             )}
           >
             <CustomPlusIconMobile className="h-10 w-10" />
           </Link>
 
-          {isMainPage && (
+          {isCataloguePage && (
             <BookmarkButton
               isActive={isBookmarksActive}
               toggleHandler={toggleBookmarksView}
@@ -331,10 +343,14 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
       </div>
 
       {/* Mobile tab switcher — Airbnb-style: large emoji icon above text label */}
-      {isMainPage && (
+      {isCataloguePage && (
         <div className="sm:hidden flex justify-around border-t border-gray-100 px-[40px]">
           <LayoutGroup id="public-header-mobile-tabs">
-            <Link href="/" className="min-w-[68px]">
+            <Link
+              href="/wydarzenia"
+              aria-current={pathname === "/wydarzenia" ? "page" : undefined}
+              className="min-w-[68px]"
+            >
               <motion.span
                 initial="rest"
                 animate="rest"
@@ -380,7 +396,11 @@ export const PublicHeader = ({ force = false }: { force?: boolean } = {}) => {
                 </span>
               </motion.span>
             </Link>
-            <Link href="/wyjazdy" className="min-w-[68px]">
+            <Link
+              href="/wyjazdy"
+              aria-current={pathname === "/wyjazdy" ? "page" : undefined}
+              className="min-w-[68px]"
+            >
               <motion.span
                 initial="rest"
                 animate="rest"

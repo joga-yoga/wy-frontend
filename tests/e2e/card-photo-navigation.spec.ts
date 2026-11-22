@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 for (const [listing, detail] of [
-  ["/", "/wydarzenia"],
+  ["/wydarzenia", "/wydarzenia"],
   ["/wyjazdy", "/wyjazdy"],
 ]) {
   test(`photo buttons change only the slide on ${listing}`, async ({ page }) => {

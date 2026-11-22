@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     project: "workshops",
     title: pageTitle,
     description: pageDescription,
-    path: "/",
+    path: "/wydarzenia",
   }),
 };
 
@@ -70,7 +70,7 @@ const WorkshopsPage = async (props: PageProps) => {
       <JsonLd
         data={buildCollectionJsonLd({
           project: "workshops",
-          path: "/",
+          path: "/wydarzenia",
           name: pageTitle,
           description: pageDescription,
         })}
