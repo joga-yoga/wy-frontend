@@ -100,18 +100,22 @@ function ReferenceField({
 
 export function RecordEditor({
   record,
+  open,
   jobId,
   branches,
   readOnly = false,
   onClose,
+  onCloseComplete,
   onSave,
   busy,
 }: {
   record: ImportRecord | null;
+  open: boolean;
   jobId: string;
   branches: ImportRecord[];
   readOnly?: boolean;
   onClose: () => void;
+  onCloseComplete: () => void;
   onSave: (overrides: Record<string, Value>) => Promise<void>;
   busy: boolean;
 }) {
@@ -119,12 +123,14 @@ export function RecordEditor({
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
   const [photoBusy, setPhotoBusy] = useState(false);
+  const recordId = record?.id;
   useEffect(() => {
     photoRequest.current++;
+    if (!open && recordId) return;
     setPhoto(null);
     setPhotoBusy(false);
     setPhotoError("");
-  }, [record?.id]);
+  }, [open, recordId]);
   useEffect(
     () => () => {
       if (photo) URL.revokeObjectURL(photo);
@@ -132,7 +138,7 @@ export function RecordEditor({
     [photo],
   );
   async function loadPhoto() {
-    if (!record) return;
+    if (!open || !record) return;
     const generation = ++photoRequest.current;
     setPhotoBusy(true);
     try {
@@ -216,9 +222,12 @@ export function RecordEditor({
   }
   return (
     <Dialog
-      open={Boolean(record)}
-      onOpenChange={(open) => {
-        if (!open && !busy) onClose();
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !busy) onClose();
+      }}
+      onOpenChangeComplete={(nextOpen) => {
+        if (!nextOpen && !open) onCloseComplete();
       }}
     >
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">

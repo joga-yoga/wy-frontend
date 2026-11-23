@@ -208,6 +208,220 @@ async function room(page: Page, studio: string) {
 }
 const wizard = "/account/partner/class-schedules/create?templateId=flow";
 
+const substitutionPath = "/account/partner/schedule/edit/occurrence?field=instructor&studio_id=a";
+
+async function setupSubstitution(page: Page) {
+  await setup(page);
+  const state = {
+    assignableScopes: [] as (string | null)[],
+    rosterWrites: [] as { path: string; data: unknown }[],
+    sessionWrites: [] as { path: string; data: unknown }[],
+    added: false,
+    failAdd: false,
+    failRefresh: false,
+    assignableAfterAdd: true,
+  };
+  await page.route("**/class-sessions/occurrence", (route) =>
+    route.fulfill({
+      json: {
+        id: "occurrence",
+        organizer_kind: "studio",
+        studio_id: "b",
+        template_title: "Flow",
+        calendar_date: "2026-12-01",
+        start_time: "2026-12-01T09:00:00Z",
+        end_time: "2026-12-01T10:00:00Z",
+        is_recurring: true,
+        instructor_id: "overridden-instructor",
+        instructor_name: "Zastępczyni",
+        room_id: "room-extra",
+        series_instructor_id: "olga",
+        series_instructor_name: "Olga Testowa",
+        series_room_id: "room-b",
+      },
+    }),
+  );
+  await page.route("**/studios/b/rooms", (route) =>
+    route.fulfill({
+      json: [
+        { id: "room-b", name: "Sala B" },
+        { id: "room-extra", name: "Sala dodatkowa" },
+      ],
+    }),
+  );
+  await page.route("**/instructors/assignable?**", (route) => {
+    const studioId = new URL(route.request().url()).searchParams.get("studio_id");
+    state.assignableScopes.push(studioId);
+    if (state.added && state.failRefresh) return route.fulfill({ status: 503, json: {} });
+    return route.fulfill({
+      json: [
+        { id: "olga", name: "Olga Testowa" },
+        ...(state.added && state.assignableAfterAdd ? [{ id: "marta", name: "Marta Nowak" }] : []),
+      ],
+    });
+  });
+  await page.route("**/instructors/lookup?**", (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          { instructor_id: "marta", name: "Marta Nowak", styles: [], claim_status: "unclaimed" },
+        ],
+      },
+    }),
+  );
+  await page.route(/\/(?:studios\/[^/]+\/roster\/marta|instructors\/resolve)$/, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    state.rosterWrites.push({ path, data: route.request().postDataJSON() });
+    if (state.failAdd) return route.fulfill({ status: 400, json: { detail: "Błąd zapisu." } });
+    state.added = true;
+    return route.fulfill({ json: { instructor_id: "marta" } });
+  });
+  await page.route("**/class-sessions/edit/*", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    state.sessionWrites.push({ path, data: route.request().postDataJSON() });
+    return route.fulfill({
+      json: path.endsWith("/preview")
+        ? {
+            items: [
+              {
+                calendar_date: "2026-12-01",
+                status: "modified",
+                diffs: [{ label: "Prowadzący", old: "Olga Testowa", new: "Marta Nowak" }],
+                booked_count: 1,
+              },
+            ],
+            total_affected: 1,
+            notification_summary: { total_recipients: 1, total_booked_seats: 1 },
+          }
+        : {
+            updated: ["occurrence"],
+            created: [],
+            cancelled: [],
+            deleted: [],
+            queued_recipients: 1,
+          },
+    });
+  });
+  return state;
+}
+
+async function openSubstitution(page: Page) {
+  await page.goto(substitutionPath);
+  await cookies(page);
+  await page.getByRole("button", { name: /Tę i kolejne/ }).click();
+  await page.getByRole("button", { name: "Dalej", exact: true }).click();
+  await expect(page.getByText("Zakres: ta i kolejne", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Olga Testowa/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+}
+
+test("inline substitution links a second instructor and keeps the draft until confirmation", async ({
+  page,
+}) => {
+  const state = await setupSubstitution(page);
+  await openSubstitution(page);
+  const roomField = page.getByRole("combobox", { name: /Sala/ });
+  await expect(roomField).toContainText("Sala B");
+  const preview = page.getByRole("button", { name: "Zobacz podgląd zmian" });
+  await expect(preview).toBeDisabled();
+
+  await roomField.click();
+  await page.getByRole("option", { name: "Sala dodatkowa", exact: true }).click();
+  await expect(preview).toBeEnabled();
+  const add = page.getByRole("button", { name: "Dodaj instruktora", exact: true });
+  const dialog = page.getByRole("dialog", { name: "Dodaj instruktora" });
+  await add.click();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(add).toBeFocused();
+  await expect(roomField).toContainText("Sala dodatkowa");
+  expect(state.rosterWrites).toEqual([]);
+
+  await add.click();
+  await dialog.getByRole("button", { name: "Zamknij", exact: true }).click();
+  await expect(add).toBeFocused();
+  await expect(roomField).toContainText("Sala dodatkowa");
+  await add.click();
+  await dialog.getByLabel("Imię i nazwisko lub email").fill("Marta Nowak");
+  await dialog.getByRole("button", { name: /Marta Nowak/ }).click();
+  await expect(dialog).toBeHidden();
+  await expect(add).toBeFocused();
+  await expect(page).toHaveURL(substitutionPath);
+  await expect(page.getByText("Zakres: ta i kolejne", { exact: true })).toBeVisible();
+  await expect(roomField).toContainText("Sala dodatkowa");
+  await expect(page.getByRole("button", { name: /Olga Testowa/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const marta = page.getByRole("button", { name: /Marta Nowak/ });
+  await expect(marta).toHaveAttribute("aria-pressed", "false");
+  expect(state.rosterWrites).toEqual([{ path: "/studios/b/roster/marta", data: {} }]);
+  expect(state.assignableScopes).toEqual(["b", "b"]);
+  expect(state.sessionWrites).toEqual([]);
+
+  await marta.click();
+  await preview.click();
+  await expect(page.getByText(/Prowadzący:.*Olga Testowa.*→.*Marta Nowak/)).toBeVisible();
+  await page.getByRole("button", { name: "Zapisz zmiany" }).click();
+  await expect(page.getByRole("heading", { name: "Zapisano zmiany" })).toBeVisible();
+  expect(state.sessionWrites.map(({ path }) => path)).toEqual([
+    "/class-sessions/edit/preview",
+    "/class-sessions/edit/commit",
+  ]);
+  for (const { data } of state.sessionWrites) {
+    expect(data).toEqual({
+      occurrence_id: "occurrence",
+      scope: "this_and_future",
+      instructor_id: "marta",
+      room_id: "room-extra",
+    });
+  }
+});
+
+test("inline substitution retries the assignable read after adding a new instructor", async ({
+  page,
+}) => {
+  const state = await setupSubstitution(page);
+  state.failAdd = state.failRefresh = true;
+  state.assignableAfterAdd = false;
+  await openSubstitution(page);
+  await page.getByRole("button", { name: "Dodaj instruktora", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Dodaj instruktora" });
+  await dialog.getByRole("button", { name: /Dodaj bez zaproszenia/ }).click();
+  await dialog.getByLabel("Imię i nazwisko", { exact: true }).fill("Marta Nowak");
+  const submit = dialog.getByRole("button", { name: "Dodaj instruktora", exact: true });
+  await submit.click();
+  await expect(page.getByText("Błąd zapisu.", { exact: true })).toBeVisible();
+  await expect(dialog).toBeVisible();
+  state.failAdd = false;
+  await submit.click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Instruktor dodany. Nie udało się odświeżyć listy.")).toBeVisible();
+
+  state.failRefresh = false;
+  await page.getByRole("button", { name: "Odśwież listę instruktorów" }).click();
+  await expect(
+    page.getByText("Instruktor nie jest jeszcze dostępny do przypisania."),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /Marta Nowak/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Olga Testowa/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: "Zobacz podgląd zmian" })).toBeDisabled();
+  expect(state.assignableScopes).toEqual(["b", "b", "b"]);
+  expect(state.rosterWrites).toEqual(
+    Array.from({ length: 2 }, () => ({
+      path: "/instructors/resolve",
+      data: { name: "Marta Nowak", studio_id: "b" },
+    })),
+  );
+  expect(state.sessionWrites).toEqual([]);
+});
+
 test("inline save keeps its default through a same-studio read failure and retry", async ({
   page,
 }) => {

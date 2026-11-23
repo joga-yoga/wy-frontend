@@ -10,11 +10,15 @@ import {
   type DayStripHandle,
 } from "@/app/(public)/studio/[slug]/schedule/components/DayStrip";
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
-import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
+import {
+  LinkedSessionDetailDrawer,
+  openSessionDetails,
+} from "@/app/(public)/studio/[slug]/schedule/LinkedSessionDetailDrawer";
 import type { PublicScheduleDaySummary } from "@/app/(public)/studio/[slug]/schedule/types";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
+import { warsawCalendarDate, warsawCalendarDay } from "@/lib/warsawWallClock";
 import type { InstructorPublic } from "@/types/instructor";
 
 import type { InstructorPublicScheduleWeekResponse } from "./types";
@@ -33,7 +37,7 @@ function formatDate(d: Date): string {
 }
 
 function todayDayIndex(): number {
-  const dow = new Date().getDay();
+  const dow = warsawCalendarDay().getDay();
   return dow === 0 ? 6 : dow - 1;
 }
 
@@ -86,10 +90,9 @@ export function InstructorSchedulePage({ instructor }: { instructor: InstructorP
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
+  const [weekStart, setWeekStart] = useState(() => getMonday(warsawCalendarDay()));
   const [days, setDays] = useState<PublicScheduleDaySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(() => todayDayIndex());
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -108,9 +111,8 @@ export function InstructorSchedulePage({ instructor }: { instructor: InstructorP
     }
     hasHandledDeepLink.current = false;
     pendingScrollIndex.current = null;
-    setWeekStart(getMonday(new Date()));
+    setWeekStart(getMonday(warsawCalendarDay()));
     setSelectedIndex(todayDayIndex());
-    setSelectedOccurrenceId(null);
   }, [pathname]);
 
   const fetchWeek = useCallback(() => {
@@ -225,7 +227,7 @@ export function InstructorSchedulePage({ instructor }: { instructor: InstructorP
   }
 
   function goToToday() {
-    const currentMonday = getMonday(new Date());
+    const currentMonday = getMonday(warsawCalendarDay());
     const isCurrentWeek = formatDate(weekStart) === formatDate(currentMonday);
     const idx = todayDayIndex();
     if (isCurrentWeek) {
@@ -244,7 +246,7 @@ export function InstructorSchedulePage({ instructor }: { instructor: InstructorP
   }
 
   const sessionCounts = days.map((d) => d.session_count);
-  const todayStr = formatDate(new Date());
+  const todayStr = warsawCalendarDate(new Date());
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -293,7 +295,7 @@ export function InstructorSchedulePage({ instructor }: { instructor: InstructorP
                       key={occ.id}
                       occ={occ}
                       context="instructor"
-                      onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                      onClick={(clicked) => openSessionDetails(clicked.id)}
                     />
                   ))
                 )}
@@ -330,11 +332,12 @@ export function InstructorSchedulePage({ instructor }: { instructor: InstructorP
         </div>
       </div>
 
-      <SessionDetailDrawer
-        occurrenceId={selectedOccurrenceId}
-        onClose={() => setSelectedOccurrenceId(null)}
-        onBookingCancelled={fetchWeek}
-      />
+      {instructor.slug && (
+        <LinkedSessionDetailDrawer
+          surface={{ instructor_slug: instructor.slug }}
+          onBookingCancelled={fetchWeek}
+        />
+      )}
     </div>
   );
 }

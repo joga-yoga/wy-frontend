@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
 import { MenuRow } from "@/components/menu/MenuRow";
@@ -108,7 +108,10 @@ export default function OfferPage() {
   const [courses, setCourses] = useState<DashboardItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const deleteOpen = useRef(false);
+  const deleteTrigger = useRef<HTMLButtonElement | null>(null);
   const [organizerLabels, setOrganizerLabels] = useState<Record<string, string[]>>({});
   const [showOrganizerLabels, setShowOrganizerLabels] = useState(false);
 
@@ -169,7 +172,7 @@ export default function OfferPage() {
 
   // Fetch instructors and claim invitations
   const handleDelete = async () => {
-    if (!itemToDelete) return;
+    if (!deleteOpen.current || !itemToDelete || isDeleting) return;
     setIsDeleting(true);
     try {
       const ep =
@@ -185,7 +188,6 @@ export default function OfferPage() {
       else if (itemToDelete.kind === "workshop")
         setWorkshops((p) => p.filter((i) => i.id !== itemToDelete.id));
       else setCourses((p) => p.filter((i) => i.id !== itemToDelete.id));
-      setItemToDelete(null);
     } catch (error: any) {
       toast({
         description: `Nie udało się usunąć: ${error.response?.data?.detail || error.message}`,
@@ -287,14 +289,15 @@ export default function OfferPage() {
     }
   };
 
-  const cardProps = {
-    onDelete: setItemToDelete,
+  const cardProps: OfferRowActions = {
+    onDelete: (item, trigger) => {
+      deleteTrigger.current = trigger;
+      deleteOpen.current = true;
+      setItemToDelete(item);
+      setIsDeleteOpen(true);
+    },
     onHide: handleHide,
     onDuplicate: handleDuplicate,
-    itemToDelete,
-    isDeleting,
-    onDeleteConfirm: handleDelete,
-    onDeleteCancel: () => setItemToDelete(null),
   };
 
   const isLoading = loadingItems;
@@ -303,6 +306,40 @@ export default function OfferPage() {
 
   return (
     <>
+      <AlertDialog
+        open={isDeleteOpen}
+        onOpenChange={(open) => {
+          deleteOpen.current = open;
+          setIsDeleteOpen(open);
+        }}
+      >
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (!deleteOpen.current && deleteTrigger.current?.isConnected)
+              deleteTrigger.current.focus();
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie &quot;
+              <strong>{itemToDelete?.title}</strong>&quot;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleteOpen && isDeleting}>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleteOpen && isDeleting}
+              onClick={handleDelete}
+              className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
+            >
+              {isDeleteOpen && isDeleting ? "Usuwanie..." : "Tak, usuń"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* "Co chcesz dodać?" drawer */}
       <Drawer open={isCreateMenuOpen} onOpenChange={setIsCreateMenuOpen} showSwipeHandle>
         <DrawerContent className="sm:mx-auto sm:max-w-2xl">

@@ -21,6 +21,8 @@ async function mock(page: Page, count: number, editRoom: string | null = "room-a
     deleted: false,
     failCommit: false,
     recurring: false,
+    substitution: false,
+    assignableScopes: [] as (string | null)[],
     startTime: "2026-11-20T10:00:00Z",
     previews: [] as Record<string, unknown>[],
     writes: [] as Record<string, unknown>[],
@@ -80,8 +82,14 @@ async function mock(page: Page, count: number, editRoom: string | null = "room-a
               ? []
               : [{ id: "room-a", name: "Sala A" }];
         if (state.deleted) json = [{ id: "room-c", name: "Sala C" }];
-      } else if (path === "/instructors/assignable") json = [];
-      else if (path.endsWith("/roster")) json = { items: [] };
+      } else if (path === "/instructors/assignable") {
+        const studio = url.searchParams.get("studio_id");
+        state.assignableScopes.push(studio);
+        json =
+          state.substitution && studio === "studio-a"
+            ? [{ id: "maria", name: "Maria", row_state: "awaiting" }]
+            : [];
+      } else if (path.endsWith("/roster")) json = { items: [] };
       else if (path === "/class-templates")
         json = [
           {
@@ -107,6 +115,15 @@ async function mock(page: Page, count: number, editRoom: string | null = "room-a
           template_title: "Hatha",
           template_id: "template",
           is_recurring: state.recurring,
+          ...(state.substitution
+            ? {
+                instructor_id: "eva",
+                instructor_name: "Eva",
+                series_instructor_id: "anna",
+                series_instructor_name: "Anna",
+                series_room_id: editRoom,
+              }
+            : {}),
           role: "owner",
           capacity: 12,
           recurrence_days: state.recurring ? ["MO", "WE"] : [],
@@ -263,6 +280,31 @@ test("desktop edit retains valid room, clearing blocks save, legacy edit prompts
   await page.goto("/account/partner/schedule/edit/occurrence?field=instructor");
   await expect(selector).toHaveText("Wybierz salę");
   await expect(page.getByRole("button", { name: "Zobacz podgląd zmian" })).toBeDisabled();
+});
+
+test("substitution uses scoped candidates and sends only the selected lead", async ({ page }) => {
+  const state = await mock(page, 1);
+  state.recurring = true;
+  state.substitution = true;
+  await page.goto("/account/partner/schedule/edit/occurrence?field=instructor");
+  const cookies = page.getByRole("button", { name: "Tylko niezbędne" });
+  if (await cookies.isVisible()) await cookies.click();
+  await page.getByRole("button", { name: /Tę i kolejne/ }).click();
+  await page.getByRole("button", { name: "Dalej" }).click();
+  await expect(page.getByRole("button", { name: /Anna/ })).toHaveAttribute("aria-pressed", "true");
+  const maria = page.getByRole("button", { name: /Maria Oczekuje na zaproszenie/ });
+  await maria.click();
+  await page.getByRole("button", { name: "Zobacz podgląd zmian" }).click();
+  await page.getByRole("button", { name: "Zapisz zmiany" }).click();
+  await expect(page.getByRole("heading", { name: "Zapisano zmiany" })).toBeVisible();
+  expect(state.assignableScopes).toEqual(["studio-a"]);
+  const expected = {
+    occurrence_id: "occurrence",
+    scope: "this_and_future",
+    instructor_id: "maria",
+  };
+  expect(state.previews).toEqual([expected]);
+  expect(state.writes).toEqual([expected]);
 });
 
 test("time input accepts exact minute precision and rejects partial or invalid text", () => {

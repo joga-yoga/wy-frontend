@@ -154,6 +154,11 @@ export function GrafikSessionCard({
         </p>
       )}
       {isPast && !isCancelled && <p className="mt-0.5 text-[13px] text-gray-400">Zakończone</p>}
+      {isCancelled && occ.cancellation_email_warning && (
+        <p className="mt-1 text-xs font-medium text-b2b-amber-text">
+          Brak potwierdzenia wysyłki e-maili
+        </p>
+      )}
 
       {/* Instructor/studio stays visible even while live — it used to be replaced
        * entirely by the "Trwa" line below, which hid who's teaching or which studio

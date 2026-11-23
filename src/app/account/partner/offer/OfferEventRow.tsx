@@ -2,18 +2,9 @@
 
 import { MoreVertical } from "lucide-react";
 import Link from "next/link";
+import { useRef } from "react";
 
 import { WyImage } from "@/components/custom/WyImage";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,20 +46,12 @@ export function OfferEventRow({
   onDelete,
   onHide,
   onDuplicate,
-  itemToDelete,
-  isDeleting,
-  onDeleteConfirm,
-  onDeleteCancel,
   organizerLabel,
 }: {
   event: DashboardItem;
-  onDelete: (e: DashboardItem) => void;
+  onDelete: (e: DashboardItem, trigger: HTMLButtonElement) => void;
   onHide: (e: DashboardItem) => void;
   onDuplicate: (e: DashboardItem) => void;
-  itemToDelete: DashboardItem | null;
-  isDeleting: boolean;
-  onDeleteConfirm: () => void;
-  onDeleteCancel: () => void;
   /** "jako: X" — only passed when the partner has 2+ organizing entities (spec-b2b §4). */
   organizerLabel?: string;
 }) {
@@ -77,6 +60,8 @@ export function OfferEventRow({
   const kind = EVENT_KIND[event.kind];
   const publicHref = publicLink(event);
   const coverId = event.image_ids?.[0] ?? event.image_id ?? null;
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  const confirmDeletion = useRef(false);
 
   return (
     <div>
@@ -149,6 +134,7 @@ export function OfferEventRow({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
+                ref={menuTrigger}
                 variant="ghost"
                 size="sm"
                 aria-label={`Więcej akcji: ${event.title}`}
@@ -161,7 +147,16 @@ export function OfferEventRow({
                 />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent
+              align="end"
+              onCloseAutoFocus={(closeEvent) => {
+                if (!confirmDeletion.current) return;
+                confirmDeletion.current = false;
+                if (!menuTrigger.current?.isConnected) return;
+                closeEvent.preventDefault();
+                onDelete(event, menuTrigger.current);
+              }}
+            >
               <DropdownMenuItem asChild className="cursor-pointer">
                 <Link href={editLink(event)}>Edytuj</Link>
               </DropdownMenuItem>
@@ -174,7 +169,9 @@ export function OfferEventRow({
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
-                onClick={() => onDelete(event)}
+                onSelect={() => {
+                  confirmDeletion.current = true;
+                }}
                 className="cursor-pointer text-b2b-red-solid focus:bg-b2b-red-bg focus:text-b2b-red-solid"
               >
                 Usuń
@@ -183,30 +180,6 @@ export function OfferEventRow({
           </DropdownMenu>
         </div>
       </div>
-
-      {itemToDelete?.id === event.id && (
-        <AlertDialog open onOpenChange={(open) => !open && onDeleteCancel()}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie &quot;
-                <strong>{event.title}</strong>&quot;.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={isDeleting}
-                onClick={onDeleteConfirm}
-                className="bg-b2b-red-solid hover:bg-b2b-red-solid/90"
-              >
-                {isDeleting ? "Usuwanie..." : "Tak, usuń"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
     </div>
   );
 }

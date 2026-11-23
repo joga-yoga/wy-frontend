@@ -1,6 +1,8 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { ArrowLeft, ChevronDown, Plus, Search } from "lucide-react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -35,9 +37,10 @@ import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { getCurrencySymbol } from "@/lib/currency";
 import { personInitials, personLabel, personSortKey } from "@/lib/personDisplay";
-import { osoby, plural } from "@/lib/polishPlural";
+import { plural } from "@/lib/polishPlural";
 import { cn } from "@/lib/utils";
 
+import { noticeQueueCopy } from "../../../../schedule/noticeQueueCopy";
 import type { SessionDetailResponse } from "../../../../schedule/types";
 import { ResolveSheet } from "../components/ResolveSheet";
 import { RosterRow, RosterRowUndoStrip } from "../components/RosterRow";
@@ -149,6 +152,10 @@ export default function FrontDeskRosterPage() {
   const { toast } = useToast();
 
   const [session, setSession] = useState<SessionDetailResponse | null>(null);
+  const [rejectedOccurrenceId, setRejectedOccurrenceId] = useState<string | null>(null);
+  const isCancelled = session?.status === "cancelled" || rejectedOccurrenceId === occurrenceId;
+  const emailStatus = session?.cancellation_email_status;
+  const waitingForEmail = isCancelled && (emailStatus?.pending ?? 0) > 0;
   const [roster, setRoster] = useState<RosterEntry[] | null>(null);
   const [busyBookingId, setBusyBookingId] = useState<string | null>(null);
   const [resolveEntry, setResolveEntry] = useState<RosterEntry | null>(null);
@@ -205,9 +212,8 @@ export default function FrontDeskRosterPage() {
           .join(" · ")
       : null,
   );
-  // Overflow menu (spec §7) — owner-only, and not on a cancelled session (view-only there).
   useSetPageHeaderAction(
-    session && session.role === "owner" && session.status !== "cancelled" ? (
+    session?.can_write_schedule && !isCancelled ? (
       <SessionOverflowMenu
         solo={session.organizer_kind === "solo"}
         occurrenceId={occurrenceId}
@@ -231,6 +237,29 @@ export default function FrontDeskRosterPage() {
       .then((r) => setSession(r.data))
       .catch(() => setSession(null));
   }, [fetchRoster, occurrenceId]);
+
+  useEffect(() => {
+    if (!waitingForEmail) return;
+    const controller = new AbortController();
+    let handle: ReturnType<typeof setTimeout>;
+    const refresh = async () => {
+      try {
+        const { data } = await axiosInstance.get<SessionDetailResponse>(
+          `/class-sessions/${occurrenceId}`,
+          { signal: controller.signal },
+        );
+        if (!controller.signal.aborted) setSession(data);
+      } catch {
+        // A transient read failure does not replace the last confirmed status.
+      }
+      if (!controller.signal.aborted) handle = setTimeout(refresh, 4000);
+    };
+    handle = setTimeout(refresh, 4000);
+    return () => {
+      controller.abort();
+      clearTimeout(handle);
+    };
+  }, [occurrenceId, waitingForEmail]);
 
   useEffect(() => {
     return () => {
@@ -289,11 +318,36 @@ export default function FrontDeskRosterPage() {
     setUndoState(null);
   }
 
+  function showCancelledSession(error: unknown): boolean {
+    const detail: unknown =
+      isAxiosError(error) && error.response?.status === 409 ? error.response.data?.detail : null;
+    if (
+      !detail ||
+      typeof detail !== "object" ||
+      !("code" in detail) ||
+      detail.code !== "session_cancelled"
+    ) {
+      return false;
+    }
+    setRejectedOccurrenceId(occurrenceId);
+    setResolveEntry(null);
+    clearUndo();
+    void axiosInstance
+      .get<SessionDetailResponse>(`/class-sessions/${occurrenceId}`)
+      .then(({ data }) => setSession(data))
+      .catch(() => {});
+    return true;
+  }
+
   async function resolveWith(action: string) {
     if (!resolveEntry) return;
     clearUndo();
-    await axiosInstance.post(`/bookings/${resolveEntry.booking_id}/${action}`);
-    fetchRoster();
+    try {
+      await axiosInstance.post(`/bookings/${resolveEntry.booking_id}/${action}`);
+      fetchRoster();
+    } catch (err: unknown) {
+      if (!showCancelledSession(err)) throw err;
+    }
   }
 
   async function quickConfirm(entry: RosterEntry) {
@@ -310,12 +364,12 @@ export default function FrontDeskRosterPage() {
       });
       undoTimerRef.current = setTimeout(() => setUndoState(null), 10_000);
     } catch (err: unknown) {
-      // No optimistic mutation happened above, so there's nothing to roll back — just surface
-      // the error. The desk must never believe money was collected when it wasn't.
-      toast({
-        description: extractErrorMessage(err, "Nie udało się potwierdzić."),
-        variant: "destructive",
-      });
+      if (!showCancelledSession(err)) {
+        toast({
+          description: extractErrorMessage(err, "Nie udało się potwierdzić."),
+          variant: "destructive",
+        });
+      }
     } finally {
       setBusyBookingId(null);
     }
@@ -328,6 +382,13 @@ export default function FrontDeskRosterPage() {
     try {
       await axiosInstance.post(`/bookings/${bookingId}/undo-confirm`);
       fetchRoster();
+    } catch (err: unknown) {
+      if (!showCancelledSession(err)) {
+        toast({
+          description: extractErrorMessage(err, "Nie udało się cofnąć potwierdzenia."),
+          variant: "destructive",
+        });
+      }
     } finally {
       setBusyBookingId(null);
       clearUndo();
@@ -671,15 +732,46 @@ export default function FrontDeskRosterPage() {
   // Cancelled sessions render read-only (spec §3): facts header (via the top bar) plus this
   // banner, no counters, no roster actions, no overflow beyond viewing. Applies regardless of
   // role — the same message is correct whether the caller owns the studio or just teaches here.
-  if (session?.status === "cancelled") {
+  if (isCancelled) {
     return (
       <div className="mx-auto max-w-lg px-4 pb-8 pt-3">
         <div className="rounded-b2b border border-b2b-red-border bg-b2b-red-bg px-4 py-3">
           <p className="text-sm font-semibold text-b2b-red-text">Sesja odwołana</p>
-          {session.notified_count > 0 && (
+          {session && (
             <p className="mt-0.5 text-xs text-b2b-red-text/80">
-              Powiadomiliśmy {osoby(session.notified_count)}.
+              {noticeQueueCopy(session.cancellation_expected_recipients, session.notified_count)}
             </p>
+          )}
+          {emailStatus && emailStatus.expected !== 0 && (
+            <div role="status" className="mt-2 space-y-1 text-sm">
+              {emailStatus.expected === null ? (
+                <p>Brak danych o wyniku wysyłki.</p>
+              ) : (
+                <>
+                  <p>
+                    Operator pocztowy przyjął {emailStatus.accepted} z {emailStatus.expected}{" "}
+                    e-maili.
+                  </p>
+                  {emailStatus.pending > 0 && (
+                    <p>Oczekuje na wysyłkę lub ponowienie: {emailStatus.pending}.</p>
+                  )}
+                  {emailStatus.unconfirmed > 0 && (
+                    <p className="font-medium text-b2b-red-text">
+                      Brak potwierdzenia wysyłki: {emailStatus.unconfirmed}. Skontaktuj się z
+                      uczestnikami innym kanałem.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          {session?.can_view_finance && (
+            <Link
+              href="/account/partner/reconciliation#payment-review"
+              className="mt-2 inline-flex text-sm font-semibold underline"
+            >
+              Sprawdź rozliczenia
+            </Link>
           )}
         </div>
       </div>

@@ -47,3 +47,7 @@ export function warsawCalendarDate(now: Date): string {
     day: "2-digit",
   }).format(now);
 }
+
+export function warsawCalendarDay(now = new Date()): Date {
+  return new Date(`${warsawCalendarDate(now)}T00:00:00`);
+}

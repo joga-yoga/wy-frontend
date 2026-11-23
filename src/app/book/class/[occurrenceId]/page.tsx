@@ -677,20 +677,31 @@ function BookClassContent() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [booking, setBooking] = useState<BookingOut | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const canLoadOptions = detail?.id === occurrenceId && detail.status !== "cancelled";
+  const isCancelled = detail?.id === occurrenceId && detail.status === "cancelled";
 
   useEffect(() => {
-    if (authLoading || user) return;
+    if (authLoading || user || !canLoadOptions) return;
     router.replace(`/account/login?next=${encodeURIComponent(pathname)}`);
-  }, [authLoading, user, router, pathname]);
+  }, [authLoading, user, router, pathname, canLoadOptions]);
 
   useEffect(() => {
     if (!occurrenceId) return;
+    const controller = new AbortController();
     setDetailLoading(true);
+    setDetailError(null);
     axiosInstance
-      .get<OccurrenceDetail>(`/public/occurrences/${occurrenceId}/detail`)
+      .get<OccurrenceDetail>(`/public/occurrences/${occurrenceId}/detail`, {
+        signal: controller.signal,
+      })
       .then((r) => setDetail(r.data))
-      .catch(() => setDetailError("Nie udało się wczytać szczegółów zajęć."))
-      .finally(() => setDetailLoading(false));
+      .catch(() => {
+        if (!controller.signal.aborted) setDetailError("Nie udało się wczytać szczegółów zajęć.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDetailLoading(false);
+      });
+    return () => controller.abort();
   }, [occurrenceId]);
 
   useEffect(() => {
@@ -703,7 +714,7 @@ function BookClassContent() {
     setDrawer(null);
     setSubmitError(null);
     setOptionsError(null);
-    if (!user || !occurrenceId) return;
+    if (!user || !occurrenceId || !canLoadOptions) return;
     setOptionsLoading(true);
     axiosInstance
       .get<BookingOptionsResponse>(`/occurrences/${occurrenceId}/booking-options`)
@@ -723,7 +734,7 @@ function BookClassContent() {
     return () => {
       active = false;
     };
-  }, [user, occurrenceId]);
+  }, [user, occurrenceId, canLoadOptions]);
 
   /**
    * Two calls for an online booking, one for cash.
@@ -771,6 +782,18 @@ function BookClassContent() {
       } else setSubmitError(extractErrorDetail(err, "Nie udało się zarezerwować zajęć."));
       setIsSubmitting(false);
     }
+  }
+
+  if (isCancelled && detail) {
+    return <BlockedState title="Odwołane" body={detail.template_title} />;
+  }
+
+  if (!detailLoading && detailError) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-10 text-center text-sm text-destructive">
+        {detailError}
+      </div>
+    );
   }
 
   if (authLoading || !user) {

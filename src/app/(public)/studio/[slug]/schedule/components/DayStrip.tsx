@@ -2,7 +2,8 @@
 
 import { forwardRef } from "react";
 
-import { toDateStr } from "./dayStripUtils";
+import { warsawCalendarDate } from "@/lib/warsawWallClock";
+
 import { LabelRow } from "./LabelRow";
 import { type DayStripHandle, NumbersTrack } from "./NumbersTrack";
 
@@ -30,7 +31,7 @@ export const DayStrip = forwardRef<DayStripHandle, DayStripProps>(function DaySt
     <div className="flex flex-col gap-0">
       <LabelRow
         weekStart={weekStart}
-        todayStr={toDateStr(new Date())}
+        todayStr={warsawCalendarDate(new Date())}
         sessionCounts={sessionCounts}
         isLoading={isLoading}
       />

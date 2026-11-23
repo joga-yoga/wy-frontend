@@ -26,6 +26,7 @@ export function SportCardList({
   currency = "PLN",
 }: SportCardListProps) {
   const [selectedCard, setSelectedCard] = useState<StudioSportCardAcceptance | null>(null);
+  const [isCardOpen, setIsCardOpen] = useState(false);
 
   if (acceptsSportCards == null) return null;
 
@@ -57,7 +58,10 @@ export function SportCardList({
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setSelectedCard(item)}
+                onClick={() => {
+                  setSelectedCard(item);
+                  setIsCardOpen(true);
+                }}
                 className={`flex w-full items-center gap-3 py-3 text-left${i > 0 ? " border-t border-gray-100" : ""}`}
               >
                 <SportCardLogo photo={photo} alt={sportCardName(item)} width={56} height={40} />
@@ -80,11 +84,7 @@ export function SportCardList({
         </>
       )}
 
-      <Drawer
-        open={selectedCard != null}
-        onOpenChange={(o) => !o && setSelectedCard(null)}
-        showSwipeHandle
-      >
+      <Drawer open={isCardOpen} onOpenChange={setIsCardOpen} showSwipeHandle>
         <DrawerContent>
           <div className="flex items-center justify-end px-4 pb-2 pt-2">
             <DrawerTitle className="sr-only">

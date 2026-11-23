@@ -101,10 +101,31 @@ export interface PaidWithoutSeatItem {
 /** Something needing a person: an amount mismatch (§6) or a failed refund (§8). */
 export interface ReviewItem {
   id: string;
-  source: "amount_mismatch" | "failed_refund";
+  source:
+    | "amount_mismatch"
+    | "failed_refund"
+    | "paid_after_session_cancellation"
+    | "onsite_reimbursement"
+    | "unknown_refund"
+    | "refund_verification"
+    | "expired_restored_pass";
   detail: string;
   created_at: string;
-  order_id: string;
+  order_id: string | null;
+  booking_id?: string | null;
+  transaction_id?: string | null;
+  payment_id?: string | null;
+  occurrence_start_time?: string | null;
+  class_title?: string | null;
+  organizer_cancelled?: boolean;
+  customer_path?: string | null;
+  actions?: (
+    | "verify_refund"
+    | "record_reimbursement"
+    | "refund_online"
+    | "retry_refund"
+    | "acknowledge"
+  )[];
   user_email?: string | null;
   user_name?: string | null;
   amount?: number | null;

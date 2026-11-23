@@ -5,6 +5,7 @@ import { Check, Clock } from "lucide-react";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { SessionCardBase } from "@/components/common/SessionCardBase";
 import { COLOR_BORDER_MAP, DEFAULT_BORDER } from "@/lib/classColors";
+import { isSubstitutionVisible } from "@/lib/scheduleSubstitution";
 import { cn } from "@/lib/utils";
 import { isPastWarsawWallClock } from "@/lib/warsawWallClock";
 
@@ -32,7 +33,7 @@ export function formatSpotsRemainingLabel(n: number): string {
   return `Zostało ${n} miejsc`;
 }
 
-function isChangeAnnotationVisible(occ: PublicOccurrence, now: Date): boolean {
+function isChangeAnnotationVisible(occ: PublicOccurrence): boolean {
   if (occ.viewer_has_booking) return true;
   if (!occ.modified_at) return false;
   const startMs = new Date(occ.start_time).getTime();
@@ -73,9 +74,8 @@ export function SessionCard({
   const isNearlyFull = state === "nearly-full";
   const isDimmed = isCancelled || isPast || isFull;
 
-  const canOpenDetails = isPast ? false : isCancelled ? occ.viewer_has_booking : true;
-  const isInteractive = canOpenDetails && Boolean(onClick);
-  const showChevron = state === "default" || state === "nearly-full";
+  const isInteractive = !isPast && Boolean(onClick);
+  const showChevron = state === "default" || state === "nearly-full" || isCancelled;
 
   // ⚠ Not the same set as `isDimmed`, and the difference is load-bearing: a **full** session
   // is dimmed but keeps its colour, while past and cancelled ones lose it. Passed to
@@ -83,9 +83,9 @@ export function SessionCard({
   const showColorBorder = state === "default" || state === "nearly-full" || state === "full";
 
   const showBookedFooter = occ.viewer_has_booking && !isCancelled;
-  const changeVisible = !isCancelled && !isPast && isChangeAnnotationVisible(occ, now);
+  const changeVisible = !isCancelled && !isPast && isChangeAnnotationVisible(occ);
   const showTimeChange = changeVisible && !!occ.previous_start_time;
-  const showInstructorChange = changeVisible && !!occ.previous_instructor_name;
+  const showInstructorChange = isSubstitutionVisible(occ, now);
 
   return (
     <SessionCardBase
@@ -143,9 +143,13 @@ export function SessionCard({
           </div>
         )}
 
-      {!isCancelled &&
-        (context === "studio" || occ.organizer_kind === "solo") &&
-        occ.instructor_name && (
+      {!isCancelled && occ.instructor_name && (
+        <>
+          {showInstructorChange && occ.previous_instructor_name && (
+            <p className="mt-1 truncate text-xs text-gray-400 line-through">
+              {occ.previous_instructor_name}
+            </p>
+          )}
           <div className="mt-1 flex items-center gap-1.5">
             <HashedAvatar
               seed={occ.instructor_id ?? occ.instructor_name}
@@ -155,7 +159,8 @@ export function SessionCard({
             />
             <span className="truncate text-sm text-gray-500">{occ.instructor_name}</span>
           </div>
-        )}
+        </>
+      )}
 
       {occ.organizer_kind === "solo" && (
         <p className="mt-1 text-xs font-medium text-brand-green-700">Własne zajęcia</p>
@@ -166,9 +171,9 @@ export function SessionCard({
         </p>
       )}
       {showInstructorChange && (
-        <p className="mt-0.5 truncate text-[11px] text-gray-400">
-          Zastępstwo za <span className="line-through">{occ.previous_instructor_name}</span>
-        </p>
+        <span className="mt-1 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+          Zastępstwo
+        </span>
       )}
 
       {isCancelled ||

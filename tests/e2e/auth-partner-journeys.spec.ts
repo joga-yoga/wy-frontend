@@ -1,5 +1,8 @@
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 
+import type { InboxItem } from "../../src/components/inbox/types";
+import { expectIntactDismissal } from "../popup-dismissal";
+
 const email = "owner@example.com";
 const token = `e30.${Buffer.from(JSON.stringify({ sub: "fixture-user", email })).toString("base64url")}.fixture`;
 const destination = "/account/partner/studio/create?draft=public-token&setup=private-session";
@@ -631,6 +634,119 @@ for (const width of [390, 1280]) {
     expect(state.creates).toBe(0);
   });
 }
+
+test("accepting a studio claim refreshes the open Oferta and Grafik tab", async ({
+  page,
+  context,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await fixture(context, { partner: true });
+  await session(page);
+  const studio = { id: "claimed-studio", name: "Studio Poranna Joga", image_id: null };
+  const invitation: InboxItem = {
+    id: "studio-claim",
+    kind: "claim",
+    subtitle: "studio_claim",
+    title: studio.name,
+    resource_kind: "studio",
+    resource_id: studio.id,
+    target_kind: "studio",
+    target_id: studio.id,
+    target_name: studio.name,
+    actor_name: null,
+    commits_business_mode: true,
+    created_at: "2026-11-07T12:00:00Z",
+    handled_at: null,
+    state: "pending",
+    actionable: true,
+  };
+  let accepted = false;
+  let acceptRequests = 0;
+  await context.route("**/partner/capabilities", (route) =>
+    route.fulfill({
+      json: {
+        business_mode: accepted ? "studio" : null,
+        managed_studios: accepted ? [studio] : [],
+        teaching_studios: [],
+        has_events: false,
+        has_instructor_profile: false,
+        landing_tab: accepted ? "grafik" : "rezerwacje",
+      },
+    }),
+  );
+  await context.route("**/partner/inbox/unread-count", (route) =>
+    route.fulfill({ json: { unread_count: accepted ? 0 : 1 } }),
+  );
+  await context.route("**/partner/inbox/invitations", (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          accepted
+            ? {
+                ...invitation,
+                state: "accepted",
+                actionable: false,
+                handled_at: invitation.created_at,
+              }
+            : invitation,
+        ],
+        unread_count: accepted ? 0 : 1,
+      },
+    }),
+  );
+  await context.route(`**/users/me/invitations/${invitation.id}/accept`, (route) => {
+    expect(route.request().method()).toBe("POST");
+    acceptRequests++;
+    accepted = true;
+    return route.fulfill({
+      json: { detail: "Invitation accepted. Studio linked to your account." },
+    });
+  });
+  await context.route(`**/studios/${studio.id}`, (route) => route.fulfill({ json: studio }));
+
+  await page.goto("/account/partner/offer");
+  const createStudio = page.getByRole("button", { name: /Utwórz studio/ });
+  const soloInstructor = page.getByRole("button", { name: /Solo Instruktor/ });
+  const grafik = page.getByRole("link", { name: "Grafik", exact: true });
+  await expect(createStudio).toBeVisible();
+  await expect(soloInstructor).toBeVisible();
+  await expect(grafik).toHaveCount(0);
+  const offerContent = page.getByText("Twoja oferta jest pusta", { exact: true });
+  await expect(offerContent).toBeVisible();
+  const originalContent = await offerContent.elementHandle();
+
+  await page.getByRole("button", { name: "Powiadomienia (1)", exact: true }).click();
+  const inbox = page.getByRole("dialog", { name: "Powiadomienia", exact: true });
+  const invitationRow = inbox.getByRole("button", { name: `Przejmij profil: ${studio.name}` });
+  await invitationRow.click();
+  const detail = page.locator('[data-slot="drawer-popup"]').filter({
+    has: page.getByRole("button", { name: "Akceptuj", exact: true }),
+  });
+  await expectIntactDismissal(detail, () => page.keyboard.press("Escape"));
+  await expect(inbox).toBeVisible();
+  await expect(invitationRow).toBeFocused();
+  expect(acceptRequests).toBe(0);
+  await invitationRow.click();
+  await page.getByRole("button", { name: "Akceptuj", exact: true }).click();
+  await expect(invitationRow.getByText("Zaakceptowano", { exact: true })).toBeVisible();
+  await expect(page.getByText("Zaakceptowano.", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(inbox).toBeHidden();
+  await expect(page.getByRole("button", { name: "Powiadomienia", exact: true })).toBeVisible();
+
+  const editStudio = page.getByRole("link", { name: `Edytuj stronę studia: ${studio.name}` });
+  await expect(editStudio).toBeVisible();
+  await expect(editStudio).toHaveAttribute(
+    "href",
+    `/account/partner/studio/${studio.id}/edit?from=offer`,
+  );
+  await expect(createStudio).toHaveCount(0);
+  await expect(soloInstructor).toHaveCount(0);
+  await expect(grafik).toBeVisible();
+  await expect(page).toHaveURL(/\/account\/partner\/offer$/);
+  expect(await originalContent!.evaluate((node) => node.isConnected)).toBe(true);
+  expect(acceptRequests).toBe(1);
+});
 
 test("same-account refresh keeps partner content mounted", async ({ page, context }) => {
   const state = await fixture(context, { partner: true });

@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import type { TemplateStudioPricing } from "../../src/app/account/partner/class-templates/types";
+import { expectIntactDismissal } from "../popup-dismissal";
 
 async function setup(page: Page, cash = true, multiple = false) {
   const state = {
@@ -242,6 +243,7 @@ async function setup(page: Page, cash = true, multiple = false) {
 
 for (const width of [1280, 390]) {
   test(`template modal save cancel reset and inheritance at ${width}px`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize({ width, height: 900 });
     const state = await setup(page);
     await page.goto("/account/partner/class-templates/template/edit");
@@ -254,13 +256,17 @@ for (const width of [1280, 390]) {
       animations: "disabled",
     });
     await modal.getByLabel("Pierwsze zajęcia próbne gratis").click();
-    await modal.getByRole("button", { name: "Anuluj", exact: true }).click();
+    await expectIntactDismissal(modal, () =>
+      modal.getByRole("button", { name: "Anuluj", exact: true }).click(),
+    );
     expect(state.saved).toBe(0);
     await page.getByRole("button", { name: "Dostosuj cenę" }).click();
     await expect(modal.getByLabel("Pierwsze zajęcia próbne gratis")).not.toBeChecked();
     await modal.getByLabel("Pierwsze zajęcia próbne gratis").click();
     await modal.getByLabel("Nazwa", { exact: true }).fill("Poranna grupa");
-    await modal.getByRole("button", { name: "Zastosuj" }).click();
+    await expectIntactDismissal(modal, () =>
+      modal.getByRole("button", { name: "Zastosuj" }).click(),
+    );
     expect(state.saved).toBe(0);
     await page.getByRole("button", { name: "Zapisz zmiany", exact: true }).click();
     await expect.poll(() => state.saved).toBe(1);

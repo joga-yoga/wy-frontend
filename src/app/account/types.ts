@@ -8,6 +8,7 @@ export interface MyBookingItem {
   studio_name: string | null;
   start_time: string | null;
   status: string;
+  cancelled_by_organizer?: boolean | null;
   funding: string | null;
   is_past: boolean;
   /** Class palette colour, so the reservation card draws the same border and bar the

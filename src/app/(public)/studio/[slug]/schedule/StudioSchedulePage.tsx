@@ -8,12 +8,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { WyImage } from "@/components/custom/WyImage";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { cn } from "@/lib/utils";
+import { warsawCalendarDate, warsawCalendarDay } from "@/lib/warsawWallClock";
 import type { StudioPublic } from "@/types/studio";
 
 import type { DayStripHandle } from "./components/DayStrip";
 import { DayStrip } from "./components/DayStrip";
 import { SessionCard } from "./components/SessionCard";
-import { SessionDetailDrawer } from "./SessionDetailDrawer";
+import { LinkedSessionDetailDrawer, openSessionDetails } from "./LinkedSessionDetailDrawer";
 import type { PublicScheduleDaySummary, PublicScheduleWeekResponse } from "./types";
 
 function getMonday(d: Date): Date {
@@ -30,7 +31,7 @@ function formatDate(d: Date): string {
 }
 
 function todayDayIndex(): number {
-  const dow = new Date().getDay();
+  const dow = warsawCalendarDay().getDay();
   return dow === 0 ? 6 : dow - 1;
 }
 
@@ -103,10 +104,9 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
+  const [weekStart, setWeekStart] = useState(() => getMonday(warsawCalendarDay()));
   const [days, setDays] = useState<PublicScheduleDaySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(() => todayDayIndex());
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -131,9 +131,8 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
     }
     hasHandledDeepLink.current = false;
     pendingScrollIndex.current = null;
-    setWeekStart(getMonday(new Date()));
+    setWeekStart(getMonday(warsawCalendarDay()));
     setSelectedIndex(todayDayIndex());
-    setSelectedOccurrenceId(null);
   }, [pathname]);
 
   const fetchWeek = useCallback(() => {
@@ -292,7 +291,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
   }
 
   function goToToday() {
-    const currentMonday = getMonday(new Date());
+    const currentMonday = getMonday(warsawCalendarDay());
     const isCurrentWeek = formatDate(weekStart) === formatDate(currentMonday);
     const idx = todayDayIndex();
     if (isCurrentWeek) {
@@ -311,7 +310,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
   }
 
   const sessionCounts = days.map((d) => d.session_count);
-  const todayStr = formatDate(new Date());
+  const todayStr = warsawCalendarDate(new Date());
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -359,7 +358,7 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
                     <SessionCard
                       key={occ.id}
                       occ={occ}
-                      onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                      onClick={(clicked) => openSessionDetails(clicked.id)}
                     />
                   ))
                 )}
@@ -396,9 +395,8 @@ export function StudioSchedulePage({ studio }: { studio: StudioPublic }) {
         </div>
       </div>
 
-      <SessionDetailDrawer
-        occurrenceId={selectedOccurrenceId}
-        onClose={() => setSelectedOccurrenceId(null)}
+      <LinkedSessionDetailDrawer
+        surface={{ studio_id: studio.id }}
         onBookingCancelled={fetchWeek}
       />
     </div>

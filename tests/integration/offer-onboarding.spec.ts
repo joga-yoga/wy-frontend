@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { expectIntactDismissal } from "../popup-dismissal";
+
 // All browser API traffic is fulfilled locally. No shared accounts or provider jobs.
 async function offerSession(page: Page) {
   const state = {
@@ -285,6 +287,31 @@ test("solo identity belongs to the instructor; self profile alone does not compl
   await expect(
     page.getByRole("link", { name: "Edytuj swój profil: Alicja Instruktorka" }),
   ).toBeVisible();
+});
+
+test("offer deletion keeps its confirmation intact when cancelled or confirmed", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const state = await offerSession(page);
+  state.offers = true;
+  await page.goto("/account/partner/offer");
+  const cookies = page.getByRole("button", { name: "Tylko niezbędne", exact: true });
+  if (await cookies.isVisible()) await cookies.click();
+  const menu = page.getByRole("button", { name: /^Więcej akcji: workshops aktywny/ });
+  const popup = page.getByRole("alertdialog");
+  for (const action of ["Anuluj", "Tak, usuń"]) {
+    await menu.click();
+    await page.getByRole("menuitem", { name: "Usuń", exact: true }).click();
+    await expect(popup).toContainText("workshops aktywny");
+    await expectIntactDismissal(popup, () => popup.getByRole("button", { name: action }).click());
+    if (action === "Anuluj") {
+      await expect(menu).toBeFocused();
+      expect(state.writes.filter((path) => path === "/workshops/workshops-live")).toEqual([]);
+    }
+  }
+  await expect(menu).toHaveCount(0);
+  expect(state.writes.filter((path) => path === "/workshops/workshops-live")).toHaveLength(1);
 });
 
 for (const width of [320, 390, 1280]) {

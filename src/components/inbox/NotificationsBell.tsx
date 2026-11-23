@@ -1,12 +1,13 @@
 "use client";
 
 import { Bell, Inbox } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoChevronForward } from "react-icons/io5";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { usePartnerCapabilities } from "@/context/PartnerCapabilitiesContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
 
@@ -34,10 +35,13 @@ const CHIP_TONE: Record<InboxState, "green" | "amber" | "gray"> = {
  */
 export function NotificationsBell() {
   const { toast } = useToast();
+  const { refetch: refetchCapabilities } = usePartnerCapabilities();
   const [isOpen, setIsOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState<InboxItem[] | null>(null);
   const [selected, setSelected] = useState<InboxItem | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const activeInvitation = useRef<InboxItem | null>(null);
   const [isActing, setIsActing] = useState(false);
   // Absent until we know: a bell that flashes 0 before its first response is noise.
   const [hasPartner, setHasPartner] = useState<boolean | null>(null);
@@ -73,26 +77,33 @@ export function NotificationsBell() {
     if (isOpen) void loadItems();
   }, [isOpen, loadItems]);
 
+  function closeDetail() {
+    activeInvitation.current = null;
+    setIsDetailOpen(false);
+  }
+
   async function respond(item: InboxItem, action: "accept" | "reject") {
+    if (activeInvitation.current !== item || isActing) return;
     const urls = actionUrls(item);
     if (!urls) return;
     setIsActing(true);
     try {
       await axiosInstance.post(action === "accept" ? urls.accept : urls.reject);
-      toast({
-        description: action === "accept" ? "Zaakceptowano." : "Odrzucono.",
-      });
-      setSelected(null);
-      // Refetch rather than patching locally: accepting one row can change others (a
-      // claim materialises grants), and a hand-maintained copy would drift from the
-      // server's own view of the same facts.
-      await loadItems();
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({ description: detail || "Nie udało się wykonać akcji.", variant: "destructive" });
-    } finally {
       setIsActing(false);
+      return;
     }
+
+    toast({ description: action === "accept" ? "Zaakceptowano." : "Odrzucono." });
+    if (activeInvitation.current === item) closeDetail();
+    if (action === "accept" && item.kind === "claim" && item.subtitle === "studio_claim") {
+      refetchCapabilities();
+    }
+    // The server may add a grant announcement alongside the handled invitation.
+    await loadItems();
+    setIsActing(false);
   }
 
   if (hasPartner === false) return null;
@@ -132,7 +143,11 @@ export function NotificationsBell() {
                   <InboxRow
                     key={`${item.kind}-${item.id}-${item.target_id ?? ""}`}
                     item={item}
-                    onOpen={() => setSelected(item)}
+                    onOpen={() => {
+                      activeInvitation.current = item;
+                      setSelected(item);
+                      setIsDetailOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -143,8 +158,8 @@ export function NotificationsBell() {
 
       <InboxDetailDrawer
         item={selected}
-        open={selected !== null}
-        onOpenChange={(next) => !next && setSelected(null)}
+        open={isDetailOpen}
+        onOpenChange={(next) => !next && closeDetail()}
         onRespond={respond}
         isActing={isActing}
       />

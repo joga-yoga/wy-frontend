@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { expectIntactDismissal } from "../popup-dismissal";
+
 /** Browser-scoped API fixtures: no accounts, studios or other shared data are written. */
 async function directionSession(page: Page, hasInstructorProfile = true) {
   const state = {
@@ -153,6 +155,37 @@ test("cards match the responsive layout, cancel restores focus and only confirma
     page.getByRole("heading", { name: "Uzupełnij swój profil instruktora" }),
   ).toBeVisible();
   expect(state.mode).toBeNull();
+  expect(state.writes).toEqual([]);
+});
+
+test("direction dismissal preserves the warning while returning or continuing", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const state = await directionSession(page, false);
+  await page.goto("/account/partner/offer");
+  const cookies = page.getByRole("button", { name: "Tylko niezbędne", exact: true });
+  if (await cookies.isVisible()) await cookies.click();
+  const solo = page.getByRole("button", { name: /^Solo Instruktor/ });
+  const popup = page.locator('[data-slot="dialog-content"]');
+  await solo.click();
+  await expect(popup).toContainText("Własny grafik zajęć");
+  await expectIntactDismissal(
+    popup,
+    () => popup.getByRole("button", { name: "Wróć" }).click(),
+    "fade-in-place",
+  );
+  await expect(solo).toBeFocused();
+  await solo.click();
+  await expectIntactDismissal(
+    popup,
+    () => popup.getByRole("button", { name: "Potwierdź i kontynuuj" }).click(),
+    "fade-in-place",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Uzupełnij swój profil instruktora" }),
+  ).toBeVisible();
   expect(state.writes).toEqual([]);
 });
 

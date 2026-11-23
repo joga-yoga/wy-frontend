@@ -113,12 +113,12 @@ export function InstructorSection({
   return (
     <section className="flex flex-col gap-3 px-4 py-4">
       <p className="text-[18px] font-semibold text-[#222222]">Instruktor</p>
-      {showInstructorChange && detail.previous_instructor_name && (
+      {href ? <DetailPageLink href={href}>{row}</DetailPageLink> : row}
+      {showInstructorChange && (
         <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-800">
-          <span>Zastępstwo na tych zajęciach</span>
+          <span>Zastępstwo</span>
         </div>
       )}
-      {href ? <DetailPageLink href={href}>{row}</DetailPageLink> : row}
       {languageLines && (
         <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-sm leading-relaxed text-gray-600">
           <IoLanguage className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gray-500" />

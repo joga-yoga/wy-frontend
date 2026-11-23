@@ -105,10 +105,10 @@ export function InstructorProfileContent({
         )}
         <ContentSeparator />
 
-        {hasSchedule && (
+        {instructor.slug && schedulePreview !== undefined && (
           <>
-            <InstructorScheduleSneak instructorSlug={instructor.slug!} preview={schedulePreview} />
-            <ContentSeparator />
+            <InstructorScheduleSneak instructorSlug={instructor.slug} preview={schedulePreview} />
+            {hasSchedule && <ContentSeparator />}
           </>
         )}
 

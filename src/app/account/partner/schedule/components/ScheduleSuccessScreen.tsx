@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,13 @@ export function ScheduleSuccessScreen({
   body,
   summary,
   summaryNote = "Grafik odzwierciedla zmiany od razu.",
+  detailsHref,
 }: {
   headline: string;
   body: string;
   summary: string;
   summaryNote?: string;
+  detailsHref?: string;
 }) {
   const router = useRouter();
 
@@ -38,6 +41,11 @@ export function ScheduleSuccessScreen({
         <p className="text-sm font-semibold text-gray-900">{summary}</p>
         <p className="mt-0.5 text-xs text-gray-500">{summaryNote}</p>
       </div>
+      {detailsHref && (
+        <Button asChild size="action" variant="outline" className="w-full">
+          <Link href={detailsHref}>Sprawdź wysyłkę e-maili</Link>
+        </Button>
+      )}
       {/* Black, not green: this is a way out, not another commitment. */}
       <Button
         size="action"
