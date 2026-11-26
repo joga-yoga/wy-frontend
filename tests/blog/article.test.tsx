@@ -124,6 +124,10 @@ async function main() {
   assert.equal(mirrorBlogRoute("/"), "/blog");
   assert.equal(mirrorBlogRoute("/artykuly/unknown.with-dot"), "/blog/unknown.with-dot");
   assert.equal(mirrorBlogRoute("/artykuly/lokalna-praktyka"), "/blog/lokalna-praktyka");
+  assert.equal(
+    mirrorBlogRoute("/artykuly/sankalpa-praktyka-jogi-i-zycia"),
+    "/blog/san-kalpa-praktyka-jogi-i-zycia",
+  );
   assert.equal(mirrorBlogRoute("/lokalna-praktyka"), 404);
   assert.equal(mirrorBlogRoute("/blog/lokalna-praktyka"), 404);
   assert.equal(mirrorBlogRoute("/artykuly"), 404);
@@ -248,7 +252,15 @@ async function main() {
   assert.equal(normalized.headers.get("location"), "http://localhost/blog?utm_source=test");
   const normalizedMirror = await proxy(mirrorRequest("/?page=02"));
   assert.equal(normalizedMirror.status, 308);
-  assert.equal(normalizedMirror.headers.get("location"), "https://joga.yoga/blog?page=02");
+  assert.equal(normalizedMirror.headers.get("location"), "https://joga.yoga/blog?page=2");
+  const canonicalAlias = await proxy(
+    new NextRequest("http://localhost/blog/historia-jogi-i-jej-filozofia?utm_source=legacy"),
+  );
+  assert.equal(canonicalAlias.status, 308);
+  assert.equal(
+    canonicalAlias.headers.get("location"),
+    "https://joga.yoga/blog/historia-i-filozofia-jogi-w-indiach?utm_source=legacy",
+  );
   assert.deepEqual(indexProxyRequests, []);
   assert.equal(
     (await proxy(new NextRequest("http://localhost/blog/lokalna-praktyka"))).status,
