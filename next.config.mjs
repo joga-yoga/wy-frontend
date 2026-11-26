@@ -62,7 +62,8 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: "/:path*",
+        // The exact blog listing normalizes pagination in proxy before redirecting.
+        source: "/:path((?!blog/?$).*)",
         has: [{ type: "host", value: "(?:www\\.)?(?:wyjazdy|wydarzenia)\\.yoga" }],
         destination: "https://joga.yoga/:path*",
         permanent: true,

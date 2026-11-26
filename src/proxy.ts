@@ -1,8 +1,13 @@
 import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { isBlogMirrorHost, mirrorBlogRoute } from "@/app/(public)/blog/mirror";
-import { parseBlogPage } from "@/app/(public)/blog/pagination";
+import {
+  blogArticleAliasTarget,
+  isBlogMirrorHost,
+  isLegacyEventsHost,
+  mirrorBlogRoute,
+} from "@/app/(public)/blog/mirror";
+import { normalizeBlogPage } from "@/app/(public)/blog/pagination";
 import { blogProblemResponse } from "@/app/(public)/blog/problem-response";
 import { blogRouteStatus } from "@/app/(public)/blog/routing";
 import { cachedDirectoryList } from "@/lib/directoryListCache";
@@ -47,37 +52,44 @@ const lists = {
   ),
 };
 
-// Normalize pagination using the URL only. No index API probes run in the proxy.
-function blogIndexResponse(request: NextRequest): NextResponse | null {
-  const values = request.nextUrl.searchParams.getAll("page");
-  const page = parseBlogPage(values.length > 1 ? values : values[0]);
-  if (page === null) return blogProblemResponse(404);
-  if (values.length && (page === 1 || values[0] !== String(page))) {
-    const url = request.nextUrl.clone();
-    if (page === 1) url.searchParams.delete("page");
-    else url.searchParams.set("page", String(page));
-    return NextResponse.redirect(url, 308);
+function redirectToCanonicalBlog(
+  request: NextRequest,
+  pathname: string,
+  blogHome: "/" | "/blog" = "/blog",
+): NextResponse {
+  const target = new URL(pathname, "https://joga.yoga");
+  target.search = request.nextUrl.search;
+  if (pathname === "/blog" && normalizeBlogPage(target.searchParams) === "invalid") {
+    return blogProblemResponse(404, blogHome);
   }
-  return null;
+  return NextResponse.redirect(target, 308);
 }
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (isBlogMirrorHost(request.headers.get("host"))) {
-    const pathname = mirrorBlogRoute(request.nextUrl.pathname);
-    if (pathname === 404) return blogProblemResponse(404, "/");
-    if (!pathname) return NextResponse.next();
-    const target = new URL(pathname, "https://joga.yoga");
-    target.search = request.nextUrl.search;
-    return NextResponse.redirect(target, 308);
+  const { pathname } = request.nextUrl;
+  const host = request.headers.get("host");
+  if (isBlogMirrorHost(host)) {
+    const target = mirrorBlogRoute(pathname);
+    if (target === 404) return blogProblemResponse(404, "/");
+    if (!target) return NextResponse.next();
+    return redirectToCanonicalBlog(request, target, "/");
   }
-  if (request.nextUrl.pathname === "/blog") {
-    const response = blogIndexResponse(request);
-    if (response) return response;
+  if (pathname.toLowerCase() === "/blog" && isLegacyEventsHost(host)) {
+    return redirectToCanonicalBlog(request, "/blog");
   }
-  const blogStatus = await blogRouteStatus(request.nextUrl.pathname);
+  if (pathname === "/blog") {
+    const url = request.nextUrl.clone();
+    const result = normalizeBlogPage(url.searchParams);
+    if (result === "invalid") return blogProblemResponse(404);
+    if (result === "normalized") return NextResponse.redirect(url, 308);
+  }
+  const alias = blogArticleAliasTarget(pathname);
+  if (alias) return redirectToCanonicalBlog(request, alias);
+
+  const blogStatus = await blogRouteStatus(pathname);
   if (blogStatus) return blogProblemResponse(blogStatus);
   const waitUntil = (task: Promise<unknown>) => event.waitUntil(task);
-  const decision = await decideRoute(request.nextUrl.pathname, {
+  const decision = await decideRoute(pathname, {
     cities: () => lists.cities(waitUntil),
     stylePages: () => lists.stylePages(waitUntil),
   });

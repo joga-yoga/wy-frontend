@@ -133,13 +133,63 @@ test("legacy blog links redirect to the canonical host", async ({ request }) => 
   for (const host of ["wiedza.joga.yoga", "www.wiedza.joga.yoga"]) {
     for (const [path, target] of [
       ["/", "/blog"],
+      ["/?page=1", "/blog"],
+      ["/?page=02", "/blog?page=2"],
+      [
+        "/?q=joga+cia%C5%82a&page=1&section=praktyka&utm_source=mail",
+        "/blog?q=joga+cia%C5%82a&section=praktyka&utm_source=mail",
+      ],
       ["/?page=2&utm_source=mail", "/blog?page=2&utm_source=mail"],
       ["/artykuly/lokalna-praktyka", "/blog/lokalna-praktyka"],
+      ["/artykuly/sankalpa-praktyka-jogi-i-zycia", "/blog/san-kalpa-praktyka-jogi-i-zycia"],
       ["/artykuly/unknown.with-dot", "/blog/unknown.with-dot"],
     ]) {
       const response = await request.get(path, { headers: { host }, maxRedirects: 0 });
       expect(response.status()).toBe(308);
       expect(response.headers().location).toBe(`https://joga.yoga${target}`);
+    }
+  }
+});
+
+test("legacy event hosts normalize blog pagination before the general host redirect", async ({
+  request,
+}) => {
+  for (const host of [
+    "wyjazdy.yoga",
+    "www.wyjazdy.yoga",
+    "wydarzenia.yoga",
+    "www.wydarzenia.yoga",
+  ]) {
+    const headers = { host };
+    for (const [path, target] of [
+      ["/blog", "/blog"],
+      ["/blog?page=1&utm_source=mail", "/blog?utm_source=mail"],
+      ["/blog?page=02", "/blog?page=2"],
+      ["/blog?page=2", "/blog?page=2"],
+      ["/", "/"],
+      ["/retreats/nepal?utm_source=mail", "/retreats/nepal?utm_source=mail"],
+    ]) {
+      const response = await request.get(path, { headers, maxRedirects: 0 });
+      expect(response.status()).toBe(308);
+      expect(response.headers().location).toBe("https://joga.yoga" + target);
+    }
+  }
+
+  for (const [host, path] of [
+    ["wyjazdy.yoga", "/blog"],
+    ["www.wyjazdy.yoga", "/blog"],
+    ["wydarzenia.yoga", "/blog"],
+    ["www.wydarzenia.yoga", "/blog"],
+    ["wiedza.joga.yoga", "/"],
+    ["www.wiedza.joga.yoga", "/"],
+  ]) {
+    for (const query of ["page=x", "page=1&page=2"]) {
+      const response = await request.get(path + "?" + query, {
+        headers: { host },
+        maxRedirects: 0,
+      });
+      expect(response.status()).toBe(404);
+      expect(response.headers()["x-robots-tag"]).toBe("noindex");
     }
   }
 });
