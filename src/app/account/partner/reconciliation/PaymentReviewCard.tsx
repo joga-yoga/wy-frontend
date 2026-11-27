@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
@@ -20,7 +19,6 @@ const reason: Record<ReviewItem["source"], string> = {
   onsite_reimbursement: "Zwrot płatności pobranej na miejscu",
   unknown_refund: "Sprawdź status zwrotu u operatora",
   refund_verification: "Sprawdź status zwrotu u operatora",
-  expired_restored_pass: "Przywrócone wejście z wygasłego karnetu",
 };
 
 const outcomes = [
@@ -89,12 +87,8 @@ export function PaymentReviewCard({
               <dl className="mt-1 break-all">
                 <dt>Rezerwacja</dt>
                 <dd>{item.booking_id}</dd>
-                {item.order_id && (
-                  <>
-                    <dt>Zamówienie</dt>
-                    <dd>{item.order_id}</dd>
-                  </>
-                )}
+                <dt>Zamówienie</dt>
+                <dd>{item.order_id}</dd>
                 {item.payment_id && (
                   <>
                     <dt>Płatność</dt>
@@ -109,14 +103,6 @@ export function PaymentReviewCard({
                 )}
               </dl>
             </details>
-          )}
-          {item.customer_path && (
-            <Link
-              href={item.customer_path}
-              className="inline-block text-sm font-semibold underline"
-            >
-              Zobacz karnety uczestnika
-            </Link>
           )}
         </div>
       </div>

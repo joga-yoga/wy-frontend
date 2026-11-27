@@ -107,18 +107,16 @@ export interface ReviewItem {
     | "paid_after_session_cancellation"
     | "onsite_reimbursement"
     | "unknown_refund"
-    | "refund_verification"
-    | "expired_restored_pass";
+    | "refund_verification";
   detail: string;
   created_at: string;
-  order_id: string | null;
+  order_id: string;
   booking_id?: string | null;
   transaction_id?: string | null;
   payment_id?: string | null;
   occurrence_start_time?: string | null;
   class_title?: string | null;
   organizer_cancelled?: boolean;
-  customer_path?: string | null;
   actions?: (
     | "verify_refund"
     | "record_reimbursement"
