@@ -9,8 +9,6 @@ import { getStyleCopy } from "@/lib/yogaStyleCopy";
 const BASE_URL = "https://joga.yoga";
 const API_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
-export const revalidate = 3600;
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
 

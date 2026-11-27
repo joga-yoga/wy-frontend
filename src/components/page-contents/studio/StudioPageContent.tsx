@@ -2,14 +2,16 @@
 
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 
 import { ClassCard } from "@/app/(public)/studio/[slug]/classes/components/ClassCard";
 import type { ClassTemplateListResponse } from "@/app/(public)/studio/[slug]/classes/types";
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
-import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
+import {
+  LinkedSessionDetailDrawer,
+  openSessionDetails,
+} from "@/app/(public)/studio/[slug]/schedule/LinkedSessionDetailDrawer";
 import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]/schedule/types";
 import { HashedAvatar } from "@/components/common/HashedAvatar";
 import { InstructorList } from "@/components/common/InstructorList";
@@ -43,28 +45,16 @@ interface StudioPageContentProps {
 
 function StudioScheduleSneak({
   studioSlug,
+  studioId,
   preview,
 }: {
   studioSlug: string;
+  studioId: string;
   preview?: PublicSchedulePreviewResponse | null;
 }) {
-  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
   const occurrences = preview?.occurrences ?? [];
   const groups = groupOccurrencesByDay(occurrences);
   const todayStr = formatWarsawDateShort(new Date());
-
-  // Mirrors StudioSchedulePage's pathname-reset effect: Next.js's client router cache can
-  // keep this component instance (and its state) alive across an away-and-back navigation,
-  // so a stale selectedOccurrenceId could reopen the drawer with data from a previous visit.
-  const pathname = usePathname();
-  const isFirstPathnameEffect = useRef(true);
-  useEffect(() => {
-    if (isFirstPathnameEffect.current) {
-      isFirstPathnameEffect.current = false;
-      return;
-    }
-    setSelectedOccurrenceId(null);
-  }, [pathname]);
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-5">
@@ -82,7 +72,7 @@ function StudioScheduleSneak({
                   <SessionCard
                     key={occ.id}
                     occ={occ}
-                    onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                    onClick={(clicked) => openSessionDetails(clicked.id)}
                   />
                 ))}
               </div>
@@ -103,10 +93,7 @@ function StudioScheduleSneak({
         <ArrowRight className="h-4 w-4 shrink-0" />
       </Link>
 
-      <SessionDetailDrawer
-        occurrenceId={selectedOccurrenceId}
-        onClose={() => setSelectedOccurrenceId(null)}
-      />
+      <LinkedSessionDetailDrawer surface={{ studio_id: studioId }} />
     </section>
   );
 }
@@ -408,7 +395,11 @@ export function StudioPageContent({
       <HeroSection studio={studio} />
       {notice && <div className="mx-auto max-w-5xl px-4 pt-5">{notice}</div>}
       {!previewMode && studio.slug && (
-        <StudioScheduleSneak studioSlug={studio.slug} preview={initialSchedulePreview} />
+        <StudioScheduleSneak
+          studioSlug={studio.slug}
+          studioId={studio.id}
+          preview={initialSchedulePreview}
+        />
       )}
       {!previewMode && studio.slug && <ZajeciaPreviewSection studioSlug={studio.slug} />}
       <InstructorsSection studio={studio} />

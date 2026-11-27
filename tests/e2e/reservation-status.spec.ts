@@ -1,11 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import type { CancellationFinance } from "../../src/app/account/bookings/CancellationSettlement";
+
 async function setup(page: Page) {
   const state = {
+    useOwnedSession: false,
+    isPast: false,
     summary: {
       id: "original",
       occurrence_id: "session",
       status: "booked",
+      cancelled_by_organizer: null as boolean | null,
+      cancellation_finance: null as CancellationFinance | null,
       funding_type: "drop_in",
       amount_owed: 50,
       sport_card_surcharge: null as number | null,
@@ -75,12 +81,13 @@ async function setup(page: Page) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (!["localhost", "127.0.0.1"].includes(url.hostname)) return route.abort();
-    if (!["8000", "8010"].includes(url.port)) return route.continue();
+    if (!["8000", "8010", "18478"].includes(url.port)) return route.continue();
     expect(route.request().method()).toBe("GET");
     state.reads.push(url.pathname);
     let json: unknown = [];
     if (url.pathname === "/me") json = { id: "viewer", email: "viewer@example.com" };
-    else if (url.pathname === "/bookings/original") json = state.summary;
+    else if (url.pathname === "/bookings/original")
+      json = { ...state.summary, ...(state.useOwnedSession ? { session: state.detail } : {}) };
     else if (url.pathname === "/public/occurrences/session/detail") json = state.detail;
     else if (url.pathname === "/users/me/bookings")
       json = {
@@ -93,8 +100,9 @@ async function setup(page: Page) {
             studio_name: "Studio testowe",
             start_time: state.detail.start_time,
             status: state.summary.status,
+            cancelled_by_organizer: state.summary.cancelled_by_organizer,
             funding: state.summary.funding_type,
-            is_past: false,
+            is_past: state.isPast,
             color: "green",
             duration_minutes: 75,
           },
@@ -116,6 +124,69 @@ async function open(page: Page, query = "") {
 }
 
 const fact = (page: Page, label: string) => page.getByText(label, { exact: true }).locator("..");
+
+test("organizer cancellation remains in the account and reads the owned settlement", async ({
+  page,
+}) => {
+  const s = await setup(page);
+  s.useOwnedSession = true;
+  s.summary.cancelled_by_organizer = true;
+  s.summary.status = s.detail.status = "cancelled";
+  s.summary.cancellation_finance = {
+    state: "pass_entry_restored",
+    currency: null,
+    paid_amount: 0,
+    settled_amount: 0,
+    reserved_amount: 0,
+    pass_valid_until: "2099-10-24T13:15:00Z",
+    pass_expired: true,
+    organizer_contact_path: "/studio/studio",
+  };
+  await page.setViewportSize({ width: 360, height: 900 });
+  await page.goto("/account/bookings");
+  const cookies = page.getByRole("button", { name: "Tylko niezbędne" });
+  if (await cookies.isVisible()) await cookies.click();
+  const title = "Odwołane przez organizatora";
+  const upcoming = page.locator("section").filter({ hasText: "Nadchodzące zajęcia" });
+  await upcoming.getByRole("button").filter({ hasText: title }).click();
+  await expect(page).toHaveURL(/\/account\/bookings\/original$/);
+  const session = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Restorative Yoga", exact: true }),
+  });
+  await expect(session.getByText(title, { exact: true })).toBeVisible();
+  await expect(page.getByText("Przywrócono 1 wejście na karnet.")).toBeVisible();
+  await expect(page.getByText("Pierwotna ważność karnetu: do 24 października 2099")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Kontakt z organizatorem/ })).toHaveAttribute(
+    "href",
+    "/studio/studio",
+  );
+  await expect(page.getByRole("button", { name: "Odwołaj rezerwację" })).toHaveCount(0);
+  expect(s.reads).not.toContain("/public/occurrences/session/detail");
+
+  s.isPast = true;
+  await page.goto("/account/bookings");
+  await page.locator("section").filter({ hasText: "Minione" }).getByRole("button").click();
+  await expect(page).toHaveURL(/\/account\/bookings\/original$/);
+
+  s.summary.cancellation_finance = {
+    ...s.summary.cancellation_finance,
+    state: "refund_status_unknown",
+    currency: "PLN",
+    paid_amount: 50,
+    reserved_amount: 50,
+    pass_valid_until: null,
+    pass_expired: false,
+  };
+  await page.reload();
+  await expect(page.getByText("Organizator sprawdza status zwrotu.")).toBeVisible();
+  await expect(page.getByText(/Zwrócona kwota/)).toHaveCount(0);
+  s.summary.cancellation_finance.state = "refund_settled";
+  s.summary.cancellation_finance.settled_amount = 50;
+  s.summary.cancellation_finance.reserved_amount = 0;
+  await page.reload();
+  await expect(page.getByText("Potwierdzono zwrot płatności.")).toBeVisible();
+  await expect(page.getByText("Zwrócona kwota: 50,00 PLN")).toBeVisible();
+});
 
 test("cash and sports-card amounts remain separate from reservation confirmation", async ({
   page,

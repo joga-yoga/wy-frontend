@@ -88,7 +88,12 @@ export default function MyBookingsPage() {
   }
 
   const upcomingClasses = data.bookings
-    .filter((b) => b.event_type === "class" && !b.is_past && b.status !== "cancelled")
+    .filter(
+      (b) =>
+        b.event_type === "class" &&
+        !b.is_past &&
+        (b.status === "booked" || (b.status === "cancelled" && b.cancelled_by_organizer)),
+    )
     .sort((a, b) => {
       const aTime = Date.parse(a.start_time ?? "");
       const bTime = Date.parse(b.start_time ?? "");

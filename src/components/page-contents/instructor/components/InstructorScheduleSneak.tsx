@@ -2,12 +2,13 @@
 
 import { ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 
 import type { InstructorPublicSchedulePreviewResponse } from "@/app/(public)/instructor/[slug]/schedule/types";
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
-import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
+import {
+  LinkedSessionDetailDrawer,
+  openSessionDetails,
+} from "@/app/(public)/studio/[slug]/schedule/LinkedSessionDetailDrawer";
 import {
   formatSneakDayHeader,
   formatWarsawDateShort,
@@ -22,25 +23,12 @@ interface InstructorScheduleSneakProps {
 }
 
 export function InstructorScheduleSneak({ instructorSlug, preview }: InstructorScheduleSneakProps) {
-  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
   const occurrences = preview?.occurrences ?? [];
   const groups = groupOccurrencesByDay(occurrences);
   const todayStr = formatWarsawDateShort(new Date());
 
-  // Mirrors StudioScheduleSneak's pathname-reset effect: the client router cache can keep
-  // this component instance (and its state) alive across an away-and-back navigation, so a
-  // stale selectedOccurrenceId could reopen the drawer with data from a previous visit.
-  const pathname = usePathname();
-  const isFirstPathnameEffect = useRef(true);
-  useEffect(() => {
-    if (isFirstPathnameEffect.current) {
-      isFirstPathnameEffect.current = false;
-      return;
-    }
-    setSelectedOccurrenceId(null);
-  }, [pathname]);
-
-  if (groups.length === 0) return null;
+  const drawer = <LinkedSessionDetailDrawer surface={{ instructor_slug: instructorSlug }} />;
+  if (groups.length === 0) return drawer;
 
   return (
     <section id="schedule" className="mx-auto max-w-5xl px-4 py-5 scroll-mt-16">
@@ -58,7 +46,7 @@ export function InstructorScheduleSneak({ instructorSlug, preview }: InstructorS
                   key={occ.id}
                   occ={occ}
                   context="instructor"
-                  onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                  onClick={(clicked) => openSessionDetails(clicked.id)}
                 />
               ))}
             </div>
@@ -78,10 +66,7 @@ export function InstructorScheduleSneak({ instructorSlug, preview }: InstructorS
         <ArrowRight className="h-4 w-4 shrink-0" />
       </Link>
 
-      <SessionDetailDrawer
-        occurrenceId={selectedOccurrenceId}
-        onClose={() => setSelectedOccurrenceId(null)}
-      />
+      {drawer}
     </section>
   );
 }

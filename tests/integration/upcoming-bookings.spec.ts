@@ -53,7 +53,7 @@ test("upcoming classes use stable timestamp order, preserve other sections and o
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (!["localhost", "127.0.0.1"].includes(url.hostname)) return route.abort();
-    if (url.port !== "8000") return route.continue();
+    if (!["8000", "18478"].includes(url.port)) return route.continue();
     expect(route.request().method()).toBe("GET");
     let json: unknown = [];
     if (url.pathname === "/me") json = { id: "viewer", email: "viewer@example.com" };

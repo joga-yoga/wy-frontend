@@ -17,6 +17,7 @@ export interface ScheduleOccurrence {
   capacity?: number | null;
   fill_count: number;
   notified_count: number;
+  cancellation_email_warning?: boolean;
   /** Set-based, per-occurrence — the live card's data (spec §2.1). Never re-derive client-side. */
   attended_count: number;
   unresolved_count: number;
@@ -54,6 +55,9 @@ export interface SessionDetailResponse {
   is_modified: boolean;
   instructor_id: string | null;
   instructor_name: string | null;
+  series_instructor_id?: string | null;
+  series_instructor_name?: string | null;
+  series_room_id?: string | null;
   room_id: string | null;
   room_name: string | null;
   capacity: number | null;
@@ -66,6 +70,14 @@ export interface SessionDetailResponse {
   schedule_id: string;
   /** Caller's occurrence-role (spec §9) — drives owner (§3) vs. instructor (§8) screen choice. */
   role: "owner" | "instructor";
+  can_write_schedule: boolean;
+  can_view_finance?: boolean;
+  cancellation_email_status?: {
+    expected: number | null;
+    accepted: number;
+    pending: number;
+    unconfirmed: number;
+  } | null;
   is_recurring: boolean;
   series_to_date?: string | null;
   /** First upcoming, non-cancelled, non-individually-customised occurrence of this series —
@@ -76,6 +88,7 @@ export interface SessionDetailResponse {
   recurrence_days?: string[];
   /** People notified of the cancellation — 0 unless `status === "cancelled"`. */
   notified_count: number;
+  cancellation_expected_recipients?: number | null;
 }
 
 export interface FieldDiffItem {
@@ -115,4 +128,7 @@ export interface SessionEditCommitResponse {
   created: string[];
   cancelled: string[];
   deleted: string[];
+  expected_recipients?: number | null;
+  queued_recipients?: number;
+  already_cancelled?: boolean;
 }

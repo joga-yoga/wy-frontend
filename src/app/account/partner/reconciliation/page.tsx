@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight, Info } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { formatMoney } from "@/components/page-contents/studio/pricingHelpers";
@@ -52,22 +52,25 @@ export default function ReconciliationPage() {
   const [showStudioLabels, setShowStudioLabels] = useState(false);
   const [resolveEntry, setResolveEntry] = useState<RosterEntry | null>(null);
   const [attention, setAttention] = useState<PaymentAttentionResponse | null>(null);
+  const [attentionFailed, setAttentionFailed] = useState(false);
 
-  async function loadAttention() {
+  const loadAttention = useCallback(async () => {
     try {
       const { data } = await axiosInstance.get<PaymentAttentionResponse>(
         "/partner/payment-attention",
       );
       setAttention(data);
+      setAttentionFailed(false);
     } catch {
       // The reconciliation list is the primary content here. A failure to load the payment
       // piles must not blank the screen a studio uses to settle cash at the desk.
       setAttention(null);
+      setAttentionFailed(true);
     }
-  }
+  }, []);
 
-  async function load() {
-    void loadAttention();
+  const load = useCallback(async () => {
+    const attentionRequest = loadAttention();
     const { data } = await axiosInstance.get<{
       sessions: ReconciliationSession[];
       show_studio_labels: boolean;
@@ -88,11 +91,12 @@ export default function ReconciliationPage() {
       }),
     );
     setGroups(built.filter((g) => g.rows.length > 0));
-  }
+    await attentionRequest;
+  }, [loadAttention]);
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+  }, [load]);
 
   async function resolveWith(action: string) {
     if (!resolveEntry) return;
@@ -120,8 +124,14 @@ export default function ReconciliationPage() {
           onChanged={load}
         />
       )}
+      {attentionFailed && (
+        <p role="alert" className="text-sm text-destructive">
+          Nie udało się wczytać zgłoszeń do sprawdzenia.
+        </p>
+      )}
 
       {groups.length === 0 &&
+      attention &&
       !attention?.paid_without_seat.length &&
       !attention?.needs_review.length ? (
         <p className="py-10 text-center text-sm text-gray-400">

@@ -29,16 +29,7 @@ export function isSessionOver(endTimeIso: string, now: Date): boolean {
   return isAtOrPastWarsawWallClock(endTimeIso, now);
 }
 
-export function formatWarsawDateShort(d: Date): string {
-  const parts = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Warsaw",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(d);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
+export { warsawCalendarDate as formatWarsawDateShort } from "@/lib/warsawWallClock";
 
 export function groupOccurrencesByDay(occurrences: PublicOccurrence[]) {
   const groups: { date: string; occurrences: PublicOccurrence[] }[] = [];

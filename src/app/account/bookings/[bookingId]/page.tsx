@@ -23,7 +23,11 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { isSubstitutionVisible } from "@/lib/scheduleSubstitution";
 import { cn } from "@/lib/utils";
+import { isAtOrPastWarsawWallClock } from "@/lib/warsawWallClock";
+
+import { type CancellationFinance, CancellationSettlement } from "../CancellationSettlement";
 
 /**
  * One reservation, in full (WY-73).
@@ -65,6 +69,9 @@ interface BookingSummary {
   id: string;
   occurrence_id: string | null;
   status: string;
+  cancelled_by_organizer?: boolean | null;
+  cancellation_finance?: CancellationFinance | null;
+  session?: OccurrenceDetail | null;
   funding_type?: string;
   amount_owed?: number | null;
   sport_card_surcharge?: number | null;
@@ -85,6 +92,7 @@ function formatDateTime(iso: string): string {
     month: "long",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 }
 
@@ -135,20 +143,25 @@ function ReservationDetailContent() {
 
   const load = useCallback(async () => {
     try {
+      setNotFound(false);
       const { data: booking } = await axiosInstance.get<BookingSummary>(
         `/bookings/${params.bookingId}`,
       );
       setSummary(booking);
+      if (booking.session !== undefined) {
+        setDetail(booking.session);
+        return;
+      }
       if (!booking.occurrence_id) {
         // The schema allows it, and a reservation whose session was deleted still belongs to
         // the customer — showing the little that is left beats a 404 on their own booking.
         setDetail(null);
         return;
       }
-      const { data } = await axiosInstance.get<OccurrenceDetail>(
-        `/public/occurrences/${booking.occurrence_id}/detail`,
-      );
-      setDetail(data);
+      await axiosInstance
+        .get<OccurrenceDetail>(`/public/occurrences/${booking.occurrence_id}/detail`)
+        .then(({ data }) => setDetail(data))
+        .catch(() => setDetail(null));
     } catch {
       setNotFound(true);
     } finally {
@@ -193,6 +206,8 @@ function ReservationDetailContent() {
 
   const booking = detail?.viewer_booking?.id === summary?.id ? detail?.viewer_booking : null;
   const isCancelled = summary?.status === "cancelled";
+  const isOrganizerCancelled = isCancelled && summary?.cancelled_by_organizer === true;
+  const cancellationLabel = isOrganizerCancelled ? "Odwołane przez organizatora" : "Odwołana";
   const isNoShow = summary?.status === "no_show";
   const isBooked = summary?.status === "booked";
   const isPending = summary?.confirmation_pending === true || summary?.payment_required === true;
@@ -228,7 +243,7 @@ function ReservationDetailContent() {
               isPaid: null,
             }
           : null;
-  const isPast = detail ? new Date(detail.start_time) < new Date() : false;
+  const isPast = !!detail && isAtOrPastWarsawWallClock(detail.start_time, new Date());
 
   return (
     <div className="min-h-[100dvh] bg-background pb-10">
@@ -249,15 +264,23 @@ function ReservationDetailContent() {
             Nie znaleźliśmy tej rezerwacji.
           </p>
         ) : !detail ? (
-          <p className="px-4 py-16 text-center text-sm text-gray-400">
-            Te zajęcia nie są już dostępne, ale Twoja rezerwacja pozostaje w historii.
-          </p>
+          <>
+            <section className="space-y-2 px-4 py-5">
+              {isCancelled && <StatusChip tone="rose">{cancellationLabel}</StatusChip>}
+              <p className="text-sm text-gray-500">
+                Te zajęcia nie są już dostępne, ale Twoja rezerwacja pozostaje w historii.
+              </p>
+            </section>
+            {isOrganizerCancelled && (
+              <CancellationSettlement finance={summary?.cancellation_finance} />
+            )}
+          </>
         ) : (
           <>
             {/* ── 1. The session ───────────────────────────────────────── */}
             <section className="px-4 py-5">
               <div className="flex flex-wrap items-center gap-1.5">
-                {isCancelled && <StatusChip tone="rose">Odwołana</StatusChip>}
+                {isCancelled && <StatusChip tone="rose">{cancellationLabel}</StatusChip>}
                 {isNoShow && <StatusChip tone="gray">Nieobecność</StatusChip>}
                 {!isCancelled && !isNoShow && isPast && (
                   <StatusChip tone="gray">Zakończone</StatusChip>
@@ -363,9 +386,19 @@ function ReservationDetailContent() {
               </section>
             )}
 
+            {isOrganizerCancelled && (
+              <CancellationSettlement
+                finance={summary?.cancellation_finance}
+                organizer={detail.studio.name}
+              />
+            )}
+
             {/* ── 3. Instructor / studio / location, 1:1 from the drawer ── */}
             <div className="border-t border-gray-100">
-              <InstructorSection detail={detail} showInstructorChange={false} />
+              <InstructorSection
+                detail={detail}
+                showInstructorChange={isSubstitutionVisible(detail)}
+              />
             </div>
             <div className="border-t border-gray-100">
               <StudioSection studio={detail.studio} />

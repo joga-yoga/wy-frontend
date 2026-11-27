@@ -205,6 +205,37 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (url.pathname === "/public/studios/popup-fixture") {
+    json(res, 200, {
+      ...studioDraftFixture.profile,
+      slug: "popup-fixture",
+      status: "claimed",
+      passes: [
+        {
+          id: "morning",
+          name: "Karnet poranny",
+          description: "Poranna praktyka",
+          price: 100,
+          duration_days: 30,
+          session_count: 4,
+        },
+        {
+          id: "evening",
+          name: "Karnet wieczorny",
+          description: "Wieczorna praktyka",
+          price: 150,
+          duration_days: 30,
+          session_count: 6,
+        },
+      ],
+      accepts_sport_cards: true,
+      sport_card_acceptances: [
+        { id: "sport", name: "MultiSport", description: "Dopłata na recepcji", fee: 10 },
+      ],
+    });
+    return;
+  }
+
   if (url.pathname === "/directory/cities") {
     json(res, 200, [{ slug: "warszawa", name: "Warszawa", active_count: 0, published_count: 0 }]);
     return;

@@ -37,11 +37,12 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { axiosInstance } from "@/lib/axiosInstance";
+import { isSubstitutionVisible } from "@/lib/scheduleSubstitution";
 import { cn } from "@/lib/utils";
 
 import { levelLabel } from "../classes/types";
 import { COLOR_BORDER_MAP, DEFAULT_BORDER, NEARLY_FULL_THRESHOLD } from "./components/SessionCard";
-import type { OccurrenceDetail, OccurrenceDetailInstructor } from "./types";
+import type { OccurrenceDetail, OccurrenceDetailInstructor, SessionSurface } from "./types";
 
 const BRAND_GREEN = "#4F8A62";
 
@@ -53,7 +54,7 @@ function formatTime(iso: string): string {
 }
 
 function formatDayHeader(iso: string): string {
-  const d = new Date(iso);
+  const d = new Date(`${iso}T00:00:00`);
   const label = d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
@@ -185,7 +186,7 @@ function ModalHeader({
         <IconRow icon={<DoorOpen className="h-5 w-5" />} label="Sala" value={detail.room_name} />
       )}
 
-      {detail.capacity != null && (
+      {!isCancelled && detail.capacity != null && (
         <IconRow
           icon={<Users className="h-5 w-5" />}
           label="Wolne miejsca"
@@ -199,7 +200,7 @@ function ModalHeader({
         />
       )}
 
-      <PricingRow studio={detail.studio} />
+      {!isCancelled && <PricingRow studio={detail.studio} />}
       {!isBooked && !isCancelled && (
         <CancellationStrip
           deadline={detail.free_cancellation_deadline}
@@ -640,7 +641,6 @@ function CancelSheet({
 
 function CtaZone({
   detail,
-  isCancelled,
   isFull,
   isBooked,
   withinWindow,
@@ -648,21 +648,12 @@ function CtaZone({
   onOpenCancelSheet,
 }: {
   detail: OccurrenceDetail;
-  isCancelled: boolean;
   isFull: boolean;
   isBooked: boolean;
   withinWindow: boolean;
   onBook: () => void;
   onOpenCancelSheet: () => void;
 }) {
-  if (isCancelled) {
-    return (
-      <Button disabled className="w-full" variant="green" size="cta">
-        Zajęcia odwołane
-      </Button>
-    );
-  }
-
   if (isBooked) {
     return (
       <div className="space-y-2">
@@ -726,6 +717,7 @@ function isChangeVisible(detail: OccurrenceDetail, isBooked: boolean, now: Date)
 
 interface SessionDetailDrawerProps {
   occurrenceId: string | null;
+  surface: SessionSurface;
   onClose: () => void;
   /** Called after a successful in-drawer cancellation so the parent can refetch the week. */
   onBookingCancelled?: () => void;
@@ -733,26 +725,42 @@ interface SessionDetailDrawerProps {
 
 export function SessionDetailDrawer({
   occurrenceId,
+  surface,
   onClose,
   onBookingCancelled,
 }: SessionDetailDrawerProps) {
   const router = useRouter();
-  const [detail, setDetail] = useState<OccurrenceDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadedDetail, setDetail] = useState<OccurrenceDetail | null>(null);
+  const [unavailableId, setUnavailableId] = useState<string | null>(null);
   const [isCancelSheetOpen, setIsCancelSheetOpen] = useState(false);
+  const studioId = "studio_id" in surface ? surface.studio_id : undefined;
+  const classTemplateId = "studio_id" in surface ? surface.class_template_id : undefined;
+  const instructorSlug = "instructor_slug" in surface ? surface.instructor_slug : undefined;
+  const detail = !occurrenceId || loadedDetail?.id === occurrenceId ? loadedDetail : null;
 
   useEffect(() => {
-    if (!occurrenceId) {
-      setDetail(null);
-      return;
-    }
-    setIsLoading(true);
-    axiosInstance
-      .get<OccurrenceDetail>(`/public/occurrences/${occurrenceId}/detail`)
-      .then((r) => setDetail(r.data))
-      .catch(() => setDetail(null))
-      .finally(() => setIsLoading(false));
-  }, [occurrenceId]);
+    setIsCancelSheetOpen(false);
+    if (!occurrenceId) return;
+    setDetail(null);
+    setUnavailableId(null);
+    const controller = new AbortController();
+    void axiosInstance
+      .get<OccurrenceDetail>(`/public/occurrences/${encodeURIComponent(occurrenceId)}/detail`, {
+        signal: controller.signal,
+        params: {
+          studio_id: studioId,
+          class_template_id: classTemplateId,
+          instructor_slug: instructorSlug,
+        },
+      })
+      .then(({ data }) => {
+        if (!controller.signal.aborted) setDetail(data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setUnavailableId(occurrenceId);
+      });
+    return () => controller.abort();
+  }, [occurrenceId, studioId, classTemplateId, instructorSlug]);
 
   const handleShare = () => {
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -762,7 +770,7 @@ export function SessionDetailDrawer({
     }
   };
 
-  const isReady = !isLoading && !!detail;
+  const isReady = !!detail;
   const isCancelled = detail?.status === "cancelled";
   const isBooked = !!detail?.viewer_booking && detail.viewer_booking.status === "booked";
   const isFull = isReady && !isBooked && !isCancelled && detail.spots_remaining === 0;
@@ -772,7 +780,7 @@ export function SessionDetailDrawer({
     now.getTime() <= new Date(detail.free_cancellation_deadline).getTime();
   const changeVisible = isReady && !isCancelled && isChangeVisible(detail, isBooked, now);
   const showTimeChange = changeVisible && !!detail?.previous_start_time;
-  const showInstructorChange = changeVisible && !!detail?.previous_instructor_name;
+  const showInstructorChange = !!detail && isSubstitutionVisible(detail, now);
 
   const borderClass =
     !detail || isCancelled || !detail.color ? DEFAULT_BORDER : COLOR_BORDER_MAP[detail.color];
@@ -792,6 +800,12 @@ export function SessionDetailDrawer({
       open={!!occurrenceId}
       onOpenChange={(open) => {
         if (!open) onClose();
+      }}
+      onOpenChangeComplete={(open) => {
+        if (!open && !occurrenceId) {
+          setDetail(null);
+          setUnavailableId(null);
+        }
       }}
       snapPoints={[1]}
       showSwipeHandle
@@ -822,7 +836,7 @@ export function SessionDetailDrawer({
               <div className="flex min-h-0 flex-1 flex-col pt-12">
                 {isCancelled && <CancelledBanner />}
                 {isBooked && !isCancelled && <BookedBanner booking={detail.viewer_booking} />}
-                {isBooked && !isCancelled && changeVisible && (
+                {isBooked && (showTimeChange || showInstructorChange) && (
                   <ChangedNoticeBanner
                     showTimeChange={showTimeChange}
                     showInstructorChange={showInstructorChange}
@@ -850,21 +864,22 @@ export function SessionDetailDrawer({
                 </div>
               </div>
 
-              <div className="shrink-0 border-t bg-white p-4 pt-3 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
-                <CtaZone
-                  detail={detail}
-                  isCancelled={isCancelled}
-                  isFull={isFull}
-                  isBooked={isBooked}
-                  withinWindow={withinWindow}
-                  onBook={() => router.push(`/book/class/${detail.id}`)}
-                  onOpenCancelSheet={() => setIsCancelSheetOpen(true)}
-                />
-              </div>
+              {!isCancelled && (
+                <div className="shrink-0 border-t bg-white p-4 pt-3 shadow-[0_-4px_16px_0_rgba(0,0,0,0.06)]">
+                  <CtaZone
+                    detail={detail}
+                    isFull={isFull}
+                    isBooked={isBooked}
+                    withinWindow={withinWindow}
+                    onBook={() => router.push(`/book/class/${detail.id}`)}
+                    onOpenCancelSheet={() => setIsCancelSheetOpen(true)}
+                  />
+                </div>
+              )}
 
-              {detail.viewer_booking && cancelCopy && (
+              {!isCancelled && detail.viewer_booking && cancelCopy && (
                 <CancelSheet
-                  open={isCancelSheetOpen}
+                  open={!!occurrenceId && isCancelSheetOpen}
                   onOpenChange={setIsCancelSheetOpen}
                   bookingId={detail.viewer_booking.id}
                   copy={cancelCopy}
@@ -873,7 +888,11 @@ export function SessionDetailDrawer({
               )}
             </>
           ) : (
-            <div className="min-h-0 flex-1" />
+            <p className="min-h-0 flex-1 px-4 pt-16 text-center text-sm text-gray-600">
+              {unavailableId && (!occurrenceId || unavailableId === occurrenceId)
+                ? "Nie znaleziono zajęć."
+                : "Ładowanie..."}
+            </p>
           )}
         </div>
       </DrawerContent>

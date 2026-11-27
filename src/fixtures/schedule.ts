@@ -204,6 +204,7 @@ export const sessionDetail: SessionDetailResponse = {
   studio_name: STUDIO.name,
   schedule_id: "sch-autumn-2026",
   role: "owner",
+  can_write_schedule: true,
   is_recurring: true,
   series_to_date: "2026-12-20",
   series_from_date: "2026-09-09",

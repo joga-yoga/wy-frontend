@@ -53,6 +53,7 @@ export function TemplatePricing({
   const [studio, setStudio] = useState<StudioPrice | null>(null);
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState<TemplateStudioPricing | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("PLN");
   const [priceEdited, setPriceEdited] = useState(false);
@@ -84,13 +85,14 @@ export function TemplatePricing({
 
   function open() {
     setDraft({ ...setting });
+    setIsOpen(true);
     setAmount(effectiveAmount != null ? String(effectiveAmount) : "");
     setCurrency(effectiveCurrency || "PLN");
     setPriceEdited(false);
     setValidation("");
   }
   function confirm() {
-    if (!draft) return;
+    if (!isOpen || !draft) return;
     if (
       priceEdited &&
       (!amount.trim() ||
@@ -104,7 +106,7 @@ export function TemplatePricing({
       return;
     }
     onChange({ ...draft, ...(priceEdited ? { amount: Number(amount), currency } : {}) });
-    setDraft(null);
+    setIsOpen(false);
   }
   return (
     <section className="space-y-3">
@@ -147,12 +149,7 @@ export function TemplatePricing({
       <Button type="button" variant="outline" disabled={!currentStudio} onClick={open}>
         Dostosuj cenę
       </Button>
-      <Dialog
-        open={draft !== null}
-        onOpenChange={(open) => {
-          if (!open) setDraft(null);
-        }}
-      >
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto" closeLabel="Zamknij">
           <DialogTitle>Dostosuj cenę</DialogTitle>
           {draft && (
@@ -257,7 +254,7 @@ export function TemplatePricing({
                 </p>
               )}
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setDraft(null)}>
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                   Anuluj
                 </Button>
                 <Button type="button" onClick={confirm}>

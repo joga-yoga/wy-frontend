@@ -2,11 +2,13 @@
 
 import { BarChart3, Clock, Rainbow } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { SessionCard } from "@/app/(public)/studio/[slug]/schedule/components/SessionCard";
-import { SessionDetailDrawer } from "@/app/(public)/studio/[slug]/schedule/SessionDetailDrawer";
+import {
+  LinkedSessionDetailDrawer,
+  openSessionDetails,
+} from "@/app/(public)/studio/[slug]/schedule/LinkedSessionDetailDrawer";
 import type { PublicSchedulePreviewResponse } from "@/app/(public)/studio/[slug]/schedule/types";
 import { BackButton } from "@/components/common/BackButton";
 import { InstructorList } from "@/components/common/InstructorList";
@@ -122,25 +124,20 @@ function InstructorsSection({ classTemplate }: { classTemplate: ClassTemplateDet
   );
 }
 
-function NajblizszeZajeciaSection({ preview }: { preview?: PublicSchedulePreviewResponse | null }) {
-  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
-
-  // Mirrors StudioSchedulePage's/StudioScheduleSneak's pathname-reset effect: Next.js's
-  // client router cache can keep this component instance (and its state) alive across an
-  // away-and-back navigation, so a stale selectedOccurrenceId could reopen the drawer with
-  // data from a previous visit.
-  const pathname = usePathname();
-  const isFirstPathnameEffect = useRef(true);
-  useEffect(() => {
-    if (isFirstPathnameEffect.current) {
-      isFirstPathnameEffect.current = false;
-      return;
-    }
-    setSelectedOccurrenceId(null);
-  }, [pathname]);
-
+function NajblizszeZajeciaSection({
+  studioId,
+  templateId,
+  preview,
+}: {
+  studioId: string;
+  templateId: string;
+  preview?: PublicSchedulePreviewResponse | null;
+}) {
+  const drawer = (
+    <LinkedSessionDetailDrawer surface={{ studio_id: studioId, class_template_id: templateId }} />
+  );
   const occurrences = preview?.occurrences ?? [];
-  if (occurrences.length === 0) return null;
+  if (occurrences.length === 0) return drawer;
 
   const groups = groupOccurrencesByDay(occurrences);
   const todayStr = formatWarsawDateShort(new Date());
@@ -160,7 +157,7 @@ function NajblizszeZajeciaSection({ preview }: { preview?: PublicSchedulePreview
                   <SessionCard
                     key={occ.id}
                     occ={occ}
-                    onClick={(clicked) => setSelectedOccurrenceId(clicked.id)}
+                    onClick={(clicked) => openSessionDetails(clicked.id)}
                   />
                 ))}
               </div>
@@ -169,10 +166,7 @@ function NajblizszeZajeciaSection({ preview }: { preview?: PublicSchedulePreview
         </div>
       </div>
 
-      <SessionDetailDrawer
-        occurrenceId={selectedOccurrenceId}
-        onClose={() => setSelectedOccurrenceId(null)}
-      />
+      {drawer}
     </section>
   );
 }
@@ -232,7 +226,11 @@ export function ClassLandingPage({
         </section>
       )}
 
-      <NajblizszeZajeciaSection preview={initialUpcomingOccurrences} />
+      <NajblizszeZajeciaSection
+        studioId={studio.id}
+        templateId={classTemplate.id}
+        preview={initialUpcomingOccurrences}
+      />
 
       <InstructorsSection classTemplate={classTemplate} />
       <StudioCardSection studio={studio} />

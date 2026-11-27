@@ -46,6 +46,7 @@ export function ReviewRecords({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [editor, setEditor] = useState<ImportRecord | null>(null);
+  const [editorState, setEditorState] = useState<"closed" | "open" | "saved">("closed");
   const [agenda, setAgenda] = useState("agenda");
   const [day, setDay] = useState("");
   const load = useCallback(async () => {
@@ -90,7 +91,7 @@ export function ReviewRecords({
       );
     try {
       onJob(await importsApi.edit(job.id, job.revision, { id: record.id, ...changes }));
-      setEditor(null);
+      if (changes.overrides) setEditorState("saved");
       await load();
     } catch (error) {
       setError(importError(error).message);
@@ -301,7 +302,14 @@ export function ReviewRecords({
                   {record.asset_state === "failed" && (
                     <p className="text-sm text-amber-800">Zdjęcie nie zostało przeniesione.</p>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => setEditor(record)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditor(record);
+                      setEditorState("open");
+                    }}
+                  >
                     {readOnly ? "Zobacz dane źródłowe" : "Sprawdź i popraw"}
                   </Button>
                 </CardContent>
@@ -334,11 +342,18 @@ export function ReviewRecords({
       <RecordEditor
         jobId={job.id}
         record={editor}
+        open={editorState === "open"}
         branches={job.branches}
         readOnly={readOnly}
-        onClose={() => setEditor(null)}
-        onSave={(overrides) => (editor ? save(editor, { overrides }) : Promise.resolve())}
-        busy={busy}
+        onClose={() => setEditorState("closed")}
+        onCloseComplete={() => {
+          setEditor(null);
+          setEditorState("closed");
+        }}
+        onSave={(overrides) =>
+          editorState === "open" && editor ? save(editor, { overrides }) : Promise.resolve()
+        }
+        busy={busy || editorState === "saved"}
       />
     </section>
   );

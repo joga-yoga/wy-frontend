@@ -13,6 +13,7 @@ import { isFewForm } from "@/lib/polishPlural";
 import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { PreviewNoteCard, SessionChangesPreview } from "../../components/SessionChangesPreview";
+import { noticeQueueCopy } from "../../noticeQueueCopy";
 import type {
   SessionDetailResponse,
   SessionEditCommitResponse,
@@ -21,11 +22,6 @@ import type {
 
 type CancelScope = "single" | "end_series_from_date";
 type Step = "scope" | "preview" | "success";
-
-function sesjaNominative(n: number): string {
-  if (n === 1) return "sesja";
-  return isFewForm(n) ? "sesje" : "sesji";
-}
 
 function odwolanaForm(n: number): string {
   if (n === 1) return "odwołana";
@@ -37,20 +33,12 @@ function usunietaForm(n: number): string {
   return isFewForm(n) ? "usunięte" : "usuniętych";
 }
 
-/**
- * Cancelling a session with bookings marks it `cancelled`; cancelling an **empty** one deletes
- * it outright. Counting only `cancelled` therefore reported "0 sesji odwołanych" after
- * successfully removing an empty session — telling the user nothing had happened.
- */
-function cancelOutcome(r: SessionEditCommitResponse): { total: number; summary: string } {
+function cancelSummary(r: SessionEditCommitResponse): string {
   const parts = [
     r.cancelled.length > 0 ? `${r.cancelled.length} ${odwolanaForm(r.cancelled.length)}` : null,
     r.deleted.length > 0 ? `${r.deleted.length} ${usunietaForm(r.deleted.length)}` : null,
   ].filter(Boolean);
-  return {
-    total: r.cancelled.length + r.deleted.length,
-    summary: parts.join(" · ") || "Brak zmian",
-  };
+  return parts.join(" · ") || "Brak zmian";
 }
 
 function cancelDate(dateStr: string): string {
@@ -150,13 +138,15 @@ export default function CancelSessionPage() {
               selected={scope === "single"}
               onSelect={() => setScope("single")}
             />
-            <ScopeOptionCard
-              title="Zakończ serię od tej daty"
-              subtitle="Zapisani odwołani, puste sesje usunięte"
-              selected={scope === "end_series_from_date"}
-              onSelect={() => setScope("end_series_from_date")}
-              variant="danger"
-            />
+            {sessionDetail?.is_recurring && (
+              <ScopeOptionCard
+                title="Zakończ serię od tej daty"
+                subtitle="Odwołanie obejmie wybrany termin i wszystkie kolejne terminy, także te zmienione ręcznie."
+                selected={scope === "end_series_from_date"}
+                onSelect={() => setScope("end_series_from_date")}
+                variant="danger"
+              />
+            )}
           </div>
           <div className="flex gap-3 pt-2">
             <Button
@@ -194,8 +184,8 @@ export default function CancelSessionPage() {
 
           <PreviewNoteCard icon={<Info size={15} />}>
             {scope === "single"
-              ? "Dotyczy tylko tej sesji — seria bez zmian. Rezerwacje zostaną anulowane, karnety odzyskają wejścia (bezpłatne odwołanie po stronie studia)."
-              : "Seria zakończy się tą datą. Rezerwacje zostaną anulowane, karnety odzyskają wejścia (bezpłatne odwołanie po stronie studia)."}
+              ? "Rezerwacje na tę sesję zostaną anulowane bez opłaty za odwołanie."
+              : "Rezerwacje od wybranego terminu zostaną anulowane bez opłaty za odwołanie."}
           </PreviewNoteCard>
 
           <div className="flex gap-3 pt-2">
@@ -217,9 +207,26 @@ export default function CancelSessionPage() {
 
       {step === "success" && commitResult && (
         <ScheduleSuccessScreen
-          headline={scope === "single" ? "Sesja odwołana" : "Seria zakończona"}
-          body={`${cancelOutcome(commitResult).total} ${sesjaNominative(cancelOutcome(commitResult).total)} ${cancelOutcome(commitResult).total === commitResult.deleted.length ? usunietaForm(cancelOutcome(commitResult).total) : odwolanaForm(cancelOutcome(commitResult).total)}. Powiadomienia trafiły do kolejki wysyłki.`}
-          summary={cancelOutcome(commitResult).summary}
+          headline={
+            commitResult.already_cancelled
+              ? "Sesja była już odwołana"
+              : scope === "single"
+                ? "Sesja odwołana"
+                : "Seria zakończona"
+          }
+          body={noticeQueueCopy(commitResult.expected_recipients, commitResult.queued_recipients)}
+          detailsHref={
+            sessionDetail?.organizer_kind === "studio" &&
+            sessionDetail.studio_id &&
+            commitResult.cancelled.length > 0
+              ? `/account/partner/studio/${sessionDetail.studio_id}/front-desk/${commitResult.cancelled[0]}`
+              : undefined
+          }
+          summary={
+            commitResult.already_cancelled
+              ? "Brak nowych zmian w grafiku"
+              : cancelSummary(commitResult)
+          }
         />
       )}
     </div>

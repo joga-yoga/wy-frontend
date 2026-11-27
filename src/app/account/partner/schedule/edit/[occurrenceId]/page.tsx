@@ -1,14 +1,16 @@
 "use client";
 
 import { isAxiosError } from "axios";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Plus } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { StudioRosterAddForm } from "@/app/account/partner/instructors/components/StudioRosterAddForm";
 import { SessionContextCard } from "@/components/b2b/SessionContextCard";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useCurrentStudio } from "@/hooks/useCurrentStudio";
+import { useAssignableInstructorSource } from "@/hooks/useAssignableInstructors";
 import { useScheduleRooms } from "@/hooks/useScheduleRooms";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { addCalendarMonthClamped, formatDateYMD } from "@/lib/formatDateRange";
@@ -20,10 +22,11 @@ import {
   ScheduleRecurrenceForm,
 } from "../../../class-schedules/components/ScheduleRecurrenceForm";
 import { ScheduleRoomField } from "../../../class-schedules/components/ScheduleRoomField";
-import { InstructorPicker, type PickableInstructor } from "../../components/InstructorPicker";
+import { InstructorPicker } from "../../components/InstructorPicker";
 import { ScheduleSuccessScreen } from "../../components/ScheduleSuccessScreen";
 import { ScopeOptionCard } from "../../components/ScopeOptionCard";
 import { PreviewNoteCard, SessionChangesPreview } from "../../components/SessionChangesPreview";
+import { noticeQueueCopy } from "../../noticeQueueCopy";
 import type {
   SessionDetailResponse,
   SessionEditCommitResponse,
@@ -132,7 +135,6 @@ export default function EditSessionPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { studio: currentStudio } = useCurrentStudio();
 
   const [step, setStep] = useState<Step>("scope");
   const [scope, setScope] = useState<Scope>("single");
@@ -148,8 +150,46 @@ export default function EditSessionPage() {
   const [capacity, setCapacity] = useState("");
   const [instructorId, setInstructorId] = useState("");
 
-  const [instructors, setInstructors] = useState<PickableInstructor[]>([]);
+  const studioId = isSolo ? null : (sessionDetail?.studio_id ?? null);
+  const {
+    instructors: assignable,
+    loading: instructorsLoading,
+    error: instructorsError,
+    refresh: refreshInstructors,
+  } = useAssignableInstructorSource(studioId);
+  const [isInstructorOpen, setIsInstructorOpen] = useState(false);
+  const [instructorStep, setInstructorStep] = useState<"identify" | "new">("identify");
+  const [addedInstructorId, setAddedInstructorId] = useState<string | null>(null);
+  const addInstructorRef = useRef<HTMLButtonElement>(null);
+  const showInstructorNotice =
+    addedInstructorId &&
+    !instructorsLoading &&
+    (instructorsError || !assignable.some((row) => row.id === addedInstructorId));
+  const currentInstructorId =
+    scope !== "single" && sessionDetail?.series_instructor_id !== undefined
+      ? sessionDetail.series_instructor_id
+      : (sessionDetail?.instructor_id ?? null);
+  const currentInstructorName =
+    scope !== "single" && sessionDetail?.series_instructor_name !== undefined
+      ? sessionDetail.series_instructor_name
+      : sessionDetail?.instructor_name;
+  const currentRoomId =
+    scope !== "single" && sessionDetail?.series_room_id !== undefined
+      ? sessionDetail.series_room_id
+      : sessionDetail?.room_id;
+  const instructors =
+    currentInstructorId &&
+    currentInstructorName &&
+    !assignable.some((row) => row.id === currentInstructorId)
+      ? [{ id: currentInstructorId, name: currentInstructorName }, ...assignable]
+      : assignable;
   const roomState = useScheduleRooms(sessionDetail?.studio_id, roomId, setRoomId, isSolo);
+  const instructorChanged = instructorId !== (currentInstructorId ?? "");
+  const roomChanged = roomId !== (currentRoomId ?? "");
+  const canPreview =
+    roomState.roomValid &&
+    timeValid &&
+    (!isSubstitution || (!!instructorId && (instructorChanged || roomChanged)));
 
   // Recurrence form state
   const [frequency, setFrequency] = useState<"once" | "weekly">("weekly");
@@ -224,29 +264,21 @@ export default function EditSessionPage() {
     setFromDate(new Date(dateStr + "T00:00:00"));
   }, [scope, sessionDetail]);
 
-  // The "Prowadzący" picker draws from the studio roster, not the partner's own
-  // instructors — Zastępstwo explicitly needs pending-link instructors to be
-  // selectable too (reception-desk §6), which a partner-owned-only list would
-  // silently exclude (e.g. a claimed instructor who joined from another account).
-  // Legacy schedules can have a null `studio_id` (never backfilled), so fall back
-  // to the studio context the edit screen was reached from.
-  useEffect(() => {
-    const studioId = sessionDetail?.studio_id || currentStudio?.id;
-    if (!studioId || sessionDetail?.organizer_kind === "solo") return;
-    axiosInstance
-      .get<{ items: PickableInstructor[] }>(`/studios/${studioId}/roster`)
-      .then((r) =>
-        setInstructors(
-          r.data.items.map(({ id, name, image_id, row_state }) => ({
-            id,
-            name,
-            image_id,
-            row_state,
-          })),
-        ),
-      )
-      .catch(() => {});
-  }, [sessionDetail?.studio_id, currentStudio?.id]);
+  const selectScope = (next: Scope) => {
+    if ((scope === "single") !== (next === "single")) {
+      const effectiveInstructor =
+        next === "single" || sessionDetail?.series_instructor_id === undefined
+          ? sessionDetail?.instructor_id
+          : sessionDetail.series_instructor_id;
+      const effectiveRoom =
+        next === "single" || sessionDetail?.series_room_id === undefined
+          ? sessionDetail?.room_id
+          : sessionDetail.series_room_id;
+      setInstructorId(effectiveInstructor ?? "");
+      setRoomId(effectiveRoom ?? "");
+    }
+    setScope(next);
+  };
 
   const toggleDay = (day: string) => {
     setSelectedDays((prev) =>
@@ -255,13 +287,22 @@ export default function EditSessionPage() {
   };
 
   const buildPayload = () => {
+    if (isSubstitution) {
+      return {
+        occurrence_id: params.occurrenceId,
+        scope,
+        instructor_id: instructorId,
+        ...(roomChanged ? { room_id: roomId || null } : {}),
+      };
+    }
+
     const payload: Record<string, unknown> = {
       occurrence_id: params.occurrenceId,
       scope,
       // Always send field values; null = explicitly clear
       room_id: roomId || null,
       capacity: capacity ? parseInt(capacity, 10) : null,
-      ...(isSolo ? {} : { instructor_id: instructorId || null }),
+      ...(!isSolo && instructorChanged ? { instructor_id: instructorId || null } : {}),
     };
 
     // Time: only send if user set it
@@ -293,7 +334,7 @@ export default function EditSessionPage() {
   };
 
   const goToPreview = async () => {
-    if (!roomState.roomValid || !timeValid) return;
+    if (!canPreview) return;
     setIsLoadingPreview(true);
     try {
       const r = await axiosInstance.post<SessionEditPreviewResponse>(
@@ -310,7 +351,7 @@ export default function EditSessionPage() {
   };
 
   const handleCommit = async () => {
-    if (!roomState.roomValid || !timeValid) {
+    if (!canPreview) {
       setStep("form");
       return;
     }
@@ -376,19 +417,19 @@ export default function EditSessionPage() {
               title="Tylko tę sesję"
               subtitle={isSubstitution ? "Jednorazowe zastępstwo" : "Wyjątek, seria bez zmian"}
               selected={scope === "single"}
-              onSelect={() => setScope("single")}
+              onSelect={() => selectScope("single")}
             />
             <ScopeOptionCard
               title="Tę i kolejne"
               subtitle="Od tej daty do końca serii"
               selected={scope === "this_and_future"}
-              onSelect={() => setScope("this_and_future")}
+              onSelect={() => selectScope("this_and_future")}
             />
             <ScopeOptionCard
               title="Całą serię"
               subtitle="Wszystkie przyszłe, przeszłe nietknięte"
               selected={scope === "whole_series"}
-              onSelect={() => setScope("whole_series")}
+              onSelect={() => selectScope("whole_series")}
             />
           </div>
           <Button size="action" variant="green" className="w-full" onClick={() => setStep("form")}>
@@ -416,9 +457,65 @@ export default function EditSessionPage() {
           <InstructorPicker
             instructors={instructors}
             selectedId={instructorId}
-            currentId={sessionDetail.instructor_id}
+            currentId={currentInstructorId}
+            otherLabel={scope === "single" ? "Zastępstwo" : ""}
+            emptyHint="Brak instruktorów dostępnych w tym studiu."
             onSelect={setInstructorId}
           />
+          {studioId && (
+            <>
+              <button
+                ref={addInstructorRef}
+                type="button"
+                className="flex w-full items-center gap-3 rounded-b2b border border-gray-200 bg-white px-2 py-3 text-left text-sm font-semibold text-gray-800 shadow-xs transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                onClick={() => {
+                  setInstructorStep("identify");
+                  setIsInstructorOpen(true);
+                }}
+              >
+                <span
+                  className="flex size-8 shrink-0 items-center justify-center"
+                  aria-hidden="true"
+                >
+                  <Plus className="size-5" />
+                </span>
+                Dodaj instruktora
+              </button>
+              <Dialog open={isInstructorOpen} onOpenChange={setIsInstructorOpen}>
+                <DialogContent
+                  finalFocus={addInstructorRef}
+                  closeLabel="Zamknij"
+                  className="max-h-[90dvh] overflow-y-auto"
+                >
+                  <DialogTitle>Dodaj instruktora</DialogTitle>
+                  <StudioRosterAddForm
+                    studioId={studioId}
+                    step={instructorStep}
+                    onNew={() => setInstructorStep("new")}
+                    onAdded={(id) => {
+                      setIsInstructorOpen(false);
+                      setAddedInstructorId(id);
+                      void refreshInstructors();
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+              {showInstructorNotice && (
+                <div>
+                  <p className="text-sm text-gray-500" role="status">
+                    {instructorsError
+                      ? "Instruktor dodany. Nie udało się odświeżyć listy."
+                      : "Instruktor nie jest jeszcze dostępny do przypisania."}
+                  </p>
+                  {instructorsError && (
+                    <Button variant="outline" size="sm" onClick={() => void refreshInstructors()}>
+                      Odśwież listę instruktorów
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
           <ScheduleRoomField {...roomState} roomId={roomId} onRoomChange={setRoomId} />
           <div className="flex gap-3 pt-2">
             {sessionDetail.is_recurring && (
@@ -432,7 +529,7 @@ export default function EditSessionPage() {
               variant="green"
               className="flex-1"
               onClick={goToPreview}
-              disabled={isLoadingPreview || !roomState.roomValid || !timeValid}
+              disabled={isLoadingPreview || !canPreview}
             >
               {isLoadingPreview ? "Generowanie..." : "Zobacz podgląd zmian"}
             </Button>
@@ -536,7 +633,7 @@ export default function EditSessionPage() {
       {step === "success" && commitResult && (
         <ScheduleSuccessScreen
           headline="Zapisano zmiany"
-          body={`Zaktualizowano ${sesjeAccusative(committedTotal(commitResult))}. Powiadomienia trafiły do kolejki wysyłki.`}
+          body={`Zaktualizowano ${sesjeAccusative(committedTotal(commitResult))}. ${noticeQueueCopy(commitResult.expected_recipients, commitResult.queued_recipients)}`}
           summary={commitSummary(commitResult)}
         />
       )}

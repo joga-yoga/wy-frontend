@@ -4,6 +4,8 @@ import type {
   ImportJob,
   ImportRecord,
 } from "../../src/app/account/partner/studio/import/fitssey/types";
+import { expectIntactDismissal } from "../popup-dismissal";
+
 const base = "/account/partner/studio/import/fitssey";
 function record(kind: ImportRecord["kind"], key: string, data: ImportRecord["data"]): ImportRecord {
   return {
@@ -192,6 +194,7 @@ async function mock(page: Page, initial = job()) {
 test("connect, correct, reopen, import and explicitly publish without booking activation", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   const fixture = await mock(page);
   await page.goto(base);
   await page.getByLabel("UUID konta Fitssey").fill("fixture-source");
@@ -199,6 +202,13 @@ test("connect, correct, reopen, import and explicitly publish without booking ac
   await page.getByRole("button", { name: "Połącz i sprawdź dane" }).click();
   await expect(page).toHaveURL(`${base}/fixture-job`);
   await page.getByRole("button", { name: "Sprawdź i popraw" }).click();
+  await page.getByLabel("Waluta (np. PLN)").fill("PLN");
+  const popup = page.locator('[data-slot="dialog-content"]');
+  await expectIntactDismissal(popup, () =>
+    popup.getByRole("button", { name: "Zamknij", exact: true }).click(),
+  );
+  await page.getByRole("button", { name: "Sprawdź i popraw" }).click();
+  await expect(page.getByLabel("Waluta (np. PLN)")).toHaveValue("");
   await page.getByLabel("Waluta (np. PLN)").fill("PLN");
   await page.getByRole("button", { name: "Zapisz zmiany", exact: true }).click();
   await expect(page.getByText("Potwierdź walutę", { exact: true })).toHaveCount(0);

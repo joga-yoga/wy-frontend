@@ -3,6 +3,7 @@
 import { StatusChip } from "@/components/b2b/StatusChip";
 import { SessionCardBase } from "@/components/common/SessionCardBase";
 import { cn } from "@/lib/utils";
+import { warsawCalendarDate } from "@/lib/warsawWallClock";
 
 import type { MyBookingItem } from "../types";
 
@@ -26,14 +27,22 @@ function fundingLabel(funding: string | null): string | null {
 }
 
 /** F4 writes "dziś" / "śr 15 lip" under the time — recency beats a bare date. */
-export function relativeDay(date: Date): string {
+export function relativeDay(date: Date, warsawSlot = false): string {
   const today = new Date();
   const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const days = Math.round((startOfDay(date) - startOfDay(today)) / 86_400_000);
+  const days = warsawSlot
+    ? (Date.parse(date.toISOString().slice(0, 10)) - Date.parse(warsawCalendarDate(today))) /
+      86_400_000
+    : Math.round((startOfDay(date) - startOfDay(today)) / 86_400_000);
   if (days === 0) return "dziś";
   if (days === 1) return "jutro";
   if (days === -1) return "wczoraj";
-  return date.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" });
+  return date.toLocaleDateString("pl-PL", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: warsawSlot ? "UTC" : undefined,
+  });
 }
 
 /**
@@ -58,7 +67,9 @@ export function BookingCard({
 }) {
   const isCancelled = booking.status === "cancelled";
   const isPass = booking.funding === "use_pass" || booking.funding === "buy_and_use";
-  const start = booking.start_time ? new Date(booking.start_time) : null;
+  const startTime = Date.parse(booking.start_time ?? "");
+  const start = Number.isFinite(startTime) ? new Date(startTime) : null;
+  const warsawSlot = booking.event_type === "class";
   const label = fundingLabel(booking.funding);
 
   return (
@@ -69,8 +80,16 @@ export function BookingCard({
       onClick={() => onOpen(booking)}
       hoverable
       bodyAlign="center"
-      time={start ? start.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }) : "—"}
-      timeSub={start ? relativeDay(start) : undefined}
+      time={
+        start
+          ? start.toLocaleTimeString("pl-PL", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: warsawSlot ? "UTC" : undefined,
+            })
+          : "—"
+      }
+      timeSub={start ? relativeDay(start, warsawSlot) : undefined}
       // Wider and smaller than the schedule cards': this column carries a date, not a
       // duration, and "czw., 27 sie" wraps to two ragged lines at `w-14`/`text-sm`.
       timeColClassName="w-[68px]"
@@ -89,7 +108,11 @@ export function BookingCard({
         <p className="mt-0.5 truncate text-sm text-gray-500">{booking.studio_name}</p>
       )}
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-        {isCancelled && <StatusChip tone="rose">Odwołana</StatusChip>}
+        {isCancelled && (
+          <StatusChip tone="rose">
+            {booking.cancelled_by_organizer ? "Odwołane przez organizatora" : "Odwołana"}
+          </StatusChip>
+        )}
         {label && !isCancelled && <StatusChip tone={isPass ? "green" : "gray"}>{label}</StatusChip>}
       </div>
     </SessionCardBase>

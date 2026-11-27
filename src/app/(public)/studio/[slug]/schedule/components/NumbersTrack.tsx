@@ -16,14 +16,10 @@ import {
   useState,
 } from "react";
 
+import { warsawCalendarDate } from "@/lib/warsawWallClock";
+
 import { DayNumberCircle } from "./DayNumberCircle";
-import {
-  addDays,
-  buildWeekDays,
-  type DayInfo,
-  shouldCommitSwipe,
-  toDateStr,
-} from "./dayStripUtils";
+import { addDays, buildWeekDays, type DayInfo, shouldCommitSwipe } from "./dayStripUtils";
 
 export interface DayStripHandle {
   goToPreviousWeek: () => void;
@@ -105,7 +101,7 @@ export const NumbersTrack = forwardRef<DayStripHandle, NumbersTrackProps>(functi
     goToNextWeek: () => commit(1),
   }));
 
-  const todayStr = toDateStr(new Date());
+  const todayStr = warsawCalendarDate(new Date());
   const currentDays = buildWeekDays(weekStart, sessionCounts, todayStr, !isLoading);
   const prevDays = buildWeekDays(addDays(weekStart, -7), [], todayStr, false);
   const nextDays = buildWeekDays(addDays(weekStart, 7), [], todayStr, false);

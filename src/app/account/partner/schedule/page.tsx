@@ -88,9 +88,12 @@ export default function SchedulePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [reconciliation, setReconciliation] = useState<{
     sessionCount: number;
+    cancellationReviewCount: number;
     showStudioLabels: boolean;
     studioName: string | null;
-  }>({ sessionCount: 0, showStudioLabels: false, studioName: null });
+  }>({ sessionCount: 0, cancellationReviewCount: 0, showStudioLabels: false, studioName: null });
+  const hasReconciliation =
+    reconciliation.sessionCount > 0 || reconciliation.cancellationReviewCount > 0;
 
   // Studio comes from `managedStudios` (`is_owner=True` links only, same source the
   // add-session flow uses) — irrelevant in instructor view, where sessions can span
@@ -115,6 +118,7 @@ export default function SchedulePage() {
       .get<{
         sessions: { studio_id?: string; studio_name?: string }[];
         total: number;
+        cancellation_review_count?: number;
         show_studio_labels: boolean;
       }>("/partner/reconciliation")
       .then(({ data }) => {
@@ -127,6 +131,7 @@ export default function SchedulePage() {
           // (sum of per-session counts), so using it here read as "7 sesji" when 7 people owed
           // money across 6 sessions.
           sessionCount: data.sessions.length,
+          cancellationReviewCount: data.cancellation_review_count ?? 0,
           showStudioLabels: data.show_studio_labels,
           // Only unambiguous when every flagged session belongs to the same studio —
           // a mixed set gets its per-session labels in the reconciliation list instead.
@@ -134,7 +139,12 @@ export default function SchedulePage() {
         });
       })
       .catch(() =>
-        setReconciliation({ sessionCount: 0, showStudioLabels: false, studioName: null }),
+        setReconciliation({
+          sessionCount: 0,
+          cancellationReviewCount: 0,
+          showStudioLabels: false,
+          studioName: null,
+        }),
       );
   }, []);
 
@@ -339,7 +349,7 @@ export default function SchedulePage() {
       <div
         className={cn(
           "mt-0 flex-1",
-          !isInstructorView && reconciliation.sessionCount > 0 ? "pb-24" : "pb-4",
+          (!isInstructorView || capabilities?.soloStudioId) && hasReconciliation ? "pb-24" : "pb-4",
         )}
         {...daySwipe}
       >
@@ -415,7 +425,7 @@ export default function SchedulePage() {
        * task for top-of-screen position, but a strip that only happens to land near the bottom
        * on a short day (and collides with the fixed add button) reads as broken, not deprioritized.
        * Owner view only — instructor view is read-only, no reconciliation action to take here. */}
-      {(!isInstructorView || capabilities?.soloStudioId) && reconciliation.sessionCount > 0 && (
+      {(!isInstructorView || capabilities?.soloStudioId) && hasReconciliation && (
         <Link
           href="/account/partner/reconciliation"
           data-toast-anchor=""
@@ -423,10 +433,12 @@ export default function SchedulePage() {
         >
           <span className="flex items-center gap-2">
             <AlertCircle size={16} />
-            {sesje(reconciliation.sessionCount)} do rozliczenia
-            {reconciliation.showStudioLabels && reconciliation.studioName && (
-              <> · {reconciliation.studioName}</>
-            )}
+            {reconciliation.cancellationReviewCount > 0
+              ? "Sprawdź rozliczenia"
+              : `${sesje(reconciliation.sessionCount)} do rozliczenia`}
+            {reconciliation.cancellationReviewCount === 0 &&
+              reconciliation.showStudioLabels &&
+              reconciliation.studioName && <> · {reconciliation.studioName}</>}
           </span>
           <ChevronRight size={16} />
         </Link>
@@ -445,7 +457,7 @@ export default function SchedulePage() {
           data-toast-anchor=""
           className={cn(
             "fixed right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-colors hover:bg-gray-800",
-            reconciliation.sessionCount > 0
+            hasReconciliation
               ? "bottom-[calc(var(--bottom-tab-h)+5rem)] md:bottom-24"
               : "bottom-[calc(var(--bottom-tab-h)+1rem)] md:bottom-6",
           )}

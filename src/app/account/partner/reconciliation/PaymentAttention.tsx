@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, RefreshCw, WalletCards } from "lucide-react";
+import { isAxiosError } from "axios";
+import { WalletCards } from "lucide-react";
 import { useState } from "react";
 
 import { StatusChip } from "@/components/b2b/StatusChip";
@@ -9,6 +10,7 @@ import { axiosInstance } from "@/lib/axiosInstance";
 import { personLabel } from "@/lib/personDisplay";
 
 import type { PaidWithoutSeatItem, ReviewItem } from "../studio/[studioId]/front-desk/types";
+import { PaymentReviewCard } from "./PaymentReviewCard";
 
 /**
  * The two pinned payment piles (§9), above the reconciliation list.
@@ -30,13 +32,14 @@ function formatSession(startTime?: string | null): string | null {
     weekday: "short",
     day: "numeric",
     month: "short",
-  })}, ${when.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}`;
+    timeZone: "UTC",
+  })}, ${when.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })}`;
 }
 
 export interface PaymentAttentionProps {
   paidWithoutSeat: PaidWithoutSeatItem[];
   needsReview: ReviewItem[];
-  onChanged: () => void;
+  onChanged: () => Promise<void>;
 }
 
 export function PaymentAttention({
@@ -54,9 +57,16 @@ export function PaymentAttention({
     setError(null);
     try {
       await request();
-      onChanged();
-    } catch {
-      setError("Nie udało się wykonać tej operacji. Spróbuj ponownie.");
+      await onChanged();
+      return true;
+    } catch (error) {
+      const detail: unknown = isAxiosError(error) ? error.response?.data?.detail : null;
+      setError(
+        typeof detail === "string"
+          ? detail
+          : "Nie udało się wykonać tej operacji. Spróbuj ponownie.",
+      );
+      return false;
     } finally {
       setBusyId(null);
     }
@@ -113,63 +123,18 @@ export function PaymentAttention({
       )}
 
       {needsReview.length > 0 && (
-        <section className="space-y-2">
+        <section id="payment-review" className="space-y-2">
           <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
             Do sprawdzenia
           </h2>
           <div className="overflow-hidden rounded-b2b border bg-white divide-y">
             {needsReview.map((item) => (
-              <div key={item.id} className="px-4 py-3.5">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-gray-900">
-                      {personLabel(item.user_name, item.user_email ?? "").primary}
-                    </p>
-                    <div className="mt-1">
-                      <StatusChip tone="amber">
-                        {item.source === "failed_refund"
-                          ? "Zwrot się nie powiódł"
-                          : "Niezgodna kwota"}
-                      </StatusChip>
-                    </div>
-                    {/* The backend's own sentence, composed where the facts are. */}
-                    <p className="mt-1.5 text-[13px] leading-snug text-gray-600">{item.detail}</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex gap-2">
-                  {item.can_retry_refund && (
-                    <button
-                      type="button"
-                      disabled={busyId === item.id}
-                      onClick={() =>
-                        run(item.id, () =>
-                          axiosInstance.post(`/payments/review-items/${item.id}/retry-refund`),
-                        )
-                      }
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      <RefreshCw size={14} />
-                      {busyId === item.id ? "Ponawiam..." : "Ponów zwrot"}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    disabled={busyId === item.id}
-                    onClick={() =>
-                      run(item.id, () =>
-                        axiosInstance.post(`/payments/review-items/${item.id}/resolve`, {
-                          note: null,
-                        }),
-                      )
-                    }
-                    className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Oznacz jako sprawdzone
-                  </button>
-                </div>
-              </div>
+              <PaymentReviewCard
+                key={item.id}
+                item={item}
+                busy={busyId != null}
+                run={(request) => run(item.id, request)}
+              />
             ))}
           </div>
         </section>

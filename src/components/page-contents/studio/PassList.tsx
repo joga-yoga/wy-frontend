@@ -43,6 +43,7 @@ export function PassList({
   const router = useRouter();
   const hasDropIn = !hideDropIn && dropInPrice != null;
   const [selectedPass, setSelectedPass] = useState<StudioPass | null>(null);
+  const [isPassOpen, setIsPassOpen] = useState(false);
   const [showDropIn, setShowDropIn] = useState(false);
   const [showAllPasses, setShowAllPasses] = useState(false);
 
@@ -87,7 +88,10 @@ export function PassList({
             <button
               key={pass.id}
               type="button"
-              onClick={() => setSelectedPass(pass)}
+              onClick={() => {
+                setSelectedPass(pass);
+                setIsPassOpen(true);
+              }}
               className="flex w-full items-center gap-4 py-3 text-left"
             >
               <LightPassTile
@@ -123,11 +127,7 @@ export function PassList({
         </Button>
       )}
 
-      <Drawer
-        open={selectedPass != null}
-        onOpenChange={(o) => !o && setSelectedPass(null)}
-        showSwipeHandle
-      >
+      <Drawer open={isPassOpen} onOpenChange={setIsPassOpen} showSwipeHandle>
         <DrawerContent>
           <div className="flex items-center justify-end px-4 pb-2 pt-2">
             <DrawerTitle className="sr-only">{selectedPass?.name ?? ""}</DrawerTitle>
@@ -152,7 +152,9 @@ export function PassList({
                     variant="green"
                     size="cta"
                     className="mt-5 w-full"
-                    onClick={() => router.push(`/book/pass/${selectedPass.id}`)}
+                    onClick={() => {
+                      if (isPassOpen) router.push(`/book/pass/${selectedPass.id}`);
+                    }}
                   >
                     Kup karnet ·{" "}
                     {formatMoney(selectedPass.price, selectedPass.currency || currency)}

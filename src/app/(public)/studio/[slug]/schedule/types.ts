@@ -29,6 +29,7 @@ export interface PublicOccurrence {
   free_cancellation_deadline?: string | null;
   previous_start_time?: string | null;
   previous_instructor_name?: string | null;
+  is_substitution?: boolean;
   modified_at?: string | null;
   viewer_has_booking: boolean;
   viewer_booking_id?: string | null;
@@ -158,6 +159,7 @@ export interface OccurrenceDetail {
   previous_start_time?: string | null;
   previous_instructor_id?: string | null;
   previous_instructor_name?: string | null;
+  is_substitution?: boolean;
   modified_at?: string | null;
   instructor?: OccurrenceDetailInstructor | null;
   studio: OccurrenceDetailStudio;
@@ -181,3 +183,7 @@ export interface PublicSchedulePreviewResponse {
   studio_id: string;
   occurrences: PublicOccurrence[];
 }
+
+export type SessionSurface =
+  | { studio_id: string; class_template_id?: string }
+  | { instructor_slug: string };
